@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HackClub Spaces - Static Website Hosting</title>
+    <title>Hack Club Spaces - Static Website Hosting</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -13,11 +13,11 @@
     <div class="background-animation"></div>
     <nav class="navbar">
         <div class="nav-content">
-            <a href="/" class="logo">HackClub Spaces</a>
+            <a href="/" class="logo">Hack Club Spaces</a>
             <div class="nav-links">
                 <a href="{{ url_for('documentation') }}">Documentation</a>
                 <a href="/">Home Page</a>
-                <a href="https://hackclub.com" target="_blank">HackClub</a>
+                <a href="https://hackclub.com" target="_blank">Hack Club</a>
             </div>
             <div class="nav-auth">
                 {% if current_user.is_authenticated %}

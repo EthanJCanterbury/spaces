@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HackClub Spaces - Static Website Hosting</title>
+    <title>Hack Club Spaces - Static Website Hosting</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -23,12 +23,12 @@
     </a>
     <nav class="navbar banner-adjusted">
         <div class="nav-content">
-            <div class="logo">HackClub Spaces</div>
+            <div class="logo">Hack Club Spaces</div>
             <div class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#how-to-join">Join</a>
                 <a href="{{ url_for('documentation') }}">Documentation</a>
-                <a href="https://hackclub.com" target="_blank">HackClub</a>
+                <a href="https://hackclub.com" target="_blank">Hack Club</a>
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('welcome') }}" class="auth-button">Dashboard</a>
                 {% else %}
@@ -84,7 +84,7 @@
         <div class="join-content">
             <div class="join-card">
                 <h3>1. Join the Community</h3>
-                <p>Spaces is exclusively available to HackClub members. Join our vibrant Slack community where thousands of students build amazing things together.</p>
+                <p>Spaces is exclusively available to Hack Club members. Join our vibrant Slack community where thousands of students build amazing things together.</p>
                 <a href="https://hackclub.com/slack" class="btn primary" target="_blank">Join the Slack →</a>
             </div>
             <div class="join-card">
@@ -120,8 +120,8 @@
     <footer>
         <div class="footer-content">
             <div class="footer-section">
-                <h4>HackClub Webspaces</h4>
-                <p>Made with ❤️ by <a href="https://hackclub.com" target="_blank">HackClub</a> & <a href="https://github.com/EthanCanterburyAtWillow">Ethan</a></p>
+                <h4>Hack Club Webspaces</h4>
+                <p>Made with ❤️ by <a href="https://hackclub.com" target="_blank">Hack Club</a> & <a href="https://github.com/EthanCanterburyAtWillow">Ethan</a></p>
             </div>
             <div class="footer-section">
                 <h4>Links</h4>
