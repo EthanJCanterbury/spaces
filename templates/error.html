@@ -1,0 +1,130 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-content">
+        <div class="error-icon">
+            <i class="fas fa-wrench"></i>
+        </div>
+        <h1>Uh Oh! Our Database is down?!</h1>
+        <p>Well, thats not good. Maybe its just under maintenance or an update is underway? Or Ethan totally broke the Database again lol :p</p>
+        <p>{{ error_message or "It'll most likely be back up by the end of the day!" }}</p>
+        <button onclick="window.location.href='{{ url_for('login') }}'" class="maintenance-btn">
+            <span class="maintenance-btn-content">
+                <i class="fas fa-sync-alt"></i>
+                Try Again
+            </span>
+        </button>
+    </div>
+</div>
+
+<style>
+.error-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.error-content {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 3rem;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    max-width: 500px;
+    width: 90%;
+    animation: slideUp 0.5s ease-out;
+}
+
+.error-icon {
+    font-size: 4rem;
+    color: #ec3750;
+    margin-bottom: 1.5rem;
+    animation: bounce 2s ease infinite;
+}
+
+.error-content h1 {
+    color: #1f2d3d;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.error-content p {
+    color: #8492a6;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.maintenance-btn {
+    background: linear-gradient(45deg, #ec3750, #ff8c37);
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 50px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 15px rgba(236, 55, 80, 0.2);
+}
+
+.maintenance-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.maintenance-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(236, 55, 80, 0.3);
+}
+
+.maintenance-btn:active {
+    transform: translateY(0);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.fa-sync-alt {
+    transition: transform 0.5s ease;
+}
+
+.maintenance-btn:hover .fa-sync-alt {
+    animation: spin 1s linear infinite;
+}
+</style>
+{% endblock %}

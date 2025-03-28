@@ -1,0 +1,49 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-content">
+        <h1>Account Suspended</h1>
+        <p>Your account has been suspended by an administrator. Please join #spaces on Slack to discuss this further.</p>
+        <a href="https://hackclub.slack.com" target="_blank" class="button-link">
+            <span class="button-content">
+                <i class="fab fa-slack"></i>
+                Join Hack Club Slack
+            </span>
+        </a>
+    </div>
+</div>
+
+<style>
+.button-link {
+    display: inline-block;
+    background: linear-gradient(45deg, #4A154B, #611f69);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 6px rgba(74, 21, 75, 0.1);
+}
+
+.button-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.button-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(74, 21, 75, 0.2);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+</style>
+{% endblock %}

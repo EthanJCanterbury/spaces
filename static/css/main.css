@@ -1,0 +1,77 @@
+
+/* Club Button Styling in Welcome Page */
+.club-dashboard-btn {
+    margin-left: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Toast notifications for feedback */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    min-width: 280px;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+    opacity: 0.95;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toast-success {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.toast-error {
+    background-color: #F44336;
+    color: white;
+}
+
+.toast-info {
+    background-color: #2196F3;
+    color: white;
+}
+
+.toast-warning {
+    background-color: #FF9800;
+    color: white;
+}
+
+.nav-button.club-dashboard {
+    background-color: var(--primary);
+    color: white;
+}
+
+.nav-auth {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-auth .nav-button {
+    padding: 8px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}

@@ -1,0 +1,155 @@
+{% extends "errors/base_error.html" %}
+
+{% block head %}
+{{ super() }}
+<style>
+.error-icon {
+    color: var(--info-color);
+}
+
+.error-box {
+    border-left: 5px solid var(--info-color);
+}
+
+.maintenance-animation {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 2rem;
+}
+
+.tool-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    animation: spin 8s linear infinite;
+}
+
+.tool {
+    position: absolute;
+    font-size: 2.5rem;
+    color: var(--info-color);
+}
+
+.tool-1 { top: 0; left: 50%; transform: translateX(-50%); }
+.tool-2 { top: 50%; right: 0; transform: translateY(-50%); }
+.tool-3 { bottom: 0; left: 50%; transform: translateX(-50%); }
+.tool-4 { top: 50%; left: 0; transform: translateY(-50%); }
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.maintenance-time {
+    background: rgba(33, 150, 243, 0.1);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+.time-block {
+    display: inline-block;
+    background: var(--info-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.3rem;
+    margin: 0 0.2rem;
+    min-width: 60px;
+    text-align: center;
+}
+
+.time-label {
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+    opacity: 0.8;
+}
+</style>
+{% endblock %}
+
+{% block error_icon %}
+<div class="maintenance-animation">
+    <div class="tool-container">
+        <div class="tool tool-1"><i class="fas fa-wrench"></i></div>
+        <div class="tool tool-2"><i class="fas fa-cog"></i></div>
+        <div class="tool tool-3"><i class="fas fa-screwdriver"></i></div>
+        <div class="tool tool-4"><i class="fas fa-tools"></i></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block error_title %}
+Scheduled Maintenance
+{% endblock %}
+
+{% block error_message %}
+<div class="error-content">
+    <p>We're currently performing scheduled maintenance to improve our services.</p>
+    <p>We'll be back online shortly!</p>
+    
+    <div class="maintenance-time">
+        <p>Estimated time remaining:</p>
+        <div id="countdown-timer">
+            <div class="time-block">
+                <span id="hours">00</span>
+                <div class="time-label">Hours</div>
+            </div>
+            <div class="time-block">
+                <span id="minutes">00</span>
+                <div class="time-label">Minutes</div>
+            </div>
+            <div class="time-block">
+                <span id="seconds">00</span>
+                <div class="time-label">Seconds</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block error_actions %}
+<button onclick="window.location.reload()" class="error-btn error-btn-primary">
+    <i class="fas fa-sync"></i> Check Status
+</button>
+<a href="https://status.hackclub.com" target="_blank" class="error-btn error-btn-secondary">
+    <i class="fas fa-chart-line"></i> View Status Page
+</a>
+{% endblock %}
+
+{% block error_details %}
+<div class="error-details">
+    <p>Maintenance Window: {{ start_time|default('2025-03-19 00:00 UTC', true) }} - {{ end_time|default('2025-03-19 02:00 UTC', true) }}</p>
+    <p>We appreciate your patience while we make these improvements.</p>
+</div>
+
+<script>
+function updateCountdown() {
+    // Example end time - replace with actual maintenance end time
+    const endTime = new Date('{{ end_time|default('2025-03-19 02:00 UTC', true) }}').getTime();
+    
+    function update() {
+        const now = new Date().getTime();
+        const distance = endTime - now;
+        
+        if (distance < 0) {
+            document.getElementById('countdown-timer').innerHTML = 
+                '<div style="color: var(--success-color);">Maintenance should be complete. Please try refreshing.</div>';
+            return;
+        }
+        
+        const hours = Math.floor(distance / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+        document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+        document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+    }
+    
+    update();
+    setInterval(update, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', updateCountdown);
+</script>
+{% endblock %}

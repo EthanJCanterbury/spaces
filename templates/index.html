@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackClub Spaces - Static Website Hosting</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!--
+    <div class="unofficial-banner">
+        <div class="banner-content">
+            <span class="banner-icon">🚧</span>
+            <span class="banner-text">This is currently unofficial - We need your help to make it official!</span>
+            <span class="banner-icon">🚀</span>
+        </div>
+        -->
+    </div>
+    <div class="background-animation"></div>
+    <a href="https://hackclub.com" target="_blank" class="flag-orpheus">
+        <img src="{{ url_for('static', filename='images/flag-orpheus-left.svg') }}" alt="Orpheus Flag">
+    </a>
+    <nav class="navbar banner-adjusted">
+        <div class="nav-content">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='images/logo-rounded.png') }}" alt="HackClub" style="height: 30px; margin-right: 8px; vertical-align: middle;">
+                <span style="vertical-align: middle;">Spaces</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-to-join">Join</a>
+                <a href="{{ url_for('documentation') }}">Documentation</a>
+                <a href="https://hackclub.com" target="_blank">HackClub</a>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('welcome') }}" class="auth-button">Dashboard</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="auth-button">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="banner-adjusted">
+        <section class="hero">
+            <div class="hero-content">
+                <h1>🚀 Build, Collaborate, Deploy!</h1>
+                <p class="subtitle">Free, fast, and simple app hosting & Web-IDE!</p>
+                <div class="cta-buttons">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('welcome') }}" class="btn primary">Go to Dashboard</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn primary">Login</a>
+                        <a href="{{ url_for('signup') }}" class="btn secondary">Sign Up</a>
+                    {% endif %}
+                    <a href="#features" class="btn secondary">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-backdrop"></div>
+        </section>
+
+        <section id="features" class="features">
+            <h2>Why Choose Spaces?</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Lightning Fast</h3>
+                    <p>Our Global CDN (Cloudflare) ensures your sites load instantly</p>
+                </div>
+                <div class="feature-card">
+                    <h3>No Commands!</h3>
+                    <p>No terminal knowledge is required!!</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Always Free</h3>
+                    <p>No hidden costs or limitations (Fair use!!!)</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Custom Domains</h3>
+                    <p>Use your own domain name or choose one from our list!</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <section id="how-to-join" class="join-section">
+        <h2>Start Building Today</h2>
+        <div class="join-content">
+            <div class="join-card">
+                <h3>1. Join the Community</h3>
+                <p>Spaces is exclusively available to HackClub members. Join our vibrant Slack community where thousands of students build amazing things together.</p>
+                <a href="https://hackclub.com/slack" class="btn primary" target="_blank">Join the Slack →</a>
+            </div>
+            <div class="join-card">
+                <h3>Sign up</h3>
+                <p>Sign up for a free account on our website or with our slack bot</p>
+                <a href="{{ url_for('signup') }}" class="btn secondary">Sign up →</a>
+            </div>
+            <div class="join-card">
+                <h3>3. SYS - Ship Your Site & Get FREE Boba!!</h3>
+                <p>Use our simple web editor to make deploy your static site in seconds. Just click <code>deploy</code> and your site will be live!</p>
+                <a href="#cool" class="btn secondary" target="_blank">Thats it!</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>150+</h3>
+                <p>Active Sites</p>
+            </div>
+            <div class="stat-card">
+                <h3>99.9%</h3>
+                <p>Uptime</p>
+            </div>
+            <div class="stat-card">
+                <h3>Global</h3>
+                <p>CDN (Thanks, Cloudflare)</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>HackClub Webspaces</h4>
+                <p>Made with ❤️ by <a href="https://hackclub.com" target="_blank">HackClub</a> & <a href="https://github.com/EthanCanterburyAtWillow">Ethan</a></p>
+            </div>
+            <div class="footer-section">
+                <h4>Links</h4>
+                <a href="https://hackclub.com/slack">Slack</a>
+                <a href="https://github.com/hackclub/spaces">GitHub</a>
+                <a href="https://spaces.hackclub.com/documentation">Documentation</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

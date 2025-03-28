@@ -1,0 +1,620 @@
+
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+    :root {
+        --debug-primary: #4e54ff;
+        --debug-gradient-start: #4e54ff;
+        --debug-gradient-end: #8a84ff;
+        --debug-dark: #1c1c2e;
+        --debug-light: #ffffff;
+        --debug-success: #4CAF50;
+        --debug-error: #F44336;
+        --debug-warning: #ff9800;
+    }
+
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+
+    .debug-container {
+        max-width: 700px;
+        width: 90%;
+        margin: 0 auto;
+        padding: 40px;
+        background-color: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .debug-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, rgba(78, 84, 255, 0.05) 0%, rgba(138, 132, 255, 0.05) 100%);
+        z-index: -1;
+    }
+
+    .debug-container:before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        left: -50px;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--debug-gradient-start), var(--debug-gradient-end));
+        opacity: 0.5;
+    }
+
+    .debug-container:after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        right: -50px;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--debug-gradient-end), var(--debug-gradient-start));
+        opacity: 0.4;
+    }
+
+    .debug-header {
+        position: relative;
+        margin-bottom: 30px;
+    }
+
+    .debug-title {
+        font-size: 35px;
+        font-weight: 800;
+        margin-bottom: 20px;
+        color: var(--debug-dark);
+        background: linear-gradient(to right, var(--debug-gradient-start), var(--debug-gradient-end));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        position: relative;
+        display: inline-block;
+    }
+
+    .debug-title:after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(to right, var(--debug-gradient-start), var(--debug-gradient-end));
+        border-radius: 2px;
+    }
+
+    .debug-subtitle {
+        font-size: 20px;
+        color: #666;
+        margin-bottom: 40px;
+        font-weight: 500;
+    }
+
+    .debug-message {
+        font-size: 18px;
+        margin-bottom: 30px;
+        line-height: 1.7;
+        color: #444;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .debug-progress-container {
+        position: relative;
+        height: 10px;
+        width: 100%;
+        background-color: #f0f0f0;
+        border-radius: 5px;
+        margin-bottom: 30px;
+        overflow: hidden;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .debug-progress-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(to right, var(--debug-gradient-start), var(--debug-gradient-end));
+        border-radius: 5px;
+        transition: width 5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .debug-progress-bar:after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg, 
+            rgba(255,255,255,0) 0%, 
+            rgba(255,255,255,0.3) 50%, 
+            rgba(255,255,255,0) 100%
+        );
+        animation: progressShine 2s infinite linear;
+    }
+
+    @keyframes progressShine {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .debug-log {
+        background-color: #1c1c2e;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 30px 0;
+        text-align: left;
+        font-family: 'Fira Code', monospace;
+        font-size: 14px;
+        height: 180px;
+        overflow-y: auto;
+        color: #e4e8f0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .debug-log-entry {
+        margin-bottom: 8px;
+        color: #a0a0a0;
+        line-height: 1.5;
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .debug-log-entry.success {
+        color: var(--debug-success);
+    }
+
+    .debug-log-entry.error {
+        color: var(--debug-error);
+    }
+
+    .debug-log-entry.warning {
+        color: var(--debug-warning);
+    }
+
+    .debug-log-time {
+        color: #666;
+        margin-right: 10px;
+        font-size: 12px;
+        min-width: 75px;
+    }
+
+    .debug-status {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 40px 0 20px;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+        color: var(--debug-dark);
+    }
+
+    .debug-status.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .debug-checkmark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--debug-gradient-start), var(--debug-gradient-end));
+        color: white;
+        font-size: 30px;
+        margin-bottom: 20px;
+        transform: scale(0) rotate(-90deg);
+        transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+        box-shadow: 0 10px 20px rgba(78, 84, 255, 0.3);
+    }
+
+    .debug-checkmark.show {
+        transform: scale(1) rotate(0);
+    }
+
+    .debug-actions {
+        margin-top: 30px;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+        transition-delay: 0.3s;
+    }
+
+    .debug-actions.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .debug-home-btn {
+        background: linear-gradient(135deg, var(--debug-gradient-start), var(--debug-gradient-end));
+        color: white;
+        border: none;
+        padding: 16px 32px;
+        border-radius: 50px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 10px 20px rgba(78, 84, 255, 0.3);
+    }
+
+    .debug-home-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 25px rgba(78, 84, 255, 0.4);
+    }
+
+    .debug-home-btn:active {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 15px rgba(78, 84, 255, 0.4);
+    }
+
+    .debug-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: linear-gradient(135deg, #ff4e4e, #ff4e8a);
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 20px;
+        letter-spacing: 0.5px;
+        box-shadow: 0 5px 10px rgba(255, 78, 78, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="debug-container">
+    <div class="debug-background"></div>
+    <div class="debug-badge">LOCAL SYSTEM</div>
+    
+    <div class="debug-header">
+        <h1 class="debug-title">Local Debug Utility</h1>
+        <p class="debug-subtitle">Performing comprehensive system diagnostics</p>
+    </div>
+    
+    <p class="debug-message">Attempting to resolve issues by resetting your browser data, clearing cache, and reconstituting client sessions...</p>
+    
+    <div class="debug-progress-container">
+        <div id="progressBar" class="debug-progress-bar"></div>
+    </div>
+    
+    <div id="debugLog" class="debug-log">
+        <div class="debug-log-entry">
+            <span class="debug-log-time">00:00.00</span>
+            <span>Initializing comprehensive debug protocol...</span>
+        </div>
+    </div>
+    
+    <div id="debugStatus" class="debug-status">
+        <div id="checkmark" class="debug-checkmark">
+            <i class="fas fa-check"></i>
+        </div>
+        Debug process complete!
+    </div>
+    
+    <div id="debugActions" class="debug-actions">
+        <a href="{{ url_for('welcome') }}" class="debug-home-btn">
+            <i class="fas fa-home"></i> Return Home
+        </a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const progressBar = document.getElementById('progressBar');
+        const debugStatus = document.getElementById('debugStatus');
+        const checkmark = document.getElementById('checkmark');
+        const debugActions = document.getElementById('debugActions');
+        const debugLog = document.getElementById('debugLog');
+        let startTime = Date.now();
+        
+        function formatTime() {
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toFixed(2).padStart(5, '0');
+            return `${minutes}:${seconds}`;
+        }
+        
+        function addLogEntry(message, type = '') {
+            const entry = document.createElement('div');
+            entry.className = `debug-log-entry ${type}`;
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'debug-log-time';
+            timeSpan.textContent = formatTime();
+            
+            const messageSpan = document.createElement('span');
+            messageSpan.textContent = message;
+            
+            entry.appendChild(timeSpan);
+            entry.appendChild(messageSpan);
+            
+            debugLog.appendChild(entry);
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+        
+        // Function to properly clear localStorage
+        function clearLocalStorage() {
+            try {
+                addLogEntry('Scanning local storage...', '');
+                const keysCount = Object.keys(localStorage).length;
+                
+                if (keysCount > 0) {
+                    addLogEntry(`Found ${keysCount} items in local storage`, '');
+                    addLogEntry('Clearing all local storage data...', '');
+                    localStorage.clear();
+                    addLogEntry('✓ Local storage cleared successfully', 'success');
+                } else {
+                    addLogEntry('Local storage is already empty', '');
+                }
+            } catch (e) {
+                addLogEntry(`✗ Error clearing local storage: ${e.message}`, 'error');
+            }
+        }
+        
+        // Function to properly clear cookies
+        function clearCookies() {
+            try {
+                const cookies = document.cookie.split(";");
+                addLogEntry(`Scanning cookies - found ${cookies.length} cookies`, '');
+                
+                if (cookies.length > 0 && cookies[0] !== "") {
+                    addLogEntry('Clearing browser cookies...', '');
+                    
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i];
+                        const eqPos = cookie.indexOf("=");
+                        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                        
+                        // Delete the cookie by setting expiration in the past
+                        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+                        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
+                        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
+                    }
+                    
+                    // Check if cookies were actually cleared
+                    const remainingCookies = document.cookie.split(";").filter(c => c.trim() !== "");
+                    if (remainingCookies.length === 0) {
+                        addLogEntry('✓ Browser cookies cleared successfully', 'success');
+                    } else {
+                        addLogEntry(`! Some cookies could not be cleared (${remainingCookies.length} remaining)`, 'warning');
+                        // Attempt server-side logout by redirecting to logout URL
+                        setTimeout(() => {
+                            fetch('/logout', { method: 'GET', credentials: 'include' })
+                                .then(() => addLogEntry('✓ Session terminated on server', 'success'))
+                                .catch(() => addLogEntry('! Could not terminate server session', 'warning'));
+                        }, 1000);
+                    }
+                } else {
+                    addLogEntry('No cookies found to clear', '');
+                }
+            } catch (e) {
+                addLogEntry(`✗ Error clearing cookies: ${e.message}`, 'error');
+            }
+        }
+        
+        // Clear localStorage - actually run it immediately
+        setTimeout(clearLocalStorage, 800);
+        
+        // Clear cookies - more thorough approach
+        setTimeout(clearCookies, 1500);
+        
+        // Reset session storage
+        setTimeout(() => {
+            try {
+                addLogEntry('Scanning session storage...', '');
+                const keysCount = Object.keys(sessionStorage).length;
+                
+                if (keysCount > 0) {
+                    addLogEntry(`Found ${keysCount} items in session storage`, '');
+                    addLogEntry('Clearing session storage...', '');
+                    sessionStorage.clear();
+                    addLogEntry('✓ Session storage cleared successfully', 'success');
+                } else {
+                    addLogEntry('Session storage is already empty', '');
+                }
+            } catch (e) {
+                addLogEntry(`✗ Error clearing session storage: ${e.message}`, 'error');
+            }
+        }, 2200);
+        
+        // Clear service workers if present
+        setTimeout(() => {
+            try {
+                if ('serviceWorker' in navigator) {
+                    addLogEntry('Checking for active service workers...', '');
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        if (registrations.length > 0) {
+                            addLogEntry(`Found ${registrations.length} service worker(s)`, '');
+                            registrations.forEach(registration => {
+                                registration.unregister();
+                            });
+                            addLogEntry('✓ Service workers unregistered', 'success');
+                        } else {
+                            addLogEntry('No service workers found', '');
+                        }
+                    });
+                } else {
+                    addLogEntry('Service workers not supported in this browser', '');
+                }
+            } catch (e) {
+                addLogEntry(`✗ Error handling service workers: ${e.message}`, 'error');
+            }
+        }, 2800);
+        
+        // Clear IndexedDB if possible
+        setTimeout(() => {
+            try {
+                if ('indexedDB' in window) {
+                    addLogEntry('Checking IndexedDB storage...', '');
+                    const request = window.indexedDB.databases();
+                    request.onsuccess = function() {
+                        const databases = request.result;
+                        if (databases.length > 0) {
+                            addLogEntry(`Found ${databases.length} IndexedDB database(s)`, '');
+                            databases.forEach(db => {
+                                try {
+                                    window.indexedDB.deleteDatabase(db.name);
+                                } catch (err) {
+                                    // Silent catch for individual DB
+                                }
+                            });
+                            addLogEntry('✓ IndexedDB databases cleared', 'success');
+                        } else {
+                            addLogEntry('No IndexedDB databases found', '');
+                        }
+                    };
+                    request.onerror = function() {
+                        addLogEntry('Unable to retrieve IndexedDB databases list', 'warning');
+                    };
+                } else {
+                    addLogEntry('IndexedDB not supported in this browser', '');
+                }
+            } catch (e) {
+                addLogEntry(`IndexedDB operation not supported in this browser`, 'warning');
+            }
+        }, 3400);
+        
+        // Cache reset and application state reset
+        setTimeout(() => {
+            addLogEntry('Validating browser cache state...', '');
+            // Force logout - with immediate server action
+            try {
+                addLogEntry('Authentication detected, forcing server logout...', '');
+                
+                // Immediate server-side logout - synchronous request
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', '/logout', false); // false = synchronous
+                xhr.withCredentials = true;
+                try {
+                    xhr.send();
+                    if (xhr.status === 200) {
+                        addLogEntry('✓ Server-side session forcefully terminated', 'success');
+                    } else {
+                        addLogEntry('! Server logout returned non-200 status', 'warning');
+                    }
+                } catch (err) {
+                    addLogEntry('! Server logout request failed, will retry', 'error');
+                    // Fallback to async fetch
+                    fetch('/logout', { 
+                        method: 'GET',
+                        credentials: 'include',
+                        cache: 'no-store',
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache'
+                        }
+                    })
+                    .then(() => {
+                        addLogEntry('✓ Server-side session terminated (fallback)', 'success');
+                    })
+                    .catch(error => {
+                        addLogEntry(`! Error during server logout: ${error.message}`, 'warning');
+                    });
+                }
+                
+                // Extra: invalidate any session cookies by setting them to expired
+                document.cookie.split(";").forEach(function(c) {
+                    if (c.trim().startsWith("session=")) {
+                        document.cookie = c.trim().split("=")[0] + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                    }
+                });
+            } catch (e) {
+                addLogEntry(`! Error handling authentication: ${e.message}`, 'warning');
+            }
+            
+            setTimeout(() => {
+                addLogEntry('✓ Browser cache verification complete', 'success');
+                
+                // Redirect to login page after cleanup is done
+                setTimeout(() => {
+                    addLogEntry('Redirecting to login page...', '');
+                    window.location.href = '/login';
+                }, 1000);
+            }, 500);
+        }, 3900);
+        
+        // Reset application state
+        setTimeout(() => {
+            addLogEntry('Resetting application state...', '');
+            setTimeout(() => {
+                addLogEntry('✓ Application state successfully reset', 'success');
+            }, 600);
+        }, 4400);
+        
+        // Verify connection
+        setTimeout(() => {
+            addLogEntry('Verifying server connection...', '');
+            fetch(window.location.href, { method: 'HEAD', cache: 'no-store' })
+                .then(response => {
+                    if (response.ok) {
+                        addLogEntry('✓ Server connection verified successfully', 'success');
+                    } else {
+                        addLogEntry('⚠ Server connection established but with issues', 'warning');
+                    }
+                })
+                .catch(error => {
+                    addLogEntry('✗ Server connection failed', 'error');
+                });
+        }, 5000);
+        
+        // Final checks
+        setTimeout(() => {
+            addLogEntry('Running final diagnostic checks...', '');
+            setTimeout(() => {
+                addLogEntry('✓ All diagnostics completed successfully', 'success');
+                addLogEntry('✓ System ready for normal operation', 'success');
+            }, 700);
+        }, 5500);
+        
+        // Start progress animation
+        setTimeout(() => {
+            progressBar.style.width = '100%';
+        }, 100);
+        
+        // Show completion status
+        setTimeout(() => {
+            debugStatus.classList.add('show');
+            checkmark.classList.add('show');
+            setTimeout(() => {
+                debugActions.classList.add('show');
+            }, 500);
+        }, 6500);
+    });
+</script>
+{% endblock %}

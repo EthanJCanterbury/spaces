@@ -1,0 +1,288 @@
+{% extends "errors/base_error.html" %}
+
+{% block head %}
+{{ super() }}
+<style>
+.error-icon {
+    color: var(--warning-color);
+}
+
+.error-box {
+    border-left: 5px solid var(--warning-color);
+}
+
+.gear-animation {
+    position: absolute;
+    opacity: 0.1;
+    z-index: 0;
+}
+
+.gear-1 {
+    top: 20px;
+    right: 20px;
+    animation: spin 10s linear infinite;
+}
+
+.gear-2 {
+    bottom: 20px;
+    left: 20px;
+    animation: spin-reverse 8s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+
+.error-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Enhanced error details styling */
+.error-details {
+    text-align: left;
+    margin-top: 2rem;
+}
+
+.error-section {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.error-section-title {
+    font-weight: 600;
+    color: var(--warning-color);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.code-snippet {
+    font-family: monospace;
+    background: #2d3436;
+    color: #dfe6e9;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    line-height: 1.5;
+    margin: 1rem 0;
+    position: relative;
+}
+
+.code-snippet pre {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.error-line {
+    background: rgba(255, 99, 71, 0.3);
+    display: block;
+}
+
+.stack-trace {
+    font-family: monospace;
+    font-size: 0.9rem;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+}
+
+.suggestions-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: #2d3436;
+}
+
+.suggestion-item i {
+    color: var(--warning-color);
+    margin-top: 0.2rem;
+}
+
+.copy-button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #dfe6e9;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.copy-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.error-path {
+    font-family: monospace;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.error-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+.metadata-item {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.metadata-item i {
+    color: var(--warning-color);
+}
+</style>
+{% endblock %}
+
+{% block error_icon %}
+<i class="fas fa-cogs"></i>
+{% endblock %}
+
+{% block error_title %}
+{{ error_type or 'Internal Server Error' }}
+{% endblock %}
+
+{% block error_message %}
+<div class="error-content">
+    <i class="fas fa-cog fa-3x gear-animation gear-1"></i>
+    <i class="fas fa-cog fa-4x gear-animation gear-2"></i>
+    <p>{{ error_message or 'Oops! Something went wrong on our end. Our team has been notified and is working to fix it.' }}</p>
+    
+    {% if file_name or line_number %}
+    <div class="error-metadata">
+        {% if file_name %}
+        <div class="metadata-item">
+            <i class="fas fa-file-code"></i>
+            <span class="error-path">{{ file_name }}</span>
+        </div>
+        {% endif %}
+        {% if line_number %}
+        <div class="metadata-item">
+            <i class="fas fa-map-marker-alt"></i>
+            Line {{ line_number }}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% if code_snippet %}
+    <div class="error-section">
+        <div class="error-section-title">
+            <i class="fas fa-code"></i>
+            Code Context
+        </div>
+        <div class="code-snippet">
+            <button class="copy-button" onclick="copyToClipboard(this)" data-clipboard-target="#codeSnippet">
+                <i class="fas fa-copy"></i> Copy
+            </button>
+            <pre id="codeSnippet">{{ code_snippet }}</pre>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if suggestions %}
+    <div class="error-section">
+        <div class="error-section-title">
+            <i class="fas fa-lightbulb"></i>
+            Suggestions
+        </div>
+        <ul class="suggestions-list">
+            {% for suggestion in suggestions %}
+            <li class="suggestion-item">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ suggestion }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    {% if traceback and config.DEBUG %}
+    <div class="error-section">
+        <div class="error-section-title">
+            <i class="fas fa-bug"></i>
+            Stack Trace
+        </div>
+        <div class="stack-trace">
+            <pre>{{ traceback }}</pre>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block error_actions %}
+<a href="{{ url_for('welcome') }}" class="error-btn error-btn-primary">
+    <i class="fas fa-home"></i> Back to Home
+</a>
+<button onclick="window.location.reload()" class="error-btn error-btn-secondary">
+    <i class="fas fa-redo"></i> Try Again
+</button>
+{% endblock %}
+
+{% block error_details %}
+<div class="error-details">
+    <p>Error Code: 500</p>
+    <p>Time: <span id="errorTime"></span></p>
+    <p>If this issue persists, please contact our support team.</p>
+</div>
+
+<script>
+document.getElementById('errorTime').textContent = new Date().toLocaleString();
+
+function copyToClipboard(button) {
+    const target = document.querySelector(button.dataset.clipboardTarget);
+    if (!target) return;
+    
+    const textArea = document.createElement('textarea');
+    textArea.value = target.textContent;
+    document.body.appendChild(textArea);
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => {
+            button.innerHTML = '<i class="fas fa-copy"></i> Copy';
+        }, 2000);
+    } catch (err) {
+        console.error('Failed to copy text:', err);
+    }
+    
+    document.body.removeChild(textArea);
+}
+</script>
+{% endblock %}

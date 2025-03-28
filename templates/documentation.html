@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/toolbar/prism-toolbar.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="docs-container">
+    <aside class="docs-sidebar">
+        <div class="sidebar-content">
+            <div class="sidebar-header">
+                <h3>Documentation</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <h4>Getting Started</h4>
+                    <ul>
+                        <li><a href="#introduction" class="active">Introduction</a></li>
+                        <li><a href="#quick-start">Quick Start Guide</a></li>
+                        <li><a href="#features">Features Overview</a></li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <h4>Core Concepts</h4>
+                    <ul>
+                        <li><a href="#sites">Sites & Projects</a></li>
+                        <li><a href="#editor">Code Editor</a></li>
+                        <li><a href="#deployment">Deployment</a></li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <h4>Guides</h4>
+                    <ul>
+                        <li><a href="#html-css">HTML & CSS Tips</a></li>
+                        <li><a href="#best-practices">Best Practices</a></li>
+                        <li><a href="#examples">Example Projects</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </aside>
+
+    <main class="docs-content">
+        <section id="introduction">
+            <h1>Welcome to HackClub Webspaces</h1>
+            <p class="lead">Build and deploy your websites instantly with our powerful, easy-to-use platform designed for students and creators.</p>
+            
+            <div class="info-box">
+                <div class="info-icon">🚀</div>
+                <div class="info-content">
+                    <h4>Getting Started is Easy</h4>
+                    <p>Create your first website in minutes! No complex setup or configuration required.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="quick-start">
+            <h2>Quick Start Guide</h2>
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Create a New Site</h3>
+                    <p>Click the "New Site" button in your dashboard to start a new project.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Edit Your Code</h3>
+                    <p>Use our powerful code editor to write HTML, CSS, and add content.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Deploy</h3>
+                    <p>Your changes are automatically saved and deployed. Share your site instantly!</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="features">
+            <h2>Features Overview</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <i class="fas fa-code"></i>
+                    <h3>Code Editor</h3>
+                    <p>Powerful editor with syntax highlighting and auto-completion.</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-bolt"></i>
+                    <h3>Instant Deploy</h3>
+                    <p>Changes go live immediately with automatic deployments.</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h3>Responsive Preview</h3>
+                    <p>Test your site's appearance across different devices.</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-link"></i>
+                    <h3>Custom Domain</h3>
+                    <p>Use your own domain name for a professional touch.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="html-css">
+            <h2>HTML & CSS Tips</h2>
+            <div class="code-example">
+                <h3>Responsive Design Example</h3>
+                <pre><code class="language-css">/* Mobile-first approach */
+.container {
+    width: 100%;
+    padding: 1rem;
+}
+
+/* Tablet and larger */
+@media (min-width: 768px) {
+    .container {
+        max-width: 720px;
+        margin: 0 auto;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .container {
+        max-width: 960px;
+    }
+}</code></pre>
+            </div>
+
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <h4>Use Semantic HTML</h4>
+                    <p>Choose meaningful tags like <code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, and <code>&lt;article&gt;</code> instead of generic <code>&lt;div&gt;</code>s.</p>
+                </div>
+                <div class="tip-card">
+                    <h4>CSS Best Practices</h4>
+                    <p>Organize your CSS with a consistent naming convention and use CSS custom properties for theming.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="best-practices">
+            <h2>Best Practices</h2>
+            <div class="practices-list">
+                <div class="practice-item">
+                    <h3>1. Optimize Images</h3>
+                    <p>Compress images and use appropriate formats (JPG for photos, PNG for graphics with transparency, SVG for icons).</p>
+                </div>
+                <div class="practice-item">
+                    <h3>2. Mobile-First Design</h3>
+                    <p>Start with mobile layouts and enhance for larger screens using media queries.</p>
+                </div>
+                <div class="practice-item">
+                    <h3>3. Performance</h3>
+                    <p>Minimize HTTP requests, use appropriate image sizes, and keep your code clean and efficient.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="examples">
+            <h2>Example Projects</h2>
+            <div class="examples-grid">
+                <div class="example-card">
+                    <div class="example-preview">
+                        <img src="https://source.unsplash.com/400x300/?portfolio" alt="Portfolio example">
+                    </div>
+                    <div class="example-content">
+                        <h3>Portfolio Site</h3>
+                        <p>A clean, modern portfolio template perfect for showcasing your work.</p>
+                        <a href="#" class="btn-secondary">View Template</a>
+                    </div>
+                </div>
+                <div class="example-card">
+                    <div class="example-preview">
+                        <img src="https://source.unsplash.com/400x300/?blog" alt="Blog example">
+                    </div>
+                    <div class="example-content">
+                        <h3>Blog Template</h3>
+                        <p>A responsive blog template with a focus on readability and content.</p>
+                        <a href="#" class="btn-secondary">View Template</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/toolbar/prism-toolbar.min.js"></script>
+{% endblock %}

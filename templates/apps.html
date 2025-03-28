@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackClub Apps</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="background-animation"></div>
+    <nav class="navbar">
+        {% include 'base.html' %}
+    </nav>
+
+    <main class="apps-container">
+        <br>
+        <br>
+        <br>
+        <div class="search-container">
+            <input type="text" id="appSearch" placeholder="Search apps..." onkeyup="filterApps()">
+        </div>
+
+        <div class="apps-grid" id="appsGrid">
+            <div class="app-card">
+                <img src="{{ url_for('static', filename='images/logo-rounded.png') }}" alt="Spaces" class="app-logo">
+                <h3>Spaces [Stable]</h3>
+                <p>Create and host static websites and Python scripts with automatic deployments and custom domain support.</p>
+                <a href="{{ url_for('welcome') }}" class="app-link">Launch →</a>
+            </div>
+            
+            <div class="app-card">
+                <img src="{{ url_for('static', filename='images/logo-rounded.png') }}" alt="Spaces For Clubs" class="app-logo">
+                <h3>Spaces For Clubs</h3>
+                <p>Empower your Hack Club with collaborative website and app building tools. Manage members and projects together.</p>
+                <a href="https://forms.hackclub.com/spacesclub" class="app-link" target="_blank">Apply →</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    function filterApps() {
+        const searchTerm = document.getElementById('appSearch').value.toLowerCase();
+        const cards = document.querySelectorAll('.app-card');
+        
+        cards.forEach(card => {
+            const title = card.querySelector('h3').textContent.toLowerCase();
+            const description = card.querySelector('p').textContent.toLowerCase();
+            
+            if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    </script>
+
+    <style>
+    .apps-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .search-container {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    #appSearch {
+        width: 100%;
+        max-width: 500px;
+        padding: 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1.1rem;
+    }
+
+    .apps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .app-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+
+    .app-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .app-logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 1rem;
+    }
+
+    .app-link {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        background: #ec3750;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .app-link.disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    </style>
+</body>
+</html>

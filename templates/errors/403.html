@@ -1,0 +1,73 @@
+{% extends "errors/base_error.html" %}
+
+{% block head %}
+{{ super() }}
+<style>
+.error-icon {
+    color: var(--error-color);
+}
+
+.error-box {
+    border-left: 5px solid var(--error-color);
+}
+
+.lock-animation {
+    position: relative;
+    display: inline-block;
+}
+
+.lock-animation i {
+    animation: lockShake 2s infinite;
+}
+
+@keyframes lockShake {
+    0%, 100% { transform: rotate(0); }
+    20%, 60% { transform: rotate(-12deg); }
+    40%, 80% { transform: rotate(12deg); }
+}
+
+.shield {
+    position: absolute;
+    opacity: 0.1;
+    font-size: 8rem;
+    z-index: 0;
+    right: -20px;
+    bottom: -20px;
+    transform: rotate(15deg);
+}
+</style>
+{% endblock %}
+
+{% block error_icon %}
+<div class="lock-animation">
+    <i class="fas fa-lock"></i>
+</div>
+{% endblock %}
+
+{% block error_title %}
+Access Denied
+{% endblock %}
+
+{% block error_message %}
+<div class="error-content">
+    <i class="fas fa-shield-alt shield"></i>
+    <p>Sorry, but you don't have permission to access this page.</p>
+    <p>If you believe this is a mistake, try signing in or contact the administrator.</p>
+</div>
+{% endblock %}
+
+{% block error_actions %}
+<a href="{{ url_for('welcome') }}" class="error-btn error-btn-primary">
+    <i class="fas fa-home"></i> Back to Home
+</a>
+<a href="{{ url_for('login') }}" class="error-btn error-btn-secondary">
+    <i class="fas fa-sign-in-alt"></i> Sign In
+</a>
+{% endblock %}
+
+{% block error_details %}
+<div class="error-details">
+    <p>Error Code: 403</p>
+    <p>If you need access to this resource, please request permissions from your administrator.</p>
+</div>
+{% endblock %}

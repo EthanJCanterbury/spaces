@@ -1,0 +1,150 @@
+{% extends "errors/base_error.html" %}
+
+{% block head %}
+{{ super() }}
+<style>
+.error-icon {
+    color: var(--warning-color);
+}
+
+.error-box {
+    border-left: 5px solid var(--warning-color);
+}
+
+.timer-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 2rem;
+}
+
+.timer-circle {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 4px solid #eee;
+}
+
+.timer-fill {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 4px solid var(--warning-color);
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    animation: timerSpin 2s linear infinite;
+}
+
+.timer-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5rem;
+    color: var(--warning-color);
+}
+
+@keyframes timerSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.retry-time {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--warning-color);
+    margin: 1rem 0;
+}
+
+.progress-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--warning-color);
+    opacity: 0.3;
+    animation: dotPulse 1.5s infinite;
+}
+
+.dot:nth-child(2) { animation-delay: 0.5s; }
+.dot:nth-child(3) { animation-delay: 1s; }
+
+@keyframes dotPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+</style>
+{% endblock %}
+
+{% block error_icon %}
+<div class="timer-container">
+    <div class="timer-circle"></div>
+    <div class="timer-fill"></div>
+    <div class="timer-icon">
+        <i class="fas fa-hourglass-half"></i>
+    </div>
+</div>
+{% endblock %}
+
+{% block error_title %}
+Too Many Requests
+{% endblock %}
+
+{% block error_message %}
+<div class="error-content">
+    <p>Whoa there! You've made too many requests in a short time.</p>
+    <p>Please wait a moment before trying again.</p>
+    <div class="retry-time">
+        Try again in <span id="countdown">30</span> seconds
+    </div>
+    <div class="progress-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block error_actions %}
+<button id="retryBtn" class="error-btn error-btn-primary" disabled>
+    <i class="fas fa-redo"></i> Try Again
+</button>
+<a href="{{ url_for('welcome') }}" class="error-btn error-btn-secondary">
+    <i class="fas fa-home"></i> Back to Home
+</a>
+{% endblock %}
+
+{% block error_details %}
+<div class="error-details">
+    <p>Error Code: 429</p>
+    <p>This limit helps ensure fair usage of our services for all users.</p>
+</div>
+
+<script>
+let timeLeft = 30;
+const countdownEl = document.getElementById('countdown');
+const retryBtn = document.getElementById('retryBtn');
+
+function updateCountdown() {
+    if (timeLeft > 0) {
+        timeLeft--;
+        countdownEl.textContent = timeLeft;
+        setTimeout(updateCountdown, 1000);
+    } else {
+        retryBtn.disabled = false;
+        retryBtn.onclick = () => window.location.reload();
+        document.querySelector('.retry-time').innerHTML = '<span style="color: var(--success-color);">You can try again now!</span>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', updateCountdown);
+</script>
+{% endblock %}

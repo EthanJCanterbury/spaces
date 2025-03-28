@@ -1,0 +1,29 @@
+{% extends "errors/base_error.html" %}
+
+{% block error_icon %}
+<i class="fas fa-map-signs"></i>
+{% endblock %}
+
+{% block error_title %}
+Page Not Found
+{% endblock %}
+
+{% block error_message %}
+Oops! The page you're looking for seems to have wandered off. Don't worry though, we can help you find your way back.
+{% endblock %}
+
+{% block error_actions %}
+<a href="{{ url_for('welcome') }}" class="error-btn error-btn-primary">
+    <i class="fas fa-home"></i> Back to Home
+</a>
+<button onclick="window.history.back()" class="error-btn error-btn-secondary">
+    <i class="fas fa-arrow-left"></i> Go Back
+</button>
+{% endblock %}
+
+{% block error_details %}
+<div class="error-details">
+    <p>Error Code: 404</p>
+    <p>If you believe this is a mistake, please contact our support team.</p>
+</div>
+{% endblock %}

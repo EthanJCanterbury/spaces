@@ -1,0 +1,239 @@
+{% extends "errors/base_error.html" %}
+
+{% block head %}
+{{ super() }}
+<style>
+.error-icon {
+    color: var(--info-color);
+}
+
+.error-box {
+    border-left: 5px solid var(--info-color);
+}
+
+.status-code {
+    font-family: monospace;
+    font-size: 1.2rem;
+    background: rgba(33, 150, 243, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 0.3rem;
+    color: var(--info-color);
+    display: inline-block;
+    margin: 1rem 0;
+}
+
+.error-suggestions {
+    text-align: left;
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.suggestion-item:last-child {
+    margin-bottom: 0;
+}
+
+.suggestion-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-right: 1rem;
+    color: var(--info-color);
+}
+
+.suggestion-text {
+    flex-grow: 1;
+    color: #4a5568;
+}
+
+.helpful-links {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+}
+
+.link-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.link-item {
+    text-decoration: none;
+    color: var(--info-color);
+    padding: 0.5rem 1rem;
+    border-radius: 0.3rem;
+    background: rgba(33, 150, 243, 0.1);
+    transition: all 0.3s ease;
+}
+
+.link-item:hover {
+    background: rgba(33, 150, 243, 0.2);
+    transform: translateY(-2px);
+}
+
+.error-image {
+    max-width: 200px;
+    margin: 2rem auto;
+    opacity: 0.8;
+}
+
+/* Loading animation for status check */
+.loading-dots {
+    display: inline-flex;
+    gap: 0.3rem;
+    margin-left: 0.5rem;
+}
+
+.loading-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+    opacity: 0.6;
+    animation: loadingDot 1.4s infinite;
+}
+
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loadingDot {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+</style>
+{% endblock %}
+
+{% block error_icon %}
+<i class="fas fa-exclamation-triangle"></i>
+{% endblock %}
+
+{% block error_title %}
+{{ error_title|default('Something Went Wrong', true) }}
+{% endblock %}
+
+{% block error_message %}
+<div class="error-content">
+    <div class="status-code">
+        Status Code: {{ status_code|default('500', true) }}
+    </div>
+    
+    <p>{{ error_message|default('We encountered an unexpected error while processing your request.', true) }}</p>
+    
+    <div class="error-suggestions">
+        <div class="suggestion-item">
+            <div class="suggestion-icon">
+                <i class="fas fa-sync"></i>
+            </div>
+            <div class="suggestion-text">
+                Try refreshing the page - sometimes that's all it takes!
+            </div>
+        </div>
+        
+        <div class="suggestion-item">
+            <div class="suggestion-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="suggestion-text">
+                Wait a few minutes and try again - the issue might resolve itself.
+            </div>
+        </div>
+        
+        <div class="suggestion-item">
+            <div class="suggestion-icon">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <div class="suggestion-text">
+                Clear your browser cache and cookies, then try again.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block error_actions %}
+<button onclick="checkServerStatus()" class="error-btn error-btn-primary" id="checkStatusBtn">
+    <i class="fas fa-sync"></i> Check Server Status
+    <span class="loading-dots" style="display: none;">
+        <span class="loading-dot"></span>
+        <span class="loading-dot"></span>
+        <span class="loading-dot"></span>
+    </span>
+</button>
+<button onclick="window.history.back()" class="error-btn error-btn-secondary">
+    <i class="fas fa-arrow-left"></i> Go Back
+</button>
+{% endblock %}
+
+{% block error_details %}
+<div class="error-details">
+    <div class="helpful-links">
+        <h3>Helpful Links</h3>
+        <div class="link-list">
+            <a href="{{ url_for('welcome') }}" class="link-item">
+                <i class="fas fa-home"></i> Homepage
+            </a>
+            <a href="https://docs.hackclub.com" class="link-item">
+                <i class="fas fa-book"></i> Documentation
+            </a>
+            <a href="https://hackclub.com/support" class="link-item">
+                <i class="fas fa-question-circle"></i> Support
+            </a>
+        </div>
+    </div>
+    
+    <p>Error ID: {{ error_id|default(range(1000, 9999)|random, true) }}</p>
+    <p>Time: <span id="errorTime"></span></p>
+</div>
+
+<script>
+document.getElementById('errorTime').textContent = new Date().toLocaleString();
+
+async function checkServerStatus() {
+    const btn = document.getElementById('checkStatusBtn');
+    const loadingDots = btn.querySelector('.loading-dots');
+    
+    btn.disabled = true;
+    loadingDots.style.display = 'inline-flex';
+    
+    try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        
+        if (data.status === 'ok') {
+            showToast('success', 'Server is operational! Try refreshing the page.');
+        } else {
+            showToast('warning', 'Server is experiencing issues. Please try again later.');
+        }
+    } catch (error) {
+        showToast('error', 'Could not check server status. Please try again later.');
+    } finally {
+        btn.disabled = false;
+        loadingDots.style.display = 'none';
+    }
+}
+
+function showToast(type, message) {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+:root {
+    --primary-color: #6a0dad;
+    --error-color: #ed6663;
+    --success-color: #4caf50;
+    --warning-color: #ff9800;
+    --info-color: #2196f3;
+}
+
+.error-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #f8f9fa 100%);
+}
+
+.error-box {
+    background: white;
+    padding: 3rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    animation: slideIn 0.5s ease-out;
+}
+
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    animation: bounce 2s infinite;
+    color: var(--error-color);
+}
+
+.error-title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #2d3436;
+    font-weight: 700;
+}
+
+.error-message {
+    font-size: 1.2rem;
+    color: #636e72;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-btn {
+    padding: 0.8rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.error-btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.error-btn-secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.error-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.error-btn:active {
+    transform: translateY(0);
+}
+
+.error-details {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-20px);
+    }
+    60% {
+        transform: translateY(-10px);
+    }
+}
+
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    background: var(--primary-color);
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: float 3s infinite ease-in-out;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .error-box {
+        padding: 2rem;
+    }
+    
+    .error-title {
+        font-size: 2rem;
+    }
+    
+    .error-message {
+        font-size: 1rem;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+    }
+    
+    .error-btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="particles" id="particles"></div>
+    <div class="error-box">
+        <div class="error-icon">
+            {% block error_icon %}
+            <i class="fas fa-exclamation-circle"></i>
+            {% endblock %}
+        </div>
+        <h1 class="error-title">
+            {% block error_title %}
+            Error
+            {% endblock %}
+        </h1>
+        <div class="error-message">
+            {% block error_message %}
+            An error has occurred.
+            {% endblock %}
+        </div>
+        <div class="error-actions">
+            {% block error_actions %}
+            <a href="{{ url_for('welcome') }}" class="error-btn error-btn-primary">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+            {% endblock %}
+        </div>
+        {% block error_details %}{% endblock %}
+    </div>
+</div>
+
+<script>
+function createParticles() {
+    const container = document.getElementById('particles');
+    const particleCount = 20;
+    
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        // Random size between 5 and 15px
+        const size = Math.random() * 10 + 5;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        
+        // Random position
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.top = `${Math.random() * 100}%`;
+        
+        // Random animation delay
+        particle.style.animationDelay = `${Math.random() * 2}s`;
+        
+        container.appendChild(particle);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', createParticles);
+</script>
+{% endblock %}

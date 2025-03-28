@@ -1,0 +1,3794 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-sidebar">
+        <div class="admin-profile">
+            <div class="profile-avatar">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="profile-info">
+                <h3>{{ current_user.username }}</h3>
+                <span class="admin-badge">Full-Administrator</span>
+            </div>
+        </div>
+
+        <nav class="admin-nav">
+            <ul>
+                <li>
+                    <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#users" class="nav-link" data-section="users">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#sites" class="nav-link" data-section="sites">
+                        <i class="fas fa-globe"></i>
+                        <span>Sites</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#admins" class="nav-link" data-section="admins">
+                        <i class="fas fa-user-cog"></i>
+                        <span>Admins</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#analytics" class="nav-link" data-section="analytics">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#settings" class="nav-link" data-section="settings">
+                        <i class="fas fa-cogs"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="admin-sidebar-footer">
+            <div class="sidebar-collapse-btn" id="sidebarCollapseBtn">
+                <i class="fas fa-chevron-left"></i>
+            </div>
+            <a href="/logout" class="logout-link">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-content">
+        <div class="admin-header">
+            <h1><i class="fas fa-shield-alt"></i> Hack Club HQ | Panel for Spaces Admins</h1>
+            <div class="header-actions">
+                <button class="btn-primary email-btn" onclick="emailAllUsers()">
+                    <i class="fas fa-envelope"></i> Email All Users
+                </button>
+                <button class="btn-success refresh-btn" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Refresh Data
+                </button>
+            </div>
+        </div>
+
+        <section id="dashboard" class="admin-section active">
+            <div class="section-header">
+                <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                <p>Overview of Hack Club Space's performance and statistics YAY!!!</p>
+                <p>This is a very early version of this dash since I like just made it. ~ Ethan</p>
+            </div>
+
+            <div class="dashboard-stats">
+                <div class="stats-wrapper">
+                    <div class="stat-card">
+                        <div class="stat-icon user-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>{{ users|length }}</h3>
+                            <p>Total Users</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon user-icon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>{{ sites|length }}</h3>
+                            <p>Total Sites</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon admin-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="adminCount">Loading...</h3>
+                            <p>Admins</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-row">
+                <div class="dashboard-card recent-activity">
+                    <div class="card-header">
+                        <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                    </div>
+                    <div class="card-content">
+                        <ul class="activity-list" id="recentActivitiesList">
+                            <li class="activity-item activity-loading">
+                                <div class="loading-spinner"></div>
+                                <span>Loading recent activities...</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="dashboard-card system-status">
+                    <div class="card-header">
+                        <h3><i class="fas fa-server"></i> System Status</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="status-item">
+                            <span class="status-label">Server Status</span>
+                            <span id="serverStatus" class="status-value">Checking... <i class="fas fa-spinner fa-spin"></i></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Database</span>
+                            <span id="databaseStatus" class="status-value">Checking... <i class="fas fa-spinner fa-spin"></i></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Last Backup</span>
+                            <span id="lastBackup" class="status-value">Checking... <i class="fas fa-spinner fa-spin"></i></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Version</span>
+                            <span class="status-value">{{ version }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="users" class="admin-section">
+            <div class="section-header">
+                <h2><i class="fas fa-users"></i> Users Management</h2>
+                <p>View and manage all user accounts</p>
+            </div>
+
+            <div class="section-actions">
+                <div class="search-container">
+                    <input type="text" id="userSearch" class="search-input" placeholder="Search users..." oninput="filterUsers()">
+                    <i class="fas fa-search"></i>
+                </div>
+
+                <div class="bulk-actions">
+                    <button class="btn-warning bulk-action" onclick="handleBulkAction('suspend')" disabled>
+                        <i class="fas fa-user-lock"></i> Suspend Selected
+                    </button>
+                    <button class="btn-warning bulk-action" onclick="handleBulkAction('unsuspend')" disabled>
+                        <i class="fas fa-user-check"></i> Unsuspend Selected
+                    </button>
+                    <button class="btn-danger bulk-action" onclick="handleBulkAction('deleteSites')" disabled>
+                        <i class="fas fa-trash-alt"></i> Delete Sites
+                    </button>
+                    <button class="btn-danger bulk-action" onclick="handleBulkAction('deleteUsers')" disabled>
+                        <i class="fas fa-user-times"></i> Delete Users
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                            </th>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Created At</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                {% if user.id != current_user.id %}
+                                <input type="checkbox" class="user-select" data-userid="{{ user.id }}" data-username="{{ user.username }}" onchange="updateBulkActions()">
+                                {% endif %}
+                            </td>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                <span class="status-badge {{ 'suspended' if user.is_suspended else 'active' }}">
+                                    {{ 'Suspended' if user.is_suspended else 'Active' }}
+                                </span>
+                                {% if user.is_club_leader %}
+                                <span class="status-badge club-leader">
+                                    Club Leader
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="actions-cell">
+                                <div class="action-dropdown">
+                                    <button class="action-dropdown-btn">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <div class="action-dropdown-content">
+                                        <button onclick="viewUserDetails({{ user.id }})" class="dropdown-item">
+                                            <i class="fas fa-eye"></i>
+                                            <span>View Details</span>
+                                        </button>
+                                        {% if user.id != current_user.id %}
+                                        <button onclick="toggleSuspension({{ user.id }}, '{{ user.username }}', {{ 'false' if user.is_suspended else 'true' }})" class="dropdown-item">
+                                            <i class="fas fa-{{ 'user-check' if user.is_suspended else 'user-lock' }}"></i>
+                                            <span>{{ 'Unsuspend' if user.is_suspended else 'Suspend' }}</span>
+                                        </button>
+                                        <button onclick="toggleClubLeader({{ user.id }}, '{{ user.username }}', {{ 'false' if user.is_club_leader else 'true' }})" class="dropdown-item">
+                                            <i class="fas fa-{{ 'user-minus' if user.is_club_leader else 'user-plus' }}"></i>
+                                            <span>{{ 'Remove Club Leader' if user.is_club_leader else 'Make Club Leader' }}</span>
+                                        </button>
+                                        <button onclick="deleteAllSites({{ user.id }}, '{{ user.username }}')" class="dropdown-item">
+                                            <i class="fas fa-trash-alt"></i>
+                                            <span>Delete All Sites</span>
+                                        </button>
+                                        <button onclick="deleteUser({{ user.id }}, '{{ user.username }}')" class="dropdown-item text-danger">
+                                            <i class="fas fa-trash-alt"></i>
+                                            <span>Delete User</span>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <button class="btn-page"><i class="fas fa-chevron-left"></i></button>
+                <button class="btn-page active">1</button>
+                <button class="btn-page">2</button>
+                <button class="btn-page">3</button>
+                <span class="pagination-ellipsis">...</span>
+                <button class="btn-page">10</button>
+                <button class="btn-page"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </section>
+
+        <section id="sites" class="admin-section">
+            <div class="section-header">
+                <h2><i class="fas fa-globe"></i> Sites Management</h2>
+                <p>Monitor all sites created by users (please check for sus stuff)</p>
+            </div>
+
+            <div class="section-actions">
+                <div class="search-container">
+                    <input type="text" id="siteSearch" class="search-input" placeholder="Search sites..." oninput="filterSites()">
+                    <i class="fas fa-search"></i>
+                </div>
+
+                <div class="filter-dropdown">
+                    <button class="btn-secondary filter-btn">
+                        <i class="fas fa-filter"></i> Filter
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="filter-menu">
+                        <div class="filter-option">
+                            <input type="checkbox" id="filterWeb" checked>
+                            <label for="filterWeb">Web Sites</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="filterPython" checked>
+                            <label for="filterPython">Python Sites</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="filterRecent">
+                            <label for="filterRecent">Recently Updated</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Owner</th>
+                            <th>Type</th>
+                            <th>Created At</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="siteTableBody">
+                        {% for site in sites %}
+                        <tr>
+                            <td>{{ site.id }}</td>
+                            <td>
+                                <div class="site-name">
+                                    <span class="site-icon">
+                                        <i class="fas fa-{{ 'globe' if site.site_type == 'web' else 'code' }}"></i>
+                                    </span>
+                                    {{ site.name }}
+                                </div>
+                            </td>
+                            <td>{{ site.user.username }}</td>
+                            <td>
+                                <span class="type-badge {{ site.site_type }}">
+                                    {{ site.site_type|capitalize }}
+                                </span>
+                            </td>
+                            <td>{{ site.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ site.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td class="actions-cell">
+                                <div class="action-dropdown">
+                                    <button class="action-dropdown-btn">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <div class="action-dropdown-content">
+                                        <a href="/s/{{ site.slug }}" target="_blank" class="dropdown-item">
+                                            <i class="fas fa-eye"></i>
+                                            <span>View Site</span>
+                                        </a>
+                                        <a href="/edit/{{ site.id }}" class="dropdown-item">
+                                            <i class="fas fa-pencil-alt"></i>
+                                            <span>Edit Site</span>
+                                        </a>
+                                        <button onclick="deleteSite({{ site.id }}, '{{ site.name }}')" class="dropdown-item text-danger">
+                                            <i class="fas fa-trash-alt"></i>
+                                            <span>Delete Site</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <button class="btn-page"><i class="fas fa-chevron-left"></i></button>
+                <button class="btn-page active">1</button>
+                <button class="btn-page">2</button>
+                <button class="btn-page">3</button>
+                <span class="pagination-ellipsis">...</span>
+                <button class="btn-page">10</button>
+                <button class="btn-page"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </section>
+
+        <section id="admins" class="admin-section">
+            <div class="section-header">
+                <h2><i class="fas fa-user-shield"></i> Admin Management</h2>
+                <p>Manage administrator accounts and permissions (stop removing Ethan's admin ):<)</p>
+            </div>
+
+            <div class="admin-management">
+                <div class="admin-list-container">
+                    <div class="card-header">
+                        <h3><i class="fas fa-users-cog"></i> Current Administrators</h3>
+                    </div>
+                    <ul id="adminList" class="admin-list">
+                        <li class="admin-list-loading">
+                            <div class="loading-spinner"></div>
+                            <span>Loading admins...</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="add-admin-form">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user-plus"></i> Add New Administrator</h3>
+                    </div>
+                    <div class="form-content">
+                        <p>Grant administrator privileges to an existing user account</p>
+                        <div class="form-group">
+                            <label for="newAdminUsername">
+                                <i class="fas fa-user"></i>
+                                Username
+                            </label>
+                            <div class="input-with-icon">
+                                <input type="text" id="newAdminUsername" placeholder="Enter username" class="admin-input">
+                                <i class="fas fa-search"></i>
+                            </div>
+                        </div>
+                        <button onclick="addAdmin()" class="btn-primary add-admin-btn">
+                            <i class="fas fa-plus"></i> Add as Administrator
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="analytics" class="admin-section">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-line"></i> Analytics</h2>
+                <p>nerdy analytic stuff lol</p>
+            </div>
+
+            <div class="analytics-timeframe">
+                <button class="time-btn active" data-period="day" onclick="updateAnalytics('day')">Day</button>
+                <button class="time-btn" data-period="week" onclick="updateAnalytics('week')">Week</button>
+                <button class="time-btn" data-period="month" onclick="updateAnalytics('month')">Month</button>
+                <button class="time-btn" data-period="year" onclick="updateAnalytics('year')">Year</button>
+                <div class="date-picker">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Custom Range</span>
+                </div>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="analytics-card wide">
+                    <div class="card-header">
+                        <h3>User Registrations</h3>
+                        <div class="card-actions">
+                            <button class="btn-icon" onclick="exportChart('userRegistrations')"><i class="fas fa-download"></i></button>
+                            <button class="btn-icon"><i class="fas fa-ellipsis-v"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div id="userRegistrationsChart" class="chart-placeholder">
+                            <div class="loading-spinner"></div>
+                            <p>Loading chart data...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <div class="card-header">
+                        <h3>Site Types</h3>
+                        <div class="card-actions">
+                            <button class="btn-icon" onclick="exportChart('siteTypes')"><i class="fas fa-download"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div id="siteTypesChart" class="chart-placeholder">
+                            <div class="loading-spinner"></div>
+                            <p>Loading chart data...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <div class="card-header">
+                        <h3>Traffic Sources</h3>
+                        <div class="card-actions">
+                            <button class="btn-icon" onclick="exportChart('trafficSources')"><i class="fas fa-download"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div id="trafficSourcesChart" class="chart-placeholder">
+                            <div class="loading-spinner"></div>
+                            <p>Loading chart data...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analytics-card wide">
+                    <div class="card-header">
+                        <h3>Platform Usage</h3>
+                        <div class="card-actions">
+                            <button class="btn-icon" onclick="exportChart('platformUsage')"><i class="fas fa-download"></i></button>
+                            <button class="btn-icon"><i class="fas fa-ellipsis-v"></i></button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div id="platformUsageChart" class="chart-placeholder">
+                            <div class="loading-spinner"></div>
+                            <p>Loading chart data...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="settings" class="admin-section">
+            <div class="section-header">
+                <h2><i class="fas fa-cogs"></i> Admin Settings</h2>
+                <p>Configure platform settings and preferences</p>
+            </div>
+
+            <div class="settings-container">
+                <div class="settings-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user-friends"></i> Site Limit Settings</h3>
+                    </div>
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label>User Limits</label>
+                            <div class="input-group">
+                                <span class="input-label">Max Sites Per User</span>
+                                <input type="number" id="maxSitesPerUser" value="0.0" min="1" max="100" class="number-input">
+                            </div>
+                        </div>
+
+                        <button class="btn-primary" onclick="saveMaxSitesPerUser()">Save Site Limit</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="userDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user"></i> User Details</h2>
+                <button class="close-btn" onclick="closeUserDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="user-info-container">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div id="userDetailContent" class="user-details">
+                    </div>
+                </div>
+                <div class="user-edit-container">
+                    <h3><i class="fas fa-user-edit"></i> Edit User</h3>
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="form-group">
+                            <label for="editUsername">Username</label>
+                            <input type="text" id="editUsername" class="settings-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="editEmail">Email</label>
+                            <input type="email" id="editEmail" class="settings-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="resetPassword">New Password</label>
+                            <div class="password-input-group">
+                                <input type="password" id="resetPassword" class="settings-input" placeholder="Leave blank to keep current password">
+                                <button type="button" class="btn-icon toggle-password">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeUserDetailModal()">Close</button>
+                <button class="btn-primary" onclick="saveUserChanges()">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('.admin-section');
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+
+            const sectionId = link.getAttribute('data-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+                if (section.id === sectionId) {
+                    section.classList.add('active');
+                    section.classList.add('section-entrance');
+                    setTimeout(() => {
+                        section.classList.remove('section-entrance');
+                    }, 500);
+                }
+            });
+
+            window.location.hash = sectionId;
+        });
+    });
+
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+        const activeLink = document.querySelector(`.nav-link[data-section="${hash}"]`);
+        if (activeLink) {
+            activeLink.click();
+        }
+    }
+
+    const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+    const adminContainer = document.querySelector('.admin-container');
+
+    sidebarCollapseBtn.addEventListener('click', () => {
+        adminContainer.classList.toggle('sidebar-collapsed');
+    });
+
+    loadAdminList();
+});
+
+function filterUsers() {
+    const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+    const rows = document.getElementById('userTableBody').getElementsByTagName('tr');
+
+    for (let row of rows) {
+        const username = row.cells[2].textContent.toLowerCase();
+        const email = row.cells[3].textContent.toLowerCase();
+
+        if (username.includes(searchTerm) || email.includes(searchTerm)) {
+            row.style.display = '';
+            row.classList.add('fade-in');
+            setTimeout(() => {
+                row.classList.remove('fade-in');
+            }, 300);
+        } else {
+            row.style.display = 'none';
+        }
+    }
+}
+
+function filterSites() {
+    const searchTerm = document.getElementById('siteSearch').value.toLowerCase();
+    const rows = document.getElementById('siteTableBody').getElementsByTagName('tr');
+
+    for (let row of rows) {
+        const name = row.cells[1].textContent.toLowerCase();
+        const owner = row.cells[2].textContent.toLowerCase();
+
+        if (name.includes(searchTerm) || owner.includes(searchTerm)) {
+            row.style.display = '';
+            row.classList.add('fade-in');
+            setTimeout(() => {
+                row.classList.remove('fade-in');
+            }, 300);
+        } else {
+            row.style.display = 'none';
+        }
+    }
+}
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.user-select');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+
+    updateBulkActions();
+}
+
+function updateBulkActions() {
+    const selectedUsers = document.querySelectorAll('.user-select:checked');
+    const bulkActions = document.querySelectorAll('.bulk-action');
+
+    bulkActions.forEach(button => {
+        button.disabled = selectedUsers.length === 0;
+    });
+}
+
+function emailAllUsers() {
+    const rows = document.getElementById('userTableBody').getElementsByTagName('tr');
+    const emails = [];
+
+    for (let row of rows) {
+        const emailCell = row.cells[3]; 
+        if (emailCell) {
+            emails.push(emailCell.textContent.trim());
+        }
+    }
+
+    if (emails.length > 0) {
+        showToast('info', `Preparing email to ${emails.length} users`);
+        window.location.href = `mailto:${emails.join(',')}`;
+    } else {
+        showToast('error', 'No email addresses found');
+    }
+}
+
+async function toggleSuspension(userId, username, suspend) {
+    if (!confirm(`Are you sure you want to ${suspend ? 'suspend' : 'unsuspend'} user "${username}"?`)) return;
+
+    try {
+        showToast('info', `Processing ${suspend ? 'suspension' : 'unsuspension'}...`);
+
+        const response = await fetch(`/api/admin/users/${userId}/suspend`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ suspend })
+        });
+
+        if (response.ok) {
+            showToast('success', `User ${suspend ? 'suspended' : 'unsuspended'} successfully`);
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            const data = await response.json();
+            showToast('error', data.message || 'Failed to update user suspension status');
+        }
+    } catch (error) {
+        showToast('error', 'Failed to update user suspension status');
+    }
+}
+
+async function toggleClubLeader(userId, username, makeLeader) {
+    if (!confirm(`Are you sure you want to ${makeLeader ? 'make' : 'remove'} "${username}" ${makeLeader ? 'as a' : 'from being a'} club leader?`)) return;
+
+    try {
+        showToast('info', `${makeLeader ? 'Adding' : 'Removing'} club leader status...`);
+
+        const response = await fetch(`/api/admin/users/${userId}/club-leader`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ is_club_leader: makeLeader })
+        });
+
+        if (response.ok) {
+            showToast('success', `User ${makeLeader ? 'is now' : 'is no longer'} a club leader`);
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            const data = await response.json();
+            showToast('error', data.message || 'Failed to update club leader status');
+        }
+    } catch (error) {
+        showToast('error', 'Failed to update club leader status');
+    }
+}
+
+async function deleteAllSites(userId, username) {
+    if (!confirm(`Are you sure you want to delete ALL sites for user "${username}"? This action cannot be undone.`)) return;
+
+    try {
+        showToast('info', 'Deleting sites...');
+
+        const response = await fetch(`/api/admin/users/${userId}/sites`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            showToast('success', `All sites for user "${username}" deleted successfully`);
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            const data = await response.json();
+            showToast('error', data.message || 'Failed to delete user sites');
+        }
+    } catch (error) {
+        showToast('error', 'Failed to delete user sites');
+    }
+}
+
+async function deleteUser(userId, username) {
+    if (!confirm(`Are you sure you wantto delete user "${username}"? This action cannot be undone.`)) return;
+
+    try {
+        showToast('info', 'Deleting user...');
+
+        const response = await fetch(`/api/admin/users/${userId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            showToast('success', `User "${username}" deleted successfully`);
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            const data= await response.json();
+            showToast('error', data.message || 'Failed to delete user');
+        }
+    } catch (error) {
+        showToast('error', 'Failed to delete user');
+    }
+}
+
+async function deleteSite(siteId, siteName) {
+    if (!confirm(`Are you sure you want to delete site "${siteName}"? Thisaction cannot be undone.`)) return;
+
+    try {
+        showToast('info', 'Deleting site...');
+
+        const response = await fetch(`/api/admin/sites/${siteId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            showToast('success', `Site "${siteName}" deleted successfully`);
+            setTimeout(() => {
+                                location.reload();
+            }, 1000);
+        } else {
+            const data = await response.json();
+            showToast('error', data.message || 'Failed to delete site');
+        }
+    } catch (error) {
+        showToast('error', 'Failed to delete site');
+    }
+}
+
+async function handleBulkAction(action) {
+    const selectedUsers = Array.from(document.querySelectorAll('.user-select:checked')).map(checkbox => ({
+        id: checkbox.dataset.userid,
+        username: checkbox.dataset.username
+    }));
+
+    if (!selectedUsers.length) return;
+
+    const actionMessages = {
+        suspend: 'suspend',
+        unsuspend: 'unsuspend',
+        deleteSites: 'delete all sites for',
+        deleteUsers: 'delete'
+    };
+
+    const usernames = selectedUsers.map(user => user.username).join(', ');
+    if (!confirm(`Are you sure you want to ${actionMessages[action]} the following users: ${usernames}?`)) return;
+
+    showToast('info', `Processing bulk action: ${action}...`);
+
+    try {
+        for (const user of selectedUsers) {
+            let endpoint;
+            let method = 'POST';
+
+            switch(action) {
+                case 'suspend':
+                    endpoint = `/api/admin/users/${user.id}/suspend`;
+                    break;
+                case 'unsuspend':
+                    endpoint = `/api/admin/users/${user.id}/suspend`;
+                    break;
+                case 'deleteSites':
+                    endpoint = `/api/admin/users/${user.id}/sites`;
+                    method = 'DELETE';
+                    break;
+                case 'deleteUsers':
+                    endpoint = `/api/admin/users/${user.id}`;
+                    method = 'DELETE';
+                    break;
+            }
+
+            const response = await fetch(endpoint, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: action === 'suspend' ? JSON.stringify({ suspend: true }) :
+                      action === 'unsuspend' ? JSON.stringify({ suspend: false }) :
+                      null
+            });
+
+            if (!response.ok) throw new Error(`Failed to ${action} user ${user.username}`);
+        }
+
+        showToast('success', `Successfully performed ${action} on selected users`);
+        setTimeout(() => location.reload(), 1000);
+    } catch (error) {
+        showToast('error', error.message);
+    }
+}
+
+async function loadAdminList() {
+    try {
+        const response = await fetch('/api/admin/admins');
+        if (response.ok) {
+            const data = await response.json();
+            const adminList = document.getElementById('adminList');
+            adminList.innerHTML = '';
+
+            const adminCount = document.getElementById('adminCount');
+            if (adminCount) {
+                adminCount.textContent = data.admins.length;
+            }
+
+            data.admins.forEach(admin => {
+                const li = document.createElement('li');
+                li.className = 'admin-item';
+
+                const adminName = document.createElement('span');
+                adminName.textContent = admin;
+                adminName.className = 'admin-name';
+
+                const adminEmail = document.createElement('span');
+                adminEmail.textContent = 'admin@example.com';
+                adminEmail.className = 'admin-email';
+
+                                const adminInfo = document.createElement('div');
+                adminInfo.className = 'admin-info';
+                adminInfo.appendChild(adminName);
+                adminInfo.appendChild(adminEmail);
+
+                const removeButton = document.createElement('button');
+                removeButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                removeButton.className = 'btn-icon remove-admin';
+                removeButton.onclick = () => removeAdmin(admin);
+
+                if (admin === '{{ current_user.username }}') {
+                    removeButton.disabled = true;
+                    removeButton.title = 'Cannot remove yourself';
+                }
+
+                li.appendChild(adminInfo);
+                li.appendChild(removeButton);
+
+                li.classList.add('fade-in');
+                setTimeout(() => {
+                    li.classList.remove('fade-in');
+                }, 300);
+
+                adminList.appendChild(li);
+            });
+        } else {
+            showToast('error', 'Failed to load admin list');
+        }
+    } catch (error) {
+        showToast('error', 'Failed to load admin list');
+    }
+}
+
+async function addAdmin() {
+    const username = document.getElementById('newAdminUsername').value.trim();
+    if (!username) {
+        showToast('error', 'Please enter a username');
+        return;
+    }
+
+    try {
+        showToast('info', 'Adding administrator...');
+
+        const response = await fetch('/api/admin/admins/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            showToast('success', data.message);
+            document.getElementById('newAdminUsername').value = '';
+            loadAdminList();
+        } else {
+            showToast('error', data.error || 'Failed to add admin');
+        }
+    } catch (error) {
+        showToast('error', 'Failed to add admin');
+    }
+}
+
+async function removeAdmin(username) {
+    if (!confirm(`Are you sure you want to remove ${username} as an administrator?`)) {
+        return;
+    }
+
+    try {
+        showToast('info', 'Removing administrator...');
+
+        const response = await fetch('/api/admin/admins/remove', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            showToast('success', data.message);
+            loadAdminList();
+        } else {
+            showToast('error', data.error || 'Failed to remove admin');
+        }
+    } catch (error) {
+        showToast('error', 'Failed to remove admin');
+    }
+}
+
+function viewUserDetails(userId) {
+    const modal = document.getElementById('userDetailModal');
+    const userDetailContent = document.getElementById('userDetailContent');
+    const editUserForm = document.getElementById('editUserForm');
+
+    userDetailContent.innerHTML = `
+        <div class="user-detail-loading">
+            <div class="loading-spinner"></div>
+            <p>Loading user details...</p>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+
+    setTimeout(async () => {
+        const response = await fetch(`/api/users/${userId}`);
+        if (response.ok) {
+            const userData = await response.json();
+            userDetailContent.innerHTML = `
+                <h3>${userData.username}</h3>
+                <div class="user-meta">
+                    <p><i class="fas fa-envelope"></i> ${userData.email}</p>
+                    <p><i class="fas fa-calendar-alt"></i> Joined: ${userData.created_at}</p>
+                    <p><i class="fas fa-circle"></i> Status: ${userData.is_suspended ? 'Suspended' : 'Active'}</p>
+                </div>
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">${userData.sites_count}</span>
+                        <span class="stat-label">Sites</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${userData.logins_count}</span>
+                        <span class="stat-label">Logins</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${userData.last_active}</span>
+                        <span class="stat-label">Last Active</span>
+                    </div>
+                </div>
+            `;
+            editUserForm.querySelector('#editUserId').value = userId;
+            editUserForm.querySelector('#editUsername').value = userData.username;
+            editUserForm.querySelector('#editEmail').value = userData.email;
+        } else {
+            userDetailContent.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>User not found</p>
+                </div>
+            `;
+        }
+    }, 1000);
+}
+
+
+function closeUserDetailModal() {
+    document.getElementById('userDetailModal').style.display = 'none';
+}
+
+function refreshData() {
+    showToast('info', 'Refreshing data...');
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadSystemStatus();
+    loadRecentActivities();
+    updateAnalytics('day');
+});
+
+async function loadSystemStatus() {
+    try {
+        const response = await fetch('/api/admin/system-status');
+        const data = await response.json();
+
+        const serverStatusEl = document.getElementById('serverStatus');
+        serverStatusEl.innerHTML = data.server.status === 'healthy' 
+            ? `Healthy <i class="fas fa-check-circle"></i>` 
+            : `Unhealthy <i class="fas fa-exclamation-circle"></i>`;
+        serverStatusEl.className = `status-value ${data.server.status}`;
+
+        const dbStatusEl = document.getElementById('databaseStatus');
+        dbStatusEl.innerHTML = data.database.status === 'healthy' 
+            ? `Connected <i class="fas fa-check-circle"></i>` 
+            : `Disconnected <i class="fas fa-exclamation-circle"></i>`;
+        dbStatusEl.className = `status-value ${data.database.status}`;
+
+        const lastBackupEl = document.getElementById('lastBackup');
+        lastBackupEl.textContent = data.backup.last_backup || 'Not available';
+    } catch (error) {
+        console.error('Error loading system status:', error);
+        document.getElementById('serverStatus').innerHTML = `Unknown <i class="fas fa-question-circle"></i>`;
+        document.getElementById('databaseStatus').innerHTML = `Unknown <i class="fas fa-question-circle"></i>`;
+        document.getElementById('lastBackup').textContent = 'Not available';
+    }
+}
+
+function loadVisitData() {
+    loadRecentActivities(true);
+}
+
+function loadRecentActivities(replaceAll = true) {
+    fetch('/api/admin/recent-activities')
+        .then(response => response.json())
+        .then(data => {
+            const activitiesList = document.getElementById('recentActivitiesList');
+            if (replaceAll) {
+                activitiesList.innerHTML = '';
+            }
+
+            if (data.activities && data.activities.length > 0) {
+                data.activities.forEach(activity => {
+                    const li = document.createElement('li');
+                    li.className = 'activity-item';
+
+                    const activityIcon = document.createElement('div');
+                    activityIcon.className = 'activity-icon';
+
+                    let iconClass = 'fa-info-circle';
+                    switch (activity.type) {
+                        case 'user_registration':
+                            iconClass = 'fa-user-plus';
+                            break;
+                        case 'site_creation':
+                            iconClass = 'fa-globe';
+                            break;
+                        case 'admin_change':
+                            iconClass = 'fa-user-shield';
+                            break;
+                        case 'site_deletion':
+                            iconClass = 'fa-trash-alt';
+                            break;
+                        case 'user_login':
+                            iconClass = 'fa-sign-in-alt';
+                            break;
+                    }
+
+                    activityIcon.innerHTML = `<i class="fas ${iconClass}"></i>`;
+
+                    const activityDetails = document.createElement('div');
+                    activityDetails.className = 'activity-details';
+
+                    let message = activity.message;
+                    if (activity.username) {
+                        message = message.replace('{username}', `<strong>${activity.username}</strong>`);
+                    }
+
+                    activityDetails.innerHTML = `
+                        <p>${message}</p>
+                        <span class="activity-time">${formatTimeAgo(activity.timestamp)}</span>
+                    `;
+
+                    li.appendChild(activityIcon);
+                    li.appendChild(activityDetails);
+                    activitiesList.appendChild(li);
+
+                    setTimeout(() => {
+                        li.classList.add('fade-in');
+                    }, 100 * activitiesList.children.length);
+                });
+            } else {
+                activitiesList.innerHTML = `
+                    <li class="activity-item">
+                        <div class="activity-details">
+                            <p>No recent activities found</p>
+                        </div>
+                    </li>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading recent activities:', error);
+            document.getElementById('recentActivitiesList').innerHTML = `
+                <li class="activity-item">
+                    <div class="activity-details">
+                        <p>Failed to load recent activities</p>
+                    </div>
+                </li>
+            `;
+        });
+}
+
+function formatTimeAgo(timestamp) {
+    const now = new Date();
+    const activityTime = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - activityTime) / 1000);
+
+    if (diffInSeconds < 60) {
+        return 'just now';
+    } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    } else if (diffInSeconds < 604800) {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `${days} day${days > 1 ? 's' : ''} ago`;
+    } else {
+        return activityTime.toLocaleDateString();
+    }
+}
+
+async function updateAnalytics(period) {
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`.time-btn[data-period="${period}"]`).classList.add('active');
+
+    try {
+        showLoadingState();
+        const response = await fetch(`/api/admin/analytics?period=${period}`);
+        const data = await response.json();
+
+        renderUserRegistrationsChart(data.user_registrations);
+        renderSiteTypesChart(data.site_types);
+        renderTrafficSourcesChart(data.traffic_sources);
+        renderPlatformUsageChart(data.platform_usage);
+    } catch (error) {
+        console.error('Error loading analytics data:', error);
+        showErrorState();
+    }
+}
+
+function showLoadingState() {
+    document.getElementById('userRegistrationsChart').innerHTML = `
+        <div class="loading-spinner"></div>
+        <p>Loading chart data...</p>
+    `;
+    document.getElementById('siteTypesChart').innerHTML = `
+        <div class="loading-spinner"></div>
+        <p>Loading chart data...</p>
+    `;
+    document.getElementById('trafficSourcesChart').innerHTML = `
+        <div class="loading-spinner"></div>
+        <p>Loading chart data...</p>
+    `;
+    document.getElementById('platformUsageChart').innerHTML = `
+        <div class="loading-spinner"></div>
+        <p>Loading chart data...</p>
+    `;
+}
+
+function showErrorState() {
+    const errorMessage = `
+        <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Failed to load analytics data</p>
+        </div>
+    `;
+
+    document.getElementById('userRegistrationsChart').innerHTML = errorMessage;
+    document.getElementById('siteTypesChart').innerHTML = errorMessage;
+    document.getElementById('trafficSourcesChart').innerHTML = errorMessage;
+    document.getElementById('platformUsageChart').innerHTML = errorMessage;
+}
+
+function renderUserRegistrationsChart(data) {
+    const chartContainer = document.getElementById('userRegistrationsChart');
+    chartContainer.innerHTML = '';
+
+    const chartBars = document.createElement('div');
+    chartBars.className = 'chart-bars';
+
+    const maxValue = Math.max(...data.values, 1);
+
+    data.values.forEach((value, index) => {
+        const height = (value / maxValue) * 100;
+        const bar = document.createElement('div');
+        bar.className = 'chart-bar';
+        bar.style.height = `${height}%`;
+
+        bar.setAttribute('title', `${data.labels[index]}: ${value} registrations`);
+
+        chartBars.appendChild(bar);
+
+        setTimeout(() => {
+            bar.style.height = `${height}%`;
+        }, 100 * index);
+    });
+
+    chartContainer.appendChild(chartBars);
+}
+
+function renderSiteTypesChart(data) {
+    const chartContainer = document.getElementById('siteTypesChart');
+    chartContainer.innerHTML = '';
+
+    const webPercentage = data.web;
+    const pythonPercentage = data.python;
+
+    const pieChart = document.createElement('div');
+    pieChart.className = 'pie-chart';
+
+    const webSegment = document.createElement('div');
+    webSegment.className = 'pie-segment';
+    webSegment.style.transform = 'rotate(0deg)';
+    webSegment.style.backgroundColor = 'var(--primary)';
+
+    const pythonSegment = document.createElement('div');
+    pythonSegment.className = 'pie-segment';
+    pythonSegment.style.transform = `rotate(${webPercentage * 3.6}deg)`;
+    pythonSegment.style.backgroundColor = 'var(--accent)';
+
+    const pieCenter = document.createElement('div');
+    pieCenter.className = 'pie-center';
+    pieCenter.textContent = `${webPercentage}%`;
+
+    pieChart.appendChild(webSegment);
+    pieChart.appendChild(pythonSegment);
+    pieChart.appendChild(pieCenter);
+
+    const chartLegend = document.createElement('div');
+    chartLegend.className = 'chart-legend';
+
+    chartLegend.innerHTML = `
+        <div class="legend-item">
+            <span class="legend-color" style="background-color: var(--primary);"></span>
+            <span>Web Sites (${webPercentage}%)</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-color" style="background-color: var(--accent);"></span>
+            <span>Python Sites (${pythonPercentage}%)</span>
+        </div>
+    `;
+
+    chartContainer.appendChild(pieChart);
+    chartContainer.appendChild(chartLegend);
+
+    setTimeout(() => {
+        pieCenter.textContent = `${webPercentage}%`;
+        pythonSegment.style.transform = `rotate(${webPercentage * 3.6}deg)`;
+    }, 300);
+}
+
+function renderTrafficSourcesChart(data) {
+    const chartContainer = document.getElementById('trafficSourcesChart');
+    chartContainer.innerHTML = '';
+
+    const horizontalBars = document.createElement('div');
+    horizontalBars.className = 'horizontal-bars';
+
+    Object.entries(data).forEach(([source, percentage]) => {
+        const barItem = document.createElement('div');
+        barItem.className = 'horizontal-bar-item';
+
+        barItem.innerHTML = `
+            <span class="bar-label">${source}</span>
+            <div class="bar-container">
+                <div class="horizontal-bar" style="width: 0%"></div>
+            </div>
+            <span class="bar-value">${percentage}%</span>
+        `;
+
+        horizontalBars.appendChild(barItem);
+
+        setTimeout(() => {
+            barItem.querySelector('.horizontal-bar').style.width = `${percentage}%`;
+        }, 300);
+    });
+
+    chartContainer.appendChild(horizontalBars);
+}
+
+function renderPlatformUsageChart(data) {
+    const chartContainer = document.getElementById('platformUsageChart');
+    chartContainer.innerHTML = '';
+
+    const lineChart = document.createElement('div');
+    lineChart.className = 'line-chart';
+
+    const maxValue = Math.max(...data.values, 1);
+    const points = data.values.map((value, index) => {
+        const x = (index / (data.values.length - 1)) * 500;
+        const y = 200 - ((value / maxValue) * 180);
+        return `${x},${y}`;
+    }).join(' ');
+
+    lineChart.innerHTML = `
+        <svg viewBox="0 0 500 200" class="chart">
+            <polyline
+                fill="none"
+                stroke="var(--primary)"
+                stroke-width="3"
+                points="${points}"
+            />
+        </svg>
+    `;
+
+    chartContainer.appendChild(lineChart);
+}
+
+function exportChart(chartId) {
+    showToast('info', `Exporting ${chartId} data...`);
+
+    fetch(`/api/admin/analytics/export?chart=${chartId}`)
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            }
+            throw new Error('Export failed');
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `${chartId}_export.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showToast('success', 'Export successful');
+        })
+        .catch(error => {
+            console.error('Export error:', error);
+            showToast('error', 'Failed to export data');
+        });
+}
+
+function saveMaxSitesPerUser() {
+    const maxSites = document.getElementById('maxSitesPerUser').value;
+
+    if (maxSites < 1 || maxSites > 10) {
+        showToast('error', 'Max sites must be between 1 and 10');
+        return;
+    }
+
+    fetch('/api/admin/settings/max-sites', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ maxSites: parseInt(maxSites) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            showToast('success', data.message);
+        } else {
+            showToast('error', data.error || 'Failed to update max sites setting');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Failed to update max sites setting');
+    });
+}
+
+function showToast(type, message) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    const icon = type === 'success' ? 'check-circle' : 
+                type === 'error' ? 'exclamation-circle' :
+                'info-circle';
+
+    toast.innerHTML = `
+        <i class="fas fa-${icon}"></i>
+        <span>${message}</span>
+        <button class="toast-close">&times;</button>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+
+    toast.querySelector('.toast-close').addEventListener('click', () => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    });
+
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 300);
+        }
+    }, 5000);
+}
+
+async function saveUserChanges() {
+    const form = document.getElementById('editUserForm');
+    const userId = form.querySelector('#editUserId').value;
+    const username = form.querySelector('#editUsername').value;
+    const email = form.querySelector('#editEmail').value;
+    const password = form.querySelector('#resetPassword').value;
+
+    try {
+        const response = await fetch(`/api/admin/users/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        });
+
+        if (response.ok) {
+            showToast('success', 'User updated successfully!');
+            closeUserDetailModal();
+            location.reload();
+        } else {
+            const errorData = await response.json();
+            showToast('error', errorData.message || 'Failed to update user.');
+        }
+    } catch (error) {
+        showToast('error', 'An error occurred while saving changes.');
+    }
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+    togglePasswordButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const passwordInput = this.previousElementSibling;
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                this.querySelector('i').classList.remove('fa-eye');
+                this.querySelector('i').classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                this.querySelector('i').classList.remove('fa-eye-slash');
+                this.querySelector('i').classList.add('fa-eye');
+            }
+        });
+    });
+});
+
+</script>
+
+<style>
+:root {
+    --primary-rgb: 237, 102, 99;
+    --primary: #ed6663;
+    --primary-dark: #d94642;
+    --primary-light: rgba(237, 102, 99, 0.8);
+    --accent: #8a64eb;
+    --accent-light: #a68eea;
+    --danger: #ff4d6d;
+    --success: #2ecc71;
+    --warning: #ffc107;
+    --info: #3498db;
+    --surface-primary: #ffffff;
+    --surface-secondary: #f8f9fa;
+    --background-primary: #f1f3f5;
+    --background-secondary: #edf2f7;
+    --border-primary: #e2e8f0;
+    --border-secondary: #cbd5e0;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 20px;
+}
+
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--background-secondary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.admin-sidebar {
+    width: 260px;
+    background-color: var(--surface-primary);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    transition: all 0.3s ease;
+}
+
+.admin-profile {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 60px;
+}
+
+.profile-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #6e8efb, #a777e3);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.profile-avatar i {
+    font-size: 24px;
+    color: white;
+}
+
+.profile-info h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.admin-badge {
+    background-color: var(--primary);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+.admin-nav {
+    flex: 1;
+    padding: 1.5rem 0;
+    overflow-y: auto;
+}
+
+.admin-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.admin-nav li {
+    margin-bottom: 5px;
+}
+
+.admin-nav .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 1.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.admin-nav .nav-link i {
+    font-size: 18px;
+    margin-right: 12px;
+    width: 24px;
+    text-align: center;
+}
+
+.admin-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.admin-nav .nav-link.active {
+    background-color: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+    border-left-color: var(--primary);
+}
+
+.admin-sidebar-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+}
+
+.sidebar-collapse-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-collapse-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.logout-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.logout-link i {
+    margin-right: 8px;
+}
+
+.logout-link:hover {
+    color: var(--danger);
+}
+
+.admin-content {
+    flex: 1;
+    padding: 2rem;
+    margin-left: 260px;
+    transition: all 0.3s ease;
+}
+
+.admin-header {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 60px;
+}
+
+.admin-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+}
+
+.admin-header h1 i {
+    margin-right: 0.75rem;
+    color: var(--primary);
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.admin-section {
+    background-color: var(--surface-primary);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.admin-section.active {
+    display: block;
+}
+
+.section-header {
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.section-header h2 i {
+    margin-right: 0.75rem;
+    color: var(--primary);
+}
+
+.section-header p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.section-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dashboard-stats {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.stats-wrapper {
+    display: flex;
+    gap: 1.5rem;
+    max-width: 900px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.stat-card {
+    background-color: var(--surface-secondary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.stat-icon i {
+    font-size: 24px;
+    color: white;
+}
+
+.user-icon {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.site-icon {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.visit-icon {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.admin-icon {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+}
+
+.stat-info h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 5px;
+}
+
+.statinfo p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.stat-change {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.stat-change.positive {
+    color: #2ecc71;
+}
+
+.stat-change.negative {
+    color: #e74c3c;
+}
+
+.stat-change.neutral {
+    color: #95a5a6;
+}
+
+.stat-change i {
+    margin-right: 4px;
+}
+
+.dashboard-row {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 1.5rem;
+}
+
+.dashboard-card {
+    background-color: var(--surface-secondary);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.card-header h3 i {
+    margin-right: 0.75rem;
+    color: var(--primary);
+}
+
+.card-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.card-content {
+    padding: 1.5rem;
+}
+
+.activity-list {
+    list-style: none;
+padding: 0;
+    margin: 0;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: rgba(var(--primary-rgb), 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right:1rem;
+}
+
+.activity-icon i {
+    color: var(--primary);
+    font-size: 16px;
+}
+
+.activity-details p {
+    margin: 0 0 5px;
+    font-weight: 500;
+}
+
+.activity-time {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.status-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.status-label {
+    font-weight: 500;
+}
+
+.status-value {
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.status-value i {
+    margin-left: 5px;
+}
+
+.status-value.healthy {
+    color: #2ecc71;
+}
+
+.status-value.warning {
+    color: #f39c12;
+}
+
+.status-value.critical {
+    color: #e74c3c;
+}
+
+.table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    background-color: var(--surface-secondary);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+th {
+    background-color: var(--surface-secondary);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+    background-color: rgba(var(--primary-rgb), 0.05);
+}
+
+.actions-cell {
+    width: 180px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.action-buttons-cell {
+    min-width: 250px;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background-color: var(--surface-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-icon.danger:hover {
+    background-color: var(--danger);
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.btn-primary i {
+    margin-right: 8px;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: var(--surface-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.btn-secondary i {
+    margin-right: 8px;
+}
+
+.btn-secondary:hover {
+    background-color: var(--surface-primary);
+}
+
+.btn-success {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.btn-success i {
+    margin-right: 8px;
+}
+
+.btn-success:hover {
+    background-color: #27ae60;
+}
+
+.btn-view {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.btn-view:hover {
+    background-color: #138496;
+    color: white;
+}
+
+.btn-edit {
+    background-color: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.btn-edit:hover {
+    background-color: #e0a800;
+    color: #212529;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: black;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.btn-warning i {
+    margin-right: 8px;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.bulk-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.bulk-action {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bulk-action[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.status-badge.active {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+}
+
+.status-badge.suspended {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+}
+
+.status-badge.club-leader {
+    background-color: rgba(155, 89, 182, 0.15);
+    color: #9b59b6;
+}
+
+.type-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.type-badge.web {
+    background-color: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+}
+
+.type-badge.python {
+    background-color: rgba(155, 89, 182, 0.15);
+    color: #9b59b6;
+}
+
+.site-name {
+    display: flex;
+    align-items: center;
+}
+
+.site-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: rgba(var(--primary-rgb), 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+}
+
+.site-icon i {
+    color: var(--primary);
+}
+
+.search-container {
+    position: relative;
+    max-width: 300px;
+    width: 100%;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.65rem 1rem 0.65rem 2.5rem;
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background-color: var(--surface-secondary);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.2);
+}
+
+.search-container i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+}
+
+.filter-dropdown {
+    position: relative;
+}
+
+.filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background-color: var(--surface-primary);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    width: 200px;
+    z-index: 100;
+    display: none;
+}
+
+.filter-dropdown:hover .filter-menu {
+    display: block;
+    animation: slideDown 0.2s ease;
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.filter-option:last-child {
+    margin-bottom: 0;
+}
+
+.filter-option input {
+    margin-right: 8px;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1.5rem;
+    gap: 5px;
+}
+
+.btn-page {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-primary);
+    background-color: var(--surface-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-page:hover {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.btn-page.active {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.pagination-ellipsis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.admin-management {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.admin-list-container, .add-admin-form {
+    background-color: var(--surface-secondary);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.admin-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.admin-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-primary);
+    transition: background-color 0.2s ease;
+}
+
+.admin-item:hover {
+    background-color: rgba(var(--primary-rgb), 0.05);
+}
+
+.admin-item:last-child {
+    border-bottom: none;
+}
+
+.admin-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-name {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.admin-email {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.remove-admin {
+    color: #dc3545;
+}
+
+.remove-admin:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.remove-admin[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.admin-list-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(var(--primary-rgb), 0.3);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    margin-right: 10px;
+    animation: spin 1s linear infinite;
+}
+
+.form-content {
+    padding: 1.5rem;
+}
+
+.form-content p {
+    margin-top: 0;
+    color: var(--text-secondary);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-group label i {
+    margin-right: 8px;
+    color: var(--primary);
+}
+
+.input-with-icon {
+    position: relative;
+}
+
+.input-with-icon i {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+}
+
+.admin-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background-color: var(--surface-primary);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.admin-input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.2);
+}
+
+.permission-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.permission-option {
+    display: flex;
+    align-items: center;
+}
+
+.permission-option input {
+    margin-right: 8px;
+}
+
+.add-admin-btn {
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.analytics-timeframe {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    background-color: var(--surface-secondary);
+    padding: 0.5rem;
+    border-radius: 8px;
+    width: fit-content;
+}
+
+.time-btn {
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.time-btn.active {
+    background-color: var(--primary);
+    color: white;
+}
+
+.date-picker {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 10px;
+    border-left: 1px solid var(--border-primary);
+}
+
+.date-picker i {
+    margin-right: 8px;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.analytics-card {
+    background-color: var(--surface-secondary);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.analytics-card.wide {
+    grid-column: span 2;
+}
+
+.chart-container {
+    padding: 1.5rem;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+}
+
+.chart-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    width: 100%;
+    height: 100%;
+}
+
+.chart-bar {
+    width: 8%;
+    background: linear-gradient(to top, var(--primary), var(--primary-light));
+    border-radius: 6px 6px 0 0;
+    transition: height 1s ease;
+}
+
+.line-chart {
+    width: 100%;
+    height: 100%;
+}
+
+.chart svg {
+    width: 100%;
+    height: 100%;
+}
+
+.pie-chart {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    overflow: hidden;
+}
+
+.pie-segment {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform-origin: 50% 50%;
+    transition: transform 1s ease;
+}
+
+.pie-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--surface-secondary);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.chart-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-left: 1.5rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    margin-right: 8px;
+}
+
+.horizontal-bars {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.horizontal-bar-item {
+    display: flex;
+    align-items: center;
+}
+
+.bar-label {
+    width: 60px;
+}
+
+.bar-container {
+    flex: 1;
+    height: 10px;
+    background-color: rgba(var(--primary-rgb), 0.1);
+    border-radius: 10px;
+    margin: 0 10px;
+    overflow: hidden;
+}
+
+.horizontal-bar {
+    height: 100%;
+    background-color: var(--primary);
+    border-radius: 10px;
+    transition: width 1s ease;
+}
+
+.bar-value {
+    width: 40px;
+    text-align: right;
+    font-weight: 500;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+    gap: 1.5rem;
+}
+
+.settings-container {
+    max-width: 600px;
+    margin: 0 auto 1.5rem;
+}
+
+.settings-card {
+    background-color: var(--surface-secondary);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.settings-form {
+    padding: 1.5rem;
+}
+
+.toggle-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.toggle-option:last-child {
+    margin-bottom: 0;
+}
+
+.toggle-label {
+    font-weight: 500;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--primary);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--primary);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.settings-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    background-color: var(--surface-primary);
+    color: var(--text-primary);
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23718096" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+}
+
+.settings-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    background-color: var(--surface-primary);
+    color: var(--text-primary);
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 5px 0;
+}
+
+.input-label {
+    flex: 0 0 auto;
+    margin-right: 15px;
+}
+
+.number-input {
+    width: 80px;
+    padding: 0.5rem;
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    background-color: var(--surface-primary);
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.modal-header h2 i {
+    margin-right: 10px;
+    color: var(--primary);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+    color: var(--danger);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-actions {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-primary);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+}
+
+.user-info-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+}
+
+.user-avatar {
+    width: 80px;
+    height: 80px;
+    background-color: var(--surface-secondary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-avatar i {
+    font-size: 40px;
+    color: var(--primary);
+}
+
+.user-details {
+    flex: 1;
+}
+
+.user-details h3 {
+    margin: 0 0 10px;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.user-meta {
+    margin-bottom: 1.5rem;
+}
+
+.user-meta p {
+    margin: 8px 0;
+    display: flex;
+    align-items: center;
+}
+
+.user-meta p i {
+    width: 20px;
+    margin-right: 10px;
+    color: var(--text-secondary);}
+
+.user-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-item {
+    display flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--surface-secondary);
+    padding: 1rem;
+    border-radius: 8px;
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+color: var(--text-secondary);
+}
+
+.user-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.user-detail-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.error-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--danger);
+    padding: 2rem;
+}
+
+.error-message i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background-color: var(--surface-primary);
+    border-radius: 8px;
+    padding: 1rem;
+    min-width: 300px;
+    max-width: 400px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateX(120%);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast.success {
+    border-left: 4px solid #2ecc71;
+}
+
+.toast.error {
+    border-left: 4px solid #e74c3c;
+}
+
+.toast.info {
+    border-left: 4px solid #3498db;
+}
+
+.toast i {
+    font-size: 1.25rem;
+    margin-right: 10px;
+}
+
+.toast.success i {
+    color: #2ecc71;
+}
+
+.toast.error i {
+    color: #e74c3c;
+}
+
+.toast.info i {
+    color: #3498db;
+}
+
+.toast span {
+    flex: 1;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+}
+
+.toast-close:hover {
+    color: var(--danger);
+}
+
+.sidebar-collapsed .admin-sidebar {
+    width: 80px;
+}
+
+.sidebar-collapsed .admin-content {
+    margin-left: 80px;
+}
+
+.sidebar-collapsed .profile-info,
+.sidebar-collapsed .nav-link span,
+.sidebar-collapsed .logout-link span {
+    display: none;
+}
+
+.sidebar-collapsed .sidebar-collapse-btn i {
+    transform: rotate(180deg);
+}
+
+.sidebar-collapsed .admin-nav .nav-link {
+    justify-content: center;
+    padding: 12px 0;
+}
+
+.sidebar-collapsed .admin-nav .nav-link i {
+    margin-right: 0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+.section-entrance {
+    animation: slideUp 0.5s ease;
+}
+
+/* Action Dropdown Styling */
+.action-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.action-dropdown-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background-color: var(--surface-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.action-dropdown-btn:hover {
+    background-color: var(--background-primary);
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.action-dropdown-content {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 5px);
+    background-color: var(--surface-primary);
+    min-width: 180px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.action-dropdown:hover .action-dropdown-content,
+.action-dropdown:focus-within .action-dropdown-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.dropdown-item:hover {
+    background-color: var(--background-primary);
+}
+
+.dropdown-item i {
+    width: 20px;
+    margin-right: 10px;
+    font-size: 0.9rem;
+}
+
+.dropdown-item.text-danger {
+    color: var(--danger);
+}
+
+.dropdown-item.text-danger:hover {
+    background-color: rgba(255, 77, 109, 0.1);
+}
+
+/* Table Styling Improvements */
+.table-container {
+    box-shadow: var(--shadow-md);
+    margin-bottom: 2rem;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+th {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 1.25rem 1rem;
+    background-color: var(--surface-primary);
+    border-bottom: 2px solid var(--border-primary);
+}
+
+td {
+    vertical-align: middle;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+tbody tr {
+    transition: all 0.2s ease;
+}
+
+tbody tr:hover {
+    background-color: rgba(var(--primary-rgb), 0.05);
+}
+
+/* Status Badge Enhancements */
+.status-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 30px;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.status-badge.active {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.status-badge.suspended {
+    background-color: rgba(255, 77, 109, 0.15);
+    color: var(--danger);
+    border: 1px solid rgba(255, 77, 109, 0.3);
+}
+
+.status-badge.club-leader {
+    background-color: rgba(138, 100, 235, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(138, 100, 235, 0.3);
+}
+
+/* Card Improvements */
+.dashboard-card, .analytics-card, .settings-card {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    background-color: var(--surface-primary);
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover, .analytics-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border-primary);
+    background-color: var(--surface-primary);
+}
+
+.card-content {
+    padding: 1.5rem;
+}
+
+/* Stats Card Improvements */
+.stat-card {
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    background: var(--surface-primary);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-md);
+    margin-right: 1.25rem;
+}
+
+.user-icon {
+    background: linear-gradient(135deg, var(--info), #2574a9);
+}
+
+.site-icon {
+    background: linear-gradient(135deg, var(--success), #27ae60);
+}
+
+.admin-icon {
+    background: linear-gradient(135deg, var(--accent), #6c5ce7);
+}
+
+/* Button Enhancements */
+.btn-primary, .btn-secondary, .btn-danger, .btn-success, .btn-warning {
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+    background-color: var(--surface-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-primary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--background-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #ff3358;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-success {
+    background-color: var(--success);
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #27ae60;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Admin Sidebar Improvements */
+.admin-sidebar {
+    background: linear-gradient(to bottom, var(--surface-primary), #f5f7fa);
+    border-right: 1px solid var(--border-primary);
+    box-shadow: var(--shadow-md);
+    width: 280px;
+}
+
+.profile-avatar {
+    width: 55px;
+    height: 55px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border-radius: var(--radius-md);
+}
+
+.admin-nav .nav-link {
+    border-radius: var(--radius-md);
+    margin: 0 1rem;
+    padding: 12px 1rem;
+}
+
+.admin-nav .nav-link.active {
+    background-color: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.admin-nav .nav-link:hover {
+    background-color: var(--background-primary);
+}
+
+/* Pagination Improvements */
+.pagination {
+    margin-top: 2rem;
+    gap: 8px;
+}
+
+.btn-page {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background-color: var(--surface-primary);
+    border: 1px solid var(--border-primary);
+    transition: all 0.2s ease;
+}
+
+.btn-page.active, .btn-page:hover {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Form Element Improvements */
+.search-input, .admin-input, .form-input, .form-textarea {
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-primary);
+    transition: all 0.2s ease;
+    background-color: var(--surface-primary);
+}
+
+.search-input:focus, .admin-input:focus, .form-input:focus, .form-textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.2);
+    outline: none;
+}
+
+/* Toast Improvements */
+.toast-container {
+    z-index: 9999;
+}
+
+.toast {
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-md);
+    min-width: 300px;
+}
+
+.toast.success {
+    border-left: 4px solid var(--success);
+}
+
+.toast.error {
+    border-left: 4px solid var(--danger);
+}
+
+.toast.info {
+    border-left: 4px solid var(--info);
+}
+
+.toast.warning {
+    border-left: 4px solid var(--warning);
+}
+
+/* Modal Improvements */
+.modal {
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    border: none;
+}
+
+.modal-header {
+    background-color: var(--surface-primary);
+}
+
+.modal-actions {
+    background-color: var(--surface-secondary);
+}
+
+/* Custom animations */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0.5);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(var(--primary-rgb), 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0);
+    }
+}
+
+.user-edit-container {
+    margin-top: 2rem;
+    border-top: 1px solid var(--border-primary);
+    padding-top: 1.5rem;
+}
+
+.password-input-group {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+/* Media Queries */
+@media (max-width: 992px) {
+    .admin-container {
+        flex-direction: column;
+    }
+
+    .admin-sidebar {
+        width: 100%;
+        position: relative;
+        box-shadow: none;
+        border-bottom: 1px solid var(--border-primary);
+    }
+
+    .admin-content {
+        margin-left: 0;
+    }
+
+    .admin-nav ul {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .admin-nav li {
+        margin-right: 10px;
+    }
+
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-actions {
+        margin-top: 1rem;
+    }
+
+    .dashboard-row,
+    .admin-management {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-card.wide {
+        grid-column: auto;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-content {
+        padding: 1rem;
+    }
+
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .section-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .bulk-actions {
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+
+    .action-buttons-cell {
+        min-width: 200px;
+    }
+
+    .analytics-timeframe {
+        overflow-x: auto;
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .admin-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .table-container {
+        margin: 0 -1rem;
+        width: calc(100% + 2rem);
+        border-radius: 0;
+    }
+
+    .user-info-container {
+        flex-direction: column;
+    }
+
+    .user-avatar {
+        margin: 0 auto 1rem;
+    }
+
+    .user-actions {
+        flex-direction: column;
+    }
+
+    .user-actions button {
+        width: 100%;
+    }
+
+    .toast {
+        min-width: auto;
+        max-width: 300px;
+    }
+}
+</style>
+{% endblock %}

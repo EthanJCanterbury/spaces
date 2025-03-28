@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="auth-page">
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2>Login</h2>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="social-login">
+                <a href="{{ url_for('github.github_login') }}" class="btn-github">
+                    <i class="fab fa-github"></i> Sign in with GitHub
+                </a>
+            </div>
+            <div class="divider">or</div>
+            <form method="POST" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn primary">Login</button>
+            </form>
+            
+            <div class="auth-links">
+                <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

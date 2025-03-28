@@ -1,0 +1,753 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+    .shared-site-card {
+        border-left: 4px solid var(--primary);
+        position: relative;
+    }
+
+    .shared-site-card:before {
+        content: 'Shared';
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background-color: var(--primary);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        z-index: 2;
+    }
+
+    .inactive-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background-color: #dc3545;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        z-index: 2;
+    }
+
+    .inactive-space {
+        position: relative;
+    }
+
+    .inactive-space::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1;
+    }
+
+    .spaces-tabs-container {
+        margin-bottom: 30px;
+    }
+
+    .spaces-tabs {
+        display: flex;
+        border-bottom: 1px solid #e1e4e8;
+        margin-bottom: 20px;
+    }
+
+    .tab-btn {
+        padding: 10px 20px;
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #586069;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .tab-btn:hover {
+        color: var(--primary);
+    }
+
+    .tab-btn.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .profile-card .email {
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .club-leader-badge {
+        background-color: #4CAF50;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-top: 8px;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="welcome-container">
+    <div class="welcome-header">
+        <div class="welcome-title">
+            <h1>Welcome, {{ current_user.username }}! 👋</h1>
+            <p class="subtitle">Lets make some cool stuff :D</p>
+            <p class="subtitle">Heads Up! This is a pre-pre-pre-beta so stuff WILL break lol.</p>
+        </div>
+        <div class="button-group">
+            {% if sites|length < max_sites %}
+            <button class="btn-primary" onclick="openNewSpaceModal()">
+                <i class="fas fa-plus"></i>
+                New Space
+            </button>
+            {% else %}
+            <button class="btn-primary" disabled title="Maximum limit of {{ max_sites }} Spaces reached">
+                <i class="fas fa-plus"></i>
+                Space Limit Reached
+            </button>
+
+            <!-- Join Club Modal -->
+            <div id="joinClubModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-users"></i> Join a Club</h2>
+                        <button class="close-btn" onclick="closeJoinClubModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="joinClubForm">
+                            <div class="form-group">
+                                <label for="joinCode">Club Join Code <span class="required">*</span></label>
+                                <input type="text" id="joinCode" name="joinCode" required placeholder="Enter the join code" class="form-input">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn-secondary" onclick="closeJoinClubModal()">Cancel</button>
+                        <button class="btn-primary" onclick="joinClub()">
+                            <i class="fas fa-sign-in-alt"></i> Join Club
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function openJoinClubModal() {
+                    document.getElementById('joinClubModal').style.display = 'flex';
+                }
+
+                function closeJoinClubModal() {
+                    document.getElementById('joinClubModal').style.display = 'none';
+                    document.getElementById('joinClubForm').reset();
+                }
+
+                function joinClub() {
+                    const joinCode = document.getElementById('joinCode').value.trim();
+
+                    if (!joinCode) {
+                        alert('Join code is required');
+                        return;
+                    }
+
+                    fetch('/api/clubs/join', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ join_code: joinCode })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message) {
+                            alert(data.message);
+                            closeJoinClubModal();
+                            setTimeout(() => {
+                                location.reload();
+                            }, 500);
+                        } else if (data.error) {
+                            alert(data.error);
+                        } else {
+                            alert('Failed to join club');
+                        }
+                    })
+                    .catch(error => {
+                        alert('Failed to join club');
+                        console.error('Error:', error);
+                    });
+                }
+            </script>
+            {% endif %}
+        </div>
+        <div class="site-limit-info">
+            {{ sites|length }}/{{ max_sites }} spaces used (During Beta)
+        </div>
+    </div>
+
+    <div class="spaces-tabs-container">
+        <div class="spaces-tabs">
+            <button id="mySpacesTab" class="tab-btn active" onclick="switchTab('mySpaces')">
+                <i class="fas fa-globe"></i> My Spaces
+            </button>
+            <button id="sharedSpacesTab" class="tab-btn" onclick="switchTab('sharedSpaces')">
+                <i class="fas fa-users"></i> Shared Spaces
+            </button>
+        </div>
+
+        <div id="mySpacesContent" class="tab-content active">
+            <div class="sites-grid">
+                {% for site in sites %}
+                <div class="site-card">
+                    <div class="site-preview">
+                        <iframe srcdoc="{{ site.html_content }}" frameborder="0"></iframe>
+                        <div class="site-overlay">
+                            <a href="{{ url_for('edit_site', site_id=site.id) }}" class="btn-icon">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="site-info">
+                        <div class="site-meta">
+                            <h3>{{ site.name }}</h3>
+                            <span class="site-date">Last updated {{ site.updated_at.strftime('%b %d, %Y') }}</span>
+                        </div>
+                        <div class="site-actions">
+                            <a href="/s/{{ site.slug }}" target="_blank" class="btn-icon" title="View Live Space">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <button class="btn-icon" onclick="copyPublicLink('{{ site.slug }}')" title="Copy Public Link">
+                                <i class="fas fa-link"></i>
+                            </button>
+                            <button class="btn-icon" onclick="openRenameModal('{{ site.id }}', '{{ site.name }}')" title="Rename Site">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon delete-btn" onclick="openDeleteModal('{{ site.id }}')" title="Delete Space">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h2>Create Your First Space!</h2>
+                    <p>Get started by clicking the New Space button above</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="sharedSpacesContent" class="tab-content">
+            <div class="sites-grid">
+                {% for collab in shared_spaces %}
+                <div class="site-card shared-site-card {% if not collab.is_active %}inactive-space{% endif %}">
+                    <div class="site-preview">
+                        {% if not collab.is_active %}
+                        <div class="inactive-badge">Owner Offline</div>
+                        {% endif %}
+                        <iframe srcdoc="{{ collab.site.html_content }}" frameborder="0"></iframe>
+                        <div class="site-overlay">
+                            {% if collab.is_active %}
+                            <a href="{{ url_for('edit_site', site_id=collab.site.id) }}" class="btn-icon">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% else %}
+                            <a href="javascript:void(0)" class="btn-icon" onclick="showOwnerInactiveMessage();" style="cursor: not-allowed;">
+                                <i class="fas fa-lock"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="site-info">
+                        <div class="site-meta">
+                            <h3>{{ collab.site.name }}</h3>
+                            <span class="site-date">Shared by {{ collab.site.user.username }}</span>
+                            <span class="site-date">Last updated {{ collab.site.updated_at.strftime('%b %d, %Y') }}</span>
+                        </div>
+                        <div class="site-actions">
+                            <a href="/s/{{ collab.site.slug }}" target="_blank" class="btn-icon" title="View Live Space">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <button class="btn-icon" onclick="leaveSharedSpace({{ collab.id }})" title="Leave Shared Space">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h2>No Shared Spaces</h2>
+                    <p>Spaces shared with you will appear here</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="newSpaceModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-plus-circle"></i> Create New Space</h2>
+            <button class="close-btn" onclick="closeNewSpaceModal()">&times;</button>
+        </div>
+        <form id="newSpaceForm" onsubmit="createNewSpace(event)">
+            <div class="form-group">
+                <label for="spaceName">
+                    <i class="fas fa-font"></i>
+                    Space Name
+                </label>
+                <input type="text" id="spaceName" name="name" required
+                    placeholder="My Awesome Space">
+            </div>
+            <div class="form-group">
+                <label for="spaceType">
+                    <i class="fas fa-code"></i>
+                    Space Type
+                </label>
+                <select id="spaceType" name="type" required class="space-type-select">
+                    <option value="web">Web Space</option>
+                    <option value="python">Python Space</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeNewSpaceModal()">
+                    Cancel
+                </button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Create Space
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-exclamation-triangle"></i> Delete Space?</h2>
+            <button class="close-btn" onclick="closeDeleteModal()">&times;</button>
+        </div>
+        <p>Are you sure you want to delete this space? This action cannot be undone.</p>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeDeleteModal()">
+                Cancel
+            </button>
+            <button class="btn-danger" onclick="deleteSite()">
+                <i class="fas fa-trash-alt"></i>
+                Delete Space
+            </button>
+        </div>
+    </div>
+</div>
+<div id="newPythonModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fab fa-python"></i> Create New Python Script</h2>
+            <button class="close-btn" onclick="closeNewPythonModal()">&times;</button>
+        </div>
+        <form id="newPythonForm" onsubmit="createNewPython(event)">
+            <div class="form-group">
+                <label for="pythonName">
+                    <i class="fas fa-file-code"></i>
+                    Script Name
+                </label>
+                <input type="text" id="pythonName" name="name" required
+                    placeholder="My Python Script">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeNewPythonModal()">
+                    Cancel
+                </button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Create Script
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<br>
+<br>
+<br>
+
+<div id="toast-container"></div>
+
+<script>
+let currentSiteId = null;
+
+function openNewSpaceModal() {
+    const modal = document.getElementById('newSpaceModal');
+    modal.style.display = 'flex';
+    modal.offsetHeight;
+    modal.classList.add('show');
+    document.getElementById('spaceName').focus();
+}
+
+function closeNewSpaceModal() {
+    const modal = document.getElementById('newSpaceModal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.getElementById('newSpaceForm').reset();
+    }, 300);
+}
+
+async function createNewSpace(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+
+    const spaceName = document.getElementById('spaceName').value;
+    const spaceType = document.getElementById('spaceType').value;
+
+    try {
+        const endpoint = spaceType === 'python' ? '/api/sites/python' : '/api/sites';
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                name: spaceName,
+                type: spaceType
+            })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            showToast('success', `${spaceType === 'python' ? 'Python' : 'Web'} space created successfully!`);
+            window.location.href = spaceType === 'python' 
+                ? `/python/${data.site_id}`
+                : `/edit/${data.site_id}`;
+        } else {
+            showToast('error', data.message || 'Failed to create space');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('error', 'Failed to create space');
+    } finally {
+        submitBtn.disabled = false;
+    }
+}
+
+function openDeleteModal(siteId) {
+    currentSiteId = siteId;
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+    currentSiteId = null;
+}
+
+async function createNewSite(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    showToast('info', 'Creating your Space...');
+
+    try {
+        const response = await fetch('/api/sites', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: form.name.value
+            })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            showToast('success', 'Space created successfully!');
+            window.location.href = `{{ url_for('welcome') }}`.replace('/welcome', `/edit/${data.site_id}`);
+        } else {
+            showToast('error', data.message || 'Failed to create Space');
+        }
+    } catch (error) {
+        console.error('Error creating site:', error);
+        showToast('error', 'An error occurred while creating the Space');
+    } finally {
+        submitBtn.disabled = false;
+    }
+}
+
+async function deleteSite() {
+    if (!currentSiteId) return;
+
+    const deleteBtn = document.querySelector('#deleteModal .btn-danger');
+    const originalHtml = deleteBtn.innerHTML;
+    deleteBtn.disabled = true;
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+    try {
+        const repoResponse = await fetch(`/api/github/repo-info?site_id=${currentSiteId}`);
+        if (repoResponse.ok) {
+            await fetch(`/api/github/disconnect-repo?site_id=${currentSiteId}`, {
+                method: 'POST'
+            });
+        }
+
+        const response = await fetch(`/api/sites/${currentSiteId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            showToast('success', 'Space deleted successfully!');
+            location.reload();
+        } else {
+            const data = await response.json();
+            showToast('error', data.message || 'Failed to delete Space');
+        }
+    } catch (error) {
+        showToast('error', 'An error occurred while deleting the Space');
+    } finally {
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = originalHtml;
+        closeDeleteModal();
+    }
+}
+
+function copyPublicLink(slug) {
+    const url = `${window.location.origin}/s/${slug}`;
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('success', 'Public link copied to clipboard!');
+    }).catch(() => {
+        showToast('error', 'Failed to copy link');
+    });
+}
+
+function openNewPythonModal() {
+    const modal = document.getElementById('newPythonModal');
+    modal.style.display = 'flex';
+    modal.offsetHeight;
+    modal.classList.add('show');
+    document.getElementById('pythonName').focus();
+}
+
+function closeNewPythonModal() {
+    const modal = document.getElementById('newPythonModal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.getElementById('newPythonForm').reset();
+    }, 300);
+}
+
+async function createNewPython(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    showToast('info', 'Creating your Python script...');
+
+    try {
+        const response = await fetch('/api/sites/python', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: form.name.value,
+                type: 'python'
+            })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            showToast('success', 'Python script created successfully!');
+            window.location.href = `{{ url_for('welcome') }}`.replace('/welcome', `/python/${data.site_id}`);
+        } else {
+            showToast('error', data.message || 'Failed to create Python script');
+        }
+    } catch (error) {
+        console.error('Error creating Python script:', error);
+        showToast('error', 'An error occurred while creating the Python script');
+    } finally {
+        submitBtn.disabled = false;
+    }
+}
+
+function showToast(type, message) {
+    const toastContainer = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    toast.offsetHeight;
+
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+async function leaveSharedSpace(collaborationId) {
+    if (!confirm('Are you sure you want to leave this shared space?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/collaborations/${collaborationId}/leave`, {
+            method: 'POST',
+        });
+
+        if (response.ok) {
+            showToast('success', 'You have left the shared space');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            const data = await response.json();
+            showToast('error', data.message || 'Failed to leave shared space');
+        }
+    } catch (error) {
+        showToast('error', `Error: ${error.message}`);
+    }
+}
+</script>
+<div id="renameSiteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> Rename Space</h2>
+            <button class="close-btn" onclick="closeRenameModal()">&times;</button>
+        </div>
+        <form id="renameSiteForm" onsubmit="renameSite(event)">
+            <input type="hidden" id="renameSiteId">
+            <div class="form-group">
+                <label for="newSiteName">
+                    <i class="fas fa-font"></i>
+                    New Space Name
+                </label>
+                <input type="text" id="newSiteName" name="name" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeRenameModal()">
+                    Cancel
+                </button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openRenameModal(siteId, siteName) {
+    const modal = document.getElementById('renameSiteModal');
+    modal.style.display = 'flex';
+    document.getElementById('renameSiteId').value = siteId;
+    document.getElementById('newSiteName').value = siteName;
+}
+
+function closeRenameModal() {
+    document.getElementById('renameSiteModal').style.display = 'none';
+}
+
+async function renameSite(e) {
+    e.preventDefault();
+    const siteId = document.getElementById('renameSiteId').value;
+    const newName = document.getElementById('newSiteName').value;
+
+    try {
+        const response = await fetch(`/api/sites/${siteId}/rename`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: newName })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast('success', 'Space renamed successfully');
+            closeRenameModal();
+            location.reload();
+        } else {
+            showToast('error', data.message || 'Failed to rename Space');
+        }
+    } catch (error) {
+        showToast('error', 'Failed to rename Space');
+    }
+}
+
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    document.getElementById(tabName + 'Tab').classList.add('active');
+    document.getElementById(tabName + 'Content').classList.add('active');
+
+    localStorage.setItem('activeSpacesTab', tabName);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const activeTab = localStorage.getItem('activeSpacesTab') || 'mySpaces';
+    switchTab(activeTab);
+
+    const message = localStorage.getItem('collaboration_message');
+    if (message) {
+        showToast('info', message);
+        localStorage.removeItem('collaboration_message');
+    }
+
+    {% if message %}
+    showToast('warning', '{{ message }}');
+    {% endif %}
+});
+
+function showOwnerInactiveMessage() {
+    showToast('error', 'Access denied: This space cannot be accessed because the owner is currently offline. Collaboration is only available when the space owner is active.');
+}
+</script>
+
+{% endblock %}

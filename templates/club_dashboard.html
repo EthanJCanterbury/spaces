@@ -1,0 +1,1828 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="club-dashboard-container">
+    <div class="dashboard-header">
+        <h1><i class="fas fa-users"></i> Club Dashboard</h1>
+        {% if current_user.club %}
+            <div class="club-info-card">
+                <div class="club-header">
+                    <div class="club-title">
+                        <h2>{{ current_user.club.name }}</h2>
+                        {% if current_user.club.join_code %}
+                        <div class="join-code-container">
+                            <span class="join-code-label">Join Code:</span>
+                            <span id="join-code-display">{{ current_user.club.join_code }}</span>
+                            <button class="btn-icon copy-btn" onclick="copyJoinCode()" title="Copy Join Code">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="club-header-actions">
+                        <button class="btn-primary edit-club-btn" onclick="openEditClubModal()">
+                            <i class="fas fa-edit"></i> Edit Club
+                        </button>
+                        <button class="btn-primary generate-code-btn" onclick="generateJoinCode()">
+                            <i class="fas fa-sync-alt"></i> Generate Code
+                        </button>
+                        <button class="btn-danger delete-club-btn" onclick="openDeleteClubModal()">
+                            <i class="fas fa-trash"></i> Delete Club
+                        </button>
+                    </div>
+                </div>
+                <div class="club-details">
+                    <div class="club-detail">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ current_user.club.location or 'No location set' }}</span>
+                    </div>
+
+                    <div class="club-detail">
+                        <i class="fas fa-users"></i>
+                        <span>{{ current_user.club.members.count() }} members</span>
+                    </div>
+                </div>
+                {% if current_user.club.description %}
+                    <div class="club-description">
+                        <p>{{ current_user.club.description }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="club-empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-users-slash"></i>
+                </div>
+                <h2>You haven't created a club yet</h2>
+                <p>Get started by creating your Hack Club!</p>
+                <button class="btn-primary" onclick="openCreateClubModal()">
+                    <i class="fas fa-plus"></i> Create Club
+                </button>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="dashboard-content">
+        {% if current_user.club %}
+            <div class="dashboard-card members-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-users"></i> Members</h2>
+                    <button class="btn-primary" onclick="openAddMemberModal()">
+                        <i class="fas fa-user-plus"></i> Add Member
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="members-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="membersTableBody">
+                            {% for membership in current_user.club.members %}
+                                <tr>
+                                    <td>{{ membership.user.username }}</td>
+                                    <td>{{ membership.user.email }}</td>
+                                    <td>
+                                        <span class="role-badge {% if membership.role == 'co-leader' %}role-badge-leader{% endif %}">
+                                            {{ membership.role|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>{{ membership.joined_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn-icon" onclick="openChangeRoleModal({{ membership.id }}, '{{ membership.user.username }}', '{{ membership.role }}')">
+                                                <i class="fas fa-user-tag"></i>
+                                            </button>
+                                            <button class="btn-icon delete-action" onclick="openRemoveMemberModal({{ membership.id }}, '{{ membership.user.username }}')">
+                                                <i class="fas fa-user-minus"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="dashboard-card spaces-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-cubes"></i> Member Spaces</h2>
+                </div>
+                <div id="member-spaces-container" class="member-spaces-grid">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading member spaces...</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Create Club Modal -->
+<div id="createClubModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-users"></i> Create New Club</h2>
+            <button class="close-btn" onclick="closeCreateClubModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="createClubForm">
+                <div class="form-group">
+                    <label for="clubName">Club Name <span class="required">*</span></label>
+                    <input type="text" id="clubName" name="clubName" required placeholder="E.g., Hack Club Central High" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="clubLocation">Location</label>
+                    <input type="text" id="clubLocation" name="clubLocation" placeholder="E.g., Room 203, Central High School" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="clubDescription">Description</label>
+                    <textarea id="clubDescription" name="clubDescription" rows="4" placeholder="Tell us about your club..." class="form-textarea"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeCreateClubModal()">Cancel</button>
+            <button class="btn-primary" onclick="createClub()">
+                <i class="fas fa-plus"></i> Create Club
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Club Modal -->
+<div id="editClubModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> Edit Club</h2>
+            <button class="close-btn" onclick="closeEditClubModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="editClubForm">
+                <div class="form-group">
+                    <label for="editClubName">Club Name <span class="required">*</span></label>
+                    <input type="text" id="editClubName" name="editClubName" required class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="editClubLocation">Location</label>
+                    <input type="text" id="editClubLocation" name="editClubLocation" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="editClubDescription">Description</label>
+                    <textarea id="editClubDescription" name="editClubDescription" rows="4" class="form-textarea"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeEditClubModal()">Cancel</button>
+            <button class="btn-primary" onclick="updateClub()">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Member Modal -->
+<div id="addMemberModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user-plus"></i> Add Member</h2>
+            <button class="close-btn" onclick="closeAddMemberModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="join-code-info">
+                <div class="info-card">
+                    <h3><i class="fas fa-key"></i> Join Code</h3>
+                    <p>Share your club's join code with members and let them join on their own.</p>
+                    <div class="join-code-display">
+                        {% if current_user.club.join_code %}
+                            <div class="code-box">{{ current_user.club.join_code }}</div>
+                            <button class="btn-primary" onclick="copyJoinCode()">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        {% else %}
+                            <button class="btn-primary" onclick="generateJoinCode()">
+                                <i class="fas fa-key"></i> Generate Join Code
+                            </button>
+                        {% endif %}
+                    </div>
+                    <p><small>Members can join by entering this code on their dashboard.</small></p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeAddMemberModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Change Role Modal -->
+<div id="changeRoleModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user-tag"></i> Change Member Role</h2>
+            <button class="close-btn" onclick="closeChangeRoleModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Change role for <span id="roleUsername" class="highlighted-text"></span>:</p>
+            <input type="hidden" id="membershipIdForRole">
+            <div class="role-selector">
+                <label class="role-option">
+                    <input type="radio" name="memberRole" value="member" id="roleMember">
+                    <span class="role-card">
+                        <i class="fas fa-user"></i>
+                        <span>Member</span>
+                        <span class="role-description">Regular club member with basic privileges</span>
+                    </span>
+                </label>
+                <label class="role-option">
+                    <input type="radio" name="memberRole" value="co-leader" id="roleLeader">
+                    <span class="role-card">
+                        <i class="fas fa-crown"></i>
+                        <span>Co-Leader</span>
+                        <span class="role-description">Can manage members and club settings</span>
+                    </span>
+                </label>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeChangeRoleModal()">Cancel</button>
+            <button class="btn-primary" onclick="changeRole()">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Member Modal -->
+<div id="removeMemberModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user-minus"></i> Remove Member</h2>
+            <button class="close-btn" onclick="closeRemoveMemberModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="warning-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Are you sure you want to remove <span id="removeUsername" class="highlighted-text"></span> from your club?</p>
+                <p>This action cannot be undone.</p>
+            </div>
+            <input type="hidden" id="membershipIdForRemoval">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeRemoveMemberModal()">Cancel</button>
+            <button class="btn-danger" onclick="removeMember()">
+                <i class="fas fa-user-minus"></i> Remove Member
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Club Modal -->
+<div id="deleteClubModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-trash"></i> Delete Club</h2>
+            <button class="close-btn" onclick="closeDeleteClubModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="warning-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Are you sure you want to delete your club?</p>
+                <p>This will remove all members and club data.</p>
+                <p class="warning-highlight">This action cannot be undone!</p>
+            </div>
+            <div class="confirmation-input">
+                <label for="deleteConfirmation">Type "DELETE" to confirm:</label>
+                <input type="text" id="deleteConfirmation" class="form-input" placeholder="DELETE">
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeDeleteClubModal()">Cancel</button>
+            <button class="btn-danger" id="confirmDeleteBtn" disabled onclick="deleteClub()">
+                <i class="fas fa-trash"></i> Delete Club
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container for notifications -->
+<div id="toast-container"></div>
+
+<style>
+/* ===== Base Styles ===== */
+:root {
+    --primary: #ec3750;
+    --primary-dark: #cf142b;
+    --primary-light: #ff5a69;
+    --secondary: #e83e8c;
+    --success: #059669;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --light: #f3f4f6;
+    --dark: #1f2937;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --card-bg: #ffffff;
+    --body-bg: #f9fafb;
+}
+
+.club-dashboard-container {
+    max-width: 1200px;
+    margin: 80px auto 40px;
+    padding: 0 1.5rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-secondary {
+    background-color: var(--light);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+    background-color: #b91c1c;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--light);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background-color: #e5e7eb;
+    color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.delete-action {
+    color: var(--danger);
+}
+
+.delete-action:hover {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: var(--danger);
+}
+
+.form-input, 
+.form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    color: var(--text-primary);
+    background-color: var(--light);
+    transition: all 0.2s ease;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(236, 55, 80, 0.2);
+    outline: none;
+}
+
+.form-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.required {
+    color: var(--danger);
+    margin-left: 3px;
+}
+
+/* ===== Dashboard Header ===== */
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    margin-bottom: 1.5rem;
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Club Info Card */
+.club-info-card {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    border-left: 6px solid var(--primary);
+    padding: 2rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 5px 10px rgba(0, 0, 0, 0.02);
+    margin-bottom: 2rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.club-info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08), 0 10px 15px rgba(0, 0, 0, 0.04);
+}
+
+.club-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.club-title {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.club-title h2 {
+    margin: 0;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.join-code-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--light);
+    padding: 8px 12px;
+    border-radius: 8px;
+    max-width: fit-content;
+}
+
+.join-code-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+#join-code-display {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: 0.05em;
+}
+
+.copy-btn {
+    color: var(--primary);
+    background-color: transparent;
+    border: none;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+}
+
+.copy-btn:hover {
+    background-color: rgba(236, 55, 80, 0.1);
+}
+
+.club-header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.edit-club-btn, .generate-code-btn, .delete-club-btn {
+    padding: 10px 16px;
+    font-size: 0.9375rem;
+}
+
+.delete-club-btn {
+    background-color: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.delete-club-btn:hover {
+    background-color: var(--danger);
+    color: white;
+}
+
+.club-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 1.5rem;
+}
+
+.club-detail {
+    display: flex;
+    align-items: center;
+    color: var(--text-secondary);
+    background-color: var(--light);
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 0.9375rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.club-detail i {
+    margin-right: 8px;
+    color: var(--primary);
+}
+
+.club-description {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.club-description p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+/* Empty State */
+.club-empty-state {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    padding: 4rem 2rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 5px 10px rgba(0, 0, 0, 0.02);
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.empty-icon {
+    font-size: 5rem;
+    color: var(--primary);
+    margin-bottom: 2rem;
+    opacity: 0.8;
+}
+
+.club-empty-state h2 {
+    margin: 0 0 1rem;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.club-empty-state p {
+    margin: 0 0 2rem;
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+}
+
+/* ===== Dashboard Cards ===== */
+.dashboard-card {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 5px 10px rgba(0, 0, 0, 0.02);
+}
+
+.members-card {
+    border-top: 5px solid var(--secondary);
+}
+
+.spaces-card {
+    border-top: 5px solid var(--success);
+}
+
+#member-spaces-container {
+    display: block;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+}
+
+.section-header h2 i {
+    margin-right: 0.75rem;
+    color: var(--primary);
+}
+
+/* ===== Table Styles ===== */
+.table-responsive {
+    overflow-x: auto;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+}
+
+.members-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.members-table th,
+.members-table td {
+    padding: 1rem;
+    text-align: left;
+}
+
+.members-table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    background-color: var(--light);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.members-table th:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.members-table th:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.members-table tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.members-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.members-table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    background-color: #e9ecef;
+    color: var(--text-secondary);
+}
+
+.role-badge-leader {
+    background-color: rgba(236, 55, 80, 0.15);
+    color: var(--primary);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+/* ===== Member Spaces ===== */
+.member-spaces-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.member-spaces-section .spaces-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.member-spaces-section {
+    margin-bottom: 2rem;
+}
+
+.member-spaces-section h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.member-spaces-section h3::before {
+    content: '';
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--primary);
+}
+
+.spaces-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.space-card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid var(--border-color);
+}
+
+.space-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.space-info h4 {
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    font-size: 1.125rem;
+    color: var(--text-primary);
+    word-break: break-word;
+}
+
+.space-type {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: rgba(5, 150, 105, 0.1);
+    color: var(--success);
+    border-radius: 4px;
+}
+
+.space-meta {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.space-date {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.space-date i {
+    font-size: 0.75rem;
+}
+
+.space-actions {
+    margin-top: auto;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.8125rem;
+    border-radius: 6px;
+}
+
+/* ===== Modal Styles ===== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+        background-color: var(--card-bg);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 550px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0;
+    margin: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.close-btn:hover {
+    background-color: var(--light);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Role Selector */
+.role-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 1rem;
+}
+
+.role-option {
+    cursor: pointer;
+    position: relative;
+}
+
+.role-option input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.role-card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.role-option input:checked + .role-card {
+    border-color: var(--primary);
+    background-color: rgba(236, 55, 80, 0.05);
+}
+
+.role-card i {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+}
+
+.role-option input:checked + .role-card i {
+    color: var(--primary);
+}
+
+.role-card span:nth-child(2) {
+    font-weight: 600;
+    font-size: 1.125rem;
+    margin-bottom: 4px;
+}
+
+.role-description {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+/* Warning Message */
+.warning-message {
+    background-color: rgba(220, 38, 38, 0.05);
+    border-left: 4px solid var(--danger);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.warning-message i {
+    font-size: 2rem;
+    color: var(--danger);
+    margin-bottom: 1rem;
+}
+
+.warning-message p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.warning-highlight {
+    font-weight: 600;
+    color: var(--danger);
+}
+
+.highlighted-text {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.confirmation-input {
+    margin-top: 1.5rem;
+}
+
+.confirmation-input label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+/* Info Card */
+.info-card {
+    background-color: rgba(236, 55, 80, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-card h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.join-code-display {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 1.5rem 0;
+}
+
+.code-box {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    background-color: var(--light);
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: var(--primary);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid var(--border-color);
+    flex-grow: 1;
+    text-align: center;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    text-align: center;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.loading-spinner i {
+    font-size: 2rem;
+    color: var(--primary);
+}
+
+.loading-spinner p {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+    margin: 0;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+}
+
+.empty-state .empty-icon {
+    font-size: 3.5rem;
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+}
+
+.empty-state p {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Toast Notifications */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.toast {
+    min-width: 320px;
+    max-width: 450px;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transform: translateX(120%);
+    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    overflow: hidden;
+    position: relative;
+}
+
+.toast::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toast-success {
+    background-color: #f0fdf4;
+    color: #166534;
+}
+
+.toast-success::before {
+    background-color: #059669;
+}
+
+.toast-error {
+    background-color: #fef2f2;
+    color: #b91c1c;
+}
+
+.toast-error::before {
+    background-color: #dc2626;
+}
+
+.toast-info {
+    background-color: #fff1f2;
+    color: #be123c;
+}
+
+.toast-info::before {
+    background-color: #ec3750;
+}
+
+.toast-warning {
+    background-color: #fffbeb;
+    color: #b45309;
+}
+
+.toast-warning::before {
+    background-color: #d97706;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .club-dashboard-container {
+        padding: 0 1rem;
+    }
+
+    .club-header {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .club-header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .member-spaces-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-header h1 {
+        font-size: 1.75rem;
+    }
+
+    .club-title h2 {
+        font-size: 1.5rem;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .modal-content {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 576px) {
+    .club-details {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .spaces-list {
+        grid-template-columns: 1fr;
+    }
+
+    .join-code-display {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .role-card {
+        padding: 1rem;
+    }
+}
+</style>
+
+<script>
+// Toast notification
+function showToast(type, message) {
+    const toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    const icon = type === 'success' ? 'check-circle' : 
+                 type === 'error' ? 'exclamation-circle' :
+                 type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    document.getElementById('toast-container').appendChild(toast);
+
+    // Trigger animation
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+
+    // Remove toast after 4 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+// Copy join code functionality
+function copyJoinCode() {
+    const joinCodeDisplay = document.getElementById('join-code-display');
+    if (joinCodeDisplay) {
+        const joinCode = joinCodeDisplay.textContent;
+        navigator.clipboard.writeText(joinCode).then(() => {
+            showToast('success', 'Join code copied to clipboard');
+        }).catch(err => {
+            showToast('error', 'Failed to copy join code');
+            console.error('Could not copy text: ', err);
+        });
+    }
+}
+
+// Generate join code
+function generateJoinCode() {
+    fetch('/api/clubs/join-code/generate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            showToast('success', data.message);
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else if (data.error) {
+            showToast('error', data.error);
+        } else {
+            showToast('error', 'Failed to generate join code');
+        }
+    })
+    .catch(error => {
+        showToast('error', 'Failed to generate join code');
+        console.error('Error:', error);
+    });
+}
+
+// Modal functions
+function openCreateClubModal() {
+    document.getElementById('createClubModal').style.display = 'flex';
+}
+
+function closeCreateClubModal() {
+    document.getElementById('createClubModal').style.display = 'none';
+    document.getElementById('createClubForm').reset();
+}
+
+function openEditClubModal() {
+    // Fetch current club data and populate the form
+    fetch('/api/clubs/current')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showToast('error', data.error);
+                return;
+            }
+
+            document.getElementById('editClubName').value = data.name || '';
+            document.getElementById('editClubLocation').value = data.location || '';
+            document.getElementById('editClubDescription').value = data.description || '';
+            document.getElementById('editClubModal').style.display = 'flex';
+        })
+        .catch(error => {
+            showToast('error', 'Failed to fetch club details');
+            console.error('Error:', error);
+        });
+}
+
+function closeEditClubModal() {
+    document.getElementById('editClubModal').style.display = 'none';
+    document.getElementById('editClubForm').reset();
+}
+
+function openAddMemberModal() {
+    document.getElementById('addMemberModal').style.display = 'flex';
+}
+
+function closeAddMemberModal() {
+    document.getElementById('addMemberModal').style.display = 'none';
+}
+
+function openChangeRoleModal(membershipId, username, currentRole) {
+    document.getElementById('membershipIdForRole').value = membershipId;
+    document.getElementById('roleUsername').textContent = username;
+
+    // Set the current role
+    if (currentRole === 'member') {
+        document.getElementById('roleMember').checked = true;
+    } else if (currentRole === 'co-leader') {
+        document.getElementById('roleLeader').checked = true;
+    }
+
+    document.getElementById('changeRoleModal').style.display = 'flex';
+}
+
+function closeChangeRoleModal() {
+    document.getElementById('changeRoleModal').style.display = 'none';
+}
+
+function openRemoveMemberModal(membershipId, username) {
+    document.getElementById('membershipIdForRemoval').value = membershipId;
+    document.getElementById('removeUsername').textContent = username;
+    document.getElementById('removeMemberModal').style.display = 'flex';
+}
+
+function closeRemoveMemberModal() {
+    document.getElementById('removeMemberModal').style.display = 'none';
+}
+
+function openDeleteClubModal() {
+    document.getElementById('deleteClubModal').style.display = 'flex';
+    document.getElementById('deleteConfirmation').value = '';
+    document.getElementById('confirmDeleteBtn').disabled = true;
+}
+
+function closeDeleteClubModal() {
+    document.getElementById('deleteClubModal').style.display = 'none';
+}
+
+// Create club functionality
+function createClub() {
+    const formData = {
+        name: document.getElementById('clubName').value.trim(),
+        location: document.getElementById('clubLocation').value.trim(),
+        description: document.getElementById('clubDescription').value.trim()
+    };
+
+    if (!formData.name) {
+        showToast('error', 'Club name is required');
+        return;
+    }
+
+    fetch('/api/clubs', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            showToast('success', data.message);
+            closeCreateClubModal();
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else if (data.error) {
+            showToast('error', data.error);
+        } else {
+            showToast('error', 'Failed to create club');
+        }
+    })
+    .catch(error => {
+        showToast('error', 'Failed to create club');
+        console.error('Error:', error);
+    });
+}
+
+// Update club functionality
+function updateClub() {
+    const formData = {
+        name: document.getElementById('editClubName').value.trim(),
+        location: document.getElementById('editClubLocation').value.trim(),
+        description: document.getElementById('editClubDescription').value.trim()
+    };
+
+    if (!formData.name) {
+        showToast('error', 'Club name is required');
+        return;
+    }
+
+    fetch('/api/clubs/current', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.message) {
+            showToast('success', data.message);
+            closeEditClubModal();
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else if (data.error) {
+            showToast('error', data.error);
+        } else {
+            showToast('error', 'Failed to update club');
+        }
+    })
+    .catch(error => {
+        showToast('error', 'Failed to update club');
+        console.error('Error:', error);
+    });
+}
+
+// Change role functionality
+function changeRole() {
+    const membershipId = document.getElementById('membershipIdForRole').value;
+    const selectedRole = document.querySelector('input[name="memberRole"]:checked').value;
+
+    fetch(`/api/clubs/members/${membershipId}/role`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ role: selectedRole })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            showToast('success', data.message);
+            closeChangeRoleModal();
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else if (data.error) {
+            showToast('error', data.error);
+        } else {
+            showToast('error', 'Failed to update member role');
+        }
+    })
+    .catch(error => {
+        showToast('error', 'Failed to update member role');
+        console.error('Error:', error);
+    });
+}
+
+// Remove member functionality
+function removeMember() {
+    const membershipId = document.getElementById('membershipIdForRemoval').value;
+
+    fetch(`/api/clubs/members/${membershipId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            showToast('success', data.message);
+            closeRemoveMemberModal();
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else if (data.error) {
+            showToast('error', data.error);
+        } else {
+            showToast('error', 'Failed to remove member');
+        }
+    })
+    .catch(error => {
+        showToast('error', 'Failed to remove member');
+        console.error('Error:', error);
+    });
+}
+
+// Delete club functionality
+function deleteClub() {
+    const confirmation = document.getElementById('deleteConfirmation').value;
+    if (confirmation !== 'DELETE') {
+        showToast('error', 'Please type "DELETE" to confirm');
+        return;
+    }
+
+    fetch('/api/clubs/current', {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            showToast('success', data.message);
+            closeDeleteClubModal();
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
+        } else if (data.error) {
+            showToast('error', data.error);
+        } else {
+            showToast('error', 'Failed to delete club');
+        }
+    })
+    .catch(error => {
+        showToast('error', 'Failed to delete club');
+        console.error('Error:', error);
+    });
+}
+
+// Handle delete confirmation input
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteConfirmationInput = document.getElementById('deleteConfirmation');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    if (deleteConfirmationInput && confirmDeleteBtn) {
+        deleteConfirmationInput.addEventListener('input', function() {
+            confirmDeleteBtn.disabled = this.value !== 'DELETE';
+        });
+    }
+});
+
+// Fetch member spaces
+async function fetchMemberSpaces() {
+    const container = document.getElementById('member-spaces-container');
+    if (!container) {
+        console.error('Member spaces container not found');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/clubs/members/sites');
+
+        if (response.ok) {
+            const data = await response.json();
+            displayMemberSpaces(data.sites || []);
+        } else {
+            const error = await response.json();
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <p>Failed to load member spaces: ${error.error || 'Unknown error'}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error fetching member spaces:', error);
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <p>Failed to load member spaces. Please try again later.</p>
+            </div>
+        `;
+    }
+}
+
+// Display member spaces
+function displayMemberSpaces(sites) {
+    const container = document.getElementById('member-spaces-container');
+    if (!container) {
+        console.error('Member spaces container not found');
+        return;
+    }
+
+    if (!sites || sites.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-laptop-code"></i>
+                </div>
+                <p>No spaces found for club members.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Group spaces by owner
+    const spacesByOwner = {};
+    sites.forEach(site => {
+        const ownerId = site.owner.id;
+        if (!spacesByOwner[ownerId]) {
+            spacesByOwner[ownerId] = {
+                username: site.owner.username,
+                sites: []
+            };
+        }
+        spacesByOwner[ownerId].sites.push(site);
+    });
+
+    let html = '';
+
+    // Generate HTML for each owner and their spaces
+    Object.keys(spacesByOwner).forEach(ownerId => {
+        const owner = spacesByOwner[ownerId];
+        html += `
+            <div class="member-spaces-section">
+                <h3>${owner.username}'s Spaces</h3>
+                <div class="spaces-list">
+        `;
+
+        owner.sites.forEach(site => {
+            const siteType = site.type === 'python' ? 'Python' : 'Web';
+            const siteUrl = site.type === 'python' ? `/python/${site.id}` : `/edit/${site.id}`;
+            const updatedDate = new Date(site.updated_at).toLocaleDateString();
+
+            html += `
+                <div class="space-card">
+                    <div class="space-info">
+                        <h4>${site.name}</h4>
+                        <span class="space-type">${siteType}</span>
+                    </div>
+                    <div class="space-meta">
+                        <span class="space-date"><i class="far fa-calendar-alt"></i> ${updatedDate}</span>
+                    </div>
+                    <div class="space-actions">
+                        <a href="${siteUrl}" class="btn-primary btn-sm" title="View Space">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <button class="btn-danger btn-sm" onclick="openDeleteSpaceModal(${site.id}, '${site.name}')" title="Delete Space">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+// Delete member space (modal opens a custom confirm dialog)
+function openDeleteSpaceModal(siteId, siteName) {
+    // Create modal dynamically
+    const modalId = 'deleteSpaceModal';
+    let modal = document.getElementById(modalId);
+
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-trash"></i> Delete Space</h2>
+                    <button class="close-btn" onclick="document.getElementById('${modalId}').style.display = 'none'">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="warning-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Are you sure you want to delete <span id="deleteSpaceName" class="highlighted-text"></span>?</p>
+                        <p>This action cannot be undone.</p>
+                    </div>
+                    <input type="hidden" id="spaceIdForDeletion">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="document.getElementById('${modalId}').style.display = 'none'">Cancel</button>
+                    <button class="btn-danger" onclick="deleteMemberSpace(${siteId})">
+                        <i class="fas fa-trash"></i> Delete Space
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    document.getElementById('spaceIdForDeletion').value = siteId;
+    document.getElementById('deleteSpaceName').textContent = siteName;
+    modal.style.display = 'flex';
+}
+
+function deleteMemberSpace(siteId) {
+    if (!siteId) {
+        showToast('error', 'No space selected for deletion');
+        return;
+    }
+
+    fetch(`/api/sites/${siteId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            showToast('success', data.message);
+            document.getElementById('deleteSpaceModal').style.display = 'none';
+            fetchMemberSpaces(); // Refresh the spaces list
+        } else if (data.error) {
+            showToast('error', data.error);
+        } else {
+            showToast('error', 'Failed to delete space');
+        }
+    })
+    .catch(error => {
+        showToast('error', 'Failed to delete space');
+        console.error('Error:', error);
+    });
+}
+
+// Initialize when document is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Make sure all elements exist before calling functions
+    if (document.getElementById('member-spaces-container')) {
+        fetchMemberSpaces();
+    }
+});
+</script>
+{% endblock %}

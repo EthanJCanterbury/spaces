@@ -1,0 +1,20 @@
+
+{
+  "allowed_imports": [
+    "math",
+    "random",
+    "datetime",
+    "json",
+    "collections",
+    "re",
+    "string",
+    "functools",
+    "time",
+    "statistics",
+    "decimal",
+    "fractions",
+    "os.path",
+    "sys",
+    "csv"
+  ]
+}
