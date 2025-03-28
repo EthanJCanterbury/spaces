@@ -1,0 +1,14 @@
+Flask==3.0.0
+Flask-Assets==2.1.0
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+slack-sdk==3.26.1
+requests==2.31.0
+python-dotenv==1.0.0
+Flask-Session==0.8.0
+psycopg2-binary==2.9.9
+flask-migrate
+slugify
+werkzeug
+sqlalchemy
+PyGithub==2.1.1

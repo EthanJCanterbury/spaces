@@ -1,5 +1,5 @@
 entrypoint = "main.py"
-modules = ["python-3.11"]
+modules = ["python-3.11", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
@@ -13,3 +13,57 @@ requiredFiles = [".replit", "replit.nix"]
 [deployment]
 run = ["python3", "main.py"]
 deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 3000
+externalPort = 80
+
+[[ports]]
+localPort = 32805
+externalPort = 4200
+
+[[ports]]
+localPort = 34237
+externalPort = 6000
+
+[[ports]]
+localPort = 34767
+externalPort = 5000
+
+[[ports]]
+localPort = 35749
+externalPort = 3001
+
+[[ports]]
+localPort = 37367
+externalPort = 3003
+
+[[ports]]
+localPort = 44299
+externalPort = 3002
+
+[[ports]]
+localPort = 44357
+externalPort = 3000
+
+[[ports]]
+localPort = 45843
+externalPort = 5173
+
+[env]
+
+[workflows]
+runButton = "Run"
+
+[[workflows.workflow]]
+name = "Run"
+author = 17724980
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "kill -9 $(lsof -t -i:3000) 2>/dev/null || true"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 main.py"
