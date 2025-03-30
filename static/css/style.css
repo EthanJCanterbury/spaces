@@ -1,157 +1,190 @@
+/* GitHub Integration Modal Styles */
+.github-auth,
+.github-repo-form,
+.github-repo-info,
+.github-confirm,
+.github-success,
+.github-error {
+    padding: 20px;
+}
 
-.changelog-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
+.loading-indicator {
+    text-align: center;
+    padding: 40px;
+    font-size: 18px;
+}
+
+.loading-indicator i {
+    margin-right: 10px;
+    color: #4f46e5;
+}
+
+.github-repo-form form {
+    margin-top: 20px;
+}
+
+.github-repo-form .form-group {
+    margin-bottom: 15px;
+}
+
+.github-repo-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.github-repo-form input[type="text"] {
     width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.github-repo-form .checkbox {
     display: flex;
     align-items: center;
-    justify-content: center;
-    z-index: 2000;
+    color: white;
+
 }
 
-.changelog-content {
-    background: white;
-    padding: 2rem;
+.github-repo-form .checkbox label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    color: white;
+
+}
+
+.github-repo-form .checkbox input {
+    margin-right: 8px;
+    color: white;
+
+}
+
+.github-repo-info .repo-details,
+.github-repo-info .repo-actions {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
     border-radius: 8px;
-    max-width: 600px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
 }
 
-.changelog-content button {
-    background: var(--primary);
+.github-repo-info .repo-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.github-repo-info .repo-actions button {
+    margin-top: 5px;
+}
+
+.github-confirm {
+    text-align: center;
+}
+
+.github-confirm i,
+.github-success i,
+.github-error i {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.github-confirm i,
+.github-error i {
+    color: #dc3545;
+}
+
+.github-success i {
+    color: #28a745;
+}
+
+.repo-link {
+    display: inline-flex;
+    align-items: center;
+    color: #4f46e5;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.repo-link i {
+    margin-right: 5px;
+}
+
+.github-auth-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-danger {
+    background-color: #dc3545;
     color: white;
     border: none;
     padding: 8px 16px;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
     font-weight: 500;
-    transition: all 0.2s;
 }
 
-.changelog-content button:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
+.btn-danger:hover {
+    background-color: #c82333;
 }
 
-.changelog-content h1 {
-    margin-top: 0;
-    color: var(--primary);
-}
-
-.changelog-content h2 {
-    color: var(--text);
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 0.5rem;
-}
-
-.changelog-body {
-    margin-bottom: 1.5rem;
-}
-
-.changelog-body h1 {
-    font-size: 1.8em;
-    margin-bottom: 1rem;
-    color: var(--primary);
-}
-
-.changelog-body h2 {
-    font-size: 1.4em;
-    margin: 1rem 0;
-    color: var(--text);
-}
-
-.changelog-body li {
-    list-style: none;
-    margin: 0.5rem 0;
-    padding-left: 1rem;
-}
-
-.changelog-body h1 {
-    margin-top: 0;
-}
-
-.error-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 80vh;
-    text-align: center;
-}
-
-.error-content {
-    background: rgba(255, 255, 255, 0.9);
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    max-width: 500px;
-}
-
-.error-content h1 {
-    color: var(--primary);
-    margin-bottom: 1rem;
-}
-
-
-.unofficial-banner {
-    background: linear-gradient(135deg, #ff6b00, #ff8800);
+/* General button styles */
+.btn-primary {
+    background-color: #4f46e5;
     color: white;
-    width: 100%;
-    padding: 12px 0;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1001;
-    box-shadow: 0 2px 10px rgba(255, 107, 0, 0.3);
-    text-align: center;
-    font-weight: 600;
-    font-size: 1.1rem;
-    animation: banner-glow 2s ease-in-out infinite;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
 }
 
-.banner-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 0 20px;
+.btn-secondary {
+    background-color: #e5e7eb;
+    color: #1f2937;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
 }
 
-.banner-icon {
-    font-size: 1.4rem;
-    animation: bounce 1s ease-in-out infinite;
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
 }
 
-.banner-text {
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-@keyframes banner-glow {
-    0%, 100% {
-        box-shadow: 0 2px 10px rgba(255, 107, 0, 0.3);
-    }
-    50% {
-        box-shadow: 0 2px 20px rgba(255, 107, 0, 0.5);
-    }
-}
-
-@keyframes bounce {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-3px);
-    }
+.btn-primary:hover, 
+.btn-secondary:hover,
+.btn-danger:hover {
+    opacity: 0.9;
 }
 
 :root {
-    --primary: #ec3750;
+    --primary: #eb3750;
     --secondary: #ff8c37;
     --background: #f5f7fa;
     --text: #1f2d3d;
@@ -409,7 +442,7 @@ body.editor-page {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, rgba(236, 55, 80, 0.1), rgba(132, 146, 166, 0.1));
+    background: linear-gradient(45deg, rgba(236, 55, 80, 0.1), rgba(132, 140, 166, 0.1));
     z-index: 0;
 }
 
@@ -607,7 +640,7 @@ h1 {
 .flash {
     padding: 1rem 1.5rem;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     display: flex;
@@ -617,12 +650,12 @@ h1 {
 
 .flash.error {
     border-left: 4px solid var(--primary);
-    color: var(--primary);
+    color: white;
 }
 
 .flash.success {
     border-left: 4px solid #0CCE6B;
-    color: #0CCE6B;
+    color: white;
 }
 
 .welcome-page {
@@ -1006,10 +1039,17 @@ footer {
 }
 
 .empty-state {
+    grid-column: 1 / -1;
     text-align: center;
-    padding: 2rem 0;
-    color: var(--text-light);
-    font-size: 1.1rem;
+    padding: 4rem;
+    background: var(--surface-secondary);
+    border-radius: 12px;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
 }
 
 .modal {
@@ -1174,8 +1214,7 @@ footer {
     background: white;
     border-bottom: 1px solid var(--border);
     position: sticky;
-    top: 64px;
-    z-index: 10;
+    top: 64px;z-index: 10;
 }
 
 .toolbar-left {
@@ -1247,7 +1286,7 @@ footer {
 .toast {
     padding: 1rem 1.5rem;
     border-radius: 8px;
-    background: white;
+    background: rgba(0, 0, 0, 0.85);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     display: flex;
     align-items: center;
@@ -1256,6 +1295,11 @@ footer {
     max-width: 500px;
     animation: slideIn 0.3s ease;
     border-left: 4px solid;
+    color: #ffffff !important;
+}
+
+.toast * {
+    color: #ffffff !important;
 }
 
 .toast.success {
@@ -1650,11 +1694,11 @@ footer {
     h1 {
         font-size: 2.5rem;
     }
-    
+
     .subtitle {
         font-size: 1.2rem;
     }
-    
+
     .nav-links {
         display: none;
     }
@@ -2196,8 +2240,7 @@ footer {
     transition: all 0.2s ease;
     border: none;
     background: none;
-    color: var(--text-primary);
-    cursor: pointer;
+    color: var(--text-primary);cursor: pointer;
 }
 
 .toolbar-actions button:hover {
@@ -2371,7 +2414,7 @@ footer {
 .modal-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justifycontent: space-between;
     margin-bottom: 1.5rem;
 }
 
@@ -2400,31 +2443,6 @@ footer {
 
 .close-btn:hover {
     color: var(--text-primary);
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: border-color 0.2s;
-}
-
-.form-group input:focus {
-    border-color: var(--primary);
-    outline: none;
 }
 
 .modal-actions {
@@ -2504,42 +2522,73 @@ footer {
     position: fixed;
     bottom: 2rem;
     right: 2rem;
+    z-index: 1000;
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    z-index: 2000;
 }
 
 .toast {
-    background: var(--surface-primary);
+    padding: 1rem 1.5rem;
     border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transform: translateX(120%);
-    transition: transform 0.3s ease-out;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .toast.show {
     transform: translateX(0);
+    opacity: 1;
+}
+
+.toast-success {
+    background: #10B981;
+    color: white;
+}
+
+.toast-error {
+    background: #EF4444;
+    color: white;
 }
 
 .toast-content {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: var(--text-primary);
 }
 
-.toast-success {
-    border-left: 4px solid var(--success);
+.toast i {
+    font-size: 1.25rem;
 }
 
-.toast-error {
-    border-left: 4px solid var(--error);
-}
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 0 1rem;
+        margin: 1rem auto;
+    }
 
-.toast-success i {
-    color: var(--success);
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-header h1 {
+        font-size: 2rem;
+    }
+
+    .settings-card {
+        padding: 1.5rem;
+    }
+
+    #toast-container {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+    }
 }
 
 .repo-setup, .push-changes {
@@ -2635,6 +2684,8 @@ footer {
     align-items: center;
     gap: 8px;
     padding: 8px 0;
+    color: white;
+
 }
 
 .checkbox-group input[type="checkbox"] {
@@ -2647,6 +2698,7 @@ footer {
     cursor: pointer;
     position: relative;
     transition: all 0.2s;
+    color: white;
 }
 
 .checkbox-group input[type="checkbox"]:checked {
@@ -2835,14 +2887,42 @@ footer {
     justify-content: center;
 }
 
+#githubModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+}
+
 #githubModal .modal-content {
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
     width: 90%;
     max-width: 600px;
     position: relative;
     margin: 20px;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 #githubModal .modal-header {
@@ -2940,6 +3020,7 @@ footer {
     display: flex;
     align-items: center;
     gap: 8px;
+    color: white;
 }
 
 #githubModal .text-muted {
@@ -3139,6 +3220,233 @@ footer {
     display: flex;
     gap: 12px;
     margin-top: 16px;
+}
+
+/* GitHub Integration Styles */
+.btn-github {
+    background: #24292e;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-github:hover {
+    background: #0366d6;
+}
+
+.btn-github i {
+    font-size: 16px;
+}
+
+.repo-setup, .push-changes {
+    padding: 24px;
+}
+
+.repo-setup h3, .push-changes h3 {
+    color: var(--primary);
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.repo-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    background: var(--bg-light);
+    border-radius: 6px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.repo-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+}
+
+.repo-actions button {
+    background: #dc3545;
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+}
+
+.repo-actions button:hover {
+    background: #c82333;
+}
+
+.repo-info i {
+    font-size: 20px;
+    color: var(--text-light);
+}
+
+.repo-info .repo-details {
+    flex: 1;
+}
+
+.repo-info .repo-name {
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.repo-info .repo-url {
+    font-size: 13px;
+    color: var(--text-light);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.repo-info .repo-url:hover {
+    color: var(--primary);
+}
+
+.repo-info .repo-url i {
+    font-size: 12px;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 24px;
+    color: var(--text);
+}
+
+.file-list {
+    margin: 20px 0;
+}
+
+.file-list h4 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+    color: var(--text);
+}
+
+.file-list-container {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+.files-to-push {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.file-item {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-item i {
+    color: var(--primary);
+    width: 16px;
+}
+
+.no-files {
+    padding: 16px;
+    text-align: center;
+    color: var(--text-light);
+    font-style: italic;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.btn-loading {
+    position: relative;
+    cursor: not-allowed !important;
+    opacity: 0.8;
+}
+
+.btn-loading > *{
+    visibility: hidden;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin: -8px 0 0 -8px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    animation: button-spinner 0.75s linear infinite;
+}
+
+@keyframes button-spinner {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error-message {
+    text-align: center;
+    padding: 24px;
+    color: var(--error);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.error-message i {
+    font-size: 32px;
+}
 }
 
 .modal-actions button {
@@ -3399,4 +3707,49 @@ footer {
         right: 1rem;
         left: 1rem;
     }
+}
+
+.github-status {
+    padding: 20px;
+    text-align: center;
+}
+
+.github-status.connected {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.github-status.error {
+    color: #dc3545;
+}
+
+.github-status.success {
+    color: #28a745;
+}
+
+.github-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+}
+
+.create-repo-form {
+    max-width: 300px;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
 }

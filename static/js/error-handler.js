@@ -1,4 +1,3 @@
-// Global error handler for JavaScript errors
 window.onerror = function(msg, url, lineNo, columnNo, error) {
     handleError({
         type: 'JavaScript Error',
@@ -11,7 +10,19 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
     return false;
 };
 
-// Handle unhandled promise rejections
+window.addEventListener('error', function(event) {
+  console.error('Caught error:', event.error);
+  
+  event.preventDefault();
+  
+  if (typeof showToast === 'function') {
+    showToast('error', 'An error occurred: ' + (event.error?.message || 'Unknown error'));
+  }
+  
+  return true;
+});
+
+
 window.addEventListener('unhandledrejection', function(event) {
     handleError({
         type: 'Promise Error',
@@ -20,7 +31,6 @@ window.addEventListener('unhandledrejection', function(event) {
     });
 });
 
-// Handle AJAX errors
 $(document).ajaxError(function(event, jqXHR, settings, error) {
     handleError({
         type: 'AJAX Error',
@@ -32,16 +42,13 @@ $(document).ajaxError(function(event, jqXHR, settings, error) {
 });
 
 function handleError(errorInfo) {
-    // Create error modal if it doesn't exist
     let modal = document.getElementById('errorModal');
     if (!modal) {
         modal = createErrorModal();
     }
 
-    // Update modal content with error details
     updateErrorModal(modal, errorInfo);
 
-    // Show the modal
     modal.style.display = 'block';
 }
 
@@ -71,7 +78,6 @@ function createErrorModal() {
         </div>
     `;
 
-    // Add styles
     const style = document.createElement('style');
     style.textContent = `
         .error-modal {
@@ -240,32 +246,30 @@ function closeErrorModal() {
 }
 
 function reportError() {
-    const errorType = document.getElementById('errorType').textContent;
-    const errorMessage = document.getElementById('errorMessage').textContent;
-    const errorLocation = document.getElementById('errorLocation').textContent;
-    
-    // Create the GitHub issue URL with pre-filled information
-    const issueTitle = encodeURIComponent(`[Bug] ${errorType}: ${errorMessage.substring(0, 80)}`);
-    const errorDetailsFormatted = encodeURIComponent(
-        `## Error Details\n` +
-        `- **Type:** ${errorType}\n` +
-        `- **Message:** ${errorMessage}\n` +
-        `- **Location:** ${errorLocation}\n\n` +
-        `## Stack Trace\n` +
-        `\`\`\`\n${document.getElementById('errorStack').textContent}\n\`\`\`\n\n` +
-        `## Browser Info\n` +
-        `- **User Agent:** ${navigator.userAgent}\n` +
-        `- **Timestamp:** ${new Date().toISOString()}\n`
-    );
-    
-    const issueUrl = `https://github.com/hackclub/spaces/issues/new?title=${issueTitle}&body=${errorDetailsFormatted}`;
-    
-    // Open the GitHub issue page in a new tab
-    window.open(issueUrl, '_blank');
-    closeErrorModal();
+    const errorDetails = {
+        type: document.getElementById('errorType').textContent,
+        message: document.getElementById('errorMessage').textContent,
+        location: document.getElementById('errorLocation').textContent,
+        stack: document.getElementById('errorStack').textContent,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString()
+    };
+
+    fetch('/api/report-error', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(errorDetails)
+    }).then(() => {
+        alert('Error report sent successfully. Thank you for helping us improve!');
+        closeErrorModal();
+    }).catch(err => {
+        console.error('Failed to send error report:', err);
+        alert('Failed to send error report. Please try again later.');
+    });
 }
 
-// Test function to simulate errors (remove in production)
 function testError(type) {
     switch(type) {
         case 'syntax':

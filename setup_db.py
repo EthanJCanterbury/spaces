@@ -1,7 +1,6 @@
 from app import app, db
-from models import User, Site, UserActivity, GitHubRepo
+from models import User, Site, SitePage, UserActivity, Club, ClubMembership
 from sqlalchemy.exc import OperationalError, ProgrammingError, IntegrityError
-
 
 def setup_database():
     try:

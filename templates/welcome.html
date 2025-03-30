@@ -89,22 +89,25 @@
     .tab-content.active {
         display: block;
     }
-
-    .profile-card .email {
-        color: #666;
-        margin-top: 5px;
+    .special-access-form {
+        margin-top: 20px;
+        text-align: center;
     }
-
-    .club-leader-badge {
+    .special-access-form input[type="text"] {
+        padding: 8px;
+        margin-right: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .special-access-form button[type="submit"] {
+        padding: 8px 16px;
         background-color: #4CAF50;
         color: white;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 500;
-        margin-top: 8px;
-        display: inline-block;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
     }
+
 </style>
 {% endblock %}
 
@@ -114,7 +117,15 @@
         <div class="welcome-title">
             <h1>Welcome, {{ current_user.username }}! 👋</h1>
             <p class="subtitle">Lets make some cool stuff :D</p>
-            <p class="subtitle">Heads Up! This is a pre-pre-pre-beta so stuff WILL break lol.</p>
+            <p class="subtitle">Heads Up: This build a pre-beta and stuff WILL break!</p>
+            {% if not current_user.is_admin and not current_user.has_special_access %}
+            <div class="special-access-form">
+                <form action="{{ url_for('special_access') }}" method="POST">
+                    <input type="text" name="code" placeholder="Enter special access code">
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+            {% endif %}
         </div>
         <div class="button-group">
             {% if sites|length < max_sites %}
@@ -127,76 +138,6 @@
                 <i class="fas fa-plus"></i>
                 Space Limit Reached
             </button>
-
-            <!-- Join Club Modal -->
-            <div id="joinClubModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2><i class="fas fa-users"></i> Join a Club</h2>
-                        <button class="close-btn" onclick="closeJoinClubModal()">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="joinClubForm">
-                            <div class="form-group">
-                                <label for="joinCode">Club Join Code <span class="required">*</span></label>
-                                <input type="text" id="joinCode" name="joinCode" required placeholder="Enter the join code" class="form-input">
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-actions">
-                        <button class="btn-secondary" onclick="closeJoinClubModal()">Cancel</button>
-                        <button class="btn-primary" onclick="joinClub()">
-                            <i class="fas fa-sign-in-alt"></i> Join Club
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <script>
-                function openJoinClubModal() {
-                    document.getElementById('joinClubModal').style.display = 'flex';
-                }
-
-                function closeJoinClubModal() {
-                    document.getElementById('joinClubModal').style.display = 'none';
-                    document.getElementById('joinClubForm').reset();
-                }
-
-                function joinClub() {
-                    const joinCode = document.getElementById('joinCode').value.trim();
-
-                    if (!joinCode) {
-                        alert('Join code is required');
-                        return;
-                    }
-
-                    fetch('/api/clubs/join', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ join_code: joinCode })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.message) {
-                            alert(data.message);
-                            closeJoinClubModal();
-                            setTimeout(() => {
-                                location.reload();
-                            }, 500);
-                        } else if (data.error) {
-                            alert(data.error);
-                        } else {
-                            alert('Failed to join club');
-                        }
-                    })
-                    .catch(error => {
-                        alert('Failed to join club');
-                        console.error('Error:', error);
-                    });
-                }
-            </script>
             {% endif %}
         </div>
         <div class="site-limit-info">
@@ -332,7 +273,6 @@
                 </label>
                 <select id="spaceType" name="type" required class="space-type-select">
                     <option value="web">Web Space</option>
-                    <option value="python">Python Space</option>
                 </select>
             </div>
             <div class="modal-actions">

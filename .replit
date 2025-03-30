@@ -23,10 +23,6 @@ localPort = 32805
 externalPort = 4200
 
 [[ports]]
-localPort = 34237
-externalPort = 6000
-
-[[ports]]
 localPort = 34767
 externalPort = 5000
 
@@ -53,7 +49,7 @@ externalPort = 5173
 [env]
 
 [workflows]
-runButton = "Run Web App"
+runButton = "Run"
 
 [[workflows.workflow]]
 name = "Run"
@@ -67,12 +63,3 @@ args = "kill -9 $(lsof -t -i:3000) 2>/dev/null || true"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python3 main.py"
-
-[[workflows.workflow]]
-name = "Run Web App"
-author = 17724980
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python app.py"

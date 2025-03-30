@@ -12,17 +12,24 @@ from functools import wraps
 from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, flash, request, jsonify, url_for, abort, session, Response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect, rooms
-from models import db, User, Site, UserActivity, SiteCollaborator, Club, ClubMember
-from slugify import slugify
+from models import db, User, Site, SitePage, UserActivity, Club, ClubMembership
+# Custom slugify implementation to avoid unicode errors
+def slugify(text):
+    import re
+    # Ensure text is a string
+    text = str(text)
+    # Convert to lowercase
+    text = text.lower()
+    # Remove non-word characters (alphanumerics and underscores)
+    text = re.sub(r'[^\w\s-]', '', text)
+    # Replace spaces with hyphens
+    text = re.sub(r'\s+', '-', text)
+    # Remove leading/trailing hyphens
+    text = text.strip('-')
+    return text
 from github_routes import github_bp
 from slack_routes import slack_bp
 from groq import Groq
-
-# Dictionaries to track Socket.IO connections and room members
-sid_to_user_id = {}
-user_to_sids = {}
-room_members = {}
 
 load_dotenv()
 
@@ -36,141 +43,19 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev')
 app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_size': 10,
-    'pool_recycle': 3600,
-    'pool_pre_ping': True
+    'pool_size': 20,
+    'pool_recycle': 1800,  # Recycle connections every 30 minutes
+    'pool_timeout': 30,    # Shorter timeout for better error handling
+    'max_overflow': 10,    # Allow up to 10 additional connections when needed
+    'pool_pre_ping': True  # Check if connection is still alive before using
 }
 
-# Initialize Socket.IO with message queue and other options
-socketio = SocketIO(
-    app,
-    cors_allowed_origins="*",
-    async_mode='gevent',
-    ping_timeout=60,
-    ping_interval=25,
-    max_http_buffer_size=50 * 1024 * 1024  # 50MB
-)
-
-
-# Socket.IO event handlers
-@socketio.on('connect')
-def handle_connect():
-    if current_user.is_authenticated:
-        sid_to_user_id[request.sid] = current_user.id
-        if current_user.id not in user_to_sids:
-            user_to_sids[current_user.id] = set()
-        user_to_sids[current_user.id].add(request.sid)
-
-
-@socketio.on('disconnect')
-def handle_disconnect(data=None):
-    if request.sid in sid_to_user_id:
-        user_id = sid_to_user_id[request.sid]
-        if user_id in user_to_sids:
-            user_to_sids[user_id].discard(request.sid)
-            if not user_to_sids[user_id]:
-                del user_to_sids[user_id]
-        del sid_to_user_id[request.sid]
-
-
-@socketio.on('join')
-def handle_join(data):
-    if not current_user.is_authenticated:
-        return
-
-    site_id = data.get('site_id')
-    if not site_id:
-        return
-
-    room = f'site_{site_id}'
-    join_room(room)
-
-    if room not in room_members:
-        room_members[room] = set()
-    room_members[room].add(current_user.id)
-
-    emit('user_joined', {
-        'user_id': current_user.id,
-        'username': current_user.username
-    },
-         room=room)
-
-
-@socketio.on('leave')
-def handle_leave(data):
-    if not current_user.is_authenticated:
-        return
-
-    site_id = data.get('site_id')
-    if not site_id:
-        return
-
-    room = f'site_{site_id}'
-    leave_room(room)
-
-    if room in room_members:
-        room_members[room].discard(current_user.id)
-        if not room_members[room]:
-            del room_members[room]
-
-    emit('user_left', {
-        'user_id': current_user.id,
-        'username': current_user.username
-    },
-         room=room)
-
-
-@socketio.on('cursor_move')
-def handle_cursor_move(data):
-    if not current_user.is_authenticated:
-        return
-
-    site_id = data.get('site_id')
-    if not site_id:
-        return
-
-    room = f'site_{site_id}'
-    emit('cursor_update', {
-        'user_id': current_user.id,
-        'username': current_user.username,
-        'position': data.get('position'),
-        'selection': data.get('selection')
-    },
-         room=room,
-         include_self=False)
-
-
-@socketio.on('content_change')
-def handle_content_change(data):
-    if not current_user.is_authenticated:
-        return
-
-    site_id = data.get('site_id')
-    if not site_id:
-        return
-
-    room = f'site_{site_id}'
-    emit('content_update', {
-        'user_id': current_user.id,
-        'content': data.get('content'),
-        'origin': data.get('origin'),
-        'from': data.get('from'),
-        'to': data.get('to'),
-        'text': data.get('text')
-    },
-         room=room,
-         include_self=False)
-
-
 app.config['PREFERRED_URL_SCHEME'] = 'https'
-
-# Enhanced error handling configuration
 app.config['EXPLAIN_TEMPLATE_LOADING'] = True
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 
 def get_error_context(error):
-    """Extract detailed error context from various error types"""
     context = {
         'error_type': error.__class__.__name__,
         'error_message': str(error),
@@ -183,7 +68,6 @@ def get_error_context(error):
     }
 
     if isinstance(error, jinja2.TemplateError):
-        # Handle Jinja2 template errors
         context['error_type'] = 'Template Error'
         if isinstance(error, jinja2.TemplateSyntaxError):
             context['line_number'] = error.lineno
@@ -200,7 +84,6 @@ def get_error_context(error):
                 )
 
     elif isinstance(error, SQLAlchemyError):
-        # Handle database errors
         context['error_type'] = 'Database Error'
         context['suggestions'].extend([
             'Verify database connection settings',
@@ -209,11 +92,9 @@ def get_error_context(error):
         ])
 
     elif isinstance(error, werkzeug.exceptions.HTTPException):
-        # Handle HTTP errors
         context['error_type'] = f'HTTP {error.code}'
         context['suggestions'].extend(get_http_error_suggestions(error.code))
 
-    # Get traceback information if available
     if hasattr(error, '__traceback__'):
         import traceback
         context['traceback'] = ''.join(traceback.format_tb(
@@ -223,7 +104,6 @@ def get_error_context(error):
 
 
 def get_http_error_suggestions(code):
-    """Get specific suggestions based on HTTP error code"""
     suggestions = {
         404: [
             'Check the URL for typos', 'Verify that the resource exists',
@@ -252,7 +132,6 @@ def get_http_error_suggestions(code):
         ['Try refreshing the page', 'Contact support if the problem persists'])
 
 
-# Register error handlers with enhanced context
 @app.errorhandler(404)
 def not_found_error(error):
     context = get_error_context(error)
@@ -267,7 +146,7 @@ def forbidden_error(error):
 
 @app.errorhandler(500)
 def internal_error(error):
-    db.session.rollback()  # Reset the session in case of database errors
+    db.session.rollback()
     context = get_error_context(error)
     app.logger.error(f'Internal Error: {context}')
     return render_template('errors/500.html', **context), 500
@@ -286,7 +165,6 @@ def maintenance():
                            end_time=session.get('maintenance_end')), 503
 
 
-# Enhanced generic error handler
 @app.errorhandler(Exception)
 def handle_error(error):
     code = getattr(error, 'code', 500)
@@ -299,7 +177,6 @@ def handle_error(error):
     return render_template('errors/generic.html', **context), code
 
 
-# Register Jinja2 error handler
 @app.errorhandler(jinja2.TemplateError)
 def template_error(error):
     context = get_error_context(error)
@@ -307,13 +184,11 @@ def template_error(error):
     return render_template('errors/500.html', **context), 500
 
 
-# Error reporting endpoint
 @app.route('/api/report-error', methods=['POST'])
 def report_error():
     try:
         error_data = request.get_json()
 
-        # Enhanced error logging with user context
         error_log = {
             'timestamp': datetime.utcnow().isoformat(),
             'error_type': error_data.get('type'),
@@ -327,11 +202,8 @@ def report_error():
             'ip_address': request.remote_addr
         }
 
-        # Log to application logger
         app.logger.error(
             f'Client Error Report: {json.dumps(error_log, indent=2)}')
-
-        # Could also store in database or send to error tracking service
 
         return jsonify({'status': 'success'}), 200
     except Exception as e:
@@ -339,21 +211,35 @@ def report_error():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
-# Add security headers
 @app.after_request
 def add_security_headers(response):
-    response.headers[
-        'Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' wss: ws:;"
+    # Check if this is a preview request
+    is_preview = request.args.get('preview') == 'true'
+    
+    # Base CSP policy
+    csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' wss: ws:;"
+    
+    # Add frame-ancestors directive
+    if is_preview:
+        # Allow embedding from any origin for preview requests
+        csp += " frame-ancestors *;"
+    else:
+        # Only allow embedding from self for regular requests
+        csp += " frame-ancestors 'self';"
+    
+    response.headers['Content-Security-Policy'] = csp
     response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    
+    # Set Access-Control-Allow-Origin for preview requests
+    if is_preview:
+        response.headers['Access-Control-Allow-Origin'] = '*'
+    
     response.headers['X-XSS-Protection'] = '1; mode=block'
-    response.headers[
-        'Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return response
 
 
-# Rate limiting implementation
 class RateLimiter:
 
     def __init__(self):
@@ -362,26 +248,25 @@ class RateLimiter:
             'default': {
                 'requests': 100,
                 'window': 60
-            },  # 100 requests per minute
+            },
             'api_run': {
                 'requests': 10,
                 'window': 60
-            },  # 10 code executions per minute
+            },
             'login': {
                 'requests': 5,
                 'window': 60
-            },  # 5 login attempts per minute
+            },
             'orphy': {
                 'requests': 1,
                 'window': 0.5
-            }  # 1 request per 500ms
+            }
         }
 
     def is_rate_limited(self, key, limit_type='default'):
         current_time = time.time()
         limit_config = self.limits.get(limit_type, self.limits['default'])
 
-        # Initialize or clean up old entries
         if key not in self.requests:
             self.requests[key] = []
 
@@ -390,207 +275,9 @@ class RateLimiter:
             if current_time - t < limit_config['window']
         ]
 
-        # Check if rate limit is reached
         if len(self.requests[key]) >= limit_config['requests']:
             return True
 
-        # Add current request timestamp
-        self.requests[key].append(current_time)
-        return False
-
-
-rate_limiter = RateLimiter()
-
-
-def rate_limit(limit_type='default'):
-
-    def decorator(f):
-
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            ip_address = request.remote_addr
-
-            if rate_limiter.is_rate_limited(ip_address, limit_type):
-                return jsonify({
-                    'error':
-                    'Rate limit exceeded. Please wait before trying again.'
-                }), 429
-            return f(*args, **kwargs)
-
-        return decorated_function
-
-    return decorator
-
-
-# Proxy endpoint for Orphy AI
-@app.route('/api/orphy/chat', methods=['POST'])
-@rate_limit('orphy')
-def orphy_chat_proxy():
-    try:
-        # Get the request data from client
-        client_data = request.json
-
-        # Extract data from the client request
-        user_message = client_data.get('message', '')
-        code_content = client_data.get('code', '')
-        filename = client_data.get('filename', 'untitled')
-
-        # System prompt for AI assistance
-        system_prompt = "You are Orphy, a friendly and helpful AI assistant for Hack Club Spaces. Your goal is to help users with their coding projects. Keep your responses concise, and primarily give suggestions rather than directly solving everything for them. Use friendly language with some emoji but not too many. Give guidance that encourages learning."
-
-        # User message with context
-        user_prompt = f"I'm working on a file named {filename} with the following code:\n\n{code_content}\n\nHere's my question: {user_message}"
-
-        # Try Groq first (Option 1)
-        try:
-            app.logger.info("Attempting to use Groq API")
-            groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-
-            chat_completion = groq_client.chat.completions.create(
-                messages=[{
-                    "role": "system",
-                    "content": system_prompt
-                }, {
-                    "role": "user",
-                    "content": user_prompt
-                }],
-                model="llama-3.1-8b-instant",
-                temperature=0.7,
-                max_tokens=700)
-
-            # Extract response from Groq
-            message_content = chat_completion.choices[0].message.content
-            return jsonify({
-                'response': message_content,
-                'provider': 'groq'
-            }), 200
-
-        except Exception as groq_error:
-            app.logger.warning(
-                f"Groq API failed: {str(groq_error)}. Falling back to Hack Club AI."
-            )
-
-            # Try Hack Club AI (Option 2)
-            try:
-                app.logger.info("Attempting to use Hack Club AI API")
-
-                # Format the request for Hack Club AI API
-                ai_request_data = {
-                    "messages": [{
-                        "role": "system",
-                        "content": system_prompt
-                    }, {
-                        "role": "user",
-                        "content": user_prompt
-                    }],
-                    "model":
-                    "hackclub-l",
-                    "temperature":
-                    0.7,
-                    "max_tokens":
-                    700,
-                    "stream":
-                    False
-                }
-
-                # Forward the formatted request to Hack Club AI API
-                response = requests.post(
-                    'https://ai.hackclub.com/chat/completions',
-                    json=ai_request_data,
-                    headers={'Content-Type': 'application/json'},
-                    timeout=15)
-
-                # Process the response from Hack Club AI
-                if response.status_code == 200:
-                    ai_response = response.json()
-                    # Extract just the message content for simpler client handling
-                    message_content = ai_response.get('choices', [{}])[0].get(
-                        'message', {}).get('content', '')
-                    return jsonify({
-                        'response': message_content,
-                        'provider': 'hackclub'
-                    }), 200
-                else:
-                    raise Exception(
-                        f"Hack Club AI returned status code {response.status_code}"
-                    )
-
-            except Exception as hackclub_error:
-                app.logger.warning(
-                    f"Hack Club AI failed: {str(hackclub_error)}. Using fallback."
-                )
-
-                # Fallback option (Option 3) - Simple response generated locally
-                fallback_message = (
-                    "I'm having trouble connecting to my knowledge sources right now. "
-                    "Here are some general tips:\n"
-                    "- Check your code syntax for any obvious errors\n"
-                    "- Make sure all functions are properly defined before they're called\n"
-                    "- Verify that you've imported all necessary libraries\n"
-                    "- Try breaking your problem down into smaller parts\n\n"
-                    "Please try again in a few moments when my connection may be better."
-                )
-
-                return jsonify({
-                    'response': fallback_message,
-                    'provider': 'fallback'
-                }), 200
-
-    except Exception as e:
-        app.logger.error(f"Error in Orphy proxy: {str(e)}")
-        return jsonify({'error': str(e), 'provider': 'error'}), 500
-
-
-db.init_app(app)
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-
-socketio = SocketIO(app, cors_allowed_origins="*")
-
-
-# Rate limiting implementation
-class RateLimiter:
-
-    def __init__(self):
-        self.requests = {}
-        self.limits = {
-            'default': {
-                'requests': 100,
-                'window': 60
-            },  # 100 requests per minute
-            'api_run': {
-                'requests': 10,
-                'window': 60
-            },  # 10 code executions per minute
-            'login': {
-                'requests': 5,
-                'window': 60
-            },  # 5 login attempts per minute
-            'orphy': {
-                'requests': 1,
-                'window': 0.5
-            }  # 1 request per 500ms
-        }
-
-    def is_rate_limited(self, key, limit_type='default'):
-        current_time = time.time()
-        limit_config = self.limits.get(limit_type, self.limits['default'])
-
-        # Initialize or clean up old entries
-        if key not in self.requests:
-            self.requests[key] = []
-
-        self.requests[key] = [
-            t for t in self.requests[key]
-            if current_time - t < limit_config['window']
-        ]
-
-        # Check if rate limit is reached
-        if len(self.requests[key]) >= limit_config['requests']:
-            return True
-
-        # Add current request timestamp
         self.requests[key].append(current_time)
         return False
 
@@ -621,9 +308,116 @@ def rate_limit(limit_type='default'):
     return decorator
 
 
-sid_to_user_id = {}
-user_to_sids = {}
-room_members = {}
+@app.route('/api/orphy/chat', methods=['POST'])
+@rate_limit('orphy')
+def orphy_chat_proxy():
+    try:
+        client_data = request.json
+
+        user_message = client_data.get('message', '')
+        code_content = client_data.get('code', '')
+        filename = client_data.get('filename', 'untitled')
+
+        system_prompt = "You are Orphy, a friendly and helpful AI assistant for Hack Club Spaces. Your goal is to help users with their coding projects. Keep your responses concise, and primarily give suggestions rather than directly solving everything for them. Use friendly language with some emoji but not too many. Give guidance that encourages learning."
+
+        user_prompt = f"I'm working on a file named {filename} with the following code:\n\n{code_content}\n\nHere's my question: {user_message}"
+
+        try:
+            app.logger.info("Attempting to use Groq API")
+            groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
+            chat_completion = groq_client.chat.completions.create(
+                messages=[{
+                    "role": "system",
+                    "content": system_prompt
+                }, {
+                    "role": "user",
+                    "content": user_prompt
+                }],
+                model="llama-3.1-8b-instant",
+                temperature=0.7,
+                max_tokens=700)
+
+            message_content = chat_completion.choices[0].message.content
+            return jsonify({
+                'response': message_content,
+                'provider': 'groq'
+            }), 200
+
+        except Exception as groq_error:
+            app.logger.warning(
+                f"Groq API failed: {str(groq_error)}. Falling back to Hack Club AI."
+            )
+
+            try:
+                app.logger.info("Attempting to use Hack Club AI API")
+
+                ai_request_data = {
+                    "messages": [{
+                        "role": "system",
+                        "content": system_prompt
+                    }, {
+                        "role": "user",
+                        "content": user_prompt
+                    }],
+                    "model":
+                    "hackclub-l",
+                    "temperature":
+                    0.7,
+                    "max_tokens":
+                    700,
+                    "stream":
+                    False
+                }
+
+                response = requests.post(
+                    'https://ai.hackclub.com/chat/completions',
+                    json=ai_request_data,
+                    headers={'Content-Type': 'application/json'},
+                    timeout=15)
+
+                if response.status_code == 200:
+                    ai_response = response.json()
+                    message_content = ai_response.get('choices', [{}])[0].get(
+                        'message', {}).get('content', '')
+                    return jsonify({
+                        'response': message_content,
+                        'provider': 'hackclub'
+                    }), 200
+                else:
+                    raise Exception(
+                        f"Hack Club AI returned status code {response.status_code}"
+                    )
+
+            except Exception as hackclub_error:
+                app.logger.warning(
+                    f"Hack Club AI failed: {str(hackclub_error)}. Using fallback."
+                )
+
+                fallback_message = (
+                    "I'm having trouble connecting to my knowledge sources right now. "
+                    "Here are some general tips:\n"
+                    "- Check your code syntax for any obvious errors\n"
+                    "- Make sure all functions are properly defined before they're called\n"
+                    "- Verify that you've imported all necessary libraries\n"
+                    "- Try breaking your problem down into smaller parts\n\n"
+                    "Please try again in a few moments when my connection may be better."
+                )
+
+                return jsonify({
+                    'response': fallback_message,
+                    'provider': 'fallback'
+                }), 200
+
+    except Exception as e:
+        app.logger.error(f"Error in Orphy proxy: {str(e)}")
+        return jsonify({'error': str(e), 'provider': 'error'}), 500
+
+
+db.init_app(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 app.register_blueprint(github_bp)
 app.register_blueprint(slack_bp)
@@ -682,14 +476,6 @@ def load_user(user_id):
 @app.route('/')
 def index():
     return render_template('index.html')
-
-@app.route('/debug')
-def debug():
-    return render_template('debug.html')
-
-@app.route('/local-debug')
-def local_debug():
-    return render_template('debug.html')
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -763,126 +549,67 @@ def signup():
     return render_template('signup.html')
 
 
+def check_access_code(f):
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_admin and not current_user.has_special_access:
+            return redirect(url_for('access_code'))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
 @app.route('/welcome')
 @login_required
+@check_access_code
 def welcome():
     sites = Site.query.filter_by(user_id=current_user.id).order_by(
         Site.updated_at.desc()).all()
     max_sites = get_max_sites_per_user()
+    
+    # Get shared spaces for the user
+    shared_spaces = db.session.query(ClubMembership).filter_by(user_id=current_user.id).all()
+    
+    return render_template('welcome.html', 
+                          sites=sites, 
+                          max_sites=max_sites, 
+                          shared_spaces=shared_spaces)
 
-    shared_spaces = SiteCollaborator.query.filter_by(
-        user_id=current_user.id).all()
 
-    for collab in shared_spaces:
-        if collab.site:
-            site = collab.site
-            owner_id = site.user_id
-            room_name = f'site_{site.id}'
-            owner_active = False
-
-            global sid_to_user_id, user_to_sids
-
-            app.logger.info(
-                f'Welcome page: Checking activity for space {site.id} owned by {owner_id}'
-            )
-            app.logger.info(f'Current user_to_sids map: {user_to_sids}')
-
-            if owner_id in user_to_sids and user_to_sids[owner_id]:
-                owner_active = True
-                app.logger.info(
-                    f'Space {site.id}: Owner {owner_id} is active with {len(user_to_sids[owner_id])} connections'
-                )
-            else:
-                app.logger.info(
-                    f'Space {site.id}: Owner {owner_id} is NOT active (has no connections)'
-                )
-
-            collab.is_active = owner_active
+@app.route('/access-code', methods=['GET', 'POST'])
+@login_required
+def access_code():
+    if request.method == 'POST':
+        code = request.form.get('code')
+        if code == 'SD2191305':
+            current_user.has_special_access = True
             db.session.commit()
-
-    return render_template('welcome.html',
-                           sites=sites,
-                           max_sites=max_sites,
-                           shared_spaces=shared_spaces)
+            flash('Special access granted!', 'success')
+            return redirect(url_for('welcome'))
+        flash('Invalid access code', 'error')
+    return render_template('access_code.html')
 
 
 @app.route('/edit/<int:site_id>')
 @login_required
+@check_access_code
 def edit_site(site_id):
     try:
         site = Site.query.get_or_404(site_id)
 
         is_admin = current_user.is_admin
         is_owner = site.user_id == current_user.id
-        is_club_leader = current_user.is_club_leader and hasattr(
-            current_user, 'club')
 
-        # Check if the site owner is a member of the club leader's club
-        site_owner_is_club_member = False
-        if is_club_leader and current_user.club:
-            site_owner_is_club_member = ClubMember.query.filter_by(
-                club_id=current_user.club.id,
-                user_id=site.user_id).first() is not None
-
-        collaborator = SiteCollaborator.query.filter_by(
-            site_id=site_id, user_id=current_user.id).first()
-        is_collaborator = collaborator is not None
-
-        if not is_owner and not is_admin and not is_collaborator and not (
-                is_club_leader and site_owner_is_club_member):
+        if not is_owner and not is_admin:
             app.logger.warning(
                 f'User {current_user.id} attempted to access site {site_id} owned by {site.user_id}'
             )
             abort(403)
 
-        if is_collaborator and not is_admin:
-            owner_id = site.user_id
-            owner_active = False
-
-            global sid_to_user_id, user_to_sids
-
-            app.logger.info(
-                f'Checking if owner {owner_id} is active. User SIDs: {user_to_sids}'
-            )
-
-            if owner_id in user_to_sids and user_to_sids[owner_id]:
-                owner_active = True
-                app.logger.info(
-                    f'Owner {owner_id} is active with {len(user_to_sids[owner_id])} connections'
-                )
-
-            if not owner_active:
-                if collaborator:
-                    collaborator.is_active = False
-                    db.session.commit()
-
-                flash(
-                    'ACCESS DENIED: This space cannot be accessed because the owner is offline. Collaboration is only available when the space owner is active.',
-                    'error')
-                app.logger.warning(
-                    f'Blocking access for user {current_user.id} to site {site_id} because owner {owner_id} is not active'
-                )
-                return redirect('/welcome')
-
         app.logger.info(f'User {current_user.id} editing site {site_id}')
 
-        socket_join_script = f'''
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {{
-                // Make sure to join the site's socket room when editor loads
-                if (typeof socket !== 'undefined') {{
-                    console.log('Auto-joining socket room: site_{site_id}');
-                    socket.emit('join', {{ site_id: {site_id} }});
-                }} else {{
-                    console.error('Socket not initialized');
-                }}
-            }});
-        </script>
-        '''
-
-        return render_template('editor.html',
-                               site=site,
-                               additional_scripts=socket_join_script)
+        return render_template('editor.html', site=site)
     except Exception as e:
         app.logger.error(f'Error in edit_site: {str(e)}')
         abort(500)
@@ -895,11 +622,7 @@ def run_python(site_id):
     try:
         site = Site.query.get_or_404(site_id)
         if site.user_id != current_user.id and not current_user.is_admin:
-            # Check if user is a collaborator
-            collaborator = SiteCollaborator.query.filter_by(
-                site_id=site_id, user_id=current_user.id).first()
-            if not collaborator:
-                abort(403)
+            abort(403)
 
         data = request.get_json()
         code = data.get('code', '')
@@ -944,7 +667,6 @@ def run_python(site_id):
                             'error': True
                         }), 400
 
-                # Check for potentially harmful function calls
                 if isinstance(node, Call) and hasattr(
                         node.func, 'id') and node.func.id in [
                             'eval', 'exec', '__import__'
@@ -960,7 +682,6 @@ def run_python(site_id):
                 'error': True
             }), 400
 
-        # Check code length to prevent large computations
         if len(code) > 10000:
             return jsonify({
                 'output':
@@ -972,7 +693,6 @@ def run_python(site_id):
         redirected_output = StringIO()
         sys.stdout = redirected_output
 
-        # Set execution timeout using threading instead of signals
         import threading
         import builtins
         import _thread
@@ -1012,7 +732,6 @@ def run_python(site_id):
                 raise execution_thread.exception
 
         try:
-            # Create a safe version of builtins
             safe_builtins = {}
             for name in dir(builtins):
                 if name not in [
@@ -1030,7 +749,6 @@ def run_python(site_id):
                 except ImportError:
                     pass
 
-            # Execute code with timeout
             execute_with_timeout(code, restricted_globals, timeout=5)
 
             output = redirected_output.getvalue()
@@ -1038,7 +756,6 @@ def run_python(site_id):
             if not output.strip():
                 output = "Code executed successfully, but produced no output. Add print() statements to see results."
 
-            # Truncate excessively long output
             if len(output) > 10000:
                 output = output[:10000] + "\n...\n(Output truncated due to excessive length)"
 
@@ -1062,14 +779,16 @@ def run_python(site_id):
         }), 500
 
 
-@app.route('/s/<string:slug>')
-def view_site(slug):
+@app.route('/s/<string:slug>', defaults={'filename': None})
+@app.route('/s/<string:slug>/<path:filename>')
+def view_site(slug, filename):
     site = Site.query.filter_by(slug=slug).first_or_404()
     if not site.is_public and (not current_user.is_authenticated
                                or site.user_id != current_user.id):
         abort(403)
 
-    if hasattr(site, 'analytics_enabled') and site.analytics_enabled:
+    if not filename and hasattr(
+            site, 'analytics_enabled') and site.analytics_enabled:
         with db.engine.connect() as connection:
             connection.execute(
                 db.text(
@@ -1077,7 +796,32 @@ def view_site(slug):
                 ))
             connection.commit()
 
-    return site.html_content
+    if not filename:
+        return site.html_content
+
+    try:
+        page = SitePage.query.filter_by(site_id=site.id,
+                                        filename=filename).first()
+
+        if not page:
+            app.logger.warning(
+                f"Page not found: {filename} for site {site.id}")
+            abort(404)
+
+        mime_types = {
+            'html': 'text/html',
+            'css': 'text/css',
+            'js': 'application/javascript'
+        }
+
+        content_type = mime_types.get(page.file_type, 'text/plain')
+        app.logger.info(f"Serving {filename} with MIME type: {content_type}")
+
+        return Response(page.content, mimetype=content_type)
+    except Exception as e:
+        app.logger.error(
+            f"Error serving file {filename} for site {site.id}: {str(e)}")
+        abort(500)
 
 
 @app.route('/api/sites', methods=['POST'])
@@ -1107,7 +851,14 @@ def create_site():
             return jsonify({'message':
                             'Please enter a name for your space'}), 400
 
-        slug = slugify(name)
+        # Ensure name is a string
+        name = str(name)
+        
+        try:
+            slug = slugify(name)
+        except Exception as e:
+            app.logger.error(f'Error slugifying name: {str(e)}')
+            return jsonify({'message': 'Invalid site name provided'}), 400
         existing_site = Site.query.filter_by(slug=slug).first()
         if existing_site:
             app.logger.warning(f'Site with slug {slug} already exists')
@@ -1117,39 +868,71 @@ def create_site():
         app.logger.info(
             f'Creating new site "{name}" for user {current_user.id}')
 
-        # Default content for web spaces
-        default_content = '''<!DOCTYPE html>
-<!--Hack Club Spaces-->
-<html>
-
+        default_html = f'''<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>My New Website</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <!--Add Headings Here-->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website</title>
+    <link rel="stylesheet" href="/s/{slug}/styles.css">
+    <script src="/s/{slug}/script.js" defer></script>
 </head>
-
 <body>
-  <!--Add Paragraphs & Content Here-->
-  Hello world
+    <h1>Welcome to my website!</h1>
+    <p>This is a paragraph on my new site.</p>
 </body>
-
-  <style>
-    /* Add CSS Here, no need for a seperate file! */
-    /* Ex: body background-color: red; */
-  </style>
-  <script>
-    // Add JavaScript Here, no need for a seperate file!
-    // Ex: alert("Hello World!");
-  </script>
-
 </html>'''
 
         site = Site(name=name,
                     user_id=current_user.id,
-                    html_content=default_content)
+                    html_content=default_html)
         db.session.add(site)
         db.session.commit()
+
+        default_css = '''body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+h1 {
+    color: #2c3e50;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}'''
+
+        default_js = '''document.addEventListener('DOMContentLoaded', function() {
+    console.log('Website loaded successfully!');
+});'''
+
+        try:
+            css_page = SitePage(site_id=site.id,
+                                filename="styles.css",
+                                content=default_css,
+                                file_type="css")
+
+            js_page = SitePage(site_id=site.id,
+                               filename="script.js",
+                               content=default_js,
+                               file_type="js")
+
+            html_page = SitePage(site_id=site.id,
+                                 filename="index.html",
+                                 content=default_html,
+                                 file_type="html")
+
+            db.session.add_all([css_page, js_page, html_page])
+            db.session.commit()
+
+            app.logger.info(
+                f"Successfully created site pages for site {site.id}")
+        except Exception as e:
+            app.logger.error(f"Error creating site pages: {str(e)}")
+            db.session.rollback()
 
         activity = UserActivity(activity_type="site_creation",
                                 message='New site "{}" created by {}'.format(
@@ -1168,7 +951,7 @@ def create_site():
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error creating site: {str(e)}')
-        return jsonify({'message': 'Failed to create site'}), 500
+        return jsonify({'message': 'Failed to createsite'}), 500
 
 
 @app.route('/api/sites/<int:site_id>', methods=['PUT'])
@@ -1258,7 +1041,7 @@ def create_python_site():
 
         site = Site(name=name,
                     user_id=current_user.id,
-                    html_content='N/A',
+                    html_content='print("Hello, World!")',
                     site_type='python')
         db.session.add(site)
         db.session.commit()
@@ -1281,44 +1064,11 @@ def python_editor(site_id):
         is_admin = current_user.is_admin
         is_owner = site.user_id == current_user.id
 
-        collaborator = SiteCollaborator.query.filter_by(
-            site_id=site_id, user_id=current_user.id).first()
-        is_collaborator = collaborator is not None
-
-        if not is_owner and not is_admin and not is_collaborator:
+        if not is_owner and not is_admin:
             app.logger.warning(
                 f'User {current_user.id} attempted to access Python site {site_id} owned by {site.user_id}'
             )
             abort(403)
-
-        if is_collaborator and not is_admin:
-            owner_id = site.user_id
-            owner_active = False
-
-            global sid_to_user_id, user_to_sids
-
-            app.logger.info(
-                f'Checking if owner {owner_id} is active for Python editor. User SIDs: {user_to_sids}'
-            )
-
-            if owner_id in user_to_sids and user_to_sids[owner_id]:
-                owner_active = True
-                app.logger.info(
-                    f'Owner {owner_id} is active with {len(user_to_sids[owner_id])} connections'
-                )
-
-            if not owner_active:
-                if collaborator:
-                    collaborator.is_active = False
-                    db.session.commit()
-
-                flash(
-                    'ACCESS DENIED: Cannot access this Python space because the owner is offline. Collaboration is only available when the space owner is active.',
-                    'error')
-                app.logger.warning(
-                    f'Blocking access for user {current_user.id} to Python site {site_id} because owner {owner_id} is not active'
-                )
-                return redirect('/welcome')
 
         app.logger.info(
             f'User {current_user.id} editing Python site {site_id}')
@@ -1326,7 +1076,6 @@ def python_editor(site_id):
         socket_join_script = f'''
         <script>
             document.addEventListener('DOMContentLoaded', function() {{
-                // Make sure to join the site's socket room when editor loads
                 if (typeof socket !== 'undefined') {{
                     console.log('Auto-joining socket room: site_{site_id}');
                     socket.emit('join', {{ site_id: {site_id} }});
@@ -1349,31 +1098,32 @@ def python_editor(site_id):
 @login_required
 def delete_site(site_id):
     site = Site.query.get_or_404(site_id)
-
-    # Allow site owner, admin, or club leader to delete
-    is_owner = site.user_id == current_user.id
-    is_admin = current_user.is_admin
-    is_club_leader = current_user.is_club_leader and hasattr(
-        current_user, 'club')
-
-    # Check if the site owner is a member of the club leader's club
-    site_owner_is_club_member = False
-    if is_club_leader and current_user.club:
-        site_owner_is_club_member = ClubMember.query.filter_by(
-            club_id=current_user.club.id,
-            user_id=site.user_id).first() is not None
-
-    if not is_owner and not is_admin and not (is_club_leader
-                                              and site_owner_is_club_member):
+    if site.user_id != current_user.id:
         abort(403)
 
     try:
+        with db.engine.connect() as conn:
+            conn.execute(
+                db.text("DELETE FROM site_page WHERE site_id = :site_id"),
+                {"site_id": site_id})
+            conn.commit()
+
         db.session.delete(site)
         db.session.commit()
+
+        activity = UserActivity(
+            activity_type="site_deletion",
+            message=f'Site "{site.name}" deleted by {{username}}',
+            username=current_user.username,
+            user_id=current_user.id)
+        db.session.add(activity)
+        db.session.commit()
+
         return jsonify({'message': 'Site deleted successfully'})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': 'Failed to delete site'}), 500
+        app.logger.error(f'Error deleting site {site_id}: {str(e)}')
+        return jsonify({'message': f'Failed to delete site: {str(e)}'}), 500
 
 
 @app.route('/documentation')
@@ -1441,27 +1191,53 @@ def admin_required(f):
     return decorated_function
 
 
+@app.route('/special-access', methods=['POST'])
+@login_required
+def special_access():
+    code = request.form.get('code')
+    if code == 'SD2191305':
+        current_user.has_special_access = True
+        db.session.commit()
+        flash('Special access granted!', 'success')
+        return redirect(url_for('welcome'))
+    flash('Invalid access code', 'error')
+    return redirect(url_for('welcome'))
+
+
 @app.route('/admin')
 @login_required
-@admin_required
 def admin_panel():
-    users = User.query.all()
-    sites = Site.query.all()
-
-    version = '1.7.7'
+    if not current_user.is_admin and not current_user.has_special_access:
+        abort(403)
     try:
-        with open('changelog.md', 'r') as f:
-            for line in f:
-                if line.startswith('## Version'):
-                    version = line.split(' ')[2].strip('() ✨')
-                    break
-    except Exception as e:
-        app.logger.error(f'Error reading version from changelog: {str(e)}')
+        # Load only 50 users and sites initially for better performance
+        users = User.query.with_entities(
+            User.id, User.username, User.email, User.created_at, 
+            User.is_suspended, User.is_admin
+        ).limit(50).all()
 
-    return render_template('admin_panel.html',
-                           users=users,
-                           sites=sites,
-                           version=version)
+        sites = db.session.query(
+            Site.id, Site.name, Site.slug, Site.site_type, 
+            Site.created_at, Site.updated_at, Site.user_id,
+            User.username
+        ).join(User).limit(50).all()
+        
+        # Get version from changelog
+        version = '1.7.7'
+        try:
+            with open('changelog.md', 'r') as f:
+                for line in f:
+                    if line.startswith('## Version'):
+                        version = line.split(' ')[2].strip('() ✨')
+                        break
+        except Exception as e:
+            app.logger.error(f'Error reading version from changelog: {str(e)}')
+
+        return render_template('admin_panel.html', users=users, sites=sites, version=version)
+    except Exception as e:
+        app.logger.error(f'Error loading admin panel: {str(e)}')
+        flash('Error loading admin panel: ' + str(e), 'error')
+        return redirect(url_for('welcome'))
 
 
 @app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
@@ -1490,12 +1266,28 @@ def delete_site_admin(site_id):
     site = Site.query.get_or_404(site_id)
 
     try:
+        with db.engine.connect() as conn:
+            conn.execute(
+                db.text("DELETE FROM site_page WHERE site_id = :site_id"),
+                {"site_id": site_id})
+            conn.commit()
+
         db.session.delete(site)
         db.session.commit()
+
+        activity = UserActivity(
+            activity_type="admin_action",
+            message=f'Admin {{username}} deleted site "{site.name}"',
+            username=current_user.username,
+            user_id=current_user.id)
+        db.session.add(activity)
+        db.session.commit()
+
         return jsonify({'message': 'Site deleted successfully'})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': 'Failed to delete site'}), 500
+        app.logger.error(f'Error deleting site {site_id} by admin: {str(e)}')
+        return jsonify({'message': f'Failed to delete site: {str(e)}'}), 500
 
 
 @app.route('/suspended')
@@ -1573,6 +1365,86 @@ def edit_user(user_id):
         db.session.rollback()
         app.logger.error(f'Error updating user: {str(e)}')
         return jsonify({'message': 'Failed to update user details'}), 500
+        
+@app.route('/api/admin/users/<int:user_id>/club-leader', methods=['POST'])
+@login_required
+@admin_required
+def toggle_club_leader(user_id):
+    """Toggle a user's club leader status."""
+    if user_id == current_user.id:
+        return jsonify({'message': 'Cannot change your own club leader status'}), 400
+        
+    user = User.query.get_or_404(user_id)
+    data = request.get_json()
+    make_leader = data.get('is_club_leader', False)
+    
+    try:
+        # Check if user already has a club
+        existing_club = Club.query.filter_by(leader_id=user.id).first()
+        
+        if make_leader and not existing_club:
+            # Always set admin status for club leaders
+            user.is_admin = True
+            db.session.commit()  # Commit the admin status change first
+            
+            # Create a default club for the user
+            club = Club(
+                name=f"{user.username}'s Club",
+                leader_id=user.id
+            )
+            club.generate_join_code()
+            db.session.add(club)
+            db.session.commit()  # Commit to get the club ID
+            
+            # Now create membership with valid club_id
+            membership = ClubMembership(
+                user_id=user.id,
+                club_id=club.id,
+                role='co-leader'
+            )
+            db.session.add(membership)
+            
+            # Record activity
+            activity = UserActivity(
+                activity_type="admin_action",
+                message=f"Admin {{username}} made {user.username} a club leader",
+                username=current_user.username,
+                user_id=current_user.id
+            )
+            db.session.add(activity)
+            
+            db.session.commit()
+            app.logger.info(f"Successfully made {user.username} a club leader")
+            return jsonify({'message': f"Made {user.username} a club leader", 'status': 'success'})
+            
+        elif not make_leader and existing_club:
+            # Remove all club memberships
+            ClubMembership.query.filter_by(club_id=existing_club.id).delete()
+            
+            # Delete the club
+            db.session.delete(existing_club)
+            
+            # Remove admin status if it was only for club leader
+            user.is_admin = False
+            
+            # Record activity
+            activity = UserActivity(
+                activity_type="admin_action",
+                message=f"Admin {{username}} removed {user.username} as a club leader",
+                username=current_user.username,
+                user_id=current_user.id
+            )
+            db.session.add(activity)
+            
+            db.session.commit()
+            return jsonify({'message': f"Removed {user.username} as a club leader", 'status': 'success'})
+            
+        return jsonify({'message': 'No changes made', 'status': 'success'})
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error toggling club leader status: {str(e)}')
+        return jsonify({'message': 'Failed to update club leader status', 'error': str(e)}), 500
 
 
 @app.route('/api/admin/users/<int:user_id>/sites', methods=['DELETE'])
@@ -1849,6 +1721,101 @@ def update_max_sites():
         return jsonify({'error': 'Failed to update max sites setting'}), 500
 
 
+@app.route('/api/admin/search/users')
+@login_required
+@admin_required
+def search_users():
+    try:
+        search_term = request.args.get('term', '')
+        if not search_term or len(search_term) < 2:
+            return jsonify({'error': 'Search term must be at least 2 characters'}), 400
+            
+        users = User.query.with_entities(
+            User.id, User.username, User.email, User.created_at, 
+            User.is_suspended, User.is_admin
+        ).filter(
+            db.or_(
+                User.username.ilike(f'%{search_term}%'),
+                User.email.ilike(f'%{search_term}%')
+            )
+        ).limit(50).all()
+        
+        result = []
+        for user in users:
+            # Check explicitly if the user is a club leader
+            is_club_leader = Club.query.filter_by(leader_id=user.id).first() is not None
+            
+            result.append({
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'created_at': user.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'is_suspended': user.is_suspended,
+                'is_admin': user.is_admin,
+                'is_club_leader': is_club_leader
+            })
+            
+        return jsonify({'users': result})
+    except Exception as e:
+        app.logger.error(f'Error searching users: {str(e)}')
+        return jsonify({'error': 'Failed to search users'}), 500
+
+@app.route('/api/admin/search/sites')
+@login_required
+@admin_required
+def search_sites():
+    try:
+        search_term = request.args.get('term', '')
+        if not search_term or len(search_term) < 2:
+            return jsonify({'error': 'Search term must be at least 2 characters'}), 400
+            
+        sites = db.session.query(
+            Site.id, Site.name, Site.slug, Site.site_type, 
+            Site.created_at, Site.updated_at, Site.user_id,
+            User.username
+        ).join(User).filter(
+            db.or_(
+                Site.name.ilike(f'%{search_term}%'),
+                Site.slug.ilike(f'%{search_term}%'),
+                User.username.ilike(f'%{search_term}%')
+            )
+        ).limit(50).all()
+        
+        result = []
+        for site in sites:
+            result.append({
+                'id': site.id,
+                'name': site.name,
+                'slug': site.slug,
+                'site_type': site.site_type,
+                'created_at': site.created_at.strftime('%Y-%m-%d'),
+                'updated_at': site.updated_at.strftime('%Y-%m-%d %H:%M'),
+                'user_id': site.user_id,
+                'username': site.username
+            })
+            
+        return jsonify({'sites': result})
+    except Exception as e:
+        app.logger.error(f'Error searching sites: {str(e)}')
+        return jsonify({'error': 'Failed to search sites'}), 500
+        
+@app.route('/api/admin/stats/counts')
+@login_required
+@admin_required
+def get_total_counts():
+    """Get total counts of users and sites for admin dashboard."""
+    try:
+        total_users = User.query.count()
+        total_sites = Site.query.count()
+        
+        return jsonify({
+            'totalUsers': total_users,
+            'totalSites': total_sites
+        })
+    except Exception as e:
+        app.logger.error(f'Error getting total counts: {str(e)}')
+        return jsonify({'error': 'Failed to get total counts'}), 500
+
 @app.route('/api/users/<int:user_id>')
 @login_required
 def get_user_details(user_id):
@@ -1970,13 +1937,426 @@ def clear_site_analytics(site_id):
         db.session.rollback()
         app.logger.error(f'Error clearing analytics: {str(e)}')
         return jsonify({'error': 'Failed to clear analytics data'}), 500
-    """Get the list of admin usernames"""
-    from admin_utils import get_admins
+
+
+@app.route('/api/sites/<int:site_id>/files', methods=['GET', 'POST'])
+@login_required
+def site_files(site_id):
     try:
-        admins = get_admins()
-        return jsonify({'admins': admins})
+        site = Site.query.get_or_404(site_id)
+
+        if site.user_id != current_user.id and not current_user.is_admin:
+            return jsonify({'error': 'Unauthorized'}), 403
+
+        if request.method == 'GET':
+            pages = SitePage.query.filter_by(site_id=site_id).all()
+            files = [{
+                'filename': page.filename,
+                'file_type': page.file_type
+            } for page in pages]
+
+            return jsonify({'success': True, 'files': files})
+
+        elif request.method == 'POST':
+            data = request.get_json()
+            filename = data.get('filename')
+            content = data.get('content', '')
+            file_type = data.get('file_type')
+
+            if not filename:
+                return jsonify({'error': 'Filename is required'}), 400
+
+            existing = SitePage.query.filter_by(site_id=site_id,
+                                                filename=filename).first()
+            if existing:
+                return jsonify({'error': 'File already exists'}), 400
+
+            new_page = SitePage(site_id=site_id,
+                                filename=filename,
+                                content=content,
+                                file_type=file_type)
+            db.session.add(new_page)
+            db.session.commit()
+
+            activity = UserActivity(
+                activity_type='file_creation',
+                message=f'Created new file "{filename}" for site "{site.name}"',
+                username=current_user.username,
+                user_id=current_user.id,
+                site_id=site.id)
+            db.session.add(activity)
+            db.session.commit()
+
+            return jsonify({
+                'success': True,
+                'message': f'File {filename} created successfully'
+            })
+
+        return jsonify({'error': 'Invalid request method'}), 405
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        db.session.rollback()
+        app.logger.error(f'Error in site_files: {str(e)}')
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+
+@app.route('/site/update/<int:site_id>', methods=['POST'])
+@login_required
+def update_site_form(site_id):
+    site = Site.query.get_or_404(site_id)
+
+    if site.user_id != current_user.id:
+        abort(403)
+
+    if site.site_type == 'web' and 'html_content' in request.form:
+        site.html_content = request.form['html_content']
+    elif site.site_type == 'python' and 'python_content' in request.form:
+        site.python_content = request.form['python_content']
+    else:
+        return jsonify({'error': 'No content provided'}), 400
+
+    site.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    return jsonify({'success': True})
+
+
+@app.route('/api/site/<int:site_id>/save', methods=['POST'])
+@login_required
+def save_site_content(site_id):
+    site = Site.query.get_or_404(site_id)
+
+    if site.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+
+    if site.site_type == 'web':
+        site.html_content = data.get('content')
+    else:
+        site.python_content = data.get('content')
+
+    db.session.commit()
+
+    activity = UserActivity(activity_type='site_update',
+                            message=f'Updated site "{site.name}"',
+                            username=current_user.username,
+                            user_id=current_user.id,
+                            site_id=site.id)
+    db.session.add(activity)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Content saved successfully'})
+
+
+@app.route('/api/admin/users-list')
+@login_required
+@admin_required
+def get_admin_users_list():
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        search = request.args.get('search', '')
+        
+        query = User.query
+        
+        if search:
+            query = query.filter(
+                db.or_(
+                    User.username.ilike(f'%{search}%'),
+                    User.email.ilike(f'%{search}%')
+                )
+            )
+            
+        total = query.count()
+        users = query.order_by(User.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        
+        users_list = []
+        for user in users.items:
+            # Check explicitly if the user is a club leader
+            is_club_leader = Club.query.filter_by(leader_id=user.id).first() is not None
+            
+            users_list.append({
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'created_at': user.created_at.isoformat(),
+                'is_admin': user.is_admin,
+                'is_suspended': user.is_suspended,
+                'is_club_leader': is_club_leader,
+                'sites_count': Site.query.filter_by(user_id=user.id).count()
+            })
+            
+        return jsonify({
+            'users': users_list,
+            'total': total,
+            'pages': users.pages,
+            'current_page': users.page
+        })
+    except Exception as e:
+        app.logger.error(f'Error getting admin users list: {str(e)}')
+        return jsonify({'error': 'Failed to retrieve users'}), 500
+
+@app.route('/api/admin/sites-list')
+@login_required
+@admin_required
+def get_admin_sites_list():
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        search = request.args.get('search', '')
+        
+        query = Site.query
+        
+        if search:
+            query = query.filter(Site.name.ilike(f'%{search}%'))
+            
+        total = query.count()
+        sites = query.order_by(Site.updated_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        
+        sites_list = []
+        for site in sites.items:
+            user = User.query.get(site.user_id)
+            sites_list.append({
+                'id': site.id,
+                'name': site.name,
+                'slug': site.slug,
+                'type': site.site_type,
+                'created_at': site.created_at.isoformat(),
+                'updated_at': site.updated_at.isoformat(),
+                'owner': {
+                    'id': user.id if user else None,
+                    'username': user.username if user else 'Unknown'
+                }
+            })
+            
+        return jsonify({
+            'sites': sites_list,
+            'total': total,
+            'pages': sites.pages,
+            'current_page': sites.page
+        })
+    except Exception as e:
+        app.logger.error(f'Error getting admin sites list: {str(e)}')
+        return jsonify({'error': 'Failed to retrieve sites'}), 500
+
+    if site.site_type == 'web':
+        site.html_content = data.get('content')
+    else:
+        site.python_content = data.get('content')
+
+    db.session.commit()
+
+    activity = UserActivity(activity_type='site_update',
+                            message=f'Updated site "{site.name}"',
+                            username=current_user.username,
+                            user_id=current_user.id,
+                            site_id=site.id)
+    db.session.add(activity)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Content saved successfully'})
+
+
+@app.route('/api/site/<int:site_id>/pages', methods=['GET'])
+@login_required
+def get_site_pages(site_id):
+    site = Site.query.get_or_404(site_id)
+
+    if site.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    with db.engine.connect() as conn:
+        result = conn.execute(
+            db.text("SELECT * FROM site_page WHERE site_id = :site_id"),
+            {"site_id": site_id})
+        pages = [{
+            "filename": row[2],
+            "content": row[3],
+            "file_type": row[4]
+        } for row in result]
+
+    if not pages and site.site_type == 'web':
+        default_html = site.html_content or '<h1>Welcome to my site!</h1>'
+        default_css = 'body { font-family: Arial, sans-serif; }'
+        default_js = 'console.log("Hello from JavaScript!");'
+
+        pages = [{
+            "filename": "index.html",
+            "content": default_html,
+            "file_type": "html"
+        }, {
+            "filename": "styles.css",
+            "content": default_css,
+            "file_type": "css"
+        }, {
+            "filename": "script.js",
+            "content": default_js,
+            "file_type": "js"
+        }]
+
+        for page in pages:
+            with db.engine.connect() as conn:
+                conn.execute(
+                    db.text("""
+                        INSERT INTO site_page (site_id, filename, content, file_type)
+                        VALUES (:site_id, :filename, :content, :file_type)
+                        ON CONFLICT (site_id, filename) DO UPDATE
+                        SET content = :content, file_type = :file_type
+                    """), {
+                        "site_id": site_id,
+                        "filename": page["filename"],
+                        "content": page["content"],
+                        "file_type": page["file_type"]
+                    })
+                conn.commit()
+
+    return jsonify({'success': True, 'pages': pages})
+
+@app.route('/api/sites/<int:site_id>/files', methods=['GET'])
+@login_required
+def get_site_files(site_id):
+    try:
+        site = Site.query.get_or_404(site_id)
+        
+        if site.user_id != current_user.id and not current_user.is_admin:
+            return jsonify({'error': 'Unauthorized'}), 403
+            
+        files = []
+        
+        if site.site_type == 'python':
+            files.append({
+                'filename': 'main.py',
+                'file_type': 'python'
+            })
+        else:
+            with db.engine.connect() as conn:
+                result = conn.execute(
+                    db.text("SELECT filename, file_type FROM site_page WHERE site_id = :site_id"),
+                    {"site_id": site_id})
+                
+                for row in result:
+                    files.append({
+                        'filename': row[0],
+                        'file_type': row[1]
+                    })
+                    
+            # Check if we have index.html
+            if not any(f['filename'] == 'index.html' for f in files):
+                files.append({
+                    'filename': 'index.html',
+                    'file_type': 'html'
+                })
+                
+            # Check if we have styles.css
+            if not any(f['filename'] == 'styles.css' for f in files):
+                files.append({
+                    'filename': 'styles.css',
+                    'file_type': 'css'
+                })
+                
+            # Check if we have script.js
+            if not any(f['filename'] == 'script.js' for f in files):
+                files.append({
+                    'filename': 'script.js',
+                    'file_type': 'js'
+                })
+        
+        return jsonify({'success': True, 'files': files})
+    except Exception as e:
+        print(f'Error getting site files: {str(e)}')
+        return jsonify({'error': 'Failed to get site files'}), 500
+
+
+@app.route('/api/site/<int:site_id>/save_pages', methods=['POST'])
+@login_required
+def save_site_pages(site_id):
+    site = Site.query.get_or_404(site_id)
+
+    if site.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    pages = data.get('pages', [])
+
+    if not pages:
+        return jsonify({'error': 'No pages provided'}), 400
+
+    index_html = next((page['content']
+                       for page in pages if page['filename'] == 'index.html'),
+                      None)
+
+    if not index_html:
+        return jsonify({'error': 'index.html is required'}), 400
+
+    site.html_content = index_html
+    db.session.commit()
+
+    for page in pages:
+        with db.engine.connect() as conn:
+            conn.execute(
+                db.text("""
+                    INSERT INTO site_page (site_id, filename, content, file_type)
+                    VALUES (:site_id, :filename, :content, :file_type)
+                    ON CONFLICT (site_id, filename) DO UPDATE
+                    SET content = :content, file_type = :file_type
+                """), {
+                    "site_id": site_id,
+                    "filename": page["filename"],
+                    "content": page["content"],
+                    "file_type": page["file_type"]
+                })
+            conn.commit()
+
+    activity = UserActivity(
+        activity_type='site_update',
+        message=f'Updated {len(pages)} pages for site "{site.name}"',
+        username=current_user.username,
+        user_id=current_user.id,
+        site_id=site.id)
+    db.session.add(activity)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': 'All pages saved successfully'
+    })
+
+
+@app.route('/api/site/<int:site_id>/page/<path:filename>', methods=['DELETE'])
+@login_required
+def delete_site_page(site_id, filename):
+    site = Site.query.get_or_404(site_id)
+
+    if site.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    if filename in ['index.html', 'styles.css', 'script.js']:
+        return jsonify({'error': 'Cannot delete default files'}), 400
+
+    with db.engine.connect() as conn:
+        conn.execute(
+            db.text(
+                "DELETE FROM site_page WHERE site_id = :site_id AND filename = :filename"
+            ), {
+                "site_id": site_id,
+                "filename": filename
+            })
+        conn.commit()
+
+    activity = UserActivity(
+        activity_type='site_update',
+        message=f'Deleted page "{filename}" from site "{site.name}"',
+        username=current_user.username,
+        user_id=current_user.id,
+        site_id=site.id)
+    db.session.add(activity)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'Page {filename} deleted successfully'
+    })
 
 
 @app.route('/api/admin/admins/add', methods=['POST'])
@@ -2028,6 +2408,11 @@ def remove_admin_user():
             return jsonify({'message': f'User {username} is not an admin'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/up')
+def health_check():
+    return '', 200
 
 
 @app.route('/logout')
@@ -2087,445 +2472,366 @@ def settings():
                 'message': 'Password changed successfully'
             })
 
-    # Get user's club memberships
-    memberships = ClubMember.query.filter_by(user_id=current_user.id).all()
-
-    return render_template('settings.html', memberships=memberships)
+    return render_template('settings.html')
 
 
 @app.route('/club-dashboard')
 @login_required
 def club_dashboard():
-    if not current_user.is_club_leader:
-        flash('You must be a club leader to access the club dashboard',
-              'error')
+    """Club dashboard for club leaders to manage their clubs."""
+    # Check if user is a club leader
+    club = Club.query.filter_by(leader_id=current_user.id).first()
+    if not club:
+        flash('You do not have permission to access the club dashboard.', 'error')
         return redirect(url_for('welcome'))
+        
+    # Get the user's club
+    from models import Club, ClubMembership
+    
+    club = Club.query.filter_by(leader_id=current_user.id).first()
+    
+    if not club:
+        flash('You do not have a club. Create one below.', 'info')
+        
+    # Get all memberships for the club if it exists
+    memberships = []
+    if club:
+        memberships = ClubMembership.query.filter_by(club_id=club.id).all()
+        
+    return render_template('club_dashboard.html', club=club, memberships=memberships)
 
-    return render_template('club_dashboard.html')
-
-
-@app.route('/api/clubs/members/sites')
-@login_required
-def get_club_members_sites():
-    if not current_user.is_club_leader:
-        return jsonify(
-            {'error': 'You must be a club leader to access this data'}), 403
-
-    if not hasattr(current_user, 'club') or not current_user.club:
-        return jsonify({'error': 'You do not have a club'}), 404
-
-    club = current_user.club
-
-    try:
-        # Get all member IDs in this club
-        members = ClubMember.query.filter_by(club_id=club.id).all()
-        member_ids = [member.user_id for member in members]
-
-        # Also include club leader
-        member_ids.append(current_user.id)
-
-        # Get all sites for these members
-        member_sites = []
-        for member_id in member_ids:
-            user = User.query.get(member_id)
-            if not user:
-                continue
-
-            sites = Site.query.filter_by(user_id=member_id).all()
-            for site in sites:
-                member_sites.append({
-                    'id': site.id,
-                    'name': site.name,
-                    'type': site.site_type,
-                    'created_at': site.created_at.isoformat(),
-                    'updated_at': site.updated_at.isoformat(),
-                    'owner': {
-                        'id': user.id,
-                        'username': user.username
-                    }
-                })
-
-        return jsonify({'sites': member_sites})
-    except Exception as e:
-        app.logger.error(f'Error getting club members sites: {str(e)}')
-        return jsonify({'error': 'Failed to retrieve member sites'}), 500
-
-
-@app.route('/api/admin/users/<int:user_id>/club-leader', methods=['POST'])
-@login_required
-@admin_required
-def toggle_club_leader(user_id):
-    if user_id == current_user.id:
-        return jsonify(
-            {'message': 'Cannot modify your own club leader status'}), 400
-
-    user = User.query.get_or_404(user_id)
-    data = request.get_json()
-    user.is_club_leader = data.get('is_club_leader', False)
-
-    try:
-        db.session.commit()
-        activity = UserActivity(
-            activity_type="admin_action",
-            message="Admin {username} " +
-            ("assigned" if user.is_club_leader else "removed") +
-            " club leader status for " + user.username,
-            username=current_user.username,
-            user_id=current_user.id)
-        db.session.add(activity)
-        db.session.commit()
-
-        return jsonify(
-            {'message': 'User club leader status updated successfully'})
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'Error updating club leader status: {str(e)}')
-        return jsonify({'message':
-                        'Failed to update user club leader status'}), 500
-
-
+# Club API routes
 @app.route('/api/clubs', methods=['POST'])
 @login_required
 def create_club():
-    if not current_user.is_club_leader:
-        return jsonify({'error':
-                        'You must be a club leader to create a club'}), 403
-
-    if hasattr(current_user, 'club') and current_user.club:
-        return jsonify({'error': 'You already have a club'}), 400
-
-    data = request.get_json()
-    name = data.get('name')
-
-    if not name:
-        return jsonify({'error': 'Club name is required'}), 400
-
+    """Create a new club with the current user as leader."""
     try:
-        club = Club(name=name,
-                    description=data.get('description'),
-                    location=data.get('location'),
-                    meeting_day=data.get('meeting_day'),
-                    meeting_time=data.get('meeting_time'),
-                    leader_id=current_user.id)
-
+        data = request.get_json()
+        
+        # Validate required fields
+        if not data.get('name'):
+            return jsonify({'error': 'Club name is required'}), 400
+            
+        # Check if user already has a club
+        if Club.query.filter_by(leader_id=current_user.id).first():
+            return jsonify({'error': 'You already have a club'}), 400
+            
+        # Create new club
+        club = Club(
+            name=data.get('name'),
+            description=data.get('description', ''),
+            location=data.get('location', ''),
+            leader_id=current_user.id
+        )
+        
+        # Generate a join code for the club
+        club.generate_join_code()
         db.session.add(club)
-
+        db.session.commit()  # Commit to ensure the club has an ID
+        
+        # Add the leader as a member with 'co-leader' role
+        membership = ClubMembership(
+            user_id=current_user.id,
+            club_id=club.id,
+            role='co-leader'
+        )
+        db.session.add(membership)
+        db.session.commit()
+        
+        # Record activity
         activity = UserActivity(
             activity_type="club_creation",
-            message="Club leader {username} created club " + name,
+            message=f'Club "{club.name}" created by {{username}}',
             username=current_user.username,
-            user_id=current_user.id)
+            user_id=current_user.id
+        )
         db.session.add(activity)
         db.session.commit()
-
-        return jsonify({
-            'message': 'Club created successfully',
-            'club_id': club.id
-        })
+        
+        return jsonify({'message': 'Club created successfully'}), 201
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error creating club: {str(e)}')
         return jsonify({'error': 'Failed to create club'}), 500
 
-
-@app.route('/api/clubs/current', methods=['GET'])
+@app.route('/api/clubs/current', methods=['GET', 'PUT', 'DELETE'])
 @login_required
-def get_current_club():
-    if not current_user.is_club_leader:
-        return jsonify(
-            {'error': 'You must be a club leader to access club data'}), 403
-
-    if not hasattr(current_user, 'club') or not current_user.club:
+def manage_current_club():
+    """Get, update, or delete the current user's club."""
+    # Get the user's club (if they're a leader)
+    club = Club.query.filter_by(leader_id=current_user.id).first()
+    
+    if not club:
         return jsonify({'error': 'You do not have a club'}), 404
-
-    club = current_user.club
-
-    return jsonify({
-        'id': club.id,
-        'name': club.name,
-        'description': club.description,
-        'location': club.location,
-        'meeting_day': club.meeting_day,
-        'meeting_time': club.meeting_time,
-        'join_code': club.join_code,
-        'member_count': club.members.count()
-    })
-
-
-def generate_join_code(length=6):
-    import string
-    import random
-    characters = string.ascii_uppercase + string.digits
-    while True:
-        code = ''.join(random.choices(characters, k=length))
-        if not Club.query.filter_by(join_code=code).first():
-            return code
-
+        
+    if request.method == 'GET':
+        return jsonify({
+            'id': club.id,
+            'name': club.name,
+            'description': club.description,
+            'location': club.location,
+            'join_code': club.join_code,
+            'created_at': club.created_at.isoformat(),
+            'members_count': ClubMembership.query.filter_by(club_id=club.id).count()
+        })
+        
+    elif request.method == 'PUT':
+        try:
+            data = request.get_json()
+            
+            if data.get('name'):
+                club.name = data.get('name')
+            if 'description' in data:
+                club.description = data.get('description')
+            if 'location' in data:
+                club.location = data.get('location')
+                
+            db.session.commit()
+            
+            return jsonify({'message': 'Club updated successfully'})
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'Error updating club: {str(e)}')
+            return jsonify({'error': 'Failed to update club'}), 500
+            
+    elif request.method == 'DELETE':
+        try:
+            # Delete all memberships first
+            ClubMembership.query.filter_by(club_id=club.id).delete()
+            
+            # Delete the club
+            db.session.delete(club)
+            db.session.commit()
+            
+            # Record activity
+            activity = UserActivity(
+                activity_type="club_deletion",
+                message=f'Club "{club.name}" deleted by {{username}}',
+                username=current_user.username,
+                user_id=current_user.id
+            )
+            db.session.add(activity)
+            db.session.commit()
+            
+            return jsonify({'message': 'Club deleted successfully'})
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'Error deleting club: {str(e)}')
+            return jsonify({'error': 'Failed to delete club'}), 500
 
 @app.route('/api/clubs/join-code/generate', methods=['POST'])
 @login_required
-def generate_club_join_code():
-    if not current_user.is_club_leader:
-        return jsonify(
-            {'error':
-             'You must be a club leader to generate a join code'}), 403
-
-    if not hasattr(current_user, 'club') or not current_user.club:
+def generate_join_code():
+    """Generate a new join code for the current user's club."""
+    # Get the user's club (if they're a leader)
+    club = Club.query.filter_by(leader_id=current_user.id).first()
+    
+    if not club:
         return jsonify({'error': 'You do not have a club'}), 404
-
-    club = current_user.club
-
+        
     try:
-        join_code = generate_join_code()
-        club.join_code = join_code
+        # Generate a new join code
+        club.generate_join_code()
         db.session.commit()
-
-        return jsonify({
-            'message': 'Join code generated successfully',
-            'join_code': join_code
-        })
+        
+        return jsonify({'message': 'Join code generated successfully', 'join_code': club.join_code})
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error generating join code: {str(e)}')
         return jsonify({'error': 'Failed to generate join code'}), 500
 
-
 @app.route('/api/clubs/join', methods=['POST'])
 @login_required
-def join_club_with_code():
-    data = request.get_json()
-    join_code = data.get('join_code')
-
-    if not join_code:
-        return jsonify({'error': 'Join code is required'}), 400
-
-    club = Club.query.filter_by(join_code=join_code).first()
-    if not club:
-        return jsonify({'error': 'Invalid join code'}), 404
-
-    if club.leader_id == current_user.id:
-        return jsonify({'error':
-                        'You cannot join your own club as a member'}), 400
-
-    existing_membership = ClubMember.query.filter_by(
-        club_id=club.id, user_id=current_user.id).first()
-
-    if existing_membership:
-        return jsonify({'error': 'You are already a member of this club'}), 400
-
+def join_club():
+    """Join a club using a join code."""
     try:
-        membership = ClubMember(club_id=club.id,
-                                user_id=current_user.id,
-                                role='member')
-
+        data = request.get_json()
+        join_code = data.get('join_code')
+        
+        if not join_code:
+            return jsonify({'error': 'Join code is required'}), 400
+            
+        # Find the club with this join code
+        club = Club.query.filter_by(join_code=join_code).first()
+        
+        if not club:
+            return jsonify({'error': 'Invalid join code'}), 404
+            
+        # Check if user is already a member
+        existing_membership = ClubMembership.query.filter_by(
+            user_id=current_user.id, club_id=club.id).first()
+            
+        if existing_membership:
+            return jsonify({'error': 'You are already a member of this club'}), 400
+            
+        # Add user as a member
+        membership = ClubMembership(
+            user_id=current_user.id,
+            club_id=club.id,
+            role='member'
+        )
         db.session.add(membership)
+        
+        # Record activity
+        activity = UserActivity(
+            activity_type="club_join",
+            message=f'{{username}} joined club "{club.name}"',
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
         db.session.commit()
-
+        
         return jsonify({'message': f'Successfully joined {club.name}'})
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error joining club: {str(e)}')
         return jsonify({'error': 'Failed to join club'}), 500
 
-
-@app.route('/api/clubs/current', methods=['PUT'])
-@login_required
-def update_club():
-    if not current_user.is_club_leader:
-        return jsonify(
-            {'error': 'You must be a club leader to update club data'}), 403
-
-    if not hasattr(current_user, 'club') or not current_user.club:
-        return jsonify({'error': 'You do not have a club'}), 404
-
-    club = current_user.club
-    data = request.get_json()
-
-    try:
-        if 'name' in data and data['name']:
-            club.name = data['name']
-        if 'description' in data:
-            club.description = data['description']
-        if 'location' in data:
-            club.location = data['location']
-
-        club.updated_at = datetime.utcnow()
-        db.session.commit()
-
-        app.logger.info(
-            f'Club {club.id} updated successfully by user {current_user.id}')
-        return jsonify({'message': 'Club updated successfully'})
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'Error updating club: {str(e)}')
-        return jsonify({'error': 'Failed to update club'}), 500
-
-
-@app.route('/api/clubs/members', methods=['POST'])
-@login_required
-def add_club_member():
-    if not current_user.is_club_leader:
-        return jsonify({'error':
-                        'You must be a club leader to add members'}), 403
-
-    if not hasattr(current_user, 'club') or not current_user.club:
-        return jsonify({'error': 'You do not have a club'}), 404
-
-    data = request.get_json()
-    email = data.get('email')
-    role = data.get('role', 'member')
-
-    if not email:
-        return jsonify({'error': 'Email is required'}), 400
-
-    if role not in ['member', 'co-leader']:
-        return jsonify(
-            {'error': 'Invalid role. Must be "member" or "co-leader"'}), 400
-
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        return jsonify({'error': 'User not found with that email'}), 404
-
-    if user.id == current_user.id:
-        return jsonify({'error': 'You cannot add yourself as a member'}), 400
-
-    existing_membership = ClubMember.query.filter_by(
-        club_id=current_user.club.id, user_id=user.id).first()
-
-    if existing_membership:
-        return jsonify({'error': 'User is already a member of this club'}), 400
-
-    try:
-        membership = ClubMember(club_id=current_user.club.id,
-                                user_id=user.id,
-                                role=role)
-
-        db.session.add(membership)
-        db.session.commit()
-
-        return jsonify(
-            {'message': f'Added {user.username} to the club as {role}'})
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'Error adding club member: {str(e)}')
-        return jsonify({'error': 'Failed to add member to the club'}), 500
-
-
-@app.route('/api/clubs/members/<int:membership_id>/role', methods=['PUT'])
-@login_required
-def update_member_role(membership_id):
-    if not current_user.is_club_leader:
-        return jsonify(
-            {'error': 'You must be a club leader to update member roles'}), 403
-
-    if not hasattr(current_user, 'club') or not current_user.club:
-        return jsonify({'error': 'You do not have a club'}), 404
-
-    membership = ClubMember.query.get_or_404(membership_id)
-
-    if membership.club_id != current_user.club.id:
-        return jsonify({'error': 'Member not found in your club'}), 404
-
-    data = request.get_json()
-    role = data.get('role')
-
-    if not role or role not in ['member', 'co-leader']:
-        return jsonify(
-            {'error': 'Invalid role. Must be "member" or "co-leader"'}), 400
-
-    try:
-        membership.role = role
-        db.session.commit()
-
-        return jsonify({'message': f'Updated member role to {role}'})
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'Error updating member role: {str(e)}')
-        return jsonify({'error': 'Failed to update member role'}), 500
-
-
-@app.route('/api/clubs/members/<int:membership_id>', methods=['DELETE'])
-@login_required
-def remove_club_member(membership_id):
-    if not current_user.is_club_leader:
-        return jsonify(
-            {'error': 'You must be a club leader to remove members'}), 403
-
-    if not hasattr(current_user, 'club') or not current_user.club:
-        return jsonify({'error': 'You do not have a club'}), 404
-
-    membership = ClubMember.query.get_or_404(membership_id)
-
-    if membership.club_id != current_user.club.id:
-        return jsonify({'error': 'Member not found in your club'}), 404
-
-    try:
-        username = membership.user.username
-        db.session.delete(membership)
-        db.session.commit()
-
-        return jsonify({'message': f'Removed {username} from the club'})
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'Error removing club member: {str(e)}')
-        return jsonify({'error': 'Failed to remove member from the club'}), 500
-
-
-@app.route('/api/clubs/memberships/<int:membership_id>/leave',
-           methods=['POST'])
+@app.route('/api/clubs/memberships/<int:membership_id>/leave', methods=['POST'])
 @login_required
 def leave_club(membership_id):
-    membership = ClubMember.query.get_or_404(membership_id)
-
-    if membership.user_id != current_user.id:
-        return jsonify({'error': 'Unauthorized action'}), 403
-
+    """Leave a club."""
     try:
+        # Find the membership
+        membership = ClubMembership.query.get_or_404(membership_id)
+        
+        # Verify it belongs to the current user
+        if membership.user_id != current_user.id:
+            return jsonify({'error': 'Unauthorized'}), 403
+            
+        # Prevent club leaders from leaving their own club
+        if membership.club.leader_id == current_user.id:
+            return jsonify({'error': 'Club leaders cannot leave. Delete the club instead.'}), 400
+            
         club_name = membership.club.name
+        
+        # Delete the membership
         db.session.delete(membership)
+        
+        # Record activity
+        activity = UserActivity(
+            activity_type="club_leave",
+            message=f'{{username}} left club "{club_name}"',
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
         db.session.commit()
-
-        return jsonify({'message': f'You have left {club_name}'})
+        
+        return jsonify({'message': f'Successfully left {club_name}'})
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error leaving club: {str(e)}')
-        return jsonify({'error': 'Failed to leave the club'}), 500
+        return jsonify({'error': 'Failed to leave club'}), 500
 
-
-@app.route('/api/clubs/current', methods=['DELETE'])
+@app.route('/api/clubs/members/<int:membership_id>/role', methods=['PUT'])
 @login_required
-def delete_club():
-    if not current_user.is_club_leader:
-        return jsonify({'error':
-                        'You must be a club leader to delete a club'}), 403
-
-    if not hasattr(current_user, 'club') or not current_user.club:
-        return jsonify({'error': 'You do not have a club'}), 404
-
-    club = current_user.club
-
+def change_member_role(membership_id):
+    """Change a member's role in a club."""
     try:
-        # Delete all memberships first
-        ClubMember.query.filter_by(club_id=club.id).delete()
-
-        # Delete the club
-        club_name = club.name  # Save name for activity log
-        db.session.delete(club)
-
-        activity = UserActivity(
-            activity_type="club_deletion",
-            message="Club leader {username} deleted club " + club_name,
-            username=current_user.username,
-            user_id=current_user.id)
-        db.session.add(activity)
+        membership = ClubMembership.query.get_or_404(membership_id)
+        
+        # Check if the current user is the club leader
+        club = membership.club
+        if club.leader_id != current_user.id:
+            return jsonify({'error': 'Only club leaders can change member roles'}), 403
+            
+        # Prevent changing own role
+        if membership.user_id == current_user.id:
+            return jsonify({'error': 'You cannot change your own role'}), 400
+            
+        data = request.get_json()
+        new_role = data.get('role')
+        
+        if new_role not in ['member', 'co-leader']:
+            return jsonify({'error': 'Invalid role'}), 400
+            
+        membership.role = new_role
         db.session.commit()
-
-        return jsonify({'message': 'Club deleted successfully'})
+        
+        return jsonify({'message': f'Role updated to {new_role}'})
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f'Error deleting club: {str(e)}')
-        return jsonify({'error': 'Failed to delete club'}), 500
+        app.logger.error(f'Error changing member role: {str(e)}')
+        return jsonify({'error': 'Failed to change member role'}), 500
 
+@app.route('/api/clubs/members/<int:membership_id>', methods=['DELETE'])
+@login_required
+def remove_member(membership_id):
+    """Remove a member from a club."""
+    try:
+        membership = ClubMembership.query.get_or_404(membership_id)
+        
+        # Check if the current user is the club leader
+        club = membership.club
+        if club.leader_id != current_user.id:
+            return jsonify({'error': 'Only club leaders can remove members'}), 403
+            
+        # Prevent removing self
+        if membership.user_id == current_user.id:
+            return jsonify({'error': 'You cannot remove yourself from the club'}), 400
+            
+        member_name = membership.user.username
+        
+        # Delete the membership
+        db.session.delete(membership)
+        
+        # Record activity
+        activity = UserActivity(
+            activity_type="club_member_removal",
+            message=f'{{username}} removed {member_name} from club "{club.name}"',
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        return jsonify({'message': f'Successfully removed {member_name} from the club'})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error removing member: {str(e)}')
+        return jsonify({'error': 'Failed to remove member'}), 500
+
+@app.route('/api/clubs/members/sites', methods=['GET'])
+@login_required
+def get_member_sites():
+    """Get all sites from members of the current user's club."""
+    try:
+        # Check if the user is a club leader or co-leader
+        club = Club.query.filter_by(leader_id=current_user.id).first()
+        if not club:
+            # Check if they are a co-leader
+            membership = ClubMembership.query.filter_by(user_id=current_user.id, role='co-leader').first()
+            if not membership:
+                return jsonify({'error': 'Only club leaders can access member sites'}), 403
+            club = membership.club
+            
+        # Get all members of the club
+        memberships = ClubMembership.query.filter_by(club_id=club.id).all()
+        member_ids = [m.user_id for m in memberships]
+        
+        # Get all sites from these members
+        sites = Site.query.filter(Site.user_id.in_(member_ids)).all()
+        
+        # Format the result
+        result = []
+        for site in sites:
+            result.append({
+                'id': site.id,
+                'name': site.name,
+                'type': site.site_type,
+                'updated_at': site.updated_at.isoformat(),
+                'owner': {
+                    'id': site.user.id,
+                    'username': site.user.username
+                }
+            })
+            
+        return jsonify({'sites': result})
+    except Exception as e:
+        app.logger.error(f'Error getting member sites: {str(e)}')
+        return jsonify({'error': 'Failed to get member sites'}), 500
 
 def initialize_database():
     try:
@@ -2537,516 +2843,9 @@ def initialize_database():
         return False
 
 
-@app.route('/api/sites/<int:site_id>/collaborators', methods=['GET'])
-@login_required
-def get_site_collaborators(site_id):
-    try:
-        site = Site.query.get_or_404(site_id)
-        if site.user_id != current_user.id and not current_user.is_admin:
-            return jsonify({'error': 'Unauthorized'}), 403
-
-        collaborations = SiteCollaborator.query.filter_by(
-            site_id=site_id).all()
-        collaborators = []
-        active_collaborators = []
-
-        for collab in collaborations:
-            user = User.query.get(collab.user_id)
-            if not user:
-                continue
-
-            collaborator_data = {
-                'id': collab.id,
-                'user_id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'added_at': collab.added_at.strftime('%Y-%m-%d %H:%M:%S'),
-            }
-            collaborators.append(collaborator_data)
-
-            if collab.is_active and collab.last_active > datetime.utcnow(
-            ) - timedelta(minutes=30):
-                active_collaborators.append(collaborator_data)
-
-        return jsonify({
-            'collaborators': collaborators,
-            'active_collaborators': active_collaborators
-        })
-
-    except Exception as e:
-        app.logger.error(f'Error getting collaborators: {str(e)}')
-        return jsonify({'error': 'Failed to get collaborators'}), 500
-
-
-@app.route('/api/sites/<int:site_id>/collaborators', methods=['POST'])
-@login_required
-def add_site_collaborator(site_id):
-    try:
-        site = Site.query.get_or_404(site_id)
-        if site.user_id != current_user.id and not current_user.is_admin:
-            return jsonify({'error': 'Unauthorized'}), 403
-
-        data = request.get_json()
-        email = data.get('email')
-
-        if not email:
-            return jsonify({'error': 'Email is required'}), 400
-
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            return jsonify({'error': 'User not found with that email'}), 404
-
-        if user.id == current_user.id:
-            return jsonify(
-                {'error': 'You cannot add yourself as a collaborator'}), 400
-
-        existing = SiteCollaborator.query.filter_by(site_id=site_id,
-                                                    user_id=user.id).first()
-        if existing:
-            return jsonify({'error': 'User is already a collaborator'}), 400
-
-        collaborator = SiteCollaborator(site_id=site_id, user_id=user.id)
-        db.session.add(collaborator)
-
-        activity = UserActivity(
-            activity_type="collaborator_added",
-            message=
-            "User {username} added {collab_username} as a collaborator on site {site_name}",
-            username=current_user.username,
-            user_id=current_user.id,
-            site_id=site_id)
-        db.session.add(activity)
-        db.session.commit()
-
-        return jsonify({
-            'message':
-            f'Successfully added {user.username} as a collaborator'
-        })
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'Error adding collaborator: {str(e)}')
-        return jsonify({'error': 'Failed to add collaborator'}), 500
-
-
-@app.route('/api/sites/<int:site_id>/collaborators/<int:collab_id>',
-           methods=['DELETE'])
-@login_required
-def remove_site_collaborator(site_id, collab_id):
-    try:
-        site = Site.query.get_or_404(site_id)
-        if site.user_id != current_user.id and not current_user.is_admin:
-            return jsonify({'error': 'Unauthorized'}), 403
-
-        collaborator = SiteCollaborator.query.get_or_404(collab_id)
-        if collaborator.site_id != site_id:
-            return jsonify({'error':
-                            'Collaborator not found for this site'}), 404
-
-        user = User.query.get(collaborator.user_id)
-        username = user.username if user else 'Unknown'
-
-        db.session.delete(collaborator)
-
-        activity = UserActivity(
-            activity_type="collaborator_removed",
-            message=
-            "User {username} removed {collab_username} as a collaborator from site {site_name}",
-            username=current_user.username,
-            user_id=current_user.id,
-            site_id=site_id)
-        db.session.add(activity)
-        db.session.commit()
-
-        return jsonify(
-            {'message': f'Successfully removed {username} as a collaborator'})
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'Error removing collaborator: {str(e)}')
-        return jsonify({'error': 'Failed to remove collaborator'}), 500
-
-
-@app.route('/api/collaborations/<int:collab_id>/leave', methods=['POST'])
-@login_required
-def leave_shared_space(collab_id):
-    try:
-        collaborator = SiteCollaborator.query.get_or_404(collab_id)
-
-        if collaborator.user_id != current_user.id:
-            return jsonify({'error': 'Unauthorized'}), 403
-
-        site_id = collaborator.site_id
-        site = Site.query.get(site_id)
-        site_name = site.name if site else 'Unknown'
-
-        db.session.delete(collaborator)
-
-        activity = UserActivity(
-            activity_type="collaboration_left",
-            message="User {username} left collaboration on site {site_name}",
-            username=current_user.username,
-            user_id=current_user.id,
-            site_id=site_id)
-        db.session.add(activity)
-        db.session.commit()
-
-        return jsonify(
-            {'message': f'Successfully left shared space: {site_name}'})
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'Error leaving shared space: {str(e)}')
-        return jsonify({'error': 'Failed to leave shared space'}), 500
-
-
-@app.route('/api/sites/<int:site_id>/collaborators/status', methods=['POST'])
-@login_required
-def update_collaboration_status(site_id):
-    try:
-        site = Site.query.get_or_404(site_id)
-        is_owner = site.user_id == current_user.id
-
-        collaborator = None
-        if not is_owner:
-            collaborator = SiteCollaborator.query.filter_by(
-                site_id=site_id, user_id=current_user.id).first()
-            if not collaborator:
-                return jsonify({'error': 'Unauthorized'}), 403
-
-        data = request.get_json()
-        is_active = data.get('is_active', True)
-
-        if collaborator:
-            collaborator.is_active = is_active
-            collaborator.last_active = datetime.utcnow()
-        else:
-            pass
-
-        db.session.commit()
-
-        return jsonify({'message': 'Collaboration status updated'})
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'Error updating collaboration status: {str(e)}')
-        return jsonify({'error': 'Failed to update collaboration status'}), 500
-
-
-@socketio.on('connect')
-def handle_connect():
-    print(f'Client connected: {request.sid}')
-    if current_user.is_authenticated:
-        global sid_to_user_id, user_to_sids
-        sid_to_user_id[request.sid] = current_user.id
-
-        if current_user.id not in user_to_sids:
-            user_to_sids[current_user.id] = set()
-        user_to_sids[current_user.id].add(request.sid)
-
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    print(f'Client disconnected: {request.sid}')
-
-    global sid_to_user_id, user_to_sids, room_members
-
-    user_id = sid_to_user_id.pop(request.sid, None)
-
-    if user_id and user_id in user_to_sids:
-        user_to_sids[user_id].discard(request.sid)
-        if not user_to_sids[user_id]:
-            del user_to_sids[user_id]
-
-    for room_name in list(room_members.keys()):
-        if request.sid in room_members.get(room_name, set()):
-            room_members[room_name].discard(request.sid)
-            if not room_members[room_name]:
-                del room_members[room_name]
-
-    if not current_user.is_authenticated:
-        return
-
-    for room in rooms():
-        if room.startswith('site_'):
-            try:
-                site_id = int(room.split('_')[1])
-                site = Site.query.get(site_id)
-
-                is_owner = site and site.user_id == current_user.id
-
-                emit('user_left', {
-                    'username': current_user.username,
-                    'user_id': current_user.id,
-                    'is_owner': is_owner
-                },
-                     to=room,
-                     skip_sid=request.sid)
-
-                if is_owner:
-                    emit('owner_left', to=room, skip_sid=request.sid)
-                    collaborators = SiteCollaborator.query.filter_by(
-                        site_id=site_id).all()
-                    for collab in collaborators:
-                        collab.is_active = False
-                    db.session.commit()
-                else:
-                    collaborator = SiteCollaborator.query.filter_by(
-                        site_id=site_id, user_id=current_user.id).first()
-                    if collaborator:
-                        collaborator.is_active = False
-                        db.session.commit()
-            except Exception as e:
-                app.logger.error(f'Error handling disconnect: {str(e)}')
-
-            leave_room(room)
-
-
-@socketio.on('join')
-def handle_join(data):
-    if not current_user.is_authenticated:
-        return
-
-    site_id = data.get('site_id')
-    if not site_id:
-        return
-
-    site = Site.query.get(site_id)
-    if not site:
-        return
-
-    is_owner = site.user_id == current_user.id
-
-    if not is_owner:
-        collaborator = SiteCollaborator.query.filter_by(
-            site_id=site_id, user_id=current_user.id).first()
-        if not collaborator:
-            return
-
-    room = f'site_{site_id}'
-    global room_members
-
-    already_joined = False
-    if room in room_members and request.sid in room_members[room]:
-        already_joined = True
-    else:
-        join_room(room)
-
-        if room not in room_members:
-            room_members[room] = set()
-        room_members[room].add(request.sid)
-
-    if site and site.user_id != current_user.id:
-        collaborator = SiteCollaborator.query.filter_by(
-            site_id=site_id, user_id=current_user.id).first()
-        if collaborator:
-            collaborator.is_active = True
-            collaborator.last_active = datetime.utcnow()
-            db.session.commit()
-
-    if not already_joined:
-        emit('user_joined', {
-            'username': current_user.username,
-            'id': current_user.id
-        },
-             to=room,
-             skip_sid=request.sid)
-
-    try:
-        site = Site.query.get(site_id)
-        active_users = []
-
-        if site:
-            owner = User.query.get(site.user_id)
-            if owner:
-                active_users.append({
-                    'username': owner.username,
-                    'id': owner.id,
-                    'is_owner': True
-                })
-
-            collaborators = SiteCollaborator.query.filter(
-                SiteCollaborator.site_id == site_id,
-                SiteCollaborator.is_active == True,
-                SiteCollaborator.last_active
-                > datetime.utcnow() - timedelta(minutes=30)).all()
-
-            for collab in collaborators:
-                if collab.user_id == current_user.id:
-                    continue
-
-                user = User.query.get(collab.user_id)
-                if user:
-                    active_users.append({
-                        'username': user.username,
-                        'id': user.id,
-                        'is_owner': False
-                    })
-
-        emit('active_users', {'users': active_users})
-    except Exception as e:
-        app.logger.error(f'Error getting active users: {str(e)}')
-
-
-@socketio.on('leave')
-def handle_leave(data):
-    if not current_user.is_authenticated:
-        return
-
-    site_id = data.get('site_id')
-    if not site_id:
-        return
-
-    room = f'site_{site_id}'
-    leave_room(room)
-
-    site = Site.query.get(site_id)
-    is_owner = site and site.user_id == current_user.id
-
-    if not is_owner:
-        collaborator = SiteCollaborator.query.filter_by(
-            site_id=site_id, user_id=current_user.id).first()
-        if collaborator:
-            collaborator.is_active = False
-            db.session.commit()
-    else:
-        collaborators = SiteCollaborator.query.filter_by(site_id=site_id).all()
-        for collab in collaborators:
-            collab.is_active = False
-        db.session.commit()
-
-    emit('user_left', {
-        'username': current_user.username,
-        'user_id': current_user.id,
-        'is_owner': is_owner
-    },
-         to=room)
-
-    if is_owner:
-        emit('owner_left', to=room)
-
-
-@socketio.on('cursor_move')
-def handle_cursor_move(data):
-    if not current_user.is_authenticated:
-        return
-
-    site_id = data.get('site_id')
-    if not site_id:
-        return
-
-    site = Site.query.get(site_id)
-    if not site:
-        return
-
-    is_owner = site.user_id == current_user.id
-
-    if not is_owner:
-        collaborator = SiteCollaborator.query.filter_by(
-            site_id=site_id, user_id=current_user.id).first()
-        if not collaborator:
-            return
-
-        collaborator.last_active = datetime.utcnow()
-        db.session.commit()
-
-    cursor_data = data.get('cursor', {})
-    cursor_data.update({
-        'username': current_user.username,
-        'user_id': current_user.id,
-        'is_owner': is_owner,
-        'line': cursor_data.get('line', 0),
-        'ch': cursor_data.get('ch', 0),
-        'selection': cursor_data.get('selection')
-    })
-
-    room = f'site_{site_id}'
-    emit('cursor_update', cursor_data, to=room, skip_sid=request.sid)
-
-
-@socketio.on('content_change')
-def handle_content_change(data):
-    if not current_user.is_authenticated:
-        return
-
-    site_id = data.get('site_id')
-    if not site_id:
-        return
-
-    site = Site.query.get(site_id)
-    if not site:
-        return
-
-    if site.user_id != current_user.id:
-        collaborator = SiteCollaborator.query.filter_by(
-            site_id=site_id, user_id=current_user.id).first()
-        if not collaborator:
-            return
-
-        collaborator.last_active = datetime.utcnow()
-        db.session.commit()
-
-    update_data = {
-        'content': data.get('content'),
-        'username': current_user.username,
-        'user_id': current_user.id,
-        'timestamp': datetime.utcnow().timestamp(),
-        'origin': data.get('origin'),
-        'from': data.get('from'),
-        'to': data.get('to'),
-        'text': data.get('text')
-    }
-
-    room = f'site_{site_id}'
-    emit('content_update', update_data, to=room, skip_sid=request.sid)
-
-
-@socketio.on('owner_timeout')
-def handle_owner_timeout(data):
-    if not current_user.is_authenticated:
-        return
-
-    site_id = data.get('site_id')
-    if not site_id:
-        return
-
-    site = Site.query.get(site_id)
-    if not site or site.user_id != current_user.id:
-        return
-
-    room = f'site_{site_id}'
-    emit('owner_timeout', to=room, skip_sid=request.sid)
-
-    collaborators = SiteCollaborator.query.filter_by(site_id=site_id).all()
-    for collab in collaborators:
-        collab.is_active = False
-    db.session.commit()
-
-
-@app.route('/site/update/<int:site_id>', methods=['POST'])
-@login_required
-def update_site_form(site_id):
-    site = Site.query.get_or_404(site_id)
-
-    if site.user_id != current_user.id:
-        abort(403)
-
-    if site.site_type == 'web' and 'html_content' in request.form:
-        site.html_content = request.form['html_content']
-    elif site.site_type == 'python' and 'python_content' in request.form:
-        site.python_content = request.form['python_content']
-    else:
-        return jsonify({'error': 'No content provided'}), 400
-
-    site.updated_at = datetime.utcnow()
-    db.session.commit()
-
-    return jsonify({'success': True})
-
-
 if __name__ == '__main__':
     try:
         initialize_database()
     except Exception as e:
         app.logger.warning(f"Database initialization error: {e}")
-    socketio.run(app, host='0.0.0.0', port=3000, allow_unsafe_werkzeug=True)
+    app.run(host='0.0.0.0', port=3000, debug=True)
