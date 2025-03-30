@@ -29,21 +29,8 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy application files
-COPY models.py .
-COPY app.py .
-COPY main.py .
-COPY github_routes.py .
-COPY slack_routes.py .
-COPY allowed_imports.json .
-COPY admin_utils.py .
-COPY changelog.md .
-COPY setup_db.py .
-COPY .env.example .env
-
-# Copy templates and static files
-COPY templates/ templates/
-COPY static/ static/
+# Copy the entire application
+COPY . .
 
 # Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
