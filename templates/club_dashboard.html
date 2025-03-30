@@ -4,15 +4,15 @@
 <div class="club-dashboard-container">
     <div class="dashboard-header">
         <h1><i class="fas fa-users"></i> Club Dashboard</h1>
-        {% if current_user.club %}
+        {% if club %}
             <div class="club-info-card">
                 <div class="club-header">
                     <div class="club-title">
-                        <h2>{{ current_user.club.name }}</h2>
-                        {% if current_user.club.join_code %}
+                        <h2>{{ club.name }}</h2>
+                        {% if club.join_code %}
                         <div class="join-code-container">
                             <span class="join-code-label">Join Code:</span>
-                            <span id="join-code-display">{{ current_user.club.join_code }}</span>
+                            <span id="join-code-display">{{ club.join_code }}</span>
                             <button class="btn-icon copy-btn" onclick="copyJoinCode()" title="Copy Join Code">
                                 <i class="fas fa-copy"></i>
                             </button>
@@ -34,17 +34,17 @@
                 <div class="club-details">
                     <div class="club-detail">
                         <i class="fas fa-map-marker-alt"></i>
-                        <span>{{ current_user.club.location or 'No location set' }}</span>
+                        <span>{{ club.location or 'No location set' }}</span>
                     </div>
 
                     <div class="club-detail">
                         <i class="fas fa-users"></i>
-                        <span>{{ current_user.club.members.count() }} members</span>
+                        <span>{{ club.members|length }} members</span>
                     </div>
                 </div>
-                {% if current_user.club.description %}
+                {% if club.description %}
                     <div class="club-description">
-                        <p>{{ current_user.club.description }}</p>
+                        <p>{{ club.description }}</p>
                     </div>
                 {% endif %}
             </div>
@@ -63,7 +63,7 @@
     </div>
 
     <div class="dashboard-content">
-        {% if current_user.club %}
+        {% if club %}
             <div class="dashboard-card members-card">
                 <div class="section-header">
                     <h2><i class="fas fa-users"></i> Members</h2>
@@ -84,7 +84,7 @@
                             </tr>
                         </thead>
                         <tbody id="membersTableBody">
-                            {% for membership in current_user.club.members %}
+                            {% for membership in club.members %}
                                 <tr>
                                     <td>{{ membership.user.username }}</td>
                                     <td>{{ membership.user.email }}</td>
@@ -203,8 +203,8 @@
                     <h3><i class="fas fa-key"></i> Join Code</h3>
                     <p>Share your club's join code with members and let them join on their own.</p>
                     <div class="join-code-display">
-                        {% if current_user.club.join_code %}
-                            <div class="code-box">{{ current_user.club.join_code }}</div>
+                        {% if club.join_code %}
+                            <div class="code-box">{{ club.join_code }}</div>
                             <button class="btn-primary" onclick="copyJoinCode()">
                                 <i class="fas fa-copy"></i> Copy
                             </button>
@@ -900,7 +900,7 @@
 }
 
 .modal-content {
-        background-color: var(--card-bg);
+    background-color: var(--card-bg);
     border-radius: 16px;
     width: 100%;
     max-width: 550px;

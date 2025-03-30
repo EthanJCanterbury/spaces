@@ -19,10 +19,16 @@
                 <p>Connect your GitHub account to enable version control and repository management.</p>
                 <div class="integration-actions">
                     {% if current_user.github_token %}
-                    <button class="btn-secondary" disabled>
-                        <i class="fas fa-check"></i>
-                        Connected
-                    </button>
+                    <div class="integration-status-buttons">
+                        <button class="btn-secondary" disabled>
+                            <i class="fas fa-check"></i>
+                            Connected to @{{ current_user.github_username }}
+                        </button>
+                        <button class="btn-danger" onclick="disconnectGithub()">
+                            <i class="fas fa-unlink"></i>
+                            Disconnect
+                        </button>
+                    </div>
                     {% else %}
                     <a href="{{ url_for('github.github_login') }}" class="btn-github">
                         <i class="fab fa-github"></i>
@@ -376,6 +382,22 @@
             showToast('error', 'Failed to disconnect from Slack');
         }
     }
+    
+    async function disconnectGithub() {
+        try {
+            const response = await fetch('/api/github/disconnect-account', {
+                method: 'POST'
+            });
+            if (response.ok) {
+                showToast('success', 'Disconnected from GitHub');
+                location.reload();
+            } else {
+                showToast('error', 'Failed to disconnect from GitHub');
+            }
+        } catch (error) {
+            showToast('error', 'Failed to disconnect from GitHub');
+        }
+    }
 
     // Placeholder for dynamically loading club memberships
     // This needs backend integration to fetch and display club memberships
@@ -466,6 +488,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.integration-status-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 /* Warning Modal Styles */

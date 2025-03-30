@@ -1,0 +1,143 @@
+
+.github-repo-details {
+  background-color: #f8fafc;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.75rem;
+  margin-bottom: 2rem;
+  border-left: 5px solid #24292e;
+}
+
+.github-repo-details h3 {
+  font-size: 1.5rem;
+  color: #24292e;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+}
+
+.github-repo-details h3 i {
+  color: #0366d6;
+}
+
+.repo-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.details-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #e1e4e8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.details-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.details-item {
+  margin-bottom: 1rem;
+}
+
+.details-item:last-child {
+  margin-bottom: 0;
+}
+
+.details-label {
+  display: block;
+  font-size: 0.875rem;
+  color: #6e7781;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.details-value {
+  font-size: 1rem;
+  color: #24292f;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.details-value a {
+  color: #0366d6;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.details-value a:hover {
+  color: #0969da;
+  text-decoration: underline;
+}
+
+.repo-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.badge-public {
+  background-color: #dafbe1;
+  color: #1a7f37;
+}
+
+.badge-private {
+  background-color: #fff8c5;
+  color: #9a6700;
+}
+
+.repo-details-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.github-btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-back {
+  background-color: #f6f8fa;
+  color: #24292f;
+  border: 1px solid rgba(27, 31, 36, 0.15);
+}
+
+.btn-back:hover {
+  background-color: #f3f4f6;
+  border-color: rgba(27, 31, 36, 0.2);
+}
+
+.btn-github {
+  background-color: #24292e;
+  color: white;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.btn-github:hover {
+  background-color: #0366d6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}

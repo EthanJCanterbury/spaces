@@ -1,0 +1,93 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="access-code-container">
+    <div class="access-code-card">
+        <div class="card-header">
+            <i class="fas fa-lock"></i>
+            <h1>Enter Access Code</h1>
+        </div>
+        <div class="card-body">
+            <p>Please enter your special access code to continue.</p>
+            <form method="POST">
+                <div class="form-group">
+                    <input type="text" name="code" placeholder="Enter access code" required autofocus>
+                </div>
+                <button type="submit" class="btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.access-code-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.access-code-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.card-header {
+    margin-bottom: 2rem;
+}
+
+.card-header i {
+    font-size: 3rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.card-header h1 {
+    font-size: 1.8rem;
+    color: #333;
+    margin: 0;
+}
+
+.card-body p {
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: transform 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
