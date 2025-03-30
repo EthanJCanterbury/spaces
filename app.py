@@ -981,9 +981,21 @@ def update_site(site_id):
 
     try:
         db.session.commit()
+        
+        # Log activity
+        activity_message = f'Updated {"Python" if python_content else "Web"} site "{site.name}"'
+        activity = UserActivity(activity_type='site_update',
+                                message=activity_message,
+                                username=current_user.username,
+                                user_id=current_user.id,
+                                site_id=site.id)
+        db.session.add(activity)
+        db.session.commit()
+        
         return jsonify({'message': 'Site updated successfully'})
     except Exception as e:
         db.session.rollback()
+        app.logger.error(f'Error updating site: {str(e)}')
         return jsonify({'message': 'Failed to update site'}), 500
 
 
@@ -1039,11 +1051,47 @@ def create_python_site():
         if not name:
             return jsonify({'message': 'Name is required'}), 400
 
+        # Default Python hello world script with some helpful comments
+        default_python_content = '''# Welcome to your Python space!
+# This is where you can write and run Python code.
+
+def main():
+    """Main function that runs when this script is executed."""
+    print("Hello, World!")
+    
+    # Try adding your own code below:
+    name = "Python Coder"
+    print(f"Welcome, {name}!")
+    
+    # You can use loops:
+    for i in range(3):
+        print(f"Count: {i}")
+    
+    # And conditions:
+    if name == "Python Coder":
+        print("You're a Python coder!")
+    else:
+        print("You can become a Python coder!")
+
+# Standard Python idiom to call the main function
+if __name__ == "__main__":
+    main()
+'''
+
         site = Site(name=name,
                     user_id=current_user.id,
-                    html_content='print("Hello, World!")',
+                    python_content=default_python_content,
                     site_type='python')
         db.session.add(site)
+        db.session.commit()
+
+        activity = UserActivity(activity_type="site_creation",
+                            message='New Python space "{}" created by {}'.format(
+                                name, current_user.username),
+                            username=current_user.username,
+                            user_id=current_user.id,
+                            site_id=site.id)
+        db.session.add(activity)
         db.session.commit()
 
         return jsonify({
@@ -1086,7 +1134,7 @@ def python_editor(site_id):
         </script>
         '''
 
-        return render_template('editor.html',
+        return render_template('pythoneditor.html',
                                site=site,
                                additional_scripts=socket_join_script)
     except Exception as e:

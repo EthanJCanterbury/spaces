@@ -480,10 +480,12 @@ function updatePreview() {
     const siteSlug = document.getElementById('site-slug').value;
     if (!siteSlug) return;
     
+    // Use current domain instead of hardcoded domain
     const currentDomain = window.location.hostname;
     const timestamp = new Date().getTime();
     const publicUrl = `https://${currentDomain}/s/${siteSlug}?preview=true&t=${timestamp}`;
     
+    // Always set the src attribute to force a refresh
     previewFrame.src = publicUrl;
 }
 

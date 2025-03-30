@@ -2,6 +2,7 @@
 function showToast(type, message) {
   const toastContainer = document.getElementById('toast-container');
   if (!toastContainer) {
+    // Create toast container if it doesn't exist
     const newContainer = document.createElement('div');
     newContainer.id = 'toast-container';
     document.body.appendChild(newContainer);
@@ -21,6 +22,7 @@ function showToast(type, message) {
   
   toastContainer.appendChild(toast);
   
+  // Add show class after a small delay to trigger animation
   setTimeout(() => {
     toast.classList.add('show');
   }, 10);
