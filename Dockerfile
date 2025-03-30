@@ -1,16 +1,35 @@
-FROM python:3.11-slim
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
-# Install system dependencies for PostgreSQL
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     postgresql-client \
     libpq-dev \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy uv from the official image
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Copy project files
+COPY pyproject.toml .
+
+# Install dependencies using uv
+RUN uv pip install --system .
+
+# Create a new stage for the final image
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy application files
-COPY requirements.txt .
 COPY models.py .
 COPY app.py .
 COPY main.py .
@@ -20,15 +39,19 @@ COPY allowed_imports.json .
 COPY admin_utils.py .
 COPY changelog.md .
 COPY setup_db.py .
-COPY pyproject.toml .
 COPY .env.example .env
 
 # Copy templates and static files
 COPY templates/ templates/
 COPY static/ static/
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy installed packages from builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+USER appuser
 
 # Expose port the app runs on
 EXPOSE 3000
