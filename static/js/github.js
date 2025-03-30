@@ -33,11 +33,10 @@ const GitHubManager = {
 
 
   openModal: function() {
-    if (!this.modal) {
-      this.modal = document.getElementById('githubModal');
-    }
-
-    this.modal.style.display = 'flex';
+    const modal = document.getElementById('githubModal');
+    modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
     document.body.classList.add('modal-open');
 
     this.checkGitHubStatus();
@@ -51,7 +50,7 @@ const GitHubManager = {
     }
   },
 
- 
+
   isModalOpen: function() {
     return this.modal && this.modal.style.display === 'flex';
   },
@@ -61,7 +60,7 @@ const GitHubManager = {
     const urlParams = new URLSearchParams(window.location.search);
     let siteId = urlParams.get('site_id') || sessionStorage.getItem('current_site_id');
 
- 
+
     if (!siteId || siteId === 'null' || siteId === 'undefined') {
       const pathMatch = window.location.pathname.match(/\/(edit|python)\/(\d+)/);
       if (pathMatch && pathMatch[2]) {
@@ -263,7 +262,7 @@ const GitHubManager = {
     }
   },
 
- 
+
   createRepo: function() {
     const repoName = document.getElementById('repoName').value.trim();
     const repoDesc = document.getElementById('repoDesc').value.trim();
@@ -274,7 +273,7 @@ const GitHubManager = {
       return;
     }
 
- 
+
     if (!/^[a-zA-Z0-9_.-]+$/.test(repoName)) {
       this.showFormError('repoName', 'Repository name can only contain letters, numbers, hyphens, and underscores');
       return;
@@ -433,7 +432,7 @@ const GitHubManager = {
                   </div>
                 </div>
               </div>
-              
+
               <div class="details-card">
                 <div class="details-item">
                   <span class="details-label">Created</span>
@@ -448,7 +447,7 @@ const GitHubManager = {
                   <div class="details-value">${data.default_branch}</div>
                 </div>
               </div>
-              
+
               <div class="details-card">
                 <div class="details-item">
                   <span class="details-label">Contributors</span>
@@ -464,7 +463,7 @@ const GitHubManager = {
                 </div>
               </div>
             </div>
-            
+
             <div class="repo-details-actions">
               <button onclick="GitHubManager.checkGitHubStatus()" class="github-btn btn-back">
                 <i class="fas fa-arrow-left"></i> Back
@@ -616,7 +615,7 @@ const GitHubManager = {
   authenticate: function() {
     window.location.href = '/api/github/login';
   },
-  
+
   renderConnectScreen: function() {
     return `
       <div class="github-connect-container">

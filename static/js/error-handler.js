@@ -289,3 +289,59 @@ function testError(type) {
             break;
     }
 }
+// Global error handler
+window.addEventListener('error', function(event) {
+    const errorInfo = {
+        type: event.error ? event.error.name : 'Error',
+        message: event.error ? event.error.message : event.message,
+        file: event.filename,
+        line: event.lineno,
+        column: event.colno,
+        stack: event.error ? event.error.stack : null
+    };
+    
+    console.error('Caught error:', errorInfo);
+    
+    // Send error to server
+    fetch('/api/log-error', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(errorInfo)
+    }).catch(err => {
+        console.error('Failed to log error:', err);
+    });
+    
+    // Show error toast
+    if (typeof showToast === 'function') {
+        showToast('error', `JavaScript error: ${errorInfo.message}`);
+    }
+});
+
+// Promise rejection handler
+window.addEventListener('unhandledrejection', function(event) {
+    const errorInfo = {
+        type: 'Promise Rejection',
+        message: event.reason ? (event.reason.message || String(event.reason)) : 'Unknown rejection reason',
+        stack: event.reason && event.reason.stack ? event.reason.stack : null
+    };
+    
+    console.error('Unhandled promise rejection:', errorInfo);
+    
+    // Send error to server
+    fetch('/api/log-error', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(errorInfo)
+    }).catch(err => {
+        console.error('Failed to log error:', err);
+    });
+    
+    // Show error toast
+    if (typeof showToast === 'function') {
+        showToast('error', `Promise error: ${errorInfo.message}`);
+    }
+});

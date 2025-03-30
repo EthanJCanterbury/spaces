@@ -236,7 +236,7 @@
 
 <div id="toast-container"></div>
 
-<div id="githubModal" class="modal">
+<div id="githubModal" class="modal" style="display: none; opacity: 1; visibility: visible;">
     <div class="github-modal-content">
         <div class="github-modal-header">
             <h2><i class="fab fa-github"></i> GitHub Integration</h2>
@@ -578,8 +578,6 @@ function makeDraggable(element, dragHandle) {
     document.addEventListener('mouseup', endDrag);
 }
 </script>
-
-<!-- Editor initialization is handled by editor-core.js -->
 
 {% if additional_scripts %}
 {{ additional_scripts|safe }}

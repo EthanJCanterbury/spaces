@@ -1,0 +1,32 @@
+
+{% extends "errors/base_error.html" %}
+
+{% block error_icon %}
+<i class="fas fa-bug"></i>
+{% endblock %}
+
+{% block error_title %}
+Runtime Error
+{% endblock %}
+
+{% block error_message %}
+We encountered a JavaScript error. This has been logged and our team will look into it.
+{% endblock %}
+
+{% block error_details %}
+<div class="error-details">
+    <p id="error-type"></p>
+    <p id="error-message"></p>
+    <p id="error-location"></p>
+    <pre id="error-stack" class="error-stack"></pre>
+</div>
+{% endblock %}
+
+{% block error_actions %}
+<a href="{{ url_for('welcome') }}" class="error-btn error-btn-primary">
+    <i class="fas fa-home"></i> Back to Home
+</a>
+<button onclick="window.location.reload()" class="error-btn error-btn-secondary">
+    <i class="fas fa-sync"></i> Reload Page
+</button>
+{% endblock %}

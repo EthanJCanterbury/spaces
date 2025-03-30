@@ -74,6 +74,7 @@ function sendOrphyMessage() {
 
     const now = Date.now();
     if (now - lastOrphyRequest < ORPHY_RATE_LIMIT) {
+        // Show the warning in the Orphy chat instead
         appendMessage('Please wait a moment before sending another message', 'orphy-assistant');
         return;
     }
@@ -112,7 +113,8 @@ function sendOrphyMessage() {
         isThinking = false;
 
         displayOrphyMessage('assistant', data.response);
-
+        // Assuming showToast takes a message parameter
+        // Don't show toast for Orphy messages
     })
     .catch(error => {
         console.error('Error communicating with Orphy:', error);
@@ -121,6 +123,7 @@ function sendOrphyMessage() {
         isThinking = false;
 
         displayOrphyMessage('assistant', `🤔 Hmm, I'm having a bit of trouble right now. Please try again in a moment.`);
+        // Show error in the Orphy chat instead
         appendMessage('Error: An error occurred. Please try again later.', 'orphy-assistant');
     })
     .finally(() => {

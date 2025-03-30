@@ -579,7 +579,7 @@
         </div>
     </div>
 
-    <div class="toast-container" id="toastContainer"></div>
+    <div id="toast-container" id="toastContainer"></div>
 </div>
 
 <script>
@@ -1649,43 +1649,44 @@ function saveMaxSitesPerUser() {
 }
 
 function showToast(type, message) {
-    const container = document.getElementById('toastContainer');
+    // Clear any existing toast timeout
+    if (window.toastTimeout) {
+        clearTimeout(window.toastTimeout);
+    }
+    
+    const toastContainer = document.getElementById('toastContainer');
+    
+    // Remove any existing toasts
+    while (toastContainer.firstChild) {
+        toastContainer.removeChild(toastContainer.firstChild);
+    }
+    
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
+    toast.className = `toast toast-${type}`;
 
     const icon = type === 'success' ? 'check-circle' : 
                 type === 'error' ? 'exclamation-circle' :
+                type === 'warning' ? 'exclamation-triangle' :
                 'info-circle';
 
     toast.innerHTML = `
-        <i class="fas fa-${icon}"></i>
-        <span>${message}</span>
-        <button class="toast-close">&times;</button>
+        <div class="toast-content">
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+        </div>
     `;
 
-    container.appendChild(toast);
+    toastContainer.appendChild(toast);
+    toast.offsetHeight;
+    toast.classList.add('show');
 
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 10);
-
-    toast.querySelector('.toast-close').addEventListener('click', () => {
+    window.toastTimeout = setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => {
             toast.remove();
+            window.toastTimeout = null;
         }, 300);
-    });
-
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.remove();
-                }
-            }, 300);
-        }
-    }, 5000);
+    }, 3000);
 }
 
 async function saveUserChanges() {

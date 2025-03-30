@@ -2,41 +2,150 @@
 
 {% block head %}
 <style>
-    .shared-site-card {
-        border-left: 4px solid var(--primary);
+    .sites-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .site-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.2s ease;
+        overflow: hidden;
         position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
-
-    .shared-site-card:before {
-        content: 'Shared';
+    
+    .site-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    
+    .site-preview {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        background-color: #f8f9fa;
+        height: 100px;
+        border-bottom: 1px solid #eaeaea;
+    }
+    
+    .site-icon {
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 60px;
+        border-radius: 30px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .site-icon.python {
+        color: #3776AB;
+    }
+    
+    .site-icon.web {
+        color: #FF5722;
+    }
+    
+    .site-icon i {
+        font-size: 1.8rem;
+    }
+    
+    .site-info {
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    .site-meta {
+        flex: 1;
+    }
+    
+    .site-meta h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .site-date {
+        color: #718096;
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .site-actions {
+        display: flex;
+        margin-top: 0.5rem;
+        gap: 0.5rem;
+    }
+    
+    .btn-icon {
+        padding: 0.5rem;
+        border-radius: 6px;
+        background: #f1f5f9;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+    
+    .btn-icon:hover {
+        background: #e2e8f0;
+        color: #334155;
+    }
+    
+    .delete-btn:hover {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+    
+    .site-type-badge {
         position: absolute;
-        top: 8px;
-        right: 8px;
-        background-color: var(--primary);
-        color: white;
-        padding: 2px 8px;
-        border-radius: 12px;
+        top: 0.5rem;
+        right: 0.5rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
         font-size: 0.7rem;
-        z-index: 2;
+        font-weight: 500;
     }
-
-    .inactive-badge {
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        background-color: #dc3545;
-        color: white;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 0.7rem;
-        font-weight: bold;
-        z-index: 2;
+    
+    .python-badge {
+        background-color: rgba(55, 118, 171, 0.2);
+        color: #3776AB;
     }
-
+    
+    .web-badge {
+        background-color: rgba(255, 87, 34, 0.2);
+        color: #FF5722;
+    }
+    
+    .shared-site-card {
+        border-left: 3px solid var(--primary);
+    }
+    
     .inactive-space {
         position: relative;
     }
-
+    
     .inactive-space::after {
         content: '';
         position: absolute;
@@ -44,26 +153,51 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0, 0, 0, 0.3);
         z-index: 1;
     }
-
-    .spaces-tabs-container {
-        margin-bottom: 30px;
+    
+    .inactive-badge {
+        position: absolute;
+        top: 0.5rem;
+        left: 0.5rem;
+        background-color: #dc3545;
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        z-index: 2;
     }
-
+    
+    .shared-badge {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background-color: var(--primary);
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        z-index: 2;
+    }
+    
+    .spaces-tabs-container {
+        margin-bottom: 1.5rem;
+    }
+    
     .spaces-tabs {
         display: flex;
         border-bottom: 1px solid #e1e4e8;
-        margin-bottom: 20px;
+        margin-bottom: 1rem;
     }
-
+    
     .tab-btn {
-        padding: 10px 20px;
+        padding: 0.75rem 1.25rem;
         background: none;
         border: none;
         border-bottom: 3px solid transparent;
-        font-size: 1rem;
+        font-size: 0.95rem;
         font-weight: 500;
         color: #586069;
         cursor: pointer;
@@ -72,33 +206,57 @@
         align-items: center;
         gap: 8px;
     }
-
+    
     .tab-btn:hover {
         color: var(--primary);
     }
-
+    
     .tab-btn.active {
         color: var(--primary);
         border-bottom-color: var(--primary);
     }
-
+    
     .tab-content {
         display: none;
     }
-
+    
     .tab-content.active {
         display: block;
     }
+    
+    .empty-state {
+        text-align: center;
+        color: #718096;
+        padding: 2rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px dashed #cbd5e1;
+    }
+    
+    .empty-state .empty-icon {
+        font-size: 2rem;
+        color: var(--primary);
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h2 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+        color: #334155;
+    }
+    
     .special-access-form {
         margin-top: 20px;
         text-align: center;
     }
+    
     .special-access-form input[type="text"] {
         padding: 8px;
         margin-right: 10px;
         border: 1px solid #ccc;
         border-radius: 4px;
     }
+    
     .special-access-form button[type="submit"] {
         padding: 8px 16px;
         background-color: #4CAF50;
@@ -107,7 +265,6 @@
         border-radius: 4px;
         cursor: pointer;
     }
-
 </style>
 {% endblock %}
 
@@ -156,16 +313,21 @@
         </div>
 
         <div id="mySpacesContent" class="tab-content active">
-            <div class="sites-grid">
+            <div class="sites-grid" style="margin-top: 0;">
                 {% for site in sites %}
                 <div class="site-card">
                     <div class="site-preview">
-                        <iframe srcdoc="{{ site.html_content }}" frameborder="0"></iframe>
-                        <div class="site-overlay">
-                            <a href="{{ url_for('edit_site', site_id=site.id) }}" class="btn-icon">
-                                <i class="fas fa-edit"></i>
-                            </a>
+                        {% if site.site_type == 'python' %}
+                        <div class="site-icon python">
+                            <i class="fab fa-python"></i>
                         </div>
+                        <span class="site-type-badge python-badge">Python</span>
+                        {% else %}
+                        <div class="site-icon web">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <span class="site-type-badge web-badge">Web</span>
+                        {% endif %}
                     </div>
                     <div class="site-info">
                         <div class="site-meta">
@@ -173,6 +335,15 @@
                             <span class="site-date">Last updated {{ site.updated_at.strftime('%b %d, %Y') }}</span>
                         </div>
                         <div class="site-actions">
+                            {% if site.site_type == 'python' %}
+                            <a href="{{ url_for('python_editor', site_id=site.id) }}" class="btn-icon" title="Edit Space">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('edit_site', site_id=site.id) }}" class="btn-icon" title="Edit Space">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% endif %}
                             <a href="/s/{{ site.slug }}" target="_blank" class="btn-icon" title="View Live Space">
                                 <i class="fas fa-external-link-alt"></i>
                             </a>
@@ -201,25 +372,25 @@
         </div>
 
         <div id="sharedSpacesContent" class="tab-content">
-            <div class="sites-grid">
+            <div class="sites-grid" style="margin-top: 0;">
                 {% for collab in shared_spaces %}
                 <div class="site-card shared-site-card {% if not collab.is_active %}inactive-space{% endif %}">
                     <div class="site-preview">
+                        <span class="shared-badge">Shared</span>
                         {% if not collab.is_active %}
                         <div class="inactive-badge">Owner Offline</div>
                         {% endif %}
-                        <iframe srcdoc="{{ collab.site.html_content }}" frameborder="0"></iframe>
-                        <div class="site-overlay">
-                            {% if collab.is_active %}
-                            <a href="{{ url_for('edit_site', site_id=collab.site.id) }}" class="btn-icon">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            {% else %}
-                            <a href="javascript:void(0)" class="btn-icon" onclick="showOwnerInactiveMessage();" style="cursor: not-allowed;">
-                                <i class="fas fa-lock"></i>
-                            </a>
-                            {% endif %}
+                        {% if collab.site.site_type == 'python' %}
+                        <div class="site-icon python">
+                            <i class="fab fa-python"></i>
                         </div>
+                        <span class="site-type-badge python-badge">Python</span>
+                        {% else %}
+                        <div class="site-icon web">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <span class="site-type-badge web-badge">Web</span>
+                        {% endif %}
                     </div>
                     <div class="site-info">
                         <div class="site-meta">
@@ -228,6 +399,21 @@
                             <span class="site-date">Last updated {{ collab.site.updated_at.strftime('%b %d, %Y') }}</span>
                         </div>
                         <div class="site-actions">
+                            {% if collab.is_active %}
+                                {% if collab.site.site_type == 'python' %}
+                                <a href="{{ url_for('python_editor', site_id=collab.site.id) }}" class="btn-icon" title="Edit Space">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% else %}
+                                <a href="{{ url_for('edit_site', site_id=collab.site.id) }}" class="btn-icon" title="Edit Space">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                            {% else %}
+                            <button class="btn-icon" onclick="showOwnerInactiveMessage();" style="cursor: not-allowed;" title="Owner Offline">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                            {% endif %}
                             <a href="/s/{{ collab.site.slug }}" target="_blank" class="btn-icon" title="View Live Space">
                                 <i class="fas fa-external-link-alt"></i>
                             </a>
@@ -273,6 +459,7 @@
                 </label>
                 <select id="spaceType" name="type" required class="space-type-select">
                     <option value="web">Web Space</option>
+                    <option value="python">Python Space</option>
                 </select>
             </div>
             <div class="modal-actions">
@@ -346,6 +533,7 @@ let currentSiteId = null;
 function openNewSpaceModal() {
     const modal = document.getElementById('newSpaceModal');
     modal.style.display = 'flex';
+    // Force a reflow before adding the show class for transition to work
     modal.offsetHeight;
     modal.classList.add('show');
     document.getElementById('spaceName').focus();
@@ -401,12 +589,19 @@ async function createNewSpace(event) {
 
 function openDeleteModal(siteId) {
     currentSiteId = siteId;
-    document.getElementById('deleteModal').style.display = 'flex';
+    const modal = document.getElementById('deleteModal');
+    modal.style.display = 'flex';
+    modal.offsetHeight;
+    modal.classList.add('show');
 }
 
 function closeDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'none';
-    currentSiteId = null;
+    const modal = document.getElementById('deleteModal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        currentSiteId = null;
+    }, 300);
 }
 
 async function createNewSite(e) {
@@ -620,12 +815,18 @@ async function leaveSharedSpace(collaborationId) {
 function openRenameModal(siteId, siteName) {
     const modal = document.getElementById('renameSiteModal');
     modal.style.display = 'flex';
+    modal.offsetHeight;
+    modal.classList.add('show');
     document.getElementById('renameSiteId').value = siteId;
     document.getElementById('newSiteName').value = siteName;
 }
 
 function closeRenameModal() {
-    document.getElementById('renameSiteModal').style.display = 'none';
+    const modal = document.getElementById('renameSiteModal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
 }
 
 async function renameSite(e) {

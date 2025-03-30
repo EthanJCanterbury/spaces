@@ -105,11 +105,12 @@ function createNewFile(filename, fileType) {
   });
 }
 
+// Update save message to show "Changes Saved" instead of "success"
 function saveMessage(message) {
   return message || "Changes Saved";
 }
 
-
+// Add a small delay before updating preview to ensure the server has processed the changes
 function delayedUpdatePreview() {
   setTimeout(() => {
     updatePreview();

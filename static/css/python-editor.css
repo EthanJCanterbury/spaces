@@ -1,0 +1,281 @@
+
+/* GitHub modal fix */
+#github-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+#github-modal.show {
+  display: flex;
+}
+
+#github-modal .modal-content {
+  background-color: #ffffff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 650px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Python Editor Specific Styles */
+
+.console-output {
+  flex: 1;
+  background-color: #2b2b2b;
+  color: #f8f8f2;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 15px;
+  margin: 0;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  height: 100%;
+  border-radius: 0 0 4px 4px;
+}
+
+.console-frame {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #414141;
+  color: #f8f8f2;
+  border-bottom: 1px solid #2c2c2c;
+}
+
+.console-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.console-title i {
+  font-size: 0.9rem;
+}
+
+.console-error {
+  color: #ff5f5f;
+  font-weight: 500;
+}
+
+/* Editor modifications for Python */
+.CodeMirror {
+  height: 100%;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Split view modifications */
+.split-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.editor-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+
+.preview-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.vertical-split .editor-main {
+  flex-direction: column;
+}
+
+.vertical-split .editor-pane {
+  border-right: none;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Animation effects */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(25, 25, 25, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+}
+
+.loading-overlay.fade-out {
+  opacity: 0;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 500px;
+  padding: 20px;
+}
+
+.loading-spinner-container {
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--primary);
+  animation: spin 1s ease-in-out infinite;
+}
+
+.loading-spinner-shadow {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background: rgba(236, 55, 80, 0.2);
+  border-radius: 50%;
+  filter: blur(8px);
+  animation: shadow-pulse 1s ease-in-out infinite;
+}
+
+.loading-text-container {
+  margin-bottom: 20px;
+}
+
+.loading-text {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.loading-progress-container {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 30px;
+}
+
+.loading-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), #ff89a4);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.loading-facts {
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+  font-size: 14px;
+  min-height: 40px;
+}
+
+.fact-container {
+  position: relative;
+  min-height: 40px;
+}
+
+.loading-fact {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transition: opacity 0.5s ease;
+}
+
+.loading-fact.fade-out {
+  opacity: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shadow-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+/* Toast styles removed - using unified styles from style.css */
+
+/* Keyboard shortcuts modal */
+.shortcuts-modal {
+  max-width: 600px;
+  width: 100%;
+}
+
+.shortcuts-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.shortcut-category h4 {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+
+.shortcut-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.shortcut-key {
+  background-color: #f5f7fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
