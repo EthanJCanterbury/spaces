@@ -90,17 +90,4 @@
     font-weight: 600;
 }
 
-.form-group input, .form-group select {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: white;
-    transition: border-color 0.2s ease;
-}
-
-.form-group input:focus, .form-group select:focus {
-    outline: none;
-    border-color: var(--primary, #4a86e8);
-}
+/* Using standardized input styles from style.css */

@@ -267,20 +267,7 @@
   font-size: 14px;
 }
 
-.form-group input[type="text"] {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.form-group input[type="text"]:focus {
-  border-color: #fa8072;
-  box-shadow: 0 0 0 2px rgba(250, 128, 114, 0.2);
-  outline: none;
-}
+/* Using standardized input styles from style.css */
 
 .checkbox-group {
   display: flex;
@@ -623,22 +610,7 @@ button.btn-secondary:hover {
   color: #333;
 }
 
-.form-group input[type="text"],
-.form-group textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.2s;
-}
-
-.form-group input[type="text"]:focus,
-.form-group textarea:focus {
-  border-color: #fa8072;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(250, 128, 114, 0.1);
-}
+/* Using standardized input styles from style.css */
 
 .form-check {
   display: flex;
@@ -873,14 +845,7 @@ button.btn-secondary:hover {
   color: #666;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
+/* spin animation moved to unified.css */
 
 @keyframes slide-up {
   from {

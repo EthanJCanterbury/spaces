@@ -3486,14 +3486,7 @@ footer {
     font-weight: 500;
 }
 
-.form-group input[type="text"],
-.form-group input[type="password"] {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    font-size: 14px;
-}
+/* Form group styles now use the standardized input styles */
 
 .btn-loading {
     position: relative;
@@ -3848,4 +3841,37 @@ footer {
     align-items: center;
     gap: 8px;
     color: white;
+}
+/* Standardized input styles */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background-color: #fff;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(237, 102, 99, 0.2);
+    outline: none;
+}
+}
+
+/* Form group focus styles now use the standardized input focus styles */
 }
