@@ -216,7 +216,7 @@ def report_error():
 def add_security_headers(response):
     is_preview = request.args.get('preview') == 'true'
 
-    csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' wss: ws: https://waka.hackclub.com;"
+    csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' wss: ws:;"
 
     if is_preview:
         csp += " frame-ancestors *;"
@@ -1051,15 +1051,15 @@ def create_python_site():
 def main():
     """Main function that runs when this script is executed."""
     print("Hello, World!")
-
+    
     # Try adding your own code below:
     name = "Python Coder"
     print(f"Welcome, {name}!")
-
+    
     # You can use loops:
     for i in range(3):
         print(f"Count: {i}")
-
+    
     # And conditions:
     if name == "Python Coder":
         print("You're a Python coder!")
@@ -1834,7 +1834,7 @@ def search_sites():
                 site.created_at.strftime('%Y-%m-%d'),
                 'updated_at':
                 site.updated_at.strftime('%Y-%m-%d %H:%M'),
-                                'user_id':
+                'user_id':
                 site.user_id,
                 'username':
                 site.username
@@ -2459,7 +2459,6 @@ def hackatime():
     """Page for Hackatime integration"""
     return render_template('hackatime.html')
 
-
 @app.route('/hackatime/connect', methods=['POST'])
 @login_required
 def hackatime_connect():
@@ -2467,10 +2466,10 @@ def hackatime_connect():
     try:
         data = request.get_json()
         api_key = data.get('api_key')
-
+        
         if not api_key:
             return jsonify({'success': False, 'message': 'API key is required'})
-
+            
         # Update user's wakatime_api_key
         with db.engine.connect() as conn:
             conn.execute(
@@ -2478,7 +2477,7 @@ def hackatime_connect():
                 {"api_key": api_key, "user_id": current_user.id}
             )
             conn.commit()
-
+        
         # Record activity
         activity = UserActivity(
             activity_type="hackatime_connected",
@@ -2488,82 +2487,12 @@ def hackatime_connect():
         )
         db.session.add(activity)
         db.session.commit()
-
+        
         return jsonify({'success': True, 'message': 'Hackatime account connected successfully'})
     except Exception as e:
         app.logger.error(f'Error connecting Hackatime: {str(e)}')
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Failed to connect Hackatime: {str(e)}'})
-
-
-@app.route('/api/log-error', methods=['POST'])
-def log_error():
-    """Log client-side errors"""
-    try:
-        error_data = request.get_json()
-        app.logger.error(f"Client-side error: {error_data}")
-        return jsonify({'success': True})
-    except Exception as e:
-        app.logger.error(f"Error logging client error: {str(e)}")
-        return jsonify({'success': False, 'message': str(e)})
-
-@app.route('/hackatime/check-connection', methods=['GET'])
-def check_hackatime_connection():
-    """Check if Hackatime API connection is valid"""
-    if not current_user.is_authenticated:
-        return jsonify({'success': False, 'message': 'Authentication required'})
-        
-    # Get API key from database to ensure it's fresh
-    with db.engine.connect() as conn:
-        result = conn.execute(
-            db.text("SELECT wakatime_api_key FROM \"user\" WHERE id = :user_id"),
-            {"user_id": current_user.id}
-        ).fetchone()
-
-        api_key = result[0] if result else None
-        
-    if not api_key:
-        return jsonify({'success': False, 'message': 'No Hackatime API key found'})
-    
-    # Verify the key has a reasonable length (basic validation)
-    if len(api_key) < 10:
-        return jsonify({'success': False, 'message': 'API key appears invalid'})
-        
-    return jsonify({'success': True, 'message': 'API connection valid'})
-
-def hackatime_connect():
-    """Connect Hackatime account by saving API key"""
-    try:
-        data = request.get_json()
-        api_key = data.get('api_key')
-
-        if not api_key:
-            return jsonify({'success': False, 'message': 'API key is required'})
-
-        # Update user's wakatime_api_key
-        with db.engine.connect() as conn:
-            conn.execute(
-                db.text("UPDATE \"user\" SET wakatime_api_key = :api_key WHERE id = :user_id"),
-                {"api_key": api_key, "user_id": current_user.id}
-            )
-            conn.commit()
-
-        # Record activity
-        activity = UserActivity(
-            activity_type="hackatime_connected",
-            message="User {username} connected Hackatime account",
-            username=current_user.username,
-            user_id=current_user.id
-        )
-        db.session.add(activity)
-        db.session.commit()
-
-        return jsonify({'success': True, 'message': 'Hackatime account connected successfully'})
-    except Exception as e:
-        app.logger.error(f'Error connecting Hackatime: {str(e)}')
-        db.session.rollback()
-        return jsonify({'success': False, 'message': f'Failed to connect Hackatime: {str(e)}'})
-
 
 @app.route('/hackatime/disconnect', methods=['POST'])
 @login_required
@@ -2577,7 +2506,7 @@ def hackatime_disconnect():
                 {"user_id": current_user.id}
             )
             conn.commit()
-
+        
         # Record activity
         activity = UserActivity(
             activity_type="hackatime_disconnected",
@@ -2587,183 +2516,12 @@ def hackatime_disconnect():
         )
         db.session.add(activity)
         db.session.commit()
-
+        
         return jsonify({'success': True, 'message': 'Hackatime account disconnected successfully'})
     except Exception as e:
         app.logger.error(f'Error disconnecting Hackatime: {str(e)}')
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Failed to disconnect Hackatime: {str(e)}'})
-
-
-@app.route('/hackatime/heartbeat', methods=['POST'])
-@login_required
-def hackatime_heartbeat():
-    """Send heartbeat to Hackatime API"""
-    # Get API key from database to ensure it's fresh
-    with db.engine.connect() as conn:
-        result = conn.execute(
-            db.text("SELECT wakatime_api_key FROM \"user\" WHERE id = :user_id"),
-            {"user_id": current_user.id}
-        ).fetchone()
-
-        api_key = result[0] if result else None
-
-    if not api_key:
-        app.logger.warning(f'User {current_user.id} attempted to send heartbeat without API key')
-        return jsonify({'success': False, 'message': 'No Hackatime API key found. Please connect your account first.'})
-
-    try:
-        # Get heartbeat data from request
-        heartbeat_data = request.json
-        app.logger.info(f'Received heartbeat from user {current_user.id}: {heartbeat_data}')
-
-        # Ensure the heartbeat has required fields
-        required_fields = ['entity', 'type', 'time']
-        for field in required_fields:
-            if field not in heartbeat_data:
-                app.logger.error(f'Missing required field {field} in heartbeat data')
-                return jsonify({'success': False, 'message': f'Missing required field: {field}'})
-                
-        # Add stronger rate limiting - only allow 1 heartbeat per 30 seconds per user
-        # Use a timestamp in memory (could be moved to Redis in production)
-        user_id = current_user.id
-        current_time = time.time()
-        
-        # Create a dictionary to store last heartbeat times if it doesn't exist
-        if not hasattr(app, 'last_heartbeat_times'):
-            app.last_heartbeat_times = {}
-            
-        last_heartbeat_time = app.last_heartbeat_times.get(user_id, 0)
-        
-        # Check if enough time has passed (30 seconds)
-        if current_time - last_heartbeat_time < 30:
-            app.logger.info(f'Rate limiting heartbeat for user {user_id}')
-            return jsonify({
-                'success': True, 
-                'message': 'Heartbeat skipped due to rate limiting',
-                'timestamp': heartbeat_data.get('time'),
-                'rate_limited': True
-            })
-            
-        # Update the last heartbeat time
-        app.last_heartbeat_times[user_id] = current_time
-
-        # Encode API key in Base64 for Basic auth
-        import base64
-
-        # Check if API key looks valid (basic validation)
-        if len(api_key) < 10:
-            app.logger.error(f'API key looks invalid (too short): {len(api_key)} chars')
-            return jsonify({
-                'success': False, 
-                'message': 'API key appears invalid. Please check your settings and update your API key.'
-            })
-
-        auth_header = f"Basic {base64.b64encode(api_key.encode()).decode()}"
-
-        # Log the API key length (not the actual key) for debugging
-        app.logger.info(f'API key length: {len(api_key)}, user_id: {current_user.id}')
-
-        # Construct heartbeat endpoint URL - this is the correct endpoint for Hackatime
-        heartbeat_url = "https://waka.hackclub.com/api/v1/users/current/heartbeats"
-        app.logger.info(f'Sending heartbeat to: {heartbeat_url}')
-        
-        # Log full request details for debugging
-        app.logger.info(f'Heartbeat request details: user_id={current_user.id}, entity={heartbeat_data.get("entity")}, language={heartbeat_data.get("language")}')
-
-        # Format the data in the array format expected by the Hackatime API
-        formatted_heartbeat = [{
-            "entity": heartbeat_data.get('entity'),
-            "type": heartbeat_data.get('type', 'file'),
-            "time": heartbeat_data.get('time'),
-            "project": heartbeat_data.get('project', 'Hack Club Spaces'),
-            "language": heartbeat_data.get('language', 'HTML'),
-            "is_write": heartbeat_data.get('is_write', True),
-        }]
-        
-        # Optional fields
-        if 'lines' in heartbeat_data:
-            formatted_heartbeat[0]['lines'] = heartbeat_data.get('lines')
-        if 'file_size' in heartbeat_data:
-            formatted_heartbeat[0]['file_size'] = heartbeat_data.get('file_size')
-        
-        # Send heartbeat to Hackatime API
-        response = requests.post(
-            heartbeat_url,
-            headers={
-                "Authorization": auth_header,
-                "Content-Type": "application/json"
-            },
-            json=formatted_heartbeat,
-            timeout=10  # Add timeout to prevent hanging requests
-        )
-
-        app.logger.info(f'Hackatime API response: status={response.status_code}, text={response.text[:200]}')
-        
-        # Log full response for debugging
-        with open('hackatime_responses.log', 'a') as log_file:
-            log_file.write(f"\n[{datetime.utcnow().isoformat()}] USER: {current_user.id} STATUS: {response.status_code}\n")
-            log_file.write(f"RESPONSE: {response.text[:500]}\n")
-        
-        # Parse the response and provide detailed information back to the client
-        try:
-            api_response = response.json()
-        except:
-            api_response = {"raw_response": response.text[:200]}
-            
-        if response.status_code == 201 or response.status_code == 200:
-            return jsonify({
-                'success': True,
-                'message': 'Heartbeat recorded successfully',
-                'timestamp': heartbeat_data.get('time'),
-                'api_response': api_response
-            })
-
-        if response.status_code == 201 or response.status_code == 200:
-            try:
-                response_data = response.json()
-                app.logger.info(f'Successful heartbeat response: {response_data}')
-            except Exception:
-                response_data = {'text': response.text}
-                app.logger.info(f'Successful heartbeat (non-JSON response): {response.text}')
-
-            return jsonify({
-                'success': True, 
-                'message': 'Heartbeat recorded successfully',
-                'timestamp': heartbeat_data.get('time'),
-                'api_response': response_data
-            })
-        elif response.status_code == 401:
-            app.logger.error(f'Authentication failed: Invalid API key')
-            # Reset the user's API key since it's invalid
-            with db.engine.connect() as conn:
-                conn.execute(
-                    db.text("UPDATE \"user\" SET wakatime_api_key = NULL WHERE id = :user_id"),
-                    {"user_id": current_user.id}
-                )
-                conn.commit()
-            app.logger.info(f'Reset invalid API key for user {current_user.id}')
-
-            return jsonify({
-                'success': False, 
-                'message': 'API error: 401 - Authentication failed. Your API key is invalid or expired. Please update it in Hackatime settings.',
-                'error_code': 401
-            })
-        else:
-            app.logger.error(f'Hackatime API error: {response.status_code} - {response.text}')
-            return jsonify({
-                'success': False, 
-                'message': f'API error: {response.status_code}',
-                'response': response.text,
-                'error_code': response.status_code
-            })
-
-    except Exception as e:
-        app.logger.error(f'Error sending heartbeat: {str(e)}')
-        import traceback
-        app.logger.error(traceback.format_exc())
-        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
-
 
 @app.route('/logout')
 @login_required
@@ -3202,36 +2960,6 @@ def initialize_database():
     except Exception as e:
         app.logger.warning(f"Database initialization skipped: {str(e)}")
         return False
-
-
-@app.route('/hackatime/validate-key', methods=['POST'])
-@login_required
-def hackatime_validate_key():
-    """Check if the Hackatime API key is valid"""
-    try:
-        # Get API key from database to ensure it's fresh
-        with db.engine.connect() as conn:
-            result = conn.execute(
-                db.text("SELECT wakatime_api_key FROM \"user\" WHERE id = :user_id"),
-                {"user_id": current_user.id}
-            ).fetchone()
-
-            api_key = result[0] if result else None
-
-        if not api_key:
-            app.logger.warning(f'User {current_user.id} has no API key')
-            return jsonify({'success': False, 'message': 'No Hackatime API key found. Please connect your account first.'})
-
-        # Basic validation check
-        if len(api_key) < 20:
-            app.logger.warning(f'API key is too short: {len(api_key)} chars')
-            return jsonify({'success': False, 'message': 'API key appears invalid. Please update your API key.'})
-
-        # Just return success since we have an API key
-        return jsonify({'success': True, 'message': 'Hackatime API key found'})
-    except Exception as e:
-        app.logger.error(f'Error checking API connection: {str(e)}')
-        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
 
 if __name__ == '__main__':

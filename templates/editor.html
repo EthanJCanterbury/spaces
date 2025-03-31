@@ -402,80 +402,6 @@
     </div>
 </div>
 
-{% if current_user.wakatime_api_key %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/hackatime-badge.css') }}">
-<div id="hackatime-badge" class="hackatime-badge">
-    <i class="fas fa-clock"></i> Initializing...
-</div>
-<script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
-<input type="hidden" id="user-id" value="{{ current_user.id }}">
-{% if site %}
-<input type="hidden" id="site-id" value="{{ site.id }}">
-<input type="hidden" id="site-type" value="{{ site.site_type or 'web' }}">
-{% endif %}pt>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🕒 Web editor loaded, checking for Hackatime integration');
-
-    // Initialize Hackatime tracker if it exists
-    if (window.HackatimeTracker) {
-        window.HackatimeTracker.init();
-
-    // Add event listeners to track activity
-    let editor = document.getElementById('editor');
-    if (editor && editor.CodeMirror) {
-        console.log('🕒 Adding activity tracking to CodeMirror editor');
-        editor.CodeMirror.on('keydown', function() {
-            HackatimeTracker.recordActivity();
-        });
-
-        // Also track cursor activity
-        editor.CodeMirror.on('cursorActivity', function() {
-            HackatimeTracker.recordActivity();
-        });
-    } else {
-        // Wait for CodeMirror to initialize
-        console.log('🕒 Waiting for CodeMirror to initialize...');
-        let checkEditor = setInterval(function() {
-            if (document.querySelector('.CodeMirror') && document.querySelector('.CodeMirror').CodeMirror) {
-                console.log('🕒 CodeMirror initialized, adding event listeners');
-                let cm = document.querySelector('.CodeMirror').CodeMirror;
-                cm.on('keydown', function() {
-                    HackatimeTracker.recordActivity();
-                });
-                cm.on('cursorActivity', function() {
-                    HackatimeTracker.recordActivity();
-                });
-                clearInterval(checkEditor);
-            }
-        }, 500);
-    }
-
-    // Track file tab changes
-    const fileTabs = document.querySelectorAll('.file-tab');
-    if (fileTabs.length > 0) {
-        console.log('🕒 Adding file tab change tracking');
-        fileTabs.forEach(tab => {
-            tab.addEventListener('click', function() {
-                console.log('🕒 File tab changed, sending heartbeat');
-                HackatimeTracker.recordActivity();
-                setTimeout(() => {
-                    HackatimeTracker.sendHeartbeat();
-                }, 500);
-            });
-        });
-    }
-
-    // Log Hackatime status
-    console.log('🕒 Hackatime integration active:', {
-        apiKeyExists: Boolean({{ 'true' if current_user.wakatime_api_key else 'false' }}),
-        userId: {{ current_user.id }}
-    });
-    }
-});
-</script>
-{% endif %}
-
 <!-- Include GitHub CSS -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/github-buttons.css') }}">
 <div id="ysws-widget">
@@ -489,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="ysws-section" style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #ff6b6b;">
             <h3 style="color: #ff6b6b; margin-top: 0;"><i class="fa-solid fa-mug-hot"></i> Boba Drops</h3>
             <p style="font-size: 16px; line-height: 1.5;">Ship a website, get $5 for Boba!</p>
-
+            
             <div style="margin: 15px 0; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                 <h4 style="margin-top: 0;">Requirements:</h4>
                 <ul style="padding-left: 20px; line-height: 1.6;">
@@ -501,16 +427,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li>You are in the USA!</li>
                 </ul>
             </div>
-
+            
             <a href="https://forms.hackclub.com/t/tLf8GYVBqSus" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease;">
                 <i class="fas fa-external-link-alt"></i> Apply for Boba Drops
             </a>
         </div>
-
+        
         <div class="ysws-section" style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #8c52ff;">
             <h3 style="color: #8c52ff; margin-top: 0;"><i class="fa-solid fa-ice-cream"></i> Swirl</h3>
             <p style="font-size: 16px; line-height: 1.5;">Build a website, Get free ice cream!</p>
-
+            
             <div style="margin: 15px 0; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                 <h4 style="margin-top: 0;">Requirements:</h4>
                 <ul style="padding-left: 20px; line-height: 1.6;">
@@ -525,12 +451,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li>Your website is original (NO AI or copy-pasting from ANYWHERE)</li>
                 </ul>
             </div>
-
+            
             <a href="https://forms.hackclub.com/t/t1UL6ZK4Nyus" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #8c52ff 0%, #a56fff 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease;">
                 <i class="fas fa-external-link-alt"></i> Apply for Swirl
             </a>
         </div>
-
+        
         <div style="text-align: center; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 12px;">
             <h4 style="margin-top: 0; color: #ff9d00;"><i class="fas fa-lightbulb"></i> Quick Tip</h4>
             <p>Remember to save and deploy your site before applying. Good luck!</p>
@@ -579,27 +505,25 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
 <script src="{{ url_for('static', filename='js/file-handling.js') }}"></script>
 
-{% if current_user.wakatime_api_key %}
-<script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
 <script>
 function openYSWSModal() {
     const widget = document.getElementById('ysws-widget');
     widget.style.display = 'block';
-
+    
     // Center the modal initially
     const windowHeight = window.innerHeight;
     const windowWidth = window.innerWidth;
     const modalWidth = 500; // Fixed width
     const modalHeight = 600; // Approximate height
-
+    
     widget.style.left = (windowWidth / 2 - modalWidth / 2) + 'px';
     widget.style.top = (windowHeight / 2 - modalHeight / 2) + 'px';
     widget.style.transform = 'none';
-
+    
     setTimeout(() => {
         widget.style.opacity = '1';
     }, 50);
-
+    
     const dragHandle = widget.querySelector('.orphy-header');
     makeDraggable(widget, dragHandle);
 }
@@ -615,7 +539,7 @@ function closeYSWSModal() {
 function makeDraggable(element, dragHandle) {
     let offsetX = 0, offsetY = 0;
     let isDragging = false;
-
+    
     const startDrag = function(e) {
         isDragging = true;
         const rect = element.getBoundingClientRect();
@@ -624,35 +548,33 @@ function makeDraggable(element, dragHandle) {
         dragHandle.style.cursor = 'grabbing';
         e.preventDefault();
     };
-
+    
     const moveDrag = function(e) {
         if (!isDragging) return;
-
+        
         const x = e.clientX - offsetX;
         const y = e.clientY - offsetY;
-
+        
         // Set boundaries to keep the modal within viewport
         const maxX = window.innerWidth - element.offsetWidth;
         const maxY = window.innerHeight - element.offsetHeight;
-
+        
         element.style.left = Math.min(Math.max(0, x), maxX) + 'px';
         element.style.top = Math.min(Math.max(0, y), maxY) + 'px';
         element.style.transform = 'none';
         e.preventDefault();
     };
-
+    
     const endDrag = function() {
         isDragging = false;
         dragHandle.style.cursor = 'grab';
     };
-
+    
     dragHandle.addEventListener('mousedown', startDrag);
     document.addEventListener('mousemove', moveDrag);
     document.addEventListener('mouseup', endDrag);
 }
 </script>
-
-{% endif %}
 
 {% if additional_scripts %}
 {{ additional_scripts|safe }}

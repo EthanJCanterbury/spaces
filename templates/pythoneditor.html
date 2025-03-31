@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block body_class %}editor-page{% endblock %}
@@ -12,7 +13,6 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/python-editor.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/hackatime-badge.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -233,12 +233,6 @@
     <i class="fas fa-columns"></i>
 </div>
 
-{% if current_user.wakatime_api_key %}
-<div id="hackatime-badge" class="hackatime-badge">
-    <i class="fas fa-clock"></i> Initializing...
-</div>
-{% endif %}
-
 <!-- GitHub integration removed from Python editor -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
@@ -259,75 +253,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/comment-fold.min.js"></script>
 
 <script src="{{ url_for('static', filename='js/python-editor.js') }}"></script>
-{% if current_user.wakatime_api_key %}
-<script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
-<script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
-<input type="hidden" id="user-id" value="{{ current_user.id }}">
-{% if site %}
-<input type="hidden" id="site-id" value="{{ site.id }}">
-<input type="hidden" id="site-type" value="python">
-{% endif %}
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🕒 Python editor loaded, checking for Hackatime integration');
-
-    // Make sure HackatimeTracker exists before attempting to use it
-    if (typeof HackatimeTracker !== 'undefined') {
-        // Initialize Hackatime tracker
-        HackatimeTracker.init();
-
-    // Add event listeners to track activity
-    let pythonEditor = document.getElementById('pythonEditor');
-    if (pythonEditor && pythonEditor.CodeMirror) {
-        console.log('🕒 Adding activity tracking to Python editor');
-        pythonEditor.CodeMirror.on('keydown', function() {
-            HackatimeTracker.recordActivity();
-        });
-
-        // Also track mouse movements in editor
-        pythonEditor.CodeMirror.on('mousemove', function() {
-            HackatimeTracker.recordActivity();
-        });
-
-        // Track click events
-        pythonEditor.CodeMirror.on('click', function() {
-            HackatimeTracker.recordActivity();
-            // Send a heartbeat immediately when clicking in the editor
-            setTimeout(() => HackatimeTracker.sendHeartbeat(), 300);
-        });
-    } else {
-        // Wait for CodeMirror to initialize
-        let checkEditor = setInterval(function() {
-            if (document.querySelector('.CodeMirror') && document.querySelector('.CodeMirror').CodeMirror) {
-                let cm = document.querySelector('.CodeMirror').CodeMirror;
-                console.log('🕒 Adding activity tracking to Python editor (delayed)');
-                cm.on('keydown', function() {
-                    HackatimeTracker.recordActivity();
-                });
-                cm.on('mousemove', function() {
-                    HackatimeTracker.recordActivity();
-                });
-                cm.on('click', function() {
-                    HackatimeTracker.recordActivity();
-                    setTimeout(() => HackatimeTracker.sendHeartbeat(), 300);
-                });
-                clearInterval(checkEditor);
-            }
-        }, 500);
-    }
-    } else {
-        console.log('🕒 HackatimeTracker not found, skipping time tracking initialization');
-    }
-
-    // Log Hackatime status
-    console.log('🕒 Hackatime integration active:', {
-        apiKeyExists: Boolean({{ 'true' if current_user.wakatime_api_key else 'false' }}),
-        userId: {{ current_user.id }}
-    });
-});
-</script>
-{% endif %}
 
 <!-- Editor initialization is handled by python-editor.js -->
 
