@@ -1261,6 +1261,9 @@ def admin_panel():
     if not current_user.is_admin:
         abort(403)
     try:
+        # Import Club model here to avoid undefined error
+        from models import Club
+        
         # Load only 50 users and sites initially for better performance
         users = User.query.with_entities(
             User.id, User.username, User.email, User.created_at, 
@@ -1284,7 +1287,7 @@ def admin_panel():
         except Exception as e:
             app.logger.error(f'Error reading version from changelog: {str(e)}')
 
-        return render_template('admin_panel.html', users=users, sites=sites, version=version)
+        return render_template('admin_panel.html', users=users, sites=sites, version=version, Club=Club)
     except Exception as e:
         app.logger.error(f'Error loading admin panel: {str(e)}')
         flash('Error loading admin panel: ' + str(e), 'error')
