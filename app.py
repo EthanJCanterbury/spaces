@@ -35,7 +35,10 @@ load_dotenv()
 
 
 def get_database_url():
-    return os.getenv('DATABASE_URL')
+    url = os.getenv('DATABASE_URL')
+    if url and url.startswith('postgres://'):
+        url = url.replace('postgres://', 'postgresql://', 1)
+    return url
 
 
 app = Flask(__name__)
