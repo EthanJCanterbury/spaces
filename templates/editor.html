@@ -404,9 +404,70 @@
 </div>
 
 {% if current_user.wakatime_api_key %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hackatime-badge.css') }}">
 <div id="hackatime-badge" class="hackatime-badge">
     <i class="fas fa-clock"></i> Initializing...
 </div>
+<script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🕒 Web editor loaded, checking for Hackatime integration');
+
+    // Initialize Hackatime tracker
+    HackatimeTracker.init();
+
+    // Add event listeners to track activity
+    let editor = document.getElementById('editor');
+    if (editor && editor.CodeMirror) {
+        console.log('🕒 Adding activity tracking to CodeMirror editor');
+        editor.CodeMirror.on('keydown', function() {
+            HackatimeTracker.recordActivity();
+        });
+
+        // Also track cursor activity
+        editor.CodeMirror.on('cursorActivity', function() {
+            HackatimeTracker.recordActivity();
+        });
+    } else {
+        // Wait for CodeMirror to initialize
+        console.log('🕒 Waiting for CodeMirror to initialize...');
+        let checkEditor = setInterval(function() {
+            if (document.querySelector('.CodeMirror') && document.querySelector('.CodeMirror').CodeMirror) {
+                console.log('🕒 CodeMirror initialized, adding event listeners');
+                let cm = document.querySelector('.CodeMirror').CodeMirror;
+                cm.on('keydown', function() {
+                    HackatimeTracker.recordActivity();
+                });
+                cm.on('cursorActivity', function() {
+                    HackatimeTracker.recordActivity();
+                });
+                clearInterval(checkEditor);
+            }
+        }, 500);
+    }
+
+    // Track file tab changes
+    const fileTabs = document.querySelectorAll('.file-tab');
+    if (fileTabs.length > 0) {
+        console.log('🕒 Adding file tab change tracking');
+        fileTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                console.log('🕒 File tab changed, sending heartbeat');
+                HackatimeTracker.recordActivity();
+                setTimeout(() => {
+                    HackatimeTracker.sendHeartbeat();
+                }, 500);
+            });
+        });
+    }
+
+    // Log Hackatime status
+    console.log('🕒 Hackatime integration active:', {
+        apiKeyExists: Boolean({{ 'true' if current_user.wakatime_api_key else 'false' }}),
+        userId: {{ current_user.id }}
+    });
+});
+</script>
 {% endif %}
 
 <!-- Include GitHub CSS -->
@@ -422,7 +483,7 @@
         <div class="ysws-section" style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #ff6b6b;">
             <h3 style="color: #ff6b6b; margin-top: 0;"><i class="fa-solid fa-mug-hot"></i> Boba Drops</h3>
             <p style="font-size: 16px; line-height: 1.5;">Ship a website, get $5 for Boba!</p>
-            
+
             <div style="margin: 15px 0; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                 <h4 style="margin-top: 0;">Requirements:</h4>
                 <ul style="padding-left: 20px; line-height: 1.6;">
@@ -434,16 +495,16 @@
                     <li>You are in the USA!</li>
                 </ul>
             </div>
-            
+
             <a href="https://forms.hackclub.com/t/tLf8GYVBqSus" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease;">
                 <i class="fas fa-external-link-alt"></i> Apply for Boba Drops
             </a>
         </div>
-        
+
         <div class="ysws-section" style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #8c52ff;">
             <h3 style="color: #8c52ff; margin-top: 0;"><i class="fa-solid fa-ice-cream"></i> Swirl</h3>
             <p style="font-size: 16px; line-height: 1.5;">Build a website, Get free ice cream!</p>
-            
+
             <div style="margin: 15px 0; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                 <h4 style="margin-top: 0;">Requirements:</h4>
                 <ul style="padding-left: 20px; line-height: 1.6;">
@@ -458,12 +519,12 @@
                     <li>Your website is original (NO AI or copy-pasting from ANYWHERE)</li>
                 </ul>
             </div>
-            
+
             <a href="https://forms.hackclub.com/t/t1UL6ZK4Nyus" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #8c52ff 0%, #a56fff 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease;">
                 <i class="fas fa-external-link-alt"></i> Apply for Swirl
             </a>
         </div>
-        
+
         <div style="text-align: center; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 12px;">
             <h4 style="margin-top: 0; color: #ff9d00;"><i class="fas fa-lightbulb"></i> Quick Tip</h4>
             <p>Remember to save and deploy your site before applying. Good luck!</p>
@@ -516,62 +577,189 @@
 <script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🕒 Web editor loaded, checking for Hackatime integration');
+
     // Initialize Hackatime tracker
     HackatimeTracker.init();
-    
+
     // Add event listeners to track activity
     let editor = document.getElementById('editor');
     if (editor && editor.CodeMirror) {
+        console.log('🕒 Adding activity tracking to CodeMirror editor');
         editor.CodeMirror.on('keydown', function() {
+            HackatimeTracker.recordActivity();
+        });
+
+        // Also track cursor activity
+        editor.CodeMirror.on('cursorActivity', function() {
             HackatimeTracker.recordActivity();
         });
     } else {
         // Wait for CodeMirror to initialize
+        console.log('🕒 Waiting for CodeMirror to initialize...');
         let checkEditor = setInterval(function() {
             if (document.querySelector('.CodeMirror') && document.querySelector('.CodeMirror').CodeMirror) {
+                console.log('🕒 CodeMirror initialized, adding event listeners');
                 let cm = document.querySelector('.CodeMirror').CodeMirror;
                 cm.on('keydown', function() {
+                    HackatimeTracker.recordActivity();
+                });
+                cm.on('cursorActivity', function() {
                     HackatimeTracker.recordActivity();
                 });
                 clearInterval(checkEditor);
             }
         }, 500);
     }
-    
+
     // Track file tab changes
     const fileTabs = document.querySelectorAll('.file-tab');
     if (fileTabs.length > 0) {
+        console.log('🕒 Adding file tab change tracking');
         fileTabs.forEach(tab => {
             tab.addEventListener('click', function() {
+                console.log('🕒 File tab changed, sending heartbeat');
+                HackatimeTracker.recordActivity();
                 setTimeout(() => {
                     HackatimeTracker.sendHeartbeat();
                 }, 500);
             });
         });
     }
+
+    // Log Hackatime status
+    console.log('🕒 Hackatime integration active:', {
+        apiKeyExists: Boolean({{ 'true' if current_user.wakatime_api_key else 'false' }}),
+        userId: {{ current_user.id }}
+    });
 });
 </script>
 {% endif %}
 
+<!-- Include GitHub CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/github-buttons.css') }}">
+<div id="ysws-widget">
+    <div class="orphy-header" style="background: linear-gradient(135deg, #ff6b6b 0%, #8c52ff 100%); cursor: grab; border-radius: 12px 12px 0 0;">
+        <div class="orphy-title">
+            <h2>You Ship, We Ship <span class="orphy-emoji">🎁</span></h2>
+        </div>
+        <button class="orphy-close-btn" onclick="closeYSWSModal()">&times;</button>
+    </div>
+    <div style="overflow-y: auto; max-height: 70vh; background-color: white; padding: 20px; border-radius: 0 0 12px 12px;">
+        <div class="ysws-section" style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #ff6b6b;">
+            <h3 style="color: #ff6b6b; margin-top: 0;"><i class="fa-solid fa-mug-hot"></i> Boba Drops</h3>
+            <p style="font-size: 16px; line-height: 1.5;">Ship a website, get $5 for Boba!</p>
+
+            <div style="margin: 15px 0; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <h4 style="margin-top: 0;">Requirements:</h4>
+                <ul style="padding-left: 20px; line-height: 1.6;">
+                    <li>You're a high schooler (or younger)</li>
+                    <li>The website was made recently</li>
+                    <li>Your website is a static site (uses HTML + CSS)</li>
+                    <li>Your website has text, color and an image</li>
+                    <li>You haven't gotten Boba Drops before</li>
+                    <li>You are in the USA!</li>
+                </ul>
+            </div>
+
+            <a href="https://forms.hackclub.com/t/tLf8GYVBqSus" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease;">
+                <i class="fas fa-external-link-alt"></i> Apply for Boba Drops
+            </a>
+        </div>
+
+        <div class="ysws-section" style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #8c52ff;">
+            <h3 style="color: #8c52ff; margin-top: 0;"><i class="fa-solid fa-ice-cream"></i> Swirl</h3>
+            <p style="font-size: 16px; line-height: 1.5;">Build a website, Get free ice cream!</p>
+
+            <div style="margin: 15px 0; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <h4 style="margin-top: 0;">Requirements:</h4>
+                <ul style="padding-left: 20px; line-height: 1.6;">
+                    <li>You're a high schooler (or younger)</li>
+                    <li>The website was made recently</li>
+                    <li>Your website is a static site (uses HTML + CSS)</li>
+                    <li>Your website has text, color, and an image</li>
+                    <li>Your website includes: 3 html pages, a favicon, at least 5 html tags</li>
+                    <li>Your website contains at least one scoop</li>
+                    <li>You haven't gotten a Swirl Grant before</li>
+                    <li>If your website was submitted for Boba Drops, it has been expanded</li>
+                    <li>Your website is original (NO AI or copy-pasting from ANYWHERE)</li>
+                </ul>
+            </div>
+
+            <a href="https://forms.hackclub.com/t/t1UL6ZK4Nyus" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #8c52ff 0%, #a56fff 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease;">
+                <i class="fas fa-external-link-alt"></i> Apply for Swirl
+            </a>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 12px;">
+            <h4 style="margin-top: 0; color: #ff9d00;"><i class="fas fa-lightbulb"></i> Quick Tip</h4>
+            <p>Remember to save and deploy your site before applying. Good luck!</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/search.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/searchcursor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/matchesonscrollbar.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/scroll/annotatescrollbar.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/match-highlighter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/jump-to-line.min.js"></script>
+
+{% if site.site_type == 'web' %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/xml-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/html-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/brace-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/xml-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/comment-fold.min.js"></script>
+<script src="{{ url_for('static', filename='js/github.js') }}"></script>
+{% elif site.site_type == 'python' %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/python-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/indent-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/comment-fold.min.js"></script>
+<script src="{{ url_for('static', filename='js/github.js') }}"></script>
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/editor-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ui-utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/orphy.js') }}"></script>
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+<script src="{{ url_for('static', filename='js/file-handling.js') }}"></script>
+
+{% if current_user.wakatime_api_key %}
+<script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
 <script>
 function openYSWSModal() {
     const widget = document.getElementById('ysws-widget');
     widget.style.display = 'block';
-    
+
     // Center the modal initially
     const windowHeight = window.innerHeight;
     const windowWidth = window.innerWidth;
     const modalWidth = 500; // Fixed width
     const modalHeight = 600; // Approximate height
-    
+
     widget.style.left = (windowWidth / 2 - modalWidth / 2) + 'px';
     widget.style.top = (windowHeight / 2 - modalHeight / 2) + 'px';
     widget.style.transform = 'none';
-    
+
     setTimeout(() => {
         widget.style.opacity = '1';
     }, 50);
-    
+
     const dragHandle = widget.querySelector('.orphy-header');
     makeDraggable(widget, dragHandle);
 }
@@ -587,7 +775,7 @@ function closeYSWSModal() {
 function makeDraggable(element, dragHandle) {
     let offsetX = 0, offsetY = 0;
     let isDragging = false;
-    
+
     const startDrag = function(e) {
         isDragging = true;
         const rect = element.getBoundingClientRect();
@@ -596,28 +784,28 @@ function makeDraggable(element, dragHandle) {
         dragHandle.style.cursor = 'grabbing';
         e.preventDefault();
     };
-    
+
     const moveDrag = function(e) {
         if (!isDragging) return;
-        
+
         const x = e.clientX - offsetX;
         const y = e.clientY - offsetY;
-        
+
         // Set boundaries to keep the modal within viewport
         const maxX = window.innerWidth - element.offsetWidth;
         const maxY = window.innerHeight - element.offsetHeight;
-        
+
         element.style.left = Math.min(Math.max(0, x), maxX) + 'px';
         element.style.top = Math.min(Math.max(0, y), maxY) + 'px';
         element.style.transform = 'none';
         e.preventDefault();
     };
-    
+
     const endDrag = function() {
         isDragging = false;
         dragHandle.style.cursor = 'grab';
     };
-    
+
     dragHandle.addEventListener('mousedown', startDrag);
     document.addEventListener('mousemove', moveDrag);
     document.addEventListener('mouseup', endDrag);

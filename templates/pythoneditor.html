@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block body_class %}editor-page{% endblock %}
@@ -264,27 +263,56 @@
 <script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🕒 Python editor loaded, checking for Hackatime integration');
+
     // Initialize Hackatime tracker
     HackatimeTracker.init();
-    
+
     // Add event listeners to track activity
     let pythonEditor = document.getElementById('pythonEditor');
     if (pythonEditor && pythonEditor.CodeMirror) {
+        console.log('🕒 Adding activity tracking to Python editor');
         pythonEditor.CodeMirror.on('keydown', function() {
             HackatimeTracker.recordActivity();
+        });
+
+        // Also track mouse movements in editor
+        pythonEditor.CodeMirror.on('mousemove', function() {
+            HackatimeTracker.recordActivity();
+        });
+
+        // Track click events
+        pythonEditor.CodeMirror.on('click', function() {
+            HackatimeTracker.recordActivity();
+            // Send a heartbeat immediately when clicking in the editor
+            setTimeout(() => HackatimeTracker.sendHeartbeat(), 300);
         });
     } else {
         // Wait for CodeMirror to initialize
         let checkEditor = setInterval(function() {
             if (document.querySelector('.CodeMirror') && document.querySelector('.CodeMirror').CodeMirror) {
                 let cm = document.querySelector('.CodeMirror').CodeMirror;
+                console.log('🕒 Adding activity tracking to Python editor (delayed)');
                 cm.on('keydown', function() {
                     HackatimeTracker.recordActivity();
+                });
+                cm.on('mousemove', function() {
+                    HackatimeTracker.recordActivity();
+                });
+                cm.on('click', function() {
+                    HackatimeTracker.recordActivity();
+                    setTimeout(() => HackatimeTracker.sendHeartbeat(), 300);
                 });
                 clearInterval(checkEditor);
             }
         }, 500);
     }
+
+    // Log Hackatime status
+    console.log('🕒 Hackatime integration active:', {
+        apiKeyExists: Boolean({{ 'true' if current_user.wakatime_api_key else 'false' }}),
+        userId: {{ current_user.id }}
+    });
 });
 </script>
 {% endif %}

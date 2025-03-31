@@ -2528,11 +2528,20 @@ def hackatime_disconnect():
 def hackatime_heartbeat():
     """Send heartbeat to Hackatime API"""
     if not current_user.wakatime_api_key:
+        app.logger.warning(f'User {current_user.id} attempted to send heartbeat without API key')
         return jsonify({'success': False, 'message': 'No Hackatime API key found'})
     
     try:
         # Get heartbeat data from request
         heartbeat_data = request.json
+        app.logger.info(f'Received heartbeat from user {current_user.id}: {heartbeat_data}')
+        
+        # Ensure the heartbeat has required fields
+        required_fields = ['entity', 'type', 'time']
+        for field in required_fields:
+            if field not in heartbeat_data:
+                app.logger.error(f'Missing required field {field} in heartbeat data')
+                return jsonify({'success': False, 'message': f'Missing required field: {field}'})
         
         # Add user ID to the heartbeat data
         user_id = current_user.id
@@ -2542,21 +2551,39 @@ def hackatime_heartbeat():
         api_key = current_user.wakatime_api_key.strip()
         auth_header = f"Basic {base64.b64encode(api_key.encode()).decode()}"
         
+        # Log the API key length (not the actual key) for debugging
+        app.logger.info(f'API key length: {len(api_key)}, user_id: {user_id}')
+        
+        # Construct heartbeat endpoint URL
+        heartbeat_url = f"https://waka.hackclub.com/users/{user_id}/heartbeats"
+        app.logger.info(f'Sending heartbeat to: {heartbeat_url}')
+        
         # Send heartbeat to Hackatime API
         response = requests.post(
-            f"https://waka.hackclub.com/users/{user_id}/heartbeats",
+            heartbeat_url,
             headers={
                 "Authorization": auth_header,
                 "Content-Type": "application/json"
             },
-            json=heartbeat_data
+            json=heartbeat_data,
+            timeout=10  # Add timeout to prevent hanging requests
         )
         
+        app.logger.info(f'Hackatime API response: {response.status_code}')
+        
         if response.status_code == 201 or response.status_code == 200:
+            try:
+                response_data = response.json()
+                app.logger.info(f'Successful heartbeat response: {response_data}')
+            except Exception:
+                response_data = {'text': response.text}
+                app.logger.info(f'Successful heartbeat (non-JSON response): {response.text}')
+                
             return jsonify({
                 'success': True, 
                 'message': 'Heartbeat recorded successfully',
-                'timestamp': heartbeat_data.get('time')
+                'timestamp': heartbeat_data.get('time'),
+                'api_response': response_data
             })
         else:
             app.logger.error(f'Hackatime API error: {response.status_code} - {response.text}')
@@ -2568,6 +2595,8 @@ def hackatime_heartbeat():
     
     except Exception as e:
         app.logger.error(f'Error sending heartbeat: {str(e)}')
+        import traceback
+        app.logger.error(traceback.format_exc())
         return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
 @app.route('/logout')
