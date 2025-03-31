@@ -1258,9 +1258,12 @@ def special_access():
 @app.route('/admin')
 @login_required
 def admin_panel():
-    if not current_user.is_admin and not current_user.has_special_access:
+    if not current_user.is_admin:
         abort(403)
     try:
+        # Import Club model here to avoid undefined error
+        from models import Club
+        
         # Load only 50 users and sites initially for better performance
         users = User.query.with_entities(
             User.id, User.username, User.email, User.created_at, 
@@ -1284,7 +1287,7 @@ def admin_panel():
         except Exception as e:
             app.logger.error(f'Error reading version from changelog: {str(e)}')
 
-        return render_template('admin_panel.html', users=users, sites=sites, version=version)
+        return render_template('admin_panel.html', users=users, sites=sites, version=version, Club=Club)
     except Exception as e:
         app.logger.error(f'Error loading admin panel: {str(e)}')
         flash('Error loading admin panel: ' + str(e), 'error')
@@ -1434,8 +1437,15 @@ def toggle_club_leader(user_id):
         existing_club = Club.query.filter_by(leader_id=user.id).first()
         
         if make_leader:
-            # Just mark them as club leader but don't automatically create a club
-            # They'll need to create one on the club dashboard
+            if not existing_club:
+                # Create the club leader relationship without auto-creating a club
+                # The leader_id is what determines if someone is a club leader
+                club = Club(
+                    name=f"{user.username}'s Club",
+                    description="Temporary club (please edit)",
+                    leader_id=user.id
+                )
+                db.session.add(club)
             
             # Record activity
             activity = UserActivity(
@@ -2514,13 +2524,12 @@ def club_dashboard():
     
     # Check if user is a club leader
     club = Club.query.filter_by(leader_id=current_user.id).first()
+    
+    # User doesn't have a club and isn't a leader
     if not club:
         flash('You do not have permission to access the club dashboard.', 'error')
         return redirect(url_for('welcome'))
     
-    if not club:
-        flash('You do not have a club. Create one below.', 'info')
-        
     # Get all memberships for the club if it exists
     memberships = []
     if club:
