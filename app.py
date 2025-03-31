@@ -2469,6 +2469,30 @@ def hackatime_connect():
         
         if not api_key:
             return jsonify({'success': False, 'message': 'API key is required'})
+        
+        # Validate the API key by making a request to the Hackatime API
+        api_url = "https://hackatime.hackclub.com/api"
+        
+        # Try to get the health status using the API key
+        try:
+            headers = {'Authorization': f'Basic {api_key}'}
+            response = requests.get(f"{api_url}/health", headers=headers, timeout=5)
+            
+            if response.status_code != 200:
+                return jsonify({
+                    'success': False, 
+                    'message': f'Invalid API key. Status code: {response.status_code}'
+                })
+                
+            # If we get here, the API key is valid
+            app.logger.info(f"API key validation successful for user {current_user.username}")
+            
+        except requests.RequestException as e:
+            app.logger.error(f"API key validation error: {str(e)}")
+            return jsonify({
+                'success': False, 
+                'message': f'Error validating API key: {str(e)}'
+            })
             
         # Update user's wakatime_api_key
         with db.engine.connect() as conn:

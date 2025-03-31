@@ -38,7 +38,7 @@
                 <button id="disconnect-btn" class="disconnect-button">Disconnect Account</button>
             </div>
         {% else %}
-            <form id="hackatime-form" method="post" action="{{ url_for('hackatime_connect') }}" class="api-key-form">
+            <form id="hackatime-form" class="api-key-form">
                 <div class="form-group">
                     <label for="api_key">Your Hackatime API Key</label>
                     <div class="input-group">
@@ -48,9 +48,10 @@
                         </button>
                     </div>
                     <div class="hint">The API key will be stored securely and only used to fetch your coding stats.</div>
+                    <div id="validation-message" class="validation-message"></div>
                 </div>
                 
-                <button type="submit" class="connect-button">
+                <button type="submit" class="connect-button" id="connect-button">
                     <span>Connect Hackatime</span>
                     <i class="fas fa-arrow-right"></i>
                 </button>
@@ -117,15 +118,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     const form = document.getElementById('hackatime-form');
+    const connectButton = document.getElementById('connect-button');
+    const validationMessage = document.getElementById('validation-message');
+    
     if (form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const apiKey = apiKeyInput.value.trim();
             if (!apiKey) {
-                alert('Please enter your Hackatime API key.');
+                showValidationMessage('Please enter your Hackatime API key.', 'error');
                 return;
             }
+            
+            // Show loading state
+            connectButton.disabled = true;
+            connectButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating...';
+            showValidationMessage('Validating API key...', 'info');
             
             fetch('/hackatime/connect', {
                 method: 'POST',
@@ -139,16 +148,31 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    window.location.reload();
+                    showValidationMessage('API key is valid! Connecting your account...', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 } else {
-                    alert('Failed to connect: ' + data.message);
+                    connectButton.disabled = false;
+                    connectButton.innerHTML = '<span>Connect Hackatime</span><i class="fas fa-arrow-right"></i>';
+                    showValidationMessage(data.message, 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while connecting your account.');
+                connectButton.disabled = false;
+                connectButton.innerHTML = '<span>Connect Hackatime</span><i class="fas fa-arrow-right"></i>';
+                showValidationMessage('An error occurred while connecting your account.', 'error');
             });
         });
+    }
+    
+    function showValidationMessage(message, type) {
+        if (!validationMessage) return;
+        
+        validationMessage.textContent = message;
+        validationMessage.className = 'validation-message ' + type;
+        validationMessage.style.display = 'block';
     }
 });
 </script>
