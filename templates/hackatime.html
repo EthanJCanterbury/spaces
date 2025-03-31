@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block head %}
@@ -13,12 +12,12 @@
             <h1 class="title">Connect with Hackatime</h1>
             <div class="subtitle">Track your coding time and see your stats</div>
         </div>
-        
-        
+
+
         <div class="info-section">
             <h2>What is Hackatime?</h2>
             <p>Hackatime is Hack Club's coding time tracker that helps you visualize your programming activity and track progress over time. We also use it to verify your time developing so we can send rewards!</p>
-            
+
             <div class="connection-steps">
                 <h3>How to connect:</h3>
                 <ol>
@@ -30,7 +29,7 @@
                 </ol>
             </div>
         </div>
-        
+
         {% if current_user.wakatime_api_key %}
             <div class="success-message">
                 <i class="fas fa-check-circle"></i>
@@ -41,22 +40,29 @@
             <form id="hackatime-form" method="post" action="{{ url_for('hackatime_connect') }}" class="api-key-form">
                 <div class="form-group">
                     <label for="api_key">Your Hackatime API Key</label>
-                    <div class="input-group">
-                        <input type="password" id="api_key" name="api_key" placeholder="Paste your API key here" required>
-                        <button type="button" id="toggle-visibility" class="toggle-btn">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                    <input type="password" id="api_key" name="api_key" placeholder="Paste your API key here" required>
+                    <button type="button" id="toggle-visibility" class="toggle-btn">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <div id="api-key-help" class="mt-2 p-3 border rounded bg-light" style="display:none;">
+                        <h5>Troubleshooting API Key Issues</h5>
+                        <ul>
+                            <li>Make sure you copied the full API key without any extra spaces</li>
+                            <li>API keys should be long strings (36+ characters)</li>
+                            <li>If you're getting 401 errors, your key may be expired or invalid</li>
+                            <li>You may need to regenerate a new key at <a href="https://waka.hackclub.com/settings/api-key" target="_blank">waka.hackclub.com</a></li>
+                        </ul>
                     </div>
                     <div class="hint">The API key will be stored securely and only used to fetch your coding stats.</div>
                 </div>
-                
+
                 <button type="submit" class="connect-button">
                     <span>Connect Hackatime</span>
                     <i class="fas fa-arrow-right"></i>
                 </button>
             </form>
         {% endif %}
-        
+
         <div class="benefits">
             <div class="benefit-item">
                 <i class="fas fa-chart-line"></i>
@@ -79,18 +85,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('toggle-visibility');
     const apiKeyInput = document.getElementById('api_key');
     const disconnectBtn = document.getElementById('disconnect-btn');
-    
+
     if (toggleBtn && apiKeyInput) {
         toggleBtn.addEventListener('click', function() {
             const type = apiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
             apiKeyInput.setAttribute('type', type);
-            
+
             const icon = toggleBtn.querySelector('i');
             icon.classList.toggle('fa-eye');
             icon.classList.toggle('fa-eye-slash');
         });
     }
-    
+
     if (disconnectBtn) {
         disconnectBtn.addEventListener('click', function() {
             if (confirm('Are you sure you want to disconnect your Hackatime account?')) {
@@ -115,18 +121,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     const form = document.getElementById('hackatime-form');
     if (form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const apiKey = apiKeyInput.value.trim();
             if (!apiKey) {
                 alert('Please enter your Hackatime API key.');
                 return;
             }
-            
+
             fetch('/hackatime/connect', {
                 method: 'POST',
                 headers: {

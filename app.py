@@ -2549,6 +2549,15 @@ def hackatime_heartbeat():
         # Encode API key in Base64 for Basic auth
         import base64
         api_key = current_user.wakatime_api_key.strip()
+        
+        # Check if API key looks valid (basic validation)
+        if len(api_key) < 10:
+            app.logger.error(f'API key looks invalid (too short): {len(api_key)} chars')
+            return jsonify({
+                'success': False, 
+                'message': 'API key appears invalid. Please check your settings and update your API key.'
+            })
+            
         auth_header = f"Basic {base64.b64encode(api_key.encode()).decode()}"
         
         # Log the API key length (not the actual key) for debugging
@@ -2585,12 +2594,30 @@ def hackatime_heartbeat():
                 'timestamp': heartbeat_data.get('time'),
                 'api_response': response_data
             })
+        elif response.status_code == 401:
+            app.logger.error(f'Authentication failed: Invalid API key')
+            # Reset the user's API key since it's invalid
+            if current_user.wakatime_api_key:
+                with db.engine.connect() as conn:
+                    conn.execute(
+                        db.text("UPDATE \"user\" SET wakatime_api_key = NULL WHERE id = :user_id"),
+                        {"user_id": current_user.id}
+                    )
+                    conn.commit()
+                app.logger.info(f'Reset invalid API key for user {current_user.id}')
+            
+            return jsonify({
+                'success': False, 
+                'message': 'API error: 401 - Authentication failed. Your API key is invalid or expired. Please update it in Hackatime settings.',
+                'error_code': 401
+            })
         else:
             app.logger.error(f'Hackatime API error: {response.status_code} - {response.text}')
             return jsonify({
                 'success': False, 
                 'message': f'API error: {response.status_code}',
-                'response': response.text
+                'response': response.text,
+                'error_code': response.status_code
             })
     
     except Exception as e:

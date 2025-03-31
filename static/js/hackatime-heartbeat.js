@@ -141,11 +141,24 @@ if (typeof HackatimeTracker === 'undefined') {
                         this.updateBadge();
                     }
                 } else {
-                    console.log('🕒 Heartbeat failed:', data.message);
+                    // Check for authentication errors
+                    if (data.message && data.message.includes('401')) {
+                        console.error('🕒 Heartbeat failed: Authentication error. Your API key may be invalid.');
+                        // Display a more visible error in the badge
+                        document.getElementById('hackatime-badge').innerHTML = 
+                            '<i class="fas fa-exclamation-triangle"></i> Auth Error - Check Settings';
+                        document.getElementById('hackatime-badge').style.backgroundColor = '#e74c3c';
+                    } else {
+                        console.log('🕒 Heartbeat failed:', data.message);
+                    }
                 }
             })
             .catch(error => {
                 console.log('🕒 Heartbeat failed: API error:', error);
+                // Update badge to show error state
+                document.getElementById('hackatime-badge').innerHTML = 
+                    '<i class="fas fa-exclamation-circle"></i> Connection Error';
+                document.getElementById('hackatime-badge').style.backgroundColor = '#e74c3c';
             });
         }
     };
