@@ -2623,6 +2623,25 @@ def hackatime_heartbeat():
             if field not in heartbeat_data:
                 app.logger.error(f'Missing required field {field} in heartbeat data')
                 return jsonify({'success': False, 'message': f'Missing required field: {field}'})
+                
+        # Add rate limiting - only allow 1 heartbeat per 15 seconds per user
+        # Use a timestamp in memory (could be moved to Redis in production)
+        user_id = current_user.id
+        current_time = time.time()
+        last_heartbeat_time = getattr(g, f'last_heartbeat_{user_id}', 0)
+        
+        # Check if enough time has passed (15 seconds)
+        if current_time - last_heartbeat_time < 15:
+            app.logger.info(f'Rate limiting heartbeat for user {user_id}')
+            return jsonify({
+                'success': True, 
+                'message': 'Heartbeat skipped due to rate limiting',
+                'timestamp': heartbeat_data.get('time'),
+                'rate_limited': True
+            })
+            
+        # Update the last heartbeat time
+        setattr(g, f'last_heartbeat_{user_id}', current_time)
 
         # Encode API key in Base64 for Basic auth
         import base64
@@ -2672,7 +2691,21 @@ def hackatime_heartbeat():
             timeout=10  # Add timeout to prevent hanging requests
         )
 
-        app.logger.info(f'Hackatime API response: {response.status_code}')
+        app.logger.info(f'Hackatime API response: {response.status_code}, {response.text[:100]}')
+        
+        # Parse the response and provide detailed information back to the client
+        try:
+            api_response = response.json()
+        except:
+            api_response = {"raw_response": response.text[:200]}
+            
+        if response.status_code == 201 or response.status_code == 200:
+            return jsonify({
+                'success': True,
+                'message': 'Heartbeat recorded successfully',
+                'timestamp': heartbeat_data.get('time'),
+                'api_response': api_response
+            })e}')
 
         if response.status_code == 201 or response.status_code == 200:
             try:
