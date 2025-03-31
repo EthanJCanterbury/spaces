@@ -2462,6 +2462,40 @@ def hackatime():
 
 @app.route('/hackatime/connect', methods=['POST'])
 @login_required
+def hackatime_connect():
+    """Connect Hackatime account by saving API key"""
+    try:
+        data = request.get_json()
+        api_key = data.get('api_key')
+
+        if not api_key:
+            return jsonify({'success': False, 'message': 'API key is required'})
+
+        # Update user's wakatime_api_key
+        with db.engine.connect() as conn:
+            conn.execute(
+                db.text("UPDATE \"user\" SET wakatime_api_key = :api_key WHERE id = :user_id"),
+                {"api_key": api_key, "user_id": current_user.id}
+            )
+            conn.commit()
+
+        # Record activity
+        activity = UserActivity(
+            activity_type="hackatime_connected",
+            message="User {username} connected Hackatime account",
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Hackatime account connected successfully'})
+    except Exception as e:
+        app.logger.error(f'Error connecting Hackatime: {str(e)}')
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Failed to connect Hackatime: {str(e)}'})
+
+
 @app.route('/api/log-error', methods=['POST'])
 def log_error():
     """Log client-side errors"""
