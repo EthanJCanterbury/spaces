@@ -1089,6 +1089,36 @@ if __name__ == "__main__":
         db.session.commit()
 
         return jsonify({
+
+@app.route('/hackatime/check-connection', methods=['GET'])
+@login_required
+def hackatime_check_connection():
+    """Check if the Hackatime API key is valid"""
+    try:
+        # Get API key from database to ensure it's fresh
+        with db.engine.connect() as conn:
+            result = conn.execute(
+                db.text("SELECT wakatime_api_key FROM \"user\" WHERE id = :user_id"),
+                {"user_id": current_user.id}
+            ).fetchone()
+
+            api_key = result[0] if result else None
+
+        if not api_key:
+            app.logger.warning(f'User {current_user.id} has no API key')
+            return jsonify({'success': False, 'message': 'No Hackatime API key found. Please connect your account first.'})
+
+        # Basic validation check
+        if len(api_key) < 20:
+            app.logger.warning(f'API key is too short: {len(api_key)} chars')
+            return jsonify({'success': False, 'message': 'API key appears invalid. Please update your API key.'})
+
+        # Just return success since we have an API key
+        return jsonify({'success': True, 'message': 'Hackatime API key found'})
+    except Exception as e:
+        app.logger.error(f'Error checking API connection: {str(e)}')
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
+
             'message': 'Python script created successfully',
             'site_id': site.id
         })
