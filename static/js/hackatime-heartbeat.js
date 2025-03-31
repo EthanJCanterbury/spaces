@@ -7,7 +7,7 @@ if (typeof HackatimeTracker === 'undefined') {
         lastActivity: 0,
         isActive: false,
         activityThreshold: 60000, // 1 minute
-        heartbeatInterval: 120000, // 2 minutes
+        heartbeatInterval: 300000, // Increased to 5 minutes
         heartbeatCooldown: 30000, // 30 seconds minimum between heartbeats
         lastHeartbeatTime: 0,
         currentEntity: 'index.html', // Default filename
@@ -262,6 +262,7 @@ if (typeof HackatimeTracker === 'undefined') {
         async sendHeartbeat() {
             try {
                 this.lastHeartbeatTime = Date.now();
+                console.log('🕒 sendHeartbeat called'); // Added logging
 
                 if (!this.apiKeyExists) {
                     console.log('🕒 Heartbeat skipped: No API key exists');
@@ -318,8 +319,10 @@ if (typeof HackatimeTracker === 'undefined') {
                     time: heartbeatData[0].time
                 });
 
-                // Send the heartbeat
-                const response = await fetch('/hackatime/heartbeat', {
+                // Send the heartbeat - Added logging of the URL
+                const heartbeatUrl = '/hackatime/heartbeat'; // Assumed endpoint
+                console.log('🕒 Sending heartbeat to:', heartbeatUrl);
+                const response = await fetch(heartbeatUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

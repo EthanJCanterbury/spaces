@@ -2667,6 +2667,9 @@ def hackatime_heartbeat():
         # Construct heartbeat endpoint URL - this is the correct endpoint for Hackatime
         heartbeat_url = "https://waka.hackclub.com/api/v1/users/current/heartbeats"
         app.logger.info(f'Sending heartbeat to: {heartbeat_url}')
+        
+        # Log full request details for debugging
+        app.logger.info(f'Heartbeat request details: user_id={current_user.id}, entity={heartbeat_data.get("entity")}, language={heartbeat_data.get("language")}')
 
         # Format the data in the array format expected by the Hackatime API
         formatted_heartbeat = [{
@@ -2695,7 +2698,12 @@ def hackatime_heartbeat():
             timeout=10  # Add timeout to prevent hanging requests
         )
 
-        app.logger.info(f'Hackatime API response: {response.status_code}, {response.text[:100]}')
+        app.logger.info(f'Hackatime API response: status={response.status_code}, text={response.text[:200]}')
+        
+        # Log full response for debugging
+        with open('hackatime_responses.log', 'a') as log_file:
+            log_file.write(f"\n[{datetime.utcnow().isoformat()}] USER: {current_user.id} STATUS: {response.status_code}\n")
+            log_file.write(f"RESPONSE: {response.text[:500]}\n")
         
         # Parse the response and provide detailed information back to the client
         try:
