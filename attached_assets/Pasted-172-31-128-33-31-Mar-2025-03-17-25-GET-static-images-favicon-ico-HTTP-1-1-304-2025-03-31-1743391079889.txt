@@ -1,0 +1,19 @@
+172.31.128.33 - - [31/Mar/2025 03:17:25] "GET /static/images/favicon.ico HTTP/1.1" 304 -
+[2025-03-31 03:17:27,574] ERROR in app: Unhandled Exception: {'error_type': 'UnboundLocalError', 'error_message': "cannot access local variable 'Club' where it is not associated with a value", 'error_details': None, 'file_name': None, 'line_number': None, 'code_snippet': None, 'traceback': '  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request\n    rv = self.dispatch_request()\n         ^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request\n    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view\n    return current_app.ensure_sync(func)(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/app.py", line 2530, in club_dashboard\n    club = Club.query.filter_by(leader_id=current_user.id).first()\n           ^^^^\n', 'suggestions': []}
+[2025-03-31 03:17:27,575] INFO in debughelpers: Locating template 'errors/generic.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /home/runner/workspace/templates
+       -> found ('/home/runner/workspace/templates/errors/generic.html')
+[2025-03-31 03:17:27,582] INFO in debughelpers: Locating template 'errors/base_error.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /home/runner/workspace/templates
+       -> found ('/home/runner/workspace/templates/errors/base_error.html')
+172.31.128.33 - - [3
