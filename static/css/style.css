@@ -1,3 +1,25 @@
+
+.btn-hackatime {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #ff6b6b;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.2s;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.btn-hackatime:hover {
+    background: #fa5252;
+}
+
+
 /* GitHub Integration Modal Styles */
 .github-auth,
 .github-repo-form,

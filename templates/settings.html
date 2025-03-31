@@ -37,6 +37,33 @@
                     {% endif %}
                 </div>
             </div>
+            
+            <div class="integration-item">
+                <div class="integration-header">
+                    <i class="fas fa-clock"></i>
+                    <h3>Hackatime</h3>
+                </div>
+                <p>Connect your Hackatime account to track your coding time and see your stats.</p>
+                <div class="integration-actions">
+                    {% if current_user.wakatime_api_key %}
+                    <div class="integration-status-buttons">
+                        <button class="btn-secondary" disabled>
+                            <i class="fas fa-check"></i>
+                            Connected to Hackatime
+                        </button>
+                        <button class="btn-danger" onclick="disconnectHackatime()">
+                            <i class="fas fa-unlink"></i>
+                            Disconnect
+                        </button>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('hackatime') }}" class="btn-hackatime">
+                        <i class="fas fa-clock"></i>
+                        Connect Hackatime
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
 
             <!-- Temporarily commented out Slack integration
             <div class="integration-item">
@@ -406,6 +433,22 @@
             }
         } catch (error) {
             showToast('error', 'Failed to disconnect from GitHub');
+        }
+    }
+    
+    async function disconnectHackatime() {
+        try {
+            const response = await fetch('/hackatime/disconnect', {
+                method: 'POST'
+            });
+            if (response.ok) {
+                showToast('success', 'Disconnected from Hackatime');
+                location.reload();
+            } else {
+                showToast('error', 'Failed to disconnect from Hackatime');
+            }
+        } catch (error) {
+            showToast('error', 'Failed to disconnect from Hackatime');
         }
     }
 
