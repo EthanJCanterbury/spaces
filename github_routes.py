@@ -1,4 +1,3 @@
-
 from flask import Blueprint, jsonify, request, redirect, url_for, session, flash
 from flask_login import current_user, login_required, login_user
 from github import Github, GithubException
@@ -29,7 +28,7 @@ def github_status():
     else:
         # Fallback to session token if database token doesn't exist
         access_token = session.get('github_token')
-    
+
     if not access_token:
         return jsonify({'connected': False, 'repo_connected': False})
 
@@ -46,21 +45,33 @@ def github_status():
                     return jsonify({'error': 'Site not found'}), 404
             except (ValueError, TypeError):
                 # Invalid site_id format (not an integer)
-                return jsonify({'connected': True, 'repo_connected': False, 'username': user.login})
-                
+                return jsonify({
+                    'connected': True,
+                    'repo_connected': False,
+                    'username': user.login
+                })
+
             repo = GitHubRepo.query.filter_by(site_id=site.id).first()
             if site and repo:
                 # Validate that repo still exists on GitHub
                 try:
                     gh_repo = g.get_repo(repo.repo_name)
                     return jsonify({
-                        'connected': True,
-                        'repo_connected': True,
-                        'username': user.login,
-                        'repo_name': repo.repo_name,
-                        'repo_url': repo.repo_url,
-                        'is_private': repo.is_private,
-                        'created_at': repo.created_at.isoformat() if repo.created_at else None
+                        'connected':
+                        True,
+                        'repo_connected':
+                        True,
+                        'username':
+                        user.login,
+                        'repo_name':
+                        repo.repo_name,
+                        'repo_url':
+                        repo.repo_url,
+                        'is_private':
+                        repo.is_private,
+                        'created_at':
+                        repo.created_at.isoformat()
+                        if repo.created_at else None
                     })
                 except GithubException as e:
                     if e.status == 404:
@@ -68,10 +79,14 @@ def github_status():
                         db.session.delete(repo)
                         db.session.commit()
                         return jsonify({
-                            'connected': True,
-                            'repo_connected': False,
-                            'username': user.login,
-                            'error': 'Repository no longer exists on GitHub'
+                            'connected':
+                            True,
+                            'repo_connected':
+                            False,
+                            'username':
+                            user.login,
+                            'error':
+                            'Repository no longer exists on GitHub'
                         })
                     raise
 
@@ -82,7 +97,7 @@ def github_status():
             db.session.commit()
         elif not session.get('github_token') and access_token:
             session['github_token'] = access_token
-            
+
         return jsonify({
             'connected': True,
             'repo_connected': False,
@@ -95,11 +110,23 @@ def github_status():
                 db.session.commit()
             if session.get('github_token'):
                 session.pop('github_token', None)
-            return jsonify({'connected': False, 'repo_connected': False, 'error': 'Invalid GitHub token'})
-        return jsonify({'connected': False, 'repo_connected': False, 'error': str(e)})
+            return jsonify({
+                'connected': False,
+                'repo_connected': False,
+                'error': 'Invalid GitHub token'
+            })
+        return jsonify({
+            'connected': False,
+            'repo_connected': False,
+            'error': str(e)
+        })
     except Exception as e:
         print(f'GitHub status error: {str(e)}')
-        return jsonify({'connected': False, 'repo_connected': False, 'error': str(e)})
+        return jsonify({
+            'connected': False,
+            'repo_connected': False,
+            'error': str(e)
+        })
 
 
 @github_bp.route('/api/github/login')
@@ -148,14 +175,13 @@ def github_callback():
             user.github_token = access_token
             user.github_username = gh_user.login
             db.session.commit()
-            
-            # Record activity
+
             activity = UserActivity(
                 activity_type="github_connected",
-                message=f'User {user.username} connected GitHub account @{gh_user.login}',
+                message=
+                f'User {user.username} connected GitHub account @{gh_user.login}',
                 username=user.username,
-                user_id=user.id
-            )
+                user_id=user.id)
             db.session.add(activity)
             db.session.commit()
         else:
@@ -185,14 +211,14 @@ def github_callback():
                     user.github_username = gh_user.login
                     db.session.commit()
                     login_user(user)
-                    
+
                     # Record activity
                     activity = UserActivity(
                         activity_type="github_connected",
-                        message=f'User {user.username} connected GitHub account @{gh_user.login}',
+                        message=
+                        f'User {user.username} connected GitHub account @{gh_user.login}',
                         username=user.username,
-                        user_id=user.id
-                    )
+                        user_id=user.id)
                     db.session.add(activity)
                     db.session.commit()
                 else:
@@ -207,14 +233,14 @@ def github_callback():
                     db.session.add(user)
                     db.session.commit()
                     login_user(user)
-                    
+
                     # Record activity
                     activity = UserActivity(
                         activity_type="github_connected",
-                        message=f'User {user.username} connected GitHub account @{gh_user.login}',
+                        message=
+                        f'User {user.username} connected GitHub account @{gh_user.login}',
                         username=user.username,
-                        user_id=user.id
-                    )
+                        user_id=user.id)
                     db.session.add(activity)
                     db.session.commit()
 
@@ -237,18 +263,22 @@ def create_repo():
                 access_token = current_user.github_token
             else:
                 return jsonify({
-                    'error': 'No GitHub account connected. Please link your GitHub account.'
+                    'error':
+                    'No GitHub account connected. Please link your GitHub account.'
                 }), 401
 
         site_id = request.args.get('site_id') or session.get('current_site_id')
         if not site_id:
-            return jsonify({'error': 'No site ID provided. Please select a site.'}), 400
+            return jsonify(
+                {'error': 'No site ID provided. Please select a site.'}), 400
 
         site = Site.query.get(site_id)
         if not site:
             return jsonify({'error': 'Site not found'}), 404
         if site.user_id != current_user.id:
-            return jsonify({'error': 'You do not have permission to access this site'}), 403
+            return jsonify(
+                {'error':
+                 'You do not have permission to access this site'}), 403
 
         # Check if site already has a GitHub repository
         existing_repo = GitHubRepo.query.filter_by(site_id=site.id).first()
@@ -267,7 +297,8 @@ def create_repo():
         if not name:
             return jsonify({'error': 'Repository name is required'}), 400
 
-        description = data.get('description', f'Site created with Hack Club Spaces - {site.name}')
+        description = data.get(
+            'description', f'Site created with Hack Club Spaces - {site.name}')
         private = data.get('private', True)
         has_issues = data.get('has_issues', True)
         has_projects = data.get('has_projects', True)
@@ -275,53 +306,50 @@ def create_repo():
 
         g = Github(access_token)
         user = g.get_user()
-        
+
         # Check if repo with this name already exists
         try:
             existing = user.get_repo(name)
             if existing:
-                return jsonify({
-                    'error': f'You already have a repository named "{name}"'
-                }), 400
+                return jsonify(
+                    {'error':
+                     f'You already have a repository named "{name}"'}), 400
         except GithubException:
             pass  # Repo doesn't exist, which is what we want
-        
+
         # Create the repo
-        repo = user.create_repo(
-            name=name,
-            description=description,
-            private=private,
-            has_issues=has_issues,
-            has_projects=has_projects,
-            has_wiki=has_wiki,
-            auto_init=True
-        )
+        repo = user.create_repo(name=name,
+                                description=description,
+                                private=private,
+                                has_issues=has_issues,
+                                has_projects=has_projects,
+                                has_wiki=has_wiki,
+                                auto_init=True)
 
         # Add attribution text to README.md
         try:
             readme_content = f"# {name}\n\n{description}\n\nMade with Hack Club Spaces 💖"
             readme = repo.get_contents("README.md")
-            repo.update_file("README.md", "Update README with attribution", readme_content, readme.sha)
+            repo.update_file("README.md", "Update README with attribution",
+                             readme_content, readme.sha)
         except Exception as e:
             print(f"Error updating README: {str(e)}")
 
-        github_repo = GitHubRepo(
-            repo_name=repo.full_name,
-            repo_url=repo.html_url,
-            is_private=private,
-            site_id=site_id
-        )
+        github_repo = GitHubRepo(repo_name=repo.full_name,
+                                 repo_url=repo.html_url,
+                                 is_private=private,
+                                 site_id=site_id)
 
         db.session.add(github_repo)
-        
+
         # Record activity
         activity = UserActivity(
             activity_type="github_repo_creation",
-            message=f'User {current_user.username} created GitHub repository "{repo.full_name}"',
+            message=
+            f'User {current_user.username} created GitHub repository "{repo.full_name}"',
             username=current_user.username,
             user_id=current_user.id,
-            site_id=site_id
-        )
+            site_id=site_id)
         db.session.add(activity)
         db.session.commit()
 
@@ -338,7 +366,8 @@ def create_repo():
     except Exception as e:
         print(f'Error creating repository: {str(e)}')
         db.session.rollback()
-        return jsonify({'error': 'Failed to create repository: ' + str(e)}), 500
+        return jsonify({'error':
+                        'Failed to create repository: ' + str(e)}), 500
 
 
 @github_bp.route('/api/github/repo-info')
@@ -354,7 +383,9 @@ def repo_info():
         if not site:
             return jsonify({'error': 'Site not found'}), 404
         if site.user_id != current_user.id:
-            return jsonify({'error': 'You do not have permission to access this site'}), 403
+            return jsonify(
+                {'error':
+                 'You do not have permission to access this site'}), 403
 
         github_repo = GitHubRepo.query.filter_by(site_id=site.id).first()
         if not github_repo:
@@ -373,12 +404,12 @@ def repo_info():
         try:
             g = Github(access_token)
             repo = g.get_repo(github_repo.repo_name)
-            
+
             # Update repo URL if it changed
             if repo.html_url != github_repo.repo_url:
                 github_repo.repo_url = repo.html_url
                 db.session.commit()
-                
+
             # Get contributor stats
             contributors = None
             try:
@@ -386,31 +417,45 @@ def repo_info():
                 contributor_count = len(contributors)
             except:
                 contributor_count = 1  # Default to 1 if we can't get contributors
-                
+
             # Get commit stats
             commits = None
             try:
                 commits = list(repo.get_commits())
                 commit_count = len(commits)
-                last_commit_date = commits[0].commit.author.date.isoformat() if commits else None
+                last_commit_date = commits[0].commit.author.date.isoformat(
+                ) if commits else None
             except:
                 commit_count = 0
                 last_commit_date = None
-                
+
             return jsonify({
-                'repo_name': github_repo.repo_name,
-                'repo_url': github_repo.repo_url,
-                'is_private': github_repo.is_private,
-                'created_at': github_repo.created_at.isoformat() if github_repo.created_at else None,
-                'updated_at': github_repo.updated_at.isoformat() if github_repo.updated_at else None,
-                'contributors': contributor_count,
-                'commits': commit_count,
-                'last_commit': last_commit_date,
-                'has_issues': repo.has_issues,
-                'has_wiki': repo.has_wiki,
-                'default_branch': repo.default_branch
+                'repo_name':
+                github_repo.repo_name,
+                'repo_url':
+                github_repo.repo_url,
+                'is_private':
+                github_repo.is_private,
+                'created_at':
+                github_repo.created_at.isoformat()
+                if github_repo.created_at else None,
+                'updated_at':
+                github_repo.updated_at.isoformat()
+                if github_repo.updated_at else None,
+                'contributors':
+                contributor_count,
+                'commits':
+                commit_count,
+                'last_commit':
+                last_commit_date,
+                'has_issues':
+                repo.has_issues,
+                'has_wiki':
+                repo.has_wiki,
+                'default_branch':
+                repo.default_branch
             })
-            
+
         except GithubException as e:
             if e.status == 404:
                 db.session.delete(github_repo)
@@ -435,7 +480,8 @@ def repo_info():
 
     except Exception as e:
         print(f'Error getting repo info: {str(e)}')
-        return jsonify({'error': 'Failed to get repository information: ' + str(e)}), 500
+        return jsonify(
+            {'error': 'Failed to get repository information: ' + str(e)}), 500
 
 
 @github_bp.route('/api/github/push', methods=['POST'])
@@ -457,11 +503,14 @@ def push_changes():
 
         site = Site.query.get_or_404(site_id)
         if site.user_id != current_user.id:
-            return jsonify({'error': 'You do not have permission to access this site'}), 403
+            return jsonify(
+                {'error':
+                 'You do not have permission to access this site'}), 403
 
         github_repo = GitHubRepo.query.filter_by(site_id=site.id).first()
         if not github_repo:
-            return jsonify({'error': 'No repository connected to this site'}), 404
+            return jsonify({'error':
+                            'No repository connected to this site'}), 404
 
         data = request.json
         commit_message = data.get('message', 'Update from Hack Club Spaces')
@@ -474,7 +523,7 @@ def push_changes():
 
         if site.site_type == 'python':
             files_to_update['main.py'] = site.python_content or ''
-            
+
             # Add requirements.txt if it exists
             try:
                 req_file = repo.get_contents("requirements.txt")
@@ -494,7 +543,7 @@ def push_changes():
 
             # Always include main HTML content
             files_to_update['index.html'] = site.html_content or ''
-            
+
             # Add all site pages
             for page in site_pages:
                 if page.filename != 'index.html':  # Avoid duplicate
@@ -512,7 +561,8 @@ def push_changes():
             try:
                 try:
                     file = repo.get_contents(file_path)
-                    repo.update_file(file_path, commit_message, content, file.sha)
+                    repo.update_file(file_path, commit_message, content,
+                                     file.sha)
                     results['updated'].append(file_path)
                 except GithubException as e:
                     if e.status == 404:
@@ -533,24 +583,27 @@ def push_changes():
         # Record activity
         activity = UserActivity(
             activity_type="github_push",
-            message=f'User {current_user.username} pushed {len(results["updated"])} updates and {len(results["created"])} new files to "{github_repo.repo_name}"',
+            message=
+            f'User {current_user.username} pushed {len(results["updated"])} updates and {len(results["created"])} new files to "{github_repo.repo_name}"',
             username=current_user.username,
             user_id=current_user.id,
-            site_id=site.id
-        )
+            site_id=site.id)
         db.session.add(activity)
         db.session.commit()
-        
+
         # Generate a summary
         if not results['errors']:
             if results['updated'] and results['created']:
-                results['summary'] = f"Updated {len(results['updated'])} files and created {len(results['created'])} new files"
+                results[
+                    'summary'] = f"Updated {len(results['updated'])} files and created {len(results['created'])} new files"
             elif results['updated']:
                 results['summary'] = f"Updated {len(results['updated'])} files"
             elif results['created']:
-                results['summary'] = f"Created {len(results['created'])} new files"
+                results[
+                    'summary'] = f"Created {len(results['created'])} new files"
         else:
-            results['summary'] = f"Completed with {len(results['errors'])} errors"
+            results[
+                'summary'] = f"Completed with {len(results['errors'])} errors"
 
         return jsonify({
             'message': 'Changes pushed successfully',
@@ -596,13 +649,14 @@ def delete_repo():
             return jsonify({'error': 'No repository connected'}), 404
 
         repo_name = github_repo.repo_name
-        
+
         # Verify with confirmation code
         data = request.json
         confirmation = data.get('confirmation')
         if not confirmation or confirmation.lower() != 'delete':
             return jsonify({
-                'error': 'Please type "delete" to confirm repository deletion'
+                'error':
+                'Please type "delete" to confirm repository deletion'
             }), 400
 
         g = Github(access_token)
@@ -612,18 +666,18 @@ def delete_repo():
         except GithubException as e:
             if e.status != 404:  # If it's not a 404 (already deleted), re-raise
                 raise
-                
+
         # Always remove from our database regardless of GitHub status
         db.session.delete(github_repo)
-        
+
         # Record activity
         activity = UserActivity(
             activity_type="github_repo_deletion",
-            message=f'User {current_user.username} deleted GitHub repository "{repo_name}"',
+            message=
+            f'User {current_user.username} deleted GitHub repository "{repo_name}"',
             username=current_user.username,
             user_id=current_user.id,
-            site_id=site.id
-        )
+            site_id=site.id)
         db.session.add(activity)
         db.session.commit()
 
@@ -631,7 +685,7 @@ def delete_repo():
             'message': 'Repository deleted successfully',
             'repo_name': repo_name
         })
-        
+
     except GithubException as e:
         print(f'GitHub error: {str(e)}')
         error_message = f"GitHub Error: {e.data.get('message', str(e))}"
@@ -639,7 +693,8 @@ def delete_repo():
     except Exception as e:
         db.session.rollback()
         print('Delete repo error:', str(e))
-        return jsonify({'error': 'Failed to delete repository: ' + str(e)}), 500
+        return jsonify({'error':
+                        'Failed to delete repository: ' + str(e)}), 500
 
 
 @github_bp.route('/api/github/disconnect-repo', methods=['POST'])
@@ -650,43 +705,44 @@ def disconnect_repo():
         site_id = request.args.get('site_id') or session.get('current_site_id')
         if not site_id:
             return jsonify({'error': 'No site ID provided'}), 400
-            
+
         site = Site.query.get(site_id)
         if not site:
             return jsonify({'error': 'Site not found'}), 404
         if site.user_id != current_user.id:
             return jsonify({'error': 'Permission denied'}), 403
-            
+
         github_repo = GitHubRepo.query.filter_by(site_id=site.id).first()
         if not github_repo:
             return jsonify({'error': 'No repository connected'}), 404
-            
+
         repo_name = github_repo.repo_name
         repo_url = github_repo.repo_url
-        
+
         db.session.delete(github_repo)
-        
+
         # Record activity
         activity = UserActivity(
             activity_type="github_repo_disconnect",
-            message=f'User {current_user.username} disconnected GitHub repository "{repo_name}"',
+            message=
+            f'User {current_user.username} disconnected GitHub repository "{repo_name}"',
             username=current_user.username,
             user_id=current_user.id,
-            site_id=site.id
-        )
+            site_id=site.id)
         db.session.add(activity)
         db.session.commit()
-        
+
         return jsonify({
             'message': 'Repository disconnected successfully',
             'repo_name': repo_name,
             'repo_url': repo_url
         })
-        
+
     except Exception as e:
         db.session.rollback()
         print('Disconnect error:', str(e))
-        return jsonify({'error': 'Failed to disconnect repository: ' + str(e)}), 500
+        return jsonify({'error':
+                        'Failed to disconnect repository: ' + str(e)}), 500
 
 
 @github_bp.route('/api/github/disconnect-account', methods=['POST'])
@@ -696,28 +752,28 @@ def disconnect_account():
     try:
         if not current_user.github_token:
             return jsonify({'error': 'No GitHub account connected'}), 400
-            
+
         current_user.github_token = None
         current_user.github_username = None
-        
+
         if session.get('github_token'):
             session.pop('github_token', None)
-            
+
         db.session.commit()
-        
+
         # Record activity
         activity = UserActivity(
             activity_type="github_disconnected",
             message=f'User {current_user.username} disconnected GitHub account',
             username=current_user.username,
-            user_id=current_user.id
-        )
+            user_id=current_user.id)
         db.session.add(activity)
         db.session.commit()
-        
+
         return jsonify({'message': 'GitHub account disconnected successfully'})
-        
+
     except Exception as e:
         db.session.rollback()
         print('Disconnect account error:', str(e))
-        return jsonify({'error': 'Failed to disconnect GitHub account: ' + str(e)}), 500
+        return jsonify(
+            {'error': 'Failed to disconnect GitHub account: ' + str(e)}), 500

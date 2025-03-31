@@ -13,20 +13,18 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, flash, request, jsonify, url_for, abort, session, Response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Site, SitePage, UserActivity, Club, ClubMembership
-# Custom slugify implementation to avoid unicode errors
+
+
 def slugify(text):
     import re
-    # Ensure text is a string
     text = str(text)
-    # Convert to lowercase
     text = text.lower()
-    # Remove non-word characters (alphanumerics and underscores)
     text = re.sub(r'[^\w\s-]', '', text)
-    # Replace spaces with hyphens
     text = re.sub(r'\s+', '-', text)
-    # Remove leading/trailing hyphens
     text = text.strip('-')
     return text
+
+
 from github_routes import github_bp
 from slack_routes import slack_bp
 from groq import Groq
@@ -48,8 +46,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_size': 20,
     'pool_recycle': 1800,  # Recycle connections every 30 minutes
-    'pool_timeout': 30,    # Shorter timeout for better error handling
-    'max_overflow': 10,    # Allow up to 10 additional connections when needed
+    'pool_timeout': 30,  # Shorter timeout for better error handling
+    'max_overflow': 10,  # Allow up to 10 additional connections when needed
     'pool_pre_ping': True  # Check if connection is still alive before using
 }
 
@@ -216,29 +214,24 @@ def report_error():
 
 @app.after_request
 def add_security_headers(response):
-    # Check if this is a preview request
     is_preview = request.args.get('preview') == 'true'
-    
-    # Base CSP policy
+
     csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' wss: ws:;"
-    
-    # Add frame-ancestors directive
+
     if is_preview:
-        # Allow embedding from any origin for preview requests
         csp += " frame-ancestors *;"
     else:
-        # Only allow embedding from self for regular requests
         csp += " frame-ancestors 'self';"
-    
+
     response.headers['Content-Security-Policy'] = csp
     response.headers['X-Content-Type-Options'] = 'nosniff'
-    
-    # Set Access-Control-Allow-Origin for preview requests
+
     if is_preview:
         response.headers['Access-Control-Allow-Origin'] = '*'
-    
+
     response.headers['X-XSS-Protection'] = '1; mode=block'
-    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers[
+        'Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return response
 
@@ -570,14 +563,14 @@ def welcome():
     sites = Site.query.filter_by(user_id=current_user.id).order_by(
         Site.updated_at.desc()).all()
     max_sites = get_max_sites_per_user()
-    
-    # Get club memberships for the user
-    club_memberships = db.session.query(ClubMembership).filter_by(user_id=current_user.id).all()
-    
-    return render_template('welcome.html', 
-                          sites=sites, 
-                          max_sites=max_sites, 
-                          club_memberships=club_memberships)
+
+    club_memberships = db.session.query(ClubMembership).filter_by(
+        user_id=current_user.id).all()
+
+    return render_template('welcome.html',
+                           sites=sites,
+                           max_sites=max_sites,
+                           club_memberships=club_memberships)
 
 
 @app.route('/access-code', methods=['GET', 'POST'])
@@ -854,9 +847,8 @@ def create_site():
             return jsonify({'message':
                             'Please enter a name for your space'}), 400
 
-        # Ensure name is a string
         name = str(name)
-        
+
         try:
             slug = slugify(name)
         except Exception as e:
@@ -984,8 +976,7 @@ def update_site(site_id):
 
     try:
         db.session.commit()
-        
-        # Log activity
+
         activity_message = f'Updated {"Python" if python_content else "Web"} site "{site.name}"'
         activity = UserActivity(activity_type='site_update',
                                 message=activity_message,
@@ -994,7 +985,7 @@ def update_site(site_id):
                                 site_id=site.id)
         db.session.add(activity)
         db.session.commit()
-        
+
         return jsonify({'message': 'Site updated successfully'})
     except Exception as e:
         db.session.rollback()
@@ -1054,7 +1045,6 @@ def create_python_site():
         if not name:
             return jsonify({'message': 'Name is required'}), 400
 
-        # Default Python hello world script with some helpful comments
         default_python_content = '''# Welcome to your Python space!
 # This is where you can write and run Python code.
 
@@ -1088,12 +1078,13 @@ if __name__ == "__main__":
         db.session.add(site)
         db.session.commit()
 
-        activity = UserActivity(activity_type="site_creation",
-                            message='New Python space "{}" created by {}'.format(
-                                name, current_user.username),
-                            username=current_user.username,
-                            user_id=current_user.id,
-                            site_id=site.id)
+        activity = UserActivity(
+            activity_type="site_creation",
+            message='New Python space "{}" created by {}'.format(
+                name, current_user.username),
+            username=current_user.username,
+            user_id=current_user.id,
+            site_id=site.id)
         db.session.add(activity)
         db.session.commit()
 
@@ -1261,22 +1252,17 @@ def admin_panel():
     if not current_user.is_admin:
         abort(403)
     try:
-        # Import Club model here to avoid undefined error
         from models import Club
-        
-        # Load only 50 users and sites initially for better performance
-        users = User.query.with_entities(
-            User.id, User.username, User.email, User.created_at, 
-            User.is_suspended, User.is_admin
-        ).limit(50).all()
 
-        sites = db.session.query(
-            Site.id, Site.name, Site.slug, Site.site_type, 
-            Site.created_at, Site.updated_at, Site.user_id,
-            User.username
-        ).join(User).limit(50).all()
-        
-        # Get version from changelog
+        users = User.query.with_entities(User.id, User.username, User.email,
+                                         User.created_at, User.is_suspended,
+                                         User.is_admin).limit(50).all()
+
+        sites = db.session.query(Site.id, Site.name, Site.slug, Site.site_type,
+                                 Site.created_at, Site.updated_at,
+                                 Site.user_id,
+                                 User.username).join(User).limit(50).all()
+
         version = '1.7.7'
         try:
             with open('changelog.md', 'r') as f:
@@ -1287,7 +1273,11 @@ def admin_panel():
         except Exception as e:
             app.logger.error(f'Error reading version from changelog: {str(e)}')
 
-        return render_template('admin_panel.html', users=users, sites=sites, version=version, Club=Club)
+        return render_template('admin_panel.html',
+                               users=users,
+                               sites=sites,
+                               version=version,
+                               Club=Club)
     except Exception as e:
         app.logger.error(f'Error loading admin panel: {str(e)}')
         flash('Error loading admin panel: ' + str(e), 'error')
@@ -1419,72 +1409,77 @@ def edit_user(user_id):
         db.session.rollback()
         app.logger.error(f'Error updating user: {str(e)}')
         return jsonify({'message': 'Failed to update user details'}), 500
-        
+
+
 @app.route('/api/admin/users/<int:user_id>/club-leader', methods=['POST'])
 @login_required
 @admin_required
 def toggle_club_leader(user_id):
     """Toggle a user's club leader status without creating a club automatically."""
     if user_id == current_user.id:
-        return jsonify({'message': 'Cannot change your own club leader status'}), 400
-        
+        return jsonify(
+            {'message': 'Cannot change your own club leader status'}), 400
+
     user = User.query.get_or_404(user_id)
     data = request.get_json()
     make_leader = data.get('is_club_leader', False)
-    
+
     try:
-        # Check if user already has a club
         existing_club = Club.query.filter_by(leader_id=user.id).first()
-        
+
         if make_leader:
             if not existing_club:
                 # Create the club leader relationship without auto-creating a club
                 # The leader_id is what determines if someone is a club leader
-                club = Club(
-                    name=f"{user.username}'s Club",
-                    description="Temporary club (please edit)",
-                    leader_id=user.id
-                )
+                club = Club(name=f"{user.username}'s Club",
+                            description="Temporary club (please edit)",
+                            leader_id=user.id)
                 db.session.add(club)
-            
+
             # Record activity
             activity = UserActivity(
                 activity_type="admin_action",
-                message=f"Admin {{username}} made {user.username} a club leader",
+                message=
+                f"Admin {{username}} made {user.username} a club leader",
                 username=current_user.username,
-                user_id=current_user.id
-            )
+                user_id=current_user.id)
             db.session.add(activity)
-            
+
             db.session.commit()
             app.logger.info(f"Successfully made {user.username} a club leader")
-            return jsonify({'message': f"Made {user.username} a club leader", 'status': 'success'})
-            
+            return jsonify({
+                'message': f"Made {user.username} a club leader",
+                'status': 'success'
+            })
+
         elif not make_leader and existing_club:
-            # Remove all club memberships
             ClubMembership.query.filter_by(club_id=existing_club.id).delete()
-            
-            # Delete the club
+
             db.session.delete(existing_club)
-            
-            # Record activity
+
             activity = UserActivity(
                 activity_type="admin_action",
-                message=f"Admin {{username}} removed {user.username} as a club leader",
+                message=
+                f"Admin {{username}} removed {user.username} as a club leader",
                 username=current_user.username,
-                user_id=current_user.id
-            )
+                user_id=current_user.id)
             db.session.add(activity)
-            
+
             db.session.commit()
-            return jsonify({'message': f"Removed {user.username} as a club leader", 'status': 'success'})
-            
+            return jsonify({
+                'message': f"Removed {user.username} as a club leader",
+                'status': 'success'
+            })
+
         return jsonify({'message': 'No changes made', 'status': 'success'})
-        
+
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error toggling club leader status: {str(e)}')
-        return jsonify({'message': 'Failed to update club leader status', 'error': str(e)}), 500
+        return jsonify({
+            'message': 'Failed to update club leader status',
+            'error': str(e)
+        }), 500
 
 
 @app.route('/api/admin/users/<int:user_id>/sites', methods=['DELETE'])
@@ -1768,37 +1763,43 @@ def search_users():
     try:
         search_term = request.args.get('term', '')
         if not search_term or len(search_term) < 2:
-            return jsonify({'error': 'Search term must be at least 2 characters'}), 400
-            
+            return jsonify(
+                {'error': 'Search term must be at least 2 characters'}), 400
+
         users = User.query.with_entities(
-            User.id, User.username, User.email, User.created_at, 
-            User.is_suspended, User.is_admin
-        ).filter(
-            db.or_(
-                User.username.ilike(f'%{search_term}%'),
-                User.email.ilike(f'%{search_term}%')
-            )
-        ).limit(50).all()
-        
+            User.id, User.username, User.email, User.created_at,
+            User.is_suspended, User.is_admin).filter(
+                db.or_(User.username.ilike(f'%{search_term}%'),
+                       User.email.ilike(f'%{search_term}%'))).limit(50).all()
+
         result = []
         for user in users:
             # Check explicitly if the user is a club leader
-            is_club_leader = Club.query.filter_by(leader_id=user.id).first() is not None
-            
+            is_club_leader = Club.query.filter_by(
+                leader_id=user.id).first() is not None
+
             result.append({
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'created_at': user.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                'is_suspended': user.is_suspended,
-                'is_admin': user.is_admin,
-                'is_club_leader': is_club_leader
+                'id':
+                user.id,
+                'username':
+                user.username,
+                'email':
+                user.email,
+                'created_at':
+                user.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'is_suspended':
+                user.is_suspended,
+                'is_admin':
+                user.is_admin,
+                'is_club_leader':
+                is_club_leader
             })
-            
+
         return jsonify({'users': result})
     except Exception as e:
         app.logger.error(f'Error searching users: {str(e)}')
         return jsonify({'error': 'Failed to search users'}), 500
+
 
 @app.route('/api/admin/search/sites')
 @login_required
@@ -1807,38 +1808,44 @@ def search_sites():
     try:
         search_term = request.args.get('term', '')
         if not search_term or len(search_term) < 2:
-            return jsonify({'error': 'Search term must be at least 2 characters'}), 400
-            
+            return jsonify(
+                {'error': 'Search term must be at least 2 characters'}), 400
+
         sites = db.session.query(
-            Site.id, Site.name, Site.slug, Site.site_type, 
-            Site.created_at, Site.updated_at, Site.user_id,
-            User.username
-        ).join(User).filter(
-            db.or_(
-                Site.name.ilike(f'%{search_term}%'),
-                Site.slug.ilike(f'%{search_term}%'),
-                User.username.ilike(f'%{search_term}%')
-            )
-        ).limit(50).all()
-        
+            Site.id, Site.name, Site.slug, Site.site_type, Site.created_at,
+            Site.updated_at, Site.user_id, User.username).join(User).filter(
+                db.or_(
+                    Site.name.ilike(f'%{search_term}%'),
+                    Site.slug.ilike(f'%{search_term}%'),
+                    User.username.ilike(f'%{search_term}%'))).limit(50).all()
+
         result = []
         for site in sites:
             result.append({
-                'id': site.id,
-                'name': site.name,
-                'slug': site.slug,
-                'site_type': site.site_type,
-                'created_at': site.created_at.strftime('%Y-%m-%d'),
-                'updated_at': site.updated_at.strftime('%Y-%m-%d %H:%M'),
-                'user_id': site.user_id,
-                'username': site.username
+                'id':
+                site.id,
+                'name':
+                site.name,
+                'slug':
+                site.slug,
+                'site_type':
+                site.site_type,
+                'created_at':
+                site.created_at.strftime('%Y-%m-%d'),
+                'updated_at':
+                site.updated_at.strftime('%Y-%m-%d %H:%M'),
+                'user_id':
+                site.user_id,
+                'username':
+                site.username
             })
-            
+
         return jsonify({'sites': result})
     except Exception as e:
         app.logger.error(f'Error searching sites: {str(e)}')
         return jsonify({'error': 'Failed to search sites'}), 500
-        
+
+
 @app.route('/api/admin/stats/counts')
 @login_required
 @admin_required
@@ -1847,14 +1854,12 @@ def get_total_counts():
     try:
         total_users = User.query.count()
         total_sites = Site.query.count()
-        
-        return jsonify({
-            'totalUsers': total_users,
-            'totalSites': total_sites
-        })
+
+        return jsonify({'totalUsers': total_users, 'totalSites': total_sites})
     except Exception as e:
         app.logger.error(f'Error getting total counts: {str(e)}')
         return jsonify({'error': 'Failed to get total counts'}), 500
+
 
 @app.route('/api/users/<int:user_id>')
 @login_required
@@ -2097,36 +2102,42 @@ def get_admin_users_list():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         search = request.args.get('search', '')
-        
+
         query = User.query
-        
+
         if search:
             query = query.filter(
-                db.or_(
-                    User.username.ilike(f'%{search}%'),
-                    User.email.ilike(f'%{search}%')
-                )
-            )
-            
+                db.or_(User.username.ilike(f'%{search}%'),
+                       User.email.ilike(f'%{search}%')))
+
         total = query.count()
-        users = query.order_by(User.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
-        
+        users = query.order_by(User.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False)
+
         users_list = []
         for user in users.items:
-            # Check explicitly if the user is a club leader
-            is_club_leader = Club.query.filter_by(leader_id=user.id).first() is not None
-            
+            is_club_leader = Club.query.filter_by(
+                leader_id=user.id).first() is not None
+
             users_list.append({
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'created_at': user.created_at.isoformat(),
-                'is_admin': user.is_admin,
-                'is_suspended': user.is_suspended,
-                'is_club_leader': is_club_leader,
-                'sites_count': Site.query.filter_by(user_id=user.id).count()
+                'id':
+                user.id,
+                'username':
+                user.username,
+                'email':
+                user.email,
+                'created_at':
+                user.created_at.isoformat(),
+                'is_admin':
+                user.is_admin,
+                'is_suspended':
+                user.is_suspended,
+                'is_club_leader':
+                is_club_leader,
+                'sites_count':
+                Site.query.filter_by(user_id=user.id).count()
             })
-            
+
         return jsonify({
             'users': users_list,
             'total': total,
@@ -2137,6 +2148,7 @@ def get_admin_users_list():
         app.logger.error(f'Error getting admin users list: {str(e)}')
         return jsonify({'error': 'Failed to retrieve users'}), 500
 
+
 @app.route('/api/admin/sites-list')
 @login_required
 @admin_required
@@ -2145,15 +2157,16 @@ def get_admin_sites_list():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         search = request.args.get('search', '')
-        
+
         query = Site.query
-        
+
         if search:
             query = query.filter(Site.name.ilike(f'%{search}%'))
-            
+
         total = query.count()
-        sites = query.order_by(Site.updated_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
-        
+        sites = query.order_by(Site.updated_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False)
+
         sites_list = []
         for site in sites.items:
             user = User.query.get(site.user_id)
@@ -2169,7 +2182,7 @@ def get_admin_sites_list():
                     'username': user.username if user else 'Unknown'
                 }
             })
-            
+
         return jsonify({
             'sites': sites_list,
             'total': total,
@@ -2253,55 +2266,40 @@ def get_site_pages(site_id):
 
     return jsonify({'success': True, 'pages': pages})
 
+
 @app.route('/api/sites/<int:site_id>/files', methods=['GET'])
 @login_required
 def get_site_files(site_id):
     try:
         site = Site.query.get_or_404(site_id)
-        
+
         if site.user_id != current_user.id and not current_user.is_admin:
             return jsonify({'error': 'Unauthorized'}), 403
-            
+
         files = []
-        
+
         if site.site_type == 'python':
-            files.append({
-                'filename': 'main.py',
-                'file_type': 'python'
-            })
+            files.append({'filename': 'main.py', 'file_type': 'python'})
         else:
             with db.engine.connect() as conn:
                 result = conn.execute(
-                    db.text("SELECT filename, file_type FROM site_page WHERE site_id = :site_id"),
-                    {"site_id": site_id})
-                
+                    db.text(
+                        "SELECT filename, file_type FROM site_page WHERE site_id = :site_id"
+                    ), {"site_id": site_id})
+
                 for row in result:
-                    files.append({
-                        'filename': row[0],
-                        'file_type': row[1]
-                    })
-                    
+                    files.append({'filename': row[0], 'file_type': row[1]})
+
             # Check if we have index.html
             if not any(f['filename'] == 'index.html' for f in files):
-                files.append({
-                    'filename': 'index.html',
-                    'file_type': 'html'
-                })
-                
-            # Check if we have styles.css
+                files.append({'filename': 'index.html', 'file_type': 'html'})
+
             if not any(f['filename'] == 'styles.css' for f in files):
-                files.append({
-                    'filename': 'styles.css',
-                    'file_type': 'css'
-                })
-                
-            # Check if we have script.js
+                files.append({'filename': 'styles.css', 'file_type': 'css'})
+
             if not any(f['filename'] == 'script.js' for f in files):
-                files.append({
-                    'filename': 'script.js',
-                    'file_type': 'js'
-                })
-        
+                files.append({'filename': 'script.js', 'file_type': 'js'})
+
         return jsonify({'success': True, 'files': files})
     except Exception as e:
         print(f'Error getting site files: {str(e)}')
@@ -2521,21 +2519,25 @@ def club_dashboard():
     """Club dashboard for club leaders to manage their clubs."""
     # Import Club and ClubMembership at the beginning of the function
     from models import Club, ClubMembership
-    
+
     # Check if user is a club leader
     club = Club.query.filter_by(leader_id=current_user.id).first()
-    
+
     # User doesn't have a club and isn't a leader
     if not club:
-        flash('You do not have permission to access the club dashboard.', 'error')
+        flash('You do not have permission to access the club dashboard.',
+              'error')
         return redirect(url_for('welcome'))
-    
+
     # Get all memberships for the club if it exists
     memberships = []
     if club:
         memberships = ClubMembership.query.filter_by(club_id=club.id).all()
-        
-    return render_template('club_dashboard.html', club=club, memberships=memberships)
+
+    return render_template('club_dashboard.html',
+                           club=club,
+                           memberships=memberships)
+
 
 # Club API routes
 @app.route('/api/clubs', methods=['POST'])
@@ -2544,117 +2546,110 @@ def create_club():
     """Create a new club with the current user as leader."""
     try:
         data = request.get_json()
-        
-        # Validate required fields
+
         if not data.get('name'):
             return jsonify({'error': 'Club name is required'}), 400
-            
-        # Check if user already has a club
+
         if Club.query.filter_by(leader_id=current_user.id).first():
             return jsonify({'error': 'You already have a club'}), 400
-            
-        # Create new club
-        club = Club(
-            name=data.get('name'),
-            description=data.get('description', ''),
-            location=data.get('location', ''),
-            leader_id=current_user.id
-        )
-        
-        # Generate a join code for the club
+
+        club = Club(name=data.get('name'),
+                    description=data.get('description', ''),
+                    location=data.get('location', ''),
+                    leader_id=current_user.id)
+
         club.generate_join_code()
         db.session.add(club)
         db.session.commit()  # Commit to ensure the club has an ID
-        
-        # Add the leader as a member with 'co-leader' role
-        membership = ClubMembership(
-            user_id=current_user.id,
-            club_id=club.id,
-            role='co-leader'
-        )
+
+        membership = ClubMembership(user_id=current_user.id,
+                                    club_id=club.id,
+                                    role='co-leader')
         db.session.add(membership)
         db.session.commit()
-        
-        # Record activity
+
         activity = UserActivity(
             activity_type="club_creation",
             message=f'Club "{club.name}" created by {{username}}',
             username=current_user.username,
-            user_id=current_user.id
-        )
+            user_id=current_user.id)
         db.session.add(activity)
         db.session.commit()
-        
+
         return jsonify({'message': 'Club created successfully'}), 201
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error creating club: {str(e)}')
         return jsonify({'error': 'Failed to create club'}), 500
 
+
 @app.route('/api/clubs/current', methods=['GET', 'PUT', 'DELETE'])
 @login_required
 def manage_current_club():
     """Get, update, or delete the current user's club."""
-    # Get the user's club (if they're a leader)
     club = Club.query.filter_by(leader_id=current_user.id).first()
-    
+
     if not club:
         return jsonify({'error': 'You do not have a club'}), 404
-        
+
     if request.method == 'GET':
         return jsonify({
-            'id': club.id,
-            'name': club.name,
-            'description': club.description,
-            'location': club.location,
-            'join_code': club.join_code,
-            'created_at': club.created_at.isoformat(),
-            'members_count': ClubMembership.query.filter_by(club_id=club.id).count()
+            'id':
+            club.id,
+            'name':
+            club.name,
+            'description':
+            club.description,
+            'location':
+            club.location,
+            'join_code':
+            club.join_code,
+            'created_at':
+            club.created_at.isoformat(),
+            'members_count':
+            ClubMembership.query.filter_by(club_id=club.id).count()
         })
-        
+
     elif request.method == 'PUT':
         try:
             data = request.get_json()
-            
+
             if data.get('name'):
                 club.name = data.get('name')
             if 'description' in data:
                 club.description = data.get('description')
             if 'location' in data:
                 club.location = data.get('location')
-                
+
             db.session.commit()
-            
+
             return jsonify({'message': 'Club updated successfully'})
         except Exception as e:
             db.session.rollback()
             app.logger.error(f'Error updating club: {str(e)}')
             return jsonify({'error': 'Failed to update club'}), 500
-            
+
     elif request.method == 'DELETE':
         try:
-            # Delete all memberships first
             ClubMembership.query.filter_by(club_id=club.id).delete()
-            
-            # Delete the club
+
             db.session.delete(club)
             db.session.commit()
-            
-            # Record activity
+
             activity = UserActivity(
                 activity_type="club_deletion",
                 message=f'Club "{club.name}" deleted by {{username}}',
                 username=current_user.username,
-                user_id=current_user.id
-            )
+                user_id=current_user.id)
             db.session.add(activity)
             db.session.commit()
-            
+
             return jsonify({'message': 'Club deleted successfully'})
         except Exception as e:
             db.session.rollback()
             app.logger.error(f'Error deleting club: {str(e)}')
             return jsonify({'error': 'Failed to delete club'}), 500
+
 
 @app.route('/api/clubs/join-code/generate', methods=['POST'])
 @login_required
@@ -2662,20 +2657,24 @@ def generate_join_code():
     """Generate a new join code for the current user's club."""
     # Get the user's club (if they're a leader)
     club = Club.query.filter_by(leader_id=current_user.id).first()
-    
+
     if not club:
         return jsonify({'error': 'You do not have a club'}), 404
-        
+
     try:
         # Generate a new join code
         club.generate_join_code()
         db.session.commit()
-        
-        return jsonify({'message': 'Join code generated successfully', 'join_code': club.join_code})
+
+        return jsonify({
+            'message': 'Join code generated successfully',
+            'join_code': club.join_code
+        })
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error generating join code: {str(e)}')
         return jsonify({'error': 'Failed to generate join code'}), 500
+
 
 @app.route('/api/clubs/join', methods=['POST'])
 @login_required
@@ -2684,83 +2683,86 @@ def join_club():
     try:
         data = request.get_json()
         join_code = data.get('join_code')
-        
+
         if not join_code:
             return jsonify({'error': 'Join code is required'}), 400
-            
+
         # Find the club with this join code
         club = Club.query.filter_by(join_code=join_code).first()
-        
+
         if not club:
             return jsonify({'error': 'Invalid join code'}), 404
-            
+
         # Check if user is already a member
         existing_membership = ClubMembership.query.filter_by(
             user_id=current_user.id, club_id=club.id).first()
-            
+
         if existing_membership:
-            return jsonify({'error': 'You are already a member of this club'}), 400
-            
+            return jsonify({'error':
+                            'You are already a member of this club'}), 400
+
         # Add user as a member
-        membership = ClubMembership(
-            user_id=current_user.id,
-            club_id=club.id,
-            role='member'
-        )
+        membership = ClubMembership(user_id=current_user.id,
+                                    club_id=club.id,
+                                    role='member')
         db.session.add(membership)
-        
+
         # Record activity
         activity = UserActivity(
             activity_type="club_join",
             message=f'{{username}} joined club "{club.name}"',
             username=current_user.username,
-            user_id=current_user.id
-        )
+            user_id=current_user.id)
         db.session.add(activity)
         db.session.commit()
-        
+
         return jsonify({'message': f'Successfully joined {club.name}'})
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error joining club: {str(e)}')
         return jsonify({'error': 'Failed to join club'}), 500
 
-@app.route('/api/clubs/memberships/<int:membership_id>/leave', methods=['POST'])
+
+@app.route('/api/clubs/memberships/<int:membership_id>/leave',
+           methods=['POST'])
 @login_required
 def leave_club(membership_id):
     """Leave a club."""
     try:
         # Find the membership
         membership = ClubMembership.query.get_or_404(membership_id)
-        
+
         # Verify it belongs to the current user
         if membership.user_id != current_user.id:
             return jsonify({'error': 'Unauthorized'}), 403
-            
+
         # Prevent club leaders from leaving their own club
         if membership.club.leader_id == current_user.id:
-            return jsonify({'error': 'Club leaders cannot leave. Delete the club instead.'}), 400
-            
+            return jsonify({
+                'error':
+                'Club leaders cannot leave. Delete the club instead.'
+            }), 400
+
         club_name = membership.club.name
-        
+
         # Delete the membership
         db.session.delete(membership)
-        
+
         # Record activity
         activity = UserActivity(
             activity_type="club_leave",
             message=f'{{username}} left club "{club_name}"',
             username=current_user.username,
-            user_id=current_user.id
-        )
+            user_id=current_user.id)
         db.session.add(activity)
         db.session.commit()
-        
+
         return jsonify({'message': f'Successfully left {club_name}'})
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error leaving club: {str(e)}')
         return jsonify({'error': 'Failed to leave club'}), 500
+
 
 @app.route('/api/clubs/members/<int:membership_id>/role', methods=['PUT'])
 @login_required
@@ -2768,30 +2770,32 @@ def change_member_role(membership_id):
     """Change a member's role in a club."""
     try:
         membership = ClubMembership.query.get_or_404(membership_id)
-        
+
         # Check if the current user is the club leader
         club = membership.club
         if club.leader_id != current_user.id:
-            return jsonify({'error': 'Only club leaders can change member roles'}), 403
-            
+            return jsonify(
+                {'error': 'Only club leaders can change member roles'}), 403
+
         # Prevent changing own role
         if membership.user_id == current_user.id:
             return jsonify({'error': 'You cannot change your own role'}), 400
-            
+
         data = request.get_json()
         new_role = data.get('role')
-        
+
         if new_role not in ['member', 'co-leader']:
             return jsonify({'error': 'Invalid role'}), 400
-            
+
         membership.role = new_role
         db.session.commit()
-        
+
         return jsonify({'message': f'Role updated to {new_role}'})
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error changing member role: {str(e)}')
         return jsonify({'error': 'Failed to change member role'}), 500
+
 
 @app.route('/api/clubs/members/<int:membership_id>', methods=['DELETE'])
 @login_required
@@ -2799,36 +2803,40 @@ def remove_member(membership_id):
     """Remove a member from a club."""
     try:
         membership = ClubMembership.query.get_or_404(membership_id)
-        
+
         # Check if the current user is the club leader
         club = membership.club
         if club.leader_id != current_user.id:
-            return jsonify({'error': 'Only club leaders can remove members'}), 403
-            
+            return jsonify({'error':
+                            'Only club leaders can remove members'}), 403
+
         # Prevent removing self
         if membership.user_id == current_user.id:
-            return jsonify({'error': 'You cannot remove yourself from the club'}), 400
-            
+            return jsonify(
+                {'error': 'You cannot remove yourself from the club'}), 400
+
         member_name = membership.user.username
-        
+
         # Delete the membership
         db.session.delete(membership)
-        
+
         # Record activity
         activity = UserActivity(
             activity_type="club_member_removal",
-            message=f'{{username}} removed {member_name} from club "{club.name}"',
+            message=
+            f'{{username}} removed {member_name} from club "{club.name}"',
             username=current_user.username,
-            user_id=current_user.id
-        )
+            user_id=current_user.id)
         db.session.add(activity)
         db.session.commit()
-        
-        return jsonify({'message': f'Successfully removed {member_name} from the club'})
+
+        return jsonify(
+            {'message': f'Successfully removed {member_name} from the club'})
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error removing member: {str(e)}')
         return jsonify({'error': 'Failed to remove member'}), 500
+
 
 @app.route('/api/clubs/members/sites', methods=['GET'])
 @login_required
@@ -2839,18 +2847,21 @@ def get_member_sites():
         club = Club.query.filter_by(leader_id=current_user.id).first()
         if not club:
             # Check if they are a co-leader
-            membership = ClubMembership.query.filter_by(user_id=current_user.id, role='co-leader').first()
+            membership = ClubMembership.query.filter_by(
+                user_id=current_user.id, role='co-leader').first()
             if not membership:
-                return jsonify({'error': 'Only club leaders can access member sites'}), 403
+                return jsonify(
+                    {'error':
+                     'Only club leaders can access member sites'}), 403
             club = membership.club
-            
+
         # Get all members of the club
         memberships = ClubMembership.query.filter_by(club_id=club.id).all()
         member_ids = [m.user_id for m in memberships]
-        
+
         # Get all sites from these members
         sites = Site.query.filter(Site.user_id.in_(member_ids)).all()
-        
+
         # Format the result
         result = []
         for site in sites:
@@ -2864,11 +2875,12 @@ def get_member_sites():
                     'username': site.user.username
                 }
             })
-            
+
         return jsonify({'sites': result})
     except Exception as e:
         app.logger.error(f'Error getting member sites: {str(e)}')
         return jsonify({'error': 'Failed to get member sites'}), 500
+
 
 def initialize_database():
     try:
