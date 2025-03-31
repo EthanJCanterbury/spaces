@@ -2663,22 +2663,21 @@ def hackatime_heartbeat():
         heartbeat_url = "https://waka.hackclub.com/api/v1/users/current/heartbeats"
         app.logger.info(f'Sending heartbeat to: {heartbeat_url}')
 
-        # Prepare the data in the format Hackatime expects
-        # Make sure all required fields are present and properly formatted
-        formatted_heartbeat = {
+        # Format the data in the array format expected by the Hackatime API
+        formatted_heartbeat = [{
             "entity": heartbeat_data.get('entity'),
             "type": heartbeat_data.get('type', 'file'),
             "time": heartbeat_data.get('time'),
             "project": heartbeat_data.get('project', 'Hack Club Spaces'),
             "language": heartbeat_data.get('language', 'HTML'),
             "is_write": heartbeat_data.get('is_write', True),
-        }
+        }]
         
         # Optional fields
         if 'lines' in heartbeat_data:
-            formatted_heartbeat['lines'] = heartbeat_data.get('lines')
+            formatted_heartbeat[0]['lines'] = heartbeat_data.get('lines')
         if 'file_size' in heartbeat_data:
-            formatted_heartbeat['lineno'] = heartbeat_data.get('file_size')
+            formatted_heartbeat[0]['file_size'] = heartbeat_data.get('file_size')
         
         # Send heartbeat to Hackatime API
         response = requests.post(
@@ -2705,7 +2704,7 @@ def hackatime_heartbeat():
                 'message': 'Heartbeat recorded successfully',
                 'timestamp': heartbeat_data.get('time'),
                 'api_response': api_response
-            })e}')
+            })
 
         if response.status_code == 201 or response.status_code == 200:
             try:

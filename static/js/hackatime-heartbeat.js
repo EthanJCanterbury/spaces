@@ -302,22 +302,21 @@ if (typeof HackatimeTracker === 'undefined') {
                 // Show 'Sending...' status briefly during the API call
                 this.updateBadge('Sending...', this.isActive ? 'active' : 'idle');
 
-                // Prepare heartbeat data
-                const data = {
+                // Prepare heartbeat data in array format as expected by the API
+                const heartbeatData = [{
                     entity: this.currentEntity,
                     type: 'file',
-                    time: now / 1000, // Convert to seconds
+                    time: Math.floor(now / 1000), // Convert to seconds as integer
                     language: this.currentLanguage,
                     is_write: true,
                     lines: Math.max(1, Math.floor(fileSize / 80)), // Estimate lines based on file size
-                    file_size: fileSize,
                     project: window.location.pathname
-                };
+                }];
 
                 console.log('🕒 Sending heartbeat:', {
-                    entity: data.entity,
-                    language: data.language,
-                    time: data.time
+                    entity: heartbeatData[0].entity,
+                    language: heartbeatData[0].language,
+                    time: heartbeatData[0].time
                 });
 
                 // Send the heartbeat
@@ -326,7 +325,7 @@ if (typeof HackatimeTracker === 'undefined') {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(heartbeatData[0]) // Still send as object for backend compatibility
                 });
 
                 if (response.status !== 200) {
