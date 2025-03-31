@@ -2546,9 +2546,24 @@ def hackatime_heartbeat():
         # Add user ID to the heartbeat data
         user_id = current_user.id
         
+        # Retrieve API key from database directly to ensure freshness
+        with db.engine.connect() as conn:
+            result = conn.execute(
+                db.text("SELECT wakatime_api_key FROM \"user\" WHERE id = :user_id"),
+                {"user_id": current_user.id}
+            )
+            user_row = result.fetchone()
+            if not user_row or not user_row[0]:
+                app.logger.error(f'No API key found for user {current_user.id}')
+                return jsonify({
+                    'success': False, 
+                    'message': 'No Hackatime API key found. Please connect your account first.'
+                })
+            
+            api_key = user_row[0].strip()
+        
         # Encode API key in Base64 for Basic auth
         import base64
-        api_key = current_user.wakatime_api_key.strip()
         
         # Check if API key looks valid (basic validation)
         if len(api_key) < 10:

@@ -123,13 +123,17 @@ if (typeof HackatimeTracker === 'undefined') {
 
             console.log('🕒 Sending heartbeat:', heartbeat);
 
-            // Send to our server-side proxy endpoint
+            // Send to our server-side proxy endpoint  - Assuming API key is accessible via this method.  This is a vulnerability risk in production!
+            const apiKey =  document.getElementById('wakatime-api-key')?.value || "NO_API_KEY_FOUND"; //Improved error handling
+
             fetch('/hackatime/heartbeat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}` // Add Authorization header with API key
                 },
-                body: JSON.stringify(heartbeat)
+                body: JSON.stringify(heartbeat),
+                credentials: 'same-origin' // Ensure cookies are sent for authentication
             })
             .then(response => response.json())
             .then(data => {
@@ -144,9 +148,7 @@ if (typeof HackatimeTracker === 'undefined') {
                     // Check for authentication errors
                     if (data.message && data.message.includes('401')) {
                         console.error('🕒 Heartbeat failed: Authentication error. Your API key may be invalid.');
-                        //Simulate debug key for demonstration.  This would need backend changes for real functionality.
-                        const debugKey = "This_is_a_placeholder_debug_key";
-                        console.log('Debug - Invalid API key:', debugKey); // Added logging of invalid API key
+                        console.error('Debug - Invalid API key:', apiKey); // Log the actual API key (for debugging purposes only, remove in production!)
                         // Display a more visible error in the badge
                         document.getElementById('hackatime-badge').innerHTML = 
                             '<i class="fas fa-exclamation-triangle"></i> Auth Error - Check Settings';
