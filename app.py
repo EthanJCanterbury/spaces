@@ -2526,16 +2526,14 @@ def settings():
 @login_required
 def club_dashboard():
     """Club dashboard for club leaders to manage their clubs."""
+    # Import Club and ClubMembership at the beginning of the function
+    from models import Club, ClubMembership
+    
     # Check if user is a club leader
     club = Club.query.filter_by(leader_id=current_user.id).first()
     if not club:
         flash('You do not have permission to access the club dashboard.', 'error')
         return redirect(url_for('welcome'))
-        
-    # Get the user's club
-    from models import Club, ClubMembership
-    
-    club = Club.query.filter_by(leader_id=current_user.id).first()
     
     if not club:
         flash('You do not have a club. Create one below.', 'info')
