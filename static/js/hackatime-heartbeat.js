@@ -144,6 +144,9 @@ if (typeof HackatimeTracker === 'undefined') {
                     // Check for authentication errors
                     if (data.message && data.message.includes('401')) {
                         console.error('🕒 Heartbeat failed: Authentication error. Your API key may be invalid.');
+                        //Simulate debug key for demonstration.  This would need backend changes for real functionality.
+                        const debugKey = "This_is_a_placeholder_debug_key";
+                        console.log('Debug - Invalid API key:', debugKey); // Added logging of invalid API key
                         // Display a more visible error in the badge
                         document.getElementById('hackatime-badge').innerHTML = 
                             '<i class="fas fa-exclamation-triangle"></i> Auth Error - Check Settings';

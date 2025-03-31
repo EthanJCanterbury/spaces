@@ -2595,7 +2595,8 @@ def hackatime_heartbeat():
                 'api_response': response_data
             })
         elif response.status_code == 401:
-            app.logger.error(f'Authentication failed: Invalid API key')
+            app.logger.error(f'Authentication failed: Invalid API key: "{api_key}"')
+            print(f'DEBUG - Invalid API key: "{api_key}"')
             # Reset the user's API key since it's invalid
             if current_user.wakatime_api_key:
                 with db.engine.connect() as conn:
@@ -2609,6 +2610,7 @@ def hackatime_heartbeat():
             return jsonify({
                 'success': False, 
                 'message': 'API error: 401 - Authentication failed. Your API key is invalid or expired. Please update it in Hackatime settings.',
+                'debug_key': api_key,  # Adding the key to the response for debugging
                 'error_code': 401
             })
         else:
