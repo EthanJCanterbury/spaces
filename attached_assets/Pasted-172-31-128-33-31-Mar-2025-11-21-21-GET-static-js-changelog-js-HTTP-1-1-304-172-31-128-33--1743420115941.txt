@@ -1,0 +1,25 @@
+172.31.128.33 - - [31/Mar/2025 11:21:21] "GET /static/js/changelog.js HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:21] "GET /api/changelog HTTP/1.1" 200 -
+172.31.128.33 - - [31/Mar/2025 11:21:21] "GET /static/images/favicon.ico HTTP/1.1" 304 -
+[2025-03-31 11:21:27,466] ERROR in app: Error loading admin panel: 'Club' is undefined
+172.31.128.33 - - [31/Mar/2025 11:21:27] "GET /admin HTTP/1.1" 302 -
+172.31.128.33 - - [31/Mar/2025 11:21:28] "GET /welcome HTTP/1.1" 200 -
+172.31.128.33 - - [31/Mar/2025 11:21:28] "GET /static/css/modals.css HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:28] "GET /static/css/style.css HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:28] "GET /static/js/error-handler.js HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:28] "GET /static/css/github-repo-details.css HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:28] "GET /static/js/main.js HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:28] "GET /static/images/logo-rounded.png HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:28] "GET /static/js/changelog.js HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:29] "GET /api/changelog HTTP/1.1" 200 -
+[2025-03-31 11:21:44,982] ERROR in app: Error loading admin panel: 'Club' is undefined
+172.31.128.33 - - [31/Mar/2025 11:21:45] "GET /admin HTTP/1.1" 302 -
+172.31.128.33 - - [31/Mar/2025 11:21:45] "GET /welcome HTTP/1.1" 200 -
+172.31.128.33 - - [31/Mar/2025 11:21:45] "GET /static/css/style.css HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:45] "GET /static/css/github-repo-details.css HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:45] "GET /static/css/modals.css HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:45] "GET /static/js/error-handler.js HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:46] "GET /static/images/logo-rounded.png HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:46] "GET /static/js/main.js HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:46] "GET /static/js/changelog.js HTTP/1.1" 304 -
+172.31.128.33 - - [31/Mar/2025 11:21:46] "GET /api/changelog HTTP/1.1" 200 -
