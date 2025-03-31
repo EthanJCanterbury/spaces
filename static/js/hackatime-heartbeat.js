@@ -123,8 +123,8 @@ if (typeof HackatimeTracker === 'undefined') {
 
             console.log('🕒 Sending heartbeat:', heartbeat);
 
-            // Send to server - Updated fetch URL
-            fetch(this.apiUrl, { // Use the apiUrl from the object.
+            // Send to our server-side proxy endpoint
+            fetch('/hackatime/heartbeat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
