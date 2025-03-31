@@ -8,9 +8,9 @@ if (typeof HackatimeTracker === 'undefined') {
     const HackatimeTracker = {
         lastActivity: null,
         lastHeartbeat: null,
-        idleTimeout: 5 * 60 * 1000, // 5 minutes in milliseconds
-        heartbeatInterval: 2 * 60 * 1000, // 2 minutes in milliseconds
-        totalTime: 0, // Total time in seconds
+        idleTimeout: 5 * 60 * 1000, 
+        heartbeatInterval: 2 * 60 * 1000, 
+        totalTime: 0, 
         heartbeatQueue: [],
         isProcessing: false,
         apiUrl: 'https://hackatime.hackclub.com/api/hackatime/v1',
@@ -20,20 +20,15 @@ if (typeof HackatimeTracker === 'undefined') {
             entity: null,
         },
 
-        /**
-         * Initialize the tracker
-         */
+   
         init: function() {
             console.log('🕒 Initializing Hackatime tracker');
 
-            // Get site ID and type from hidden inputs
             const siteId = document.getElementById('site-id')?.value;
             const siteType = document.getElementById('site-type')?.value;
 
-            // Set project info
             this.projectInfo.language = siteType === 'web' ? 'HTML' : 'Python';
 
-            // Set entity based on current file being edited
             const activeTab = document.querySelector('.file-tab.active');
             if (activeTab) {
                 this.projectInfo.entity = activeTab.dataset.filename;
@@ -41,44 +36,33 @@ if (typeof HackatimeTracker === 'undefined') {
                 this.projectInfo.entity = siteType === 'web' ? 'index.html' : 'main.py';
             }
 
-            // Update badge
             this.updateBadge("Initializing...");
 
-            // Start heartbeat timer
             this.startHeartbeatTimer();
 
-            // Record initial activity
             this.recordActivity();
 
-            // Send initial heartbeat
             setTimeout(() => this.sendHeartbeat(), 2000);
 
             console.log('🕒 Hackatime tracker initialized with:', this.projectInfo);
         },
 
-        /**
-         * Start the heartbeat timer
-         */
+  
         startHeartbeatTimer: function() {
             console.log('🕒 Starting heartbeat timer');
             setInterval(() => {
-                // Only send a heartbeat if there has been activity since the last one
                 if (this.lastActivity && (!this.lastHeartbeat || this.lastActivity > this.lastHeartbeat)) {
                     this.sendHeartbeat();
                 }
             }, this.heartbeatInterval);
         },
 
-        /**
-         * Record activity
-         */
+ 
         recordActivity: function() {
             this.lastActivity = Date.now();
         },
 
-        /**
-         * Update the badge with current time
-         */
+     
         updateBadge: function(text) {
             const badge = document.getElementById('hackatime-badge');
             if (badge) {
@@ -99,27 +83,21 @@ if (typeof HackatimeTracker === 'undefined') {
             }
         },
 
-        /**
-         * Send a heartbeat to the server
-         */
+   
         sendHeartbeat: function() {
-            // Check if there's been any activity
             if (!this.lastActivity) {
                 console.log('🕒 No activity to report');
                 return;
             }
 
-            // Update API endpoint URL
             this.apiUrl = 'https://hackatime.hackclub.com/api/hackatime/v1';
 
-            // If we've been idle for too long, don't send a heartbeat
             const now = Date.now();
             if (now - this.lastActivity > this.idleTimeout) {
                 console.log('🕒 User has been idle for too long, skipping heartbeat');
                 return;
             }
 
-            // Get the current file
             let entity = this.projectInfo.entity;
             const activeTab = document.querySelector('.file-tab.active');
             if (activeTab) {
