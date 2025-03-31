@@ -286,10 +286,15 @@
         </div>
         <div class="button-group">
             {% if sites|length < max_sites %}
-            <button class="btn-primary" onclick="openNewSpaceModal()">
+            <button class="btn-primary" onclick="openNewSpaceModal()" style="transition: background 0.2s ease;">
                 <i class="fas fa-plus"></i>
                 New Space
             </button>
+<style>
+    .btn-primary:hover {
+        background: #ff6b6b !important; /* Salmon pink-ish color to match site theme */
+    }
+</style>
             {% else %}
             <button class="btn-primary" disabled title="Maximum limit of {{ max_sites }} Spaces reached">
                 <i class="fas fa-plus"></i>
@@ -331,7 +336,12 @@
                     </div>
                     <div class="site-info">
                         <div class="site-meta">
-                            <h3>{{ site.name }}</h3>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h3>{{ site.name }}</h3>
+                                <button class="btn-icon" onclick="openRenameModal('{{ site.id }}', '{{ site.name }}')" title="Rename Site" style="padding: 4px; font-size: 12px;">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
                             <span class="site-date">Last updated {{ site.updated_at.strftime('%b %d, %Y') }}</span>
                         </div>
                         <div class="site-actions">
@@ -350,9 +360,7 @@
                             <button class="btn-icon" onclick="copyPublicLink('{{ site.slug }}')" title="Copy Public Link">
                                 <i class="fas fa-link"></i>
                             </button>
-                            <button class="btn-icon" onclick="openRenameModal('{{ site.id }}', '{{ site.name }}')" title="Rename Site">
-                                <i class="fas fa-edit"></i>
-                            </button>
+                            
                             <button class="btn-icon delete-btn" onclick="openDeleteModal('{{ site.id }}')" title="Delete Space">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
@@ -533,7 +541,6 @@ let currentSiteId = null;
 function openNewSpaceModal() {
     const modal = document.getElementById('newSpaceModal');
     modal.style.display = 'flex';
-    // Force a reflow before adding the show class for transition to work
     modal.offsetHeight;
     modal.classList.add('show');
     document.getElementById('spaceName').focus();
