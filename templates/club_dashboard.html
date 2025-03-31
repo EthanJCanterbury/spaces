@@ -798,6 +798,27 @@
 
 .member-spaces-section h3::before {
     content: '';
+
+// Debug helper for modals
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all modals properly
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        // Reset any stray inline styles
+        modal.style.display = 'none';
+        modal.style.opacity = '0';
+        modal.style.visibility = 'hidden';
+    });
+
+    // Log all button clicks to help debug modal issues
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            console.log('Button clicked:', this.textContent.trim(), this.onclick);
+        });
+    });
+});
+
     display: block;
     width: 8px;
     height: 8px;
@@ -892,11 +913,17 @@
     justify-content: center;
     padding: 1rem;
     animation: fadeIn 0.2s ease;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
 }
 
 /* Fix for invisible modals when displaying them */
-.modal[style*="display: flex"] {
+.modal[style*="display: flex"],
+.modal.visible {
     display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 @keyframes fadeIn {
@@ -918,12 +945,6 @@
 @keyframes slideUp {
     from { transform: translateY(30px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
-}
-
-/* Additional class for ensuring modal visibility */
-.modal.visible {
-    display: flex !important;
-    opacity: 1;
 }
 
 .modal-header {
@@ -1378,15 +1399,26 @@ function generateJoinCode() {
 // Modal functions with improved visibility handling
 function openCreateClubModal() {
     const modal = document.getElementById('createClubModal');
+    if (!modal) return;
+    
     modal.style.display = 'flex';
-    // Force repaint to ensure visibility
-    setTimeout(() => { modal.classList.add('visible'); }, 10);
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.classList.add('visible');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
 }
 
 function closeCreateClubModal() {
     const modal = document.getElementById('createClubModal');
-    modal.style.display = 'none';
-    modal.classList.remove('visible');
+    if (!modal) return;
+    
+    modal.style.opacity = '0';
+    modal.style.visibility = 'hidden';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('visible');
+        document.body.style.overflow = '';
+    }, 300);
     document.getElementById('createClubForm').reset();
 }
 
@@ -1405,9 +1437,13 @@ function openEditClubModal() {
             document.getElementById('editClubDescription').value = data.description || '';
             
             const modal = document.getElementById('editClubModal');
+            if (!modal) return;
+            
             modal.style.display = 'flex';
-            // Force repaint to ensure visibility
-            setTimeout(() => { modal.classList.add('visible'); }, 10);
+            modal.style.opacity = '1';
+            modal.style.visibility = 'visible';
+            modal.classList.add('visible');
+            document.body.style.overflow = 'hidden';
         })
         .catch(error => {
             showToast('error', 'Failed to fetch club details');
@@ -1417,22 +1453,40 @@ function openEditClubModal() {
 
 function closeEditClubModal() {
     const modal = document.getElementById('editClubModal');
-    modal.style.display = 'none';
-    modal.classList.remove('visible');
+    if (!modal) return;
+    
+    modal.style.opacity = '0';
+    modal.style.visibility = 'hidden';
+    setTimeout(() => {
+        modal.style.display = 'none'; 
+        modal.classList.remove('visible');
+        document.body.style.overflow = '';
+    }, 300);
     document.getElementById('editClubForm').reset();
 }
 
 function openAddMemberModal() {
     const modal = document.getElementById('addMemberModal');
+    if (!modal) return;
+    
     modal.style.display = 'flex';
-    // Force repaint to ensure visibility
-    setTimeout(() => { modal.classList.add('visible'); }, 10);
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.classList.add('visible');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeAddMemberModal() {
     const modal = document.getElementById('addMemberModal');
-    modal.style.display = 'none';
-    modal.classList.remove('visible');
+    if (!modal) return;
+    
+    modal.style.opacity = '0';
+    modal.style.visibility = 'hidden';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('visible'); 
+        document.body.style.overflow = '';
+    }, 300);
 }
 
 function openChangeRoleModal(membershipId, username, currentRole) {
@@ -1447,15 +1501,26 @@ function openChangeRoleModal(membershipId, username, currentRole) {
     }
 
     const modal = document.getElementById('changeRoleModal');
+    if (!modal) return;
+    
     modal.style.display = 'flex';
-    // Force repaint to ensure visibility
-    setTimeout(() => { modal.classList.add('visible'); }, 10);
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.classList.add('visible');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeChangeRoleModal() {
     const modal = document.getElementById('changeRoleModal');
-    modal.style.display = 'none';
-    modal.classList.remove('visible');
+    if (!modal) return;
+    
+    modal.style.opacity = '0';
+    modal.style.visibility = 'hidden';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('visible');
+        document.body.style.overflow = '';
+    }, 300);
 }
 
 function openRemoveMemberModal(membershipId, username) {
@@ -1463,22 +1528,37 @@ function openRemoveMemberModal(membershipId, username) {
     document.getElementById('removeUsername').textContent = username;
     
     const modal = document.getElementById('removeMemberModal');
+    if (!modal) return;
+    
     modal.style.display = 'flex';
-    // Force repaint to ensure visibility
-    setTimeout(() => { modal.classList.add('visible'); }, 10);
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.classList.add('visible');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeRemoveMemberModal() {
     const modal = document.getElementById('removeMemberModal');
-    modal.style.display = 'none';
-    modal.classList.remove('visible');
+    if (!modal) return;
+    
+    modal.style.opacity = '0';
+    modal.style.visibility = 'hidden';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('visible');
+        document.body.style.overflow = '';
+    }, 300);
 }
 
 function openDeleteClubModal() {
     const modal = document.getElementById('deleteClubModal');
+    if (!modal) return;
+    
     modal.style.display = 'flex';
-    // Force repaint to ensure visibility
-    setTimeout(() => { modal.classList.add('visible'); }, 10);
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.classList.add('visible');
+    document.body.style.overflow = 'hidden';
     
     document.getElementById('deleteConfirmation').value = '';
     document.getElementById('confirmDeleteBtn').disabled = true;
@@ -1486,8 +1566,15 @@ function openDeleteClubModal() {
 
 function closeDeleteClubModal() {
     const modal = document.getElementById('deleteClubModal');
-    modal.style.display = 'none';
-    modal.classList.remove('visible');
+    if (!modal) return;
+    
+    modal.style.opacity = '0';
+    modal.style.visibility = 'hidden';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('visible');
+        document.body.style.overflow = '';
+    }, 300);
 }
 
 // Create club functionality
