@@ -845,14 +845,7 @@ button.btn-secondary:hover {
   color: #666;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
+/* spin animation moved to unified.css */
 
 @keyframes slide-up {
   from {
