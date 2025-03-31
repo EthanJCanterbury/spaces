@@ -40,11 +40,14 @@
             <form id="hackatime-form" method="post" action="{{ url_for('hackatime_connect') }}" class="api-key-form">
                 <div class="form-group">
                     <label for="api_key">Your Hackatime API Key</label>
-                    <input type="password" id="api_key" name="api_key" placeholder="Paste your API key here" required>
+                    <input type="password" id="api_key" name="api_key" placeholder="Paste your API key here" required minlength="20">
                     <button type="button" id="toggle-visibility" class="toggle-btn">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <div id="api-key-help" class="mt-2 p-3 border rounded bg-light" style="display:none;">
+                    <div id="api-key-feedback" class="mt-2 text-muted small">
+                        <span id="api-key-length">0</span> characters (should be at least 36)
+                    </div>
+                    <div id="api-key-help" class="mt-2 p-3 border rounded bg-light">
                         <h5>Troubleshooting API Key Issues</h5>
                         <ul>
                             <li>Make sure you copied the full API key without any extra spaces</li>
@@ -123,6 +126,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const form = document.getElementById('hackatime-form');
+    // Update API key length counter
+    if (apiKeyInput) {
+        apiKeyInput.addEventListener('input', function() {
+            const keyLength = apiKeyInput.value.trim().length;
+            document.getElementById('api-key-length').textContent = keyLength;
+            
+            // Visual feedback
+            const feedbackEl = document.getElementById('api-key-feedback');
+            if (keyLength < 20) {
+                feedbackEl.className = 'mt-2 text-danger small';
+            } else if (keyLength < 36) {
+                feedbackEl.className = 'mt-2 text-warning small';
+            } else {
+                feedbackEl.className = 'mt-2 text-success small';
+            }
+        });
+    }
+
     if (form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -130,6 +151,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const apiKey = apiKeyInput.value.trim();
             if (!apiKey) {
                 alert('Please enter your Hackatime API key.');
+                return;
+            }
+            
+            if (apiKey.length < 20) {
+                alert('This API key seems too short. API keys are typically at least 36 characters long. Please check your key and try again.');
                 return;
             }
 

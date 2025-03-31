@@ -1,8 +1,40 @@
 /**
  * Hackatime Heartbeat Tracker
  * Tracks coding activity and sends heartbeats to the Hackatime API
- * API Endpoint: https://hackatime.hackclub.com/api/hackatime/v1
+ * API Endpoint: https://waka.hackclub.com/api/v1
  */
+
+// Verify API connection on load
+const checkApiConnection = async () => {
+    try {
+        const response = await fetch('/hackatime/heartbeat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                entity: 'connection_test',
+                type: 'file',
+                time: Date.now() / 1000
+            })
+        });
+        
+        const data = await response.json();
+        if (!data.success) {
+            console.warn('🕒 Hackatime connection issue:', data.message);
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('🕒 Error checking Hackatime connection:', error);
+        return false;
+    }
+};
+
+// Check connection on page load
+document.addEventListener('DOMContentLoaded', () => {
+    checkApiConnection();
+});
 
 if (typeof HackatimeTracker === 'undefined') {
     const HackatimeTracker = {

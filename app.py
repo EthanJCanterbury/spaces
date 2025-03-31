@@ -2527,10 +2527,6 @@ def hackatime_disconnect():
 @login_required
 def hackatime_heartbeat():
     """Send heartbeat to Hackatime API"""
-    if not current_user.wakatime_api_key:
-        app.logger.warning(f'User {current_user.id} attempted to send heartbeat without API key')
-        return jsonify({'success': False, 'message': 'No Hackatime API key found'})
-    
     try:
         # Get heartbeat data from request
         heartbeat_data = request.json
@@ -2546,7 +2542,7 @@ def hackatime_heartbeat():
         # Add user ID to the heartbeat data
         user_id = current_user.id
         
-        # Retrieve API key from database directly to ensure freshness
+        # Always retrieve API key from database directly to ensure freshness
         with db.engine.connect() as conn:
             result = conn.execute(
                 db.text("SELECT wakatime_api_key FROM \"user\" WHERE id = :user_id"),
@@ -2560,7 +2556,14 @@ def hackatime_heartbeat():
                     'message': 'No Hackatime API key found. Please connect your account first.'
                 })
             
-            api_key = user_row[0].strip()
+            api_key = user_row[0].strip() if user_row[0] else "NO_API_KEY_FOUND"
+            
+            if api_key == "NO_API_KEY_FOUND":
+                app.logger.error(f'Invalid API key placeholder for user {current_user.id}')
+                return jsonify({
+                    'success': False, 
+                    'message': 'No valid API key found. Please reconnect your Hackatime account.'
+                })
         
         # Encode API key in Base64 for Basic auth
         import base64
