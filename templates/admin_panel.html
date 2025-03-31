@@ -220,11 +220,9 @@
                                 <span class="status-badge {{ 'suspended' if user.is_suspended else 'active' }}">
                                     {{ 'Suspended' if user.is_suspended else 'Active' }}
                                 </span>
-                                {% if user.is_club_leader %}
-                                <span class="status-badge club-leader">
+                                <span class="status-badge club-leader" id="club-leader-badge-{{ user.id }}" style="display: {% if Club.query.filter_by(leader_id=user.id).first() %}inline-block{% else %}none{% endif %}">
                                     Club Leader
                                 </span>
-                                {% endif %}
                             </td>
                             <td class="actions-cell">
                                 <div class="action-dropdown">
