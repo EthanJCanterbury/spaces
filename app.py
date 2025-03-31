@@ -3143,9 +3143,9 @@ def check_hackatime_connection():
     
     return jsonify({"success": True})
 
-@app.route('/hackatime/heartbeat', methods=['POST'])
+@app.route('/hackatime/validate-key', methods=['POST'])
 @login_required
-def hackatime_check_connection():
+def hackatime_validate_key():
     """Check if the Hackatime API key is valid"""
     try:
         # Get API key from database to ensure it's fresh
