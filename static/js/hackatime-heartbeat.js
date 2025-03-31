@@ -1,6 +1,7 @@
 /**
  * Hackatime Heartbeat Tracker
  * Tracks coding activity and sends heartbeats to the Hackatime API
+ * API Endpoint: https://hackatime.hackclub.com/api/hackatime/v1
  */
 
 const HackatimeTracker = {
@@ -98,6 +99,10 @@ const HackatimeTracker = {
         if (!this.lastActivity) {
             console.log('🕒 No activity to report');
             return;
+        }
+        
+        // Update API endpoint to use the correct URL
+        const apiUrl = 'https://hackatime.hackclub.com/api/hackatime/v1';turn;
         }
 
         // If we've been idle for too long, don't send a heartbeat
