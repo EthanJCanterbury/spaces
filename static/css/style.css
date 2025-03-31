@@ -1052,8 +1052,7 @@ footer {
     margin-bottom: 1rem;
 }
 
-.modal {
-    display: none;
+.modal {    display: none;
     position: fixed;
     opacity: 0;
     transition: opacity 0.2s ease;
@@ -3387,7 +3386,7 @@ footer {
 }
 
 .repo-actions button:hover {
-    background: #c82333;
+    backgroundcolor: #c82333;
 }
 
 .repo-info i {

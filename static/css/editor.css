@@ -1598,7 +1598,7 @@ iframe {
   pointer-events: auto;
 }
 
-/* Toast animations removed - using unified styles from style.css */
+/* Using unified toast styles from unified.css */
 /* File Tabs */
 .file-tabs {
     display: flex;
