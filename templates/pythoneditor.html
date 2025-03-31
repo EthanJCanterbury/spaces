@@ -265,8 +265,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🕒 Python editor loaded, checking for Hackatime integration');
 
-    // Initialize Hackatime tracker
-    HackatimeTracker.init();
+    // Make sure HackatimeTracker exists before attempting to use it
+    if (typeof HackatimeTracker !== 'undefined') {
+        // Initialize Hackatime tracker
+        HackatimeTracker.init();
 
     // Add event listeners to track activity
     let pythonEditor = document.getElementById('pythonEditor');
@@ -306,6 +308,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 clearInterval(checkEditor);
             }
         }, 500);
+    }
+    } else {
+        console.log('🕒 HackatimeTracker not found, skipping time tracking initialization');
     }
 
     // Log Hackatime status

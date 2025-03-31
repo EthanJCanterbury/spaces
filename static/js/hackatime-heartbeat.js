@@ -1,14 +1,16 @@
 
-const HackatimeTracker = {
-    lastActivity: 0,
-    isActive: false,
-    activityThreshold: 60000, // 1 minute
-    heartbeatInterval: 120000, // 2 minutes
-    currentEntity: 'index.html', // Default filename
-    currentLanguage: 'HTML', // Default language
-    intervalId: null,
-    apiKeyExists: false,
-    userId: null,
+// Prevent redeclaration
+if (typeof HackatimeTracker === 'undefined') {
+    const HackatimeTracker = {
+        lastActivity: 0,
+        isActive: false,
+        activityThreshold: 60000, // 1 minute
+        heartbeatInterval: 120000, // 2 minutes
+        currentEntity: 'index.html', // Default filename
+        currentLanguage: 'HTML', // Default language
+        intervalId: null,
+        apiKeyExists: false,
+        userId: null,
 
     // Check if API connection is valid
     async checkApiConnection() {
@@ -238,6 +240,7 @@ const HackatimeTracker = {
         }
     }
 };
+} // Close the if (typeof HackatimeTracker === 'undefined') block
 
 // Add event listener to track tab changes - this helps detect file changes
 document.addEventListener('click', function(event) {
