@@ -218,10 +218,10 @@ def report_error():
 def add_security_headers(response):
     # Check if this is a preview request
     is_preview = request.args.get('preview') == 'true'
-
+    
     # Base CSP policy
     csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' wss: ws:;"
-
+    
     # Add frame-ancestors directive
     if is_preview:
         # Allow embedding from any origin for preview requests
@@ -229,14 +229,14 @@ def add_security_headers(response):
     else:
         # Only allow embedding from self for regular requests
         csp += " frame-ancestors 'self';"
-
+    
     response.headers['Content-Security-Policy'] = csp
     response.headers['X-Content-Type-Options'] = 'nosniff'
-
+    
     # Set Access-Control-Allow-Origin for preview requests
     if is_preview:
         response.headers['Access-Control-Allow-Origin'] = '*'
-
+    
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
@@ -308,7 +308,7 @@ def rate_limit(limit_type='default'):
 
         return decorated_function
 
-    return decorated_function
+    return decorator
 
 
 @app.route('/api/orphy/chat', methods=['POST'])
@@ -570,10 +570,10 @@ def welcome():
     sites = Site.query.filter_by(user_id=current_user.id).order_by(
         Site.updated_at.desc()).all()
     max_sites = get_max_sites_per_user()
-
+    
     # Get shared spaces for the user
     shared_spaces = db.session.query(ClubMembership).filter_by(user_id=current_user.id).all()
-
+    
     return render_template('welcome.html', 
                           sites=sites, 
                           max_sites=max_sites, 
@@ -856,7 +856,7 @@ def create_site():
 
         # Ensure name is a string
         name = str(name)
-
+        
         try:
             slug = slugify(name)
         except Exception as e:
@@ -984,7 +984,7 @@ def update_site(site_id):
 
     try:
         db.session.commit()
-
+        
         # Log activity
         activity_message = f'Updated {"Python" if python_content else "Web"} site "{site.name}"'
         activity = UserActivity(activity_type='site_update',
@@ -994,7 +994,7 @@ def update_site(site_id):
                                 site_id=site.id)
         db.session.add(activity)
         db.session.commit()
-
+        
         return jsonify({'message': 'Site updated successfully'})
     except Exception as e:
         db.session.rollback()
@@ -1061,15 +1061,15 @@ def create_python_site():
 def main():
     """Main function that runs when this script is executed."""
     print("Hello, World!")
-
+    
     # Try adding your own code below:
     name = "Python Coder"
     print(f"Welcome, {name}!")
-
+    
     # You can use loops:
     for i in range(3):
         print(f"Count: {i}")
-
+    
     # And conditions:
     if name == "Python Coder":
         print("You're a Python coder!")
@@ -1089,11 +1089,11 @@ if __name__ == "__main__":
         db.session.commit()
 
         activity = UserActivity(activity_type="site_creation",
-                                message='New Python space "{}" created by {}'.format(
-                                    name, current_user.username),
-                                username=current_user.username,
-                                user_id=current_user.id,
-                                site_id=site.id)
+                            message='New Python space "{}" created by {}'.format(
+                                name, current_user.username),
+                            username=current_user.username,
+                            user_id=current_user.id,
+                            site_id=site.id)
         db.session.add(activity)
         db.session.commit()
 
@@ -1272,7 +1272,7 @@ def admin_panel():
             Site.created_at, Site.updated_at, Site.user_id,
             User.username
         ).join(User).limit(50).all()
-
+        
         # Get version from changelog
         version = '1.7.7'
         try:
@@ -1416,7 +1416,7 @@ def edit_user(user_id):
         db.session.rollback()
         app.logger.error(f'Error updating user: {str(e)}')
         return jsonify({'message': 'Failed to update user details'}), 500
-
+        
 @app.route('/api/admin/users/<int:user_id>/club-leader', methods=['POST'])
 @login_required
 @admin_required
@@ -1424,19 +1424,20 @@ def toggle_club_leader(user_id):
     """Toggle a user's club leader status."""
     if user_id == current_user.id:
         return jsonify({'message': 'Cannot change your own club leader status'}), 400
-
+        
     user = User.query.get_or_404(user_id)
     data = request.get_json()
     make_leader = data.get('is_club_leader', False)
-
+    
     try:
         # Check if user already has a club
         existing_club = Club.query.filter_by(leader_id=user.id).first()
-
+        
         if make_leader and not existing_club:
-            # Don't automatically set admin status for club leaders
-            db.session.commit()  # Commit any previous changes first
-
+            # Always set admin status for club leaders
+            user.is_admin = True
+            db.session.commit()  # Commit the admin status change first
+            
             # Create a default club for the user
             club = Club(
                 name=f"{user.username}'s Club",
@@ -1445,7 +1446,7 @@ def toggle_club_leader(user_id):
             club.generate_join_code()
             db.session.add(club)
             db.session.commit()  # Commit to get the club ID
-
+            
             # Now create membership with valid club_id
             membership = ClubMembership(
                 user_id=user.id,
@@ -1453,7 +1454,7 @@ def toggle_club_leader(user_id):
                 role='co-leader'
             )
             db.session.add(membership)
-
+            
             # Record activity
             activity = UserActivity(
                 activity_type="admin_action",
@@ -1462,21 +1463,21 @@ def toggle_club_leader(user_id):
                 user_id=current_user.id
             )
             db.session.add(activity)
-
+            
             db.session.commit()
             app.logger.info(f"Successfully made {user.username} a club leader")
             return jsonify({'message': f"Made {user.username} a club leader", 'status': 'success'})
-
+            
         elif not make_leader and existing_club:
             # Remove all club memberships
             ClubMembership.query.filter_by(club_id=existing_club.id).delete()
-
+            
             # Delete the club
             db.session.delete(existing_club)
-
+            
             # Remove admin status if it was only for club leader
             user.is_admin = False
-
+            
             # Record activity
             activity = UserActivity(
                 activity_type="admin_action",
@@ -1485,12 +1486,12 @@ def toggle_club_leader(user_id):
                 user_id=current_user.id
             )
             db.session.add(activity)
-
+            
             db.session.commit()
             return jsonify({'message': f"Removed {user.username} as a club leader", 'status': 'success'})
-
+            
         return jsonify({'message': 'No changes made', 'status': 'success'})
-
+        
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error toggling club leader status: {str(e)}')
@@ -1779,7 +1780,7 @@ def search_users():
         search_term = request.args.get('term', '')
         if not search_term or len(search_term) < 2:
             return jsonify({'error': 'Search term must be at least 2 characters'}), 400
-
+            
         users = User.query.with_entities(
             User.id, User.username, User.email, User.created_at, 
             User.is_suspended, User.is_admin
@@ -1789,12 +1790,12 @@ def search_users():
                 User.email.ilike(f'%{search_term}%')
             )
         ).limit(50).all()
-
+        
         result = []
         for user in users:
             # Check explicitly if the user is a club leader
             is_club_leader = Club.query.filter_by(leader_id=user.id).first() is not None
-
+            
             result.append({
                 'id': user.id,
                 'username': user.username,
@@ -1804,7 +1805,7 @@ def search_users():
                 'is_admin': user.is_admin,
                 'is_club_leader': is_club_leader
             })
-
+            
         return jsonify({'users': result})
     except Exception as e:
         app.logger.error(f'Error searching users: {str(e)}')
@@ -1816,9 +1817,9 @@ def search_users():
 def search_sites():
     try:
         search_term = request.args.get('term', '')
-        if not search_term or len(search_term)< 2:
+        if not search_term or len(search_term) < 2:
             return jsonify({'error': 'Search term must be at least 2 characters'}), 400
-
+            
         sites = db.session.query(
             Site.id, Site.name, Site.slug, Site.site_type, 
             Site.created_at, Site.updated_at, Site.user_id,
@@ -1830,7 +1831,7 @@ def search_sites():
                 User.username.ilike(f'%{search_term}%')
             )
         ).limit(50).all()
-
+        
         result = []
         for site in sites:
             result.append({
@@ -1843,12 +1844,12 @@ def search_sites():
                 'user_id': site.user_id,
                 'username': site.username
             })
-
+            
         return jsonify({'sites': result})
     except Exception as e:
         app.logger.error(f'Error searching sites: {str(e)}')
         return jsonify({'error': 'Failed to search sites'}), 500
-
+        
 @app.route('/api/admin/stats/counts')
 @login_required
 @admin_required
@@ -1857,7 +1858,7 @@ def get_total_counts():
     try:
         total_users = User.query.count()
         total_sites = Site.query.count()
-
+        
         return jsonify({
             'totalUsers': total_users,
             'totalSites': total_sites
@@ -2107,9 +2108,9 @@ def get_admin_users_list():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         search = request.args.get('search', '')
-
+        
         query = User.query
-
+        
         if search:
             query = query.filter(
                 db.or_(
@@ -2117,15 +2118,15 @@ def get_admin_users_list():
                     User.email.ilike(f'%{search}%')
                 )
             )
-
+            
         total = query.count()
         users = query.order_by(User.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
-
+        
         users_list = []
         for user in users.items:
             # Check explicitly if the user is a club leader
             is_club_leader = Club.query.filter_by(leader_id=user.id).first() is not None
-
+            
             users_list.append({
                 'id': user.id,
                 'username': user.username,
@@ -2136,7 +2137,7 @@ def get_admin_users_list():
                 'is_club_leader': is_club_leader,
                 'sites_count': Site.query.filter_by(user_id=user.id).count()
             })
-
+            
         return jsonify({
             'users': users_list,
             'total': total,
@@ -2155,15 +2156,15 @@ def get_admin_sites_list():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         search = request.args.get('search', '')
-
+        
         query = Site.query
-
+        
         if search:
             query = query.filter(Site.name.ilike(f'%{search}%'))
-
+            
         total = query.count()
         sites = query.order_by(Site.updated_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
-
+        
         sites_list = []
         for site in sites.items:
             user = User.query.get(site.user_id)
@@ -2179,7 +2180,7 @@ def get_admin_sites_list():
                     'username': user.username if user else 'Unknown'
                 }
             })
-
+            
         return jsonify({
             'sites': sites_list,
             'total': total,
@@ -2268,12 +2269,12 @@ def get_site_pages(site_id):
 def get_site_files(site_id):
     try:
         site = Site.query.get_or_404(site_id)
-
+        
         if site.user_id != current_user.id and not current_user.is_admin:
             return jsonify({'error': 'Unauthorized'}), 403
-
+            
         files = []
-
+        
         if site.site_type == 'python':
             files.append({
                 'filename': 'main.py',
@@ -2284,34 +2285,34 @@ def get_site_files(site_id):
                 result = conn.execute(
                     db.text("SELECT filename, file_type FROM site_page WHERE site_id = :site_id"),
                     {"site_id": site_id})
-
+                
                 for row in result:
                     files.append({
                         'filename': row[0],
                         'file_type': row[1]
                     })
-
+                    
             # Check if we have index.html
             if not any(f['filename'] == 'index.html' for f in files):
                 files.append({
                     'filename': 'index.html',
                     'file_type': 'html'
                 })
-
+                
             # Check if we have styles.css
             if not any(f['filename'] == 'styles.css' for f in files):
                 files.append({
                     'filename': 'styles.css',
                     'file_type': 'css'
                 })
-
+                
             # Check if we have script.js
             if not any(f['filename'] == 'script.js' for f in files):
                 files.append({
                     'filename': 'script.js',
                     'file_type': 'js'
                 })
-
+        
         return jsonify({'success': True, 'files': files})
     except Exception as e:
         print(f'Error getting site files: {str(e)}')
@@ -2534,20 +2535,20 @@ def club_dashboard():
     if not club:
         flash('You do not have permission to access the club dashboard.', 'error')
         return redirect(url_for('welcome'))
-
+        
     # Get the user's club
     from models import Club, ClubMembership
-
+    
     club = Club.query.filter_by(leader_id=current_user.id).first()
-
+    
     if not club:
         flash('You do not have a club. Create one below.', 'info')
-
+        
     # Get all memberships for the club if it exists
     memberships = []
     if club:
         memberships = ClubMembership.query.filter_by(club_id=club.id).all()
-
+        
     return render_template('club_dashboard.html', club=club, memberships=memberships)
 
 # Club API routes
@@ -2557,15 +2558,15 @@ def create_club():
     """Create a new club with the current user as leader."""
     try:
         data = request.get_json()
-
+        
         # Validate required fields
         if not data.get('name'):
             return jsonify({'error': 'Club name is required'}), 400
-
+            
         # Check if user already has a club
         if Club.query.filter_by(leader_id=current_user.id).first():
             return jsonify({'error': 'You already have a club'}), 400
-
+            
         # Create new club
         club = Club(
             name=data.get('name'),
@@ -2573,12 +2574,12 @@ def create_club():
             location=data.get('location', ''),
             leader_id=current_user.id
         )
-
+        
         # Generate a join code for the club
         club.generate_join_code()
         db.session.add(club)
         db.session.commit()  # Commit to ensure the club has an ID
-
+        
         # Add the leader as a member with 'co-leader' role
         membership = ClubMembership(
             user_id=current_user.id,
@@ -2587,7 +2588,7 @@ def create_club():
         )
         db.session.add(membership)
         db.session.commit()
-
+        
         # Record activity
         activity = UserActivity(
             activity_type="club_creation",
@@ -2597,7 +2598,7 @@ def create_club():
         )
         db.session.add(activity)
         db.session.commit()
-
+        
         return jsonify({'message': 'Club created successfully'}), 201
     except Exception as e:
         db.session.rollback()
@@ -2610,10 +2611,10 @@ def manage_current_club():
     """Get, update, or delete the current user's club."""
     # Get the user's club (if they're a leader)
     club = Club.query.filter_by(leader_id=current_user.id).first()
-
+    
     if not club:
         return jsonify({'error': 'You do not have a club'}), 404
-
+        
     if request.method == 'GET':
         return jsonify({
             'id': club.id,
@@ -2624,35 +2625,35 @@ def manage_current_club():
             'created_at': club.created_at.isoformat(),
             'members_count': ClubMembership.query.filter_by(club_id=club.id).count()
         })
-
+        
     elif request.method == 'PUT':
         try:
             data = request.get_json()
-
+            
             if data.get('name'):
                 club.name = data.get('name')
             if 'description' in data:
                 club.description = data.get('description')
             if 'location' in data:
                 club.location = data.get('location')
-
+                
             db.session.commit()
-
+            
             return jsonify({'message': 'Club updated successfully'})
         except Exception as e:
             db.session.rollback()
             app.logger.error(f'Error updating club: {str(e)}')
             return jsonify({'error': 'Failed to update club'}), 500
-
+            
     elif request.method == 'DELETE':
         try:
             # Delete all memberships first
             ClubMembership.query.filter_by(club_id=club.id).delete()
-
+            
             # Delete the club
             db.session.delete(club)
             db.session.commit()
-
+            
             # Record activity
             activity = UserActivity(
                 activity_type="club_deletion",
@@ -2662,7 +2663,7 @@ def manage_current_club():
             )
             db.session.add(activity)
             db.session.commit()
-
+            
             return jsonify({'message': 'Club deleted successfully'})
         except Exception as e:
             db.session.rollback()
@@ -2675,15 +2676,15 @@ def generate_join_code():
     """Generate a new join code for the current user's club."""
     # Get the user's club (if they're a leader)
     club = Club.query.filter_by(leader_id=current_user.id).first()
-
+    
     if not club:
         return jsonify({'error': 'You do not have a club'}), 404
-
+        
     try:
         # Generate a new join code
         club.generate_join_code()
         db.session.commit()
-
+        
         return jsonify({'message': 'Join code generated successfully', 'join_code': club.join_code})
     except Exception as e:
         db.session.rollback()
@@ -2697,23 +2698,23 @@ def join_club():
     try:
         data = request.get_json()
         join_code = data.get('join_code')
-
+        
         if not join_code:
             return jsonify({'error': 'Join code is required'}), 400
-
+            
         # Find the club with this join code
         club = Club.query.filter_by(join_code=join_code).first()
-
+        
         if not club:
             return jsonify({'error': 'Invalid join code'}), 404
-
+            
         # Check if user is already a member
         existing_membership = ClubMembership.query.filter_by(
             user_id=current_user.id, club_id=club.id).first()
-
+            
         if existing_membership:
             return jsonify({'error': 'You are already a member of this club'}), 400
-
+            
         # Add user as a member
         membership = ClubMembership(
             user_id=current_user.id,
@@ -2721,7 +2722,7 @@ def join_club():
             role='member'
         )
         db.session.add(membership)
-
+        
         # Record activity
         activity = UserActivity(
             activity_type="club_join",
@@ -2731,7 +2732,7 @@ def join_club():
         )
         db.session.add(activity)
         db.session.commit()
-
+        
         return jsonify({'message': f'Successfully joined {club.name}'})
     except Exception as e:
         db.session.rollback()
@@ -2745,20 +2746,20 @@ def leave_club(membership_id):
     try:
         # Find the membership
         membership = ClubMembership.query.get_or_404(membership_id)
-
+        
         # Verify it belongs to the current user
         if membership.user_id != current_user.id:
             return jsonify({'error': 'Unauthorized'}), 403
-
+            
         # Prevent club leaders from leaving their own club
         if membership.club.leader_id == current_user.id:
             return jsonify({'error': 'Club leaders cannot leave. Delete the club instead.'}), 400
-
+            
         club_name = membership.club.name
-
+        
         # Delete the membership
         db.session.delete(membership)
-
+        
         # Record activity
         activity = UserActivity(
             activity_type="club_leave",
@@ -2768,7 +2769,7 @@ def leave_club(membership_id):
         )
         db.session.add(activity)
         db.session.commit()
-
+        
         return jsonify({'message': f'Successfully left {club_name}'})
     except Exception as e:
         db.session.rollback()
@@ -2781,25 +2782,25 @@ def change_member_role(membership_id):
     """Change a member's role in a club."""
     try:
         membership = ClubMembership.query.get_or_404(membership_id)
-
+        
         # Check if the current user is the club leader
         club = membership.club
         if club.leader_id != current_user.id:
             return jsonify({'error': 'Only club leaders can change member roles'}), 403
-
+            
         # Prevent changing own role
         if membership.user_id == current_user.id:
             return jsonify({'error': 'You cannot change your own role'}), 400
-
+            
         data = request.get_json()
         new_role = data.get('role')
-
+        
         if new_role not in ['member', 'co-leader']:
             return jsonify({'error': 'Invalid role'}), 400
-
+            
         membership.role = new_role
         db.session.commit()
-
+        
         return jsonify({'message': f'Role updated to {new_role}'})
     except Exception as e:
         db.session.rollback()
@@ -2812,21 +2813,21 @@ def remove_member(membership_id):
     """Remove a member from a club."""
     try:
         membership = ClubMembership.query.get_or_404(membership_id)
-
+        
         # Check if the current user is the club leader
         club = membership.club
         if club.leader_id != current_user.id:
             return jsonify({'error': 'Only club leaders can remove members'}), 403
-
+            
         # Prevent removing self
         if membership.user_id == current_user.id:
             return jsonify({'error': 'You cannot remove yourself from the club'}), 400
-
+            
         member_name = membership.user.username
-
+        
         # Delete the membership
         db.session.delete(membership)
-
+        
         # Record activity
         activity = UserActivity(
             activity_type="club_member_removal",
@@ -2836,7 +2837,7 @@ def remove_member(membership_id):
         )
         db.session.add(activity)
         db.session.commit()
-
+        
         return jsonify({'message': f'Successfully removed {member_name} from the club'})
     except Exception as e:
         db.session.rollback()
@@ -2856,14 +2857,14 @@ def get_member_sites():
             if not membership:
                 return jsonify({'error': 'Only club leaders can access member sites'}), 403
             club = membership.club
-
+            
         # Get all members of the club
         memberships = ClubMembership.query.filter_by(club_id=club.id).all()
         member_ids = [m.user_id for m in memberships]
-
+        
         # Get all sites from these members
         sites = Site.query.filter(Site.user_id.in_(member_ids)).all()
-
+        
         # Format the result
         result = []
         for site in sites:
@@ -2877,7 +2878,7 @@ def get_member_sites():
                     'username': site.user.username
                 }
             })
-
+            
         return jsonify({'sites': result})
     except Exception as e:
         app.logger.error(f'Error getting member sites: {str(e)}')
