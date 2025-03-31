@@ -2532,12 +2532,16 @@ def hackatime_heartbeat():
         heartbeat_data = request.json
         app.logger.info(f'Received heartbeat from user {current_user.id}: {heartbeat_data}')
         
+        # For test connection request - just verify key exists but don't send to API
+        is_test_request = heartbeat_data.get('type') == 'test'
+        
         # Ensure the heartbeat has required fields
-        required_fields = ['entity', 'type', 'time']
-        for field in required_fields:
-            if field not in heartbeat_data:
-                app.logger.error(f'Missing required field {field} in heartbeat data')
-                return jsonify({'success': False, 'message': f'Missing required field: {field}'})
+        if not is_test_request:
+            required_fields = ['entity', 'type', 'time']
+            for field in required_fields:
+                if field not in heartbeat_data:
+                    app.logger.error(f'Missing required field {field} in heartbeat data')
+                    return jsonify({'success': False, 'message': f'Missing required field: {field}'})
         
         # Add user ID to the heartbeat data
         user_id = current_user.id
@@ -2565,6 +2569,14 @@ def hackatime_heartbeat():
                     'message': 'No valid API key found. Please reconnect your Hackatime account.'
                 })
         
+        # For test requests, just verify the key exists and return success
+        if is_test_request:
+            return jsonify({
+                'success': True,
+                'message': 'API key verified successfully',
+                'userId': user_id
+            })
+            
         # Encode API key in Base64 for Basic auth
         import base64
         
@@ -2582,7 +2594,7 @@ def hackatime_heartbeat():
         app.logger.info(f'API key length: {len(api_key)}, user_id: {user_id}')
         
         # Construct heartbeat endpoint URL
-        heartbeat_url = f"https://waka.hackclub.com/api/v1/users/{user_id}/heartbeats"
+        heartbeat_url = f"https://waka.hackclub.com/api/v1/users/current/heartbeats"
         app.logger.info(f'Sending heartbeat to: {heartbeat_url}')
         
         # Send heartbeat to Hackatime API
@@ -2613,22 +2625,19 @@ def hackatime_heartbeat():
                 'api_response': response_data
             })
         elif response.status_code == 401:
-            app.logger.error(f'Authentication failed: Invalid API key: "{api_key}"')
-            print(f'DEBUG - Invalid API key: "{api_key}"')
+            app.logger.error(f'Authentication failed: Invalid API key')
             # Reset the user's API key since it's invalid
-            if current_user.wakatime_api_key:
-                with db.engine.connect() as conn:
-                    conn.execute(
-                        db.text("UPDATE \"user\" SET wakatime_api_key = NULL WHERE id = :user_id"),
-                        {"user_id": current_user.id}
-                    )
-                    conn.commit()
-                app.logger.info(f'Reset invalid API key for user {current_user.id}')
+            with db.engine.connect() as conn:
+                conn.execute(
+                    db.text("UPDATE \"user\" SET wakatime_api_key = NULL WHERE id = :user_id"),
+                    {"user_id": current_user.id}
+                )
+                conn.commit()
+            app.logger.info(f'Reset invalid API key for user {current_user.id}')
             
             return jsonify({
                 'success': False, 
                 'message': 'API error: 401 - Authentication failed. Your API key is invalid or expired. Please update it in Hackatime settings.',
-                'debug_key': api_key,  # Adding the key to the response for debugging
                 'error_code': 401
             })
         else:
