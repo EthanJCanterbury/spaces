@@ -541,7 +541,6 @@ let currentSiteId = null;
 function openNewSpaceModal() {
     const modal = document.getElementById('newSpaceModal');
     modal.style.display = 'flex';
-    // Force a reflow before adding the show class for transition to work
     modal.offsetHeight;
     modal.classList.add('show');
     document.getElementById('spaceName').focus();
