@@ -1,0 +1,35 @@
+🕒 Checking Hackatime API connection...
+231:467 🕒 Web editor loaded, checking for Hackatime integration
+VM12939 hackatime-heartbeat.js:21 🕒 Checking Hackatime API connection...
+231:487 🕒 Waiting for CodeMirror to initialize...
+231:506 🕒 Adding file tab change tracking
+231:519 🕒 Hackatime integration active: {apiKeyExists: true, userId: 149}
+VM12939 hackatime-heartbeat.js:21 🕒 Checking Hackatime API connection...
+VM12939 hackatime-heartbeat.js:38 🕒 Hackatime API connection successful
+VM12939 hackatime-heartbeat.js:153 🕒 Using default language: HTML
+VM12939 hackatime-heartbeat.js:109 🕒 Detected current file from tab: index.html
+VM12939 hackatime-heartbeat.js:96 🕒 Heartbeat interval started
+VM12939 hackatime-heartbeat.js:64 🕒 Hackatime integration active: {apiKeyExists: true, userId: '149'}
+231:490 🕒 CodeMirror initialized, adding event listeners
+VM12939 hackatime-heartbeat.js:38 🕒 Hackatime API connection successful
+VM12939 hackatime-heartbeat.js:153 🕒 Using default language: HTML
+VM12939 hackatime-heartbeat.js:109 🕒 Detected current file from tab: index.html
+VM12939 hackatime-heartbeat.js:64 🕒 Hackatime integration active: {apiKeyExists: true, userId: '149'}
+VM12939 hackatime-heartbeat.js:38 🕒 Hackatime API connection successful
+VM12939 hackatime-heartbeat.js:153 🕒 Using default language: HTML
+VM12939 hackatime-heartbeat.js:109 🕒 Detected current file from tab: index.html
+VM12939 hackatime-heartbeat.js:64 🕒 Hackatime integration active: {apiKeyExists: true, userId: '149'}
+VM13061 eruda.js:2 Website loaded successfully!
+VM12939 hackatime-heartbeat.js:217 🕒 Sending heartbeat: {entity: 'index.html', type: 'file', language: 'HTML', time: 1743463527.013}
+VM12939 hackatime-heartbeat.js:217 🕒 Sending heartbeat: {entity: 'index.html', type: 'file', language: 'HTML', time: 1743463527.574}
+VM12939 hackatime-heartbeat.js:244 🕒 Heartbeat sent successfully {api_response: {…}, message: 'Heartbeat recorded successfully', success: true, timestamp: 1743463527.013}
+VM12939 hackatime-heartbeat.js:217 🕒 Sending heartbeat: {entity: 'index.html', type: 'file', language: 'HTML', time: 1743463527.91}
+VM12939 hackatime-heartbeat.js:244 🕒 Heartbeat sent successfully {api_response: {…}, message: 'Heartbeat recorded successfully', success: true, timestamp: 1743463527.574}
+VM12939 hackatime-heartbeat.js:244 🕒 Heartbeat sent successfully {api_response: {…}, message: 'Heartbeat recorded successfully', success: true, timestamp: 1743463527.91}
+VM13102 css-generic.js:236 uBOL: Generic cosmetic filtering stopped because no more DOM changes
+Console.js:61 Website loaded successfully!
+css-generic.js:236 uBOL: Generic cosmetic filtering stopped because no more DOM changes
+VM12939 hackatime-heartbeat.js:217 🕒 Sending heartbeat: {entity: 'index.html', type: 'file', language: 'HTML', time: 1743463578.373}
+VM12939 hackatime-heartbeat.js:217 🕒 Sending heartbeat: {entity: 'index.html', type: 'file', language: 'HTML', time: 1743463578.376}
+VM12939 hackatime-heartbeat.js:244 🕒 Heartbeat sent successfully {api_response: {…}, message: 'Heartbeat recorded successfully', success: true, timestamp: 1743463578.376}
+VM12939 hackatime-heartbeat.js:244 🕒 Heartbeat sent successfully {api_response: {…}, message: 'Heartbeat recorded successfully', success: true, timestamp: 1743463578.373}
