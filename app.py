@@ -596,39 +596,14 @@ def edit_site(site_id):
 
         is_admin = current_user.is_admin
         is_owner = site.user_id == current_user.id
-        
-        # Check if user is a club leader or co-leader with access to this site
-        is_club_leader_with_access = False
-        
-        if not is_owner and not is_admin:
-            # Check if current user is a club leader
-            club = Club.query.filter_by(leader_id=current_user.id).first()
-            if club:
-                # Check if site owner is a member of the club
-                membership = ClubMembership.query.filter_by(club_id=club.id, user_id=site.user_id).first()
-                if membership:
-                    is_club_leader_with_access = True
-            else:
-                # Check if current user is a co-leader
-                co_leader_memberships = ClubMembership.query.filter_by(user_id=current_user.id, role='co-leader').all()
-                for membership in co_leader_memberships:
-                    # Check if site owner is a member of the same club
-                    owner_membership = ClubMembership.query.filter_by(club_id=membership.club_id, user_id=site.user_id).first()
-                    if owner_membership:
-                        is_club_leader_with_access = True
-                        break
 
-        if not (is_owner or is_admin or is_club_leader_with_access):
+        if not is_owner and not is_admin:
             app.logger.warning(
                 f'User {current_user.id} attempted to access site {site_id} owned by {site.user_id}'
             )
             abort(403)
 
         app.logger.info(f'User {current_user.id} editing site {site_id}')
-        
-        # Log additional context if edited by club leader
-        if is_club_leader_with_access:
-            app.logger.info(f'Club leader {current_user.id} editing member site {site_id}')
 
         return render_template('editor.html', site=site)
     except Exception as e:
@@ -980,35 +955,9 @@ h1 {
 def update_site(site_id):
     site = Site.query.get_or_404(site_id)
 
-    # Check if user is the site owner
-    is_owner = site.user_id == current_user.id
-    
-    # Check if user is an admin
     is_admin = current_user.is_admin
-    
-    # Check if user is a club leader or co-leader with access to this site
-    is_club_leader_with_access = False
-    
-    if not is_owner and not is_admin:
-        # Check if current user is a club leader
-        club = Club.query.filter_by(leader_id=current_user.id).first()
-        if club:
-            # Check if site owner is a member of the club
-            membership = ClubMembership.query.filter_by(club_id=club.id, user_id=site.user_id).first()
-            if membership:
-                is_club_leader_with_access = True
-        else:
-            # Check if current user is a co-leader
-            co_leader_memberships = ClubMembership.query.filter_by(user_id=current_user.id, role='co-leader').all()
-            for membership in co_leader_memberships:
-                # Check if site owner is a member of the same club
-                owner_membership = ClubMembership.query.filter_by(club_id=membership.club_id, user_id=site.user_id).first()
-                if owner_membership:
-                    is_club_leader_with_access = True
-                    break
-    
-    # Allow access if user is owner, admin, or club leader with access
-    if not (is_owner or is_admin or is_club_leader_with_access):
+
+    if site.user_id != current_user.id and not is_admin:
         abort(403)
 
     data = request.get_json()
@@ -1029,14 +978,6 @@ def update_site(site_id):
         db.session.commit()
 
         activity_message = f'Updated {"Python" if python_content else "Web"} site "{site.name}"'
-        
-        # Add more context to the activity message if edited by club leader or admin
-        if not is_owner:
-            if is_club_leader_with_access:
-                activity_message = f'Club leader {current_user.username} updated {"Python" if python_content else "Web"} site "{site.name}" (owned by {site.user.username})'
-            elif is_admin:
-                activity_message = f'Admin {current_user.username} updated {"Python" if python_content else "Web"} site "{site.name}" (owned by {site.user.username})'
-                
         activity = UserActivity(activity_type='site_update',
                                 message=activity_message,
                                 username=current_user.username,
@@ -1164,29 +1105,8 @@ def python_editor(site_id):
 
         is_admin = current_user.is_admin
         is_owner = site.user_id == current_user.id
-        
-        # Check if user is a club leader or co-leader with access to this site
-        is_club_leader_with_access = False
-        
-        if not is_owner and not is_admin:
-            # Check if current user is a club leader
-            club = Club.query.filter_by(leader_id=current_user.id).first()
-            if club:
-                # Check if site owner is a member of the club
-                membership = ClubMembership.query.filter_by(club_id=club.id, user_id=site.user_id).first()
-                if membership:
-                    is_club_leader_with_access = True
-            else:
-                # Check if current user is a co-leader
-                co_leader_memberships = ClubMembership.query.filter_by(user_id=current_user.id, role='co-leader').all()
-                for membership in co_leader_memberships:
-                    # Check if site owner is a member of the same club
-                    owner_membership = ClubMembership.query.filter_by(club_id=membership.club_id, user_id=site.user_id).first()
-                    if owner_membership:
-                        is_club_leader_with_access = True
-                        break
 
-        if not (is_owner or is_admin or is_club_leader_with_access):
+        if not is_owner and not is_admin:
             app.logger.warning(
                 f'User {current_user.id} attempted to access Python site {site_id} owned by {site.user_id}'
             )
@@ -1194,10 +1114,6 @@ def python_editor(site_id):
 
         app.logger.info(
             f'User {current_user.id} editing Python site {site_id}')
-            
-        # Log additional context if edited by club leader
-        if is_club_leader_with_access:
-            app.logger.info(f'Club leader {current_user.id} editing member Python site {site_id}')
 
         socket_join_script = f'''
         <script>
@@ -1224,33 +1140,7 @@ def python_editor(site_id):
 @login_required
 def delete_site(site_id):
     site = Site.query.get_or_404(site_id)
-    
-    # Check if user is the site owner
-    is_owner = site.user_id == current_user.id
-    
-    # Check if user is a club leader or co-leader with access to this site
-    is_club_leader_with_access = False
-    
-    if not is_owner:
-        # Check if current user is a club leader
-        club = Club.query.filter_by(leader_id=current_user.id).first()
-        if club:
-            # Check if site owner is a member of the club
-            membership = ClubMembership.query.filter_by(club_id=club.id, user_id=site.user_id).first()
-            if membership:
-                is_club_leader_with_access = True
-        else:
-            # Check if current user is a co-leader
-            co_leader_memberships = ClubMembership.query.filter_by(user_id=current_user.id, role='co-leader').all()
-            for membership in co_leader_memberships:
-                # Check if site owner is a member of the same club
-                owner_membership = ClubMembership.query.filter_by(club_id=membership.club_id, user_id=site.user_id).first()
-                if owner_membership:
-                    is_club_leader_with_access = True
-                    break
-    
-    # Allow access if user is owner, admin, or club leader with access
-    if not (is_owner or current_user.is_admin or is_club_leader_with_access):
+    if site.user_id != current_user.id:
         abort(403)
 
     try:
@@ -1263,17 +1153,9 @@ def delete_site(site_id):
         db.session.delete(site)
         db.session.commit()
 
-        # Record who performed the deletion
-        activity_message = f'Site "{site.name}" deleted by {{username}}'
-        if not is_owner:
-            if is_club_leader_with_access:
-                activity_message = f'Club leader {{username}} deleted site "{site.name}" (owned by {site.user.username})'
-            else:
-                activity_message = f'Admin {{username}} deleted site "{site.name}" (owned by {site.user.username})'
-                
         activity = UserActivity(
             activity_type="site_deletion",
-            message=activity_message,
+            message=f'Site "{site.name}" deleted by {{username}}',
             username=current_user.username,
             user_id=current_user.id)
         db.session.add(activity)
