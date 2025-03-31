@@ -1,304 +1,237 @@
+/**
+ * Hackatime Heartbeat Tracker
+ * Tracks coding activity and sends heartbeats to the Hackatime API
+ */
 
-// Hackatime Heartbeat Tracker
 const HackatimeTracker = {
-  lastHeartbeat: null,
-  interval: null,
-  timeout: null,
-  isActive: false,
-  sessionStart: new Date(),
-  totalSeconds: 0,
-  lastActivityTime: null,
-  
-  // Initialize the tracker
-  init: function() {
-    // Check if already initialized
-    if (this.interval) {
-      console.log('🕒 Hackatime tracker already initialized, skipping');
-      return;
-    }
-    
-    console.log('🕒 Initializing Hackatime tracker...');
-    
-    this.isActive = true;
-    this.lastHeartbeat = new Date();
-    this.lastActivityTime = new Date();
-    this.sessionStart = new Date();
-    this.totalSeconds = 0;
-    
-    // Create badge if it doesn't exist
-    this.createBadgeIfNeeded();
-    
-    // Send initial heartbeat
-    this.sendHeartbeat();
-    
-    // Set interval to check activity every minute
-    this.interval = setInterval(() => {
-      const now = new Date();
-      const timeSinceLastActivity = now - this.lastActivityTime;
-      
-      console.log(`🕒 Time since last activity: ${Math.round(timeSinceLastActivity / 1000)} seconds`);
-      
-      // If it's been more than 5 minutes since last activity, stop tracking
-      if (timeSinceLastActivity > 5 * 60 * 1000) {
-        console.log('🕒 Inactive for over 5 minutes, pausing tracking');
-        this.isActive = false;
-        this.updateBadgeStatus(false);
-      }
-      
-      // Only send heartbeat if active
-      if (this.isActive) {
-        // Update total tracked time
-        if (this.lastHeartbeat) {
-          // Only count time since last heartbeat (max 1 minute per interval)
-          this.totalSeconds += 60;
-          console.log(`🕒 Session time: ${this.formatTime(this.totalSeconds)}`);
-        }
-        
-        this.sendHeartbeat();
-      }
-    }, 60 * 1000); // Check every minute
-    
-    this.updateBadgeStatus(true);
-    console.log('🕒 Hackatime tracker started successfully');
-  },
-  
-  // Create the badge element if it doesn't exist
-  createBadgeIfNeeded: function() {
-    if (!document.getElementById('hackatime-badge')) {
-      console.log('🕒 Creating Hackatime badge');
-      const badge = document.createElement('div');
-      badge.id = 'hackatime-badge';
-      badge.className = 'hackatime-badge';
-      badge.innerHTML = '<i class="fas fa-clock"></i> <span>Initializing...</span>';
-      document.body.appendChild(badge);
-      
-      // Add click handler
-      badge.addEventListener('click', () => {
-        if (!this.isActive) {
-          console.log('🕒 Manually resuming tracking');
-          this.recordActivity();
-          this.sendHeartbeat();
+    lastActivity: null,
+    lastHeartbeat: null,
+    idleTimeout: 5 * 60 * 1000, // 5 minutes in milliseconds
+    heartbeatInterval: 2 * 60 * 1000, // 2 minutes in milliseconds
+    totalTime: 0, // Total time in seconds
+    heartbeatQueue: [],
+    isProcessing: false,
+    projectInfo: {
+        name: document.title || 'Unknown Project',
+        language: null,
+        entity: null,
+    },
+
+    /**
+     * Initialize the tracker
+     */
+    init: function() {
+        console.log('🕒 Initializing Hackatime tracker');
+
+        // Get site ID and type from hidden inputs
+        const siteId = document.getElementById('site-id')?.value;
+        const siteType = document.getElementById('site-type')?.value;
+
+        // Set project info
+        this.projectInfo.language = siteType === 'web' ? 'HTML' : 'Python';
+
+        // Set entity based on current file being edited
+        const activeTab = document.querySelector('.file-tab.active');
+        if (activeTab) {
+            this.projectInfo.entity = activeTab.dataset.filename;
         } else {
-          console.log('🕒 Current session stats:', {
-            totalTime: this.formatTime(this.totalSeconds),
-            sessionStart: this.sessionStart,
-            isActive: this.isActive
-          });
+            this.projectInfo.entity = siteType === 'web' ? 'index.html' : 'main.py';
         }
-      });
-    }
-  },
-  
-  // Record user activity
-  recordActivity: function() {
-    console.log('🕒 Activity detected');
-    this.lastActivityTime = new Date();
-    
-    // If tracking was inactive, restart it
-    if (!this.isActive) {
-      console.log('🕒 Resuming tracking after inactivity');
-      this.isActive = true;
-      this.updateBadgeStatus(true);
-    }
-    
-    // Reset inactivity timeout
-    if (this.timeout) {
-      clearTimeout(this.timeout);
-    }
-  },
-  
-  // Update badge content
-  updateBadge: function(text) {
-    const badge = document.getElementById('hackatime-badge');
-    if (badge) {
-      const span = badge.querySelector('span');
-      if (span) {
-        span.textContent = text;
-      } else {
-        badge.innerHTML = `<i class="fas fa-clock"></i> <span>${text}</span>`;
-      }
-    }
-  },
-  
-  // Update badge status (active/inactive)
-  updateBadgeStatus: function(active) {
-    const badge = document.getElementById('hackatime-badge');
-    if (badge) {
-      if (active) {
-        badge.classList.add('active');
-        this.updateBadge(`Active: ${this.formatTime(this.totalSeconds)}`);
-      } else {
-        badge.classList.remove('active');
-        this.updateBadge('Inactive (click to resume)');
-      }
-    }
-  },
-  
-  // Format seconds as HH:MM:SS
-  formatTime: function(seconds) {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    let result = '';
-    if (hrs > 0) {
-      result += `${hrs}h `;
-    }
-    if (mins > 0 || hrs > 0) {
-      result += `${mins}m `;
-    }
-    result += `${secs}s`;
-    
-    return result;
-  },
-  
-  // Send heartbeat to server
-  sendHeartbeat: function() {
-    console.log('🕒 Preparing to send heartbeat...');
-    
-    const now = new Date();
-    const timestamp = Math.floor(now.getTime() / 1000);
-    
-    // Get current filename and language
-    const currentFile = this.getCurrentFilename();
-    const language = this.detectLanguage(currentFile);
-    
-    console.log(`🕒 Current file: ${currentFile}, Language: ${language}`);
-    
-    // Prepare heartbeat data
-    const heartbeat = {
-      type: 'file',
-      time: timestamp,
-      entity: currentFile,
-      category: 'coding',
-      language: language,
-      is_write: false, // Track reading time, not writes
-      project: window.location.pathname,
-      editor_name: 'Hack Club Spaces',
-      user_agent: navigator.userAgent
-    };
-    
-    console.log('🕒 Heartbeat payload:', JSON.stringify(heartbeat));
-    
-    // Send to server
-    fetch('/hackatime/heartbeat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(heartbeat)
-    })
-    .then(response => {
-      console.log(`🕒 Heartbeat response status: ${response.status}`);
-      return response.json().catch(e => {
-        console.error('🕒 Error parsing JSON response:', e);
-        return { success: false, error: 'Invalid JSON response' };
-      });
-    })
-    .then(data => {
-      console.log('🕒 Heartbeat response data:', JSON.stringify(data));
-      
-      if (data && data.success) {
-        console.log(`✅ Heartbeat sent successfully at ${new Date().toISOString()}`);
+
+        // Update badge
+        this.updateBadge("Initializing...");
+
+        // Start heartbeat timer
+        this.startHeartbeatTimer();
+
+        // Record initial activity
+        this.recordActivity();
+
+        // Send initial heartbeat
+        setTimeout(() => this.sendHeartbeat(), 2000);
+
+        console.log('🕒 Hackatime tracker initialized with:', {
+            projectInfo: this.projectInfo,
+            siteId: siteId,
+            siteType: siteType
+        });
+    },
+
+    /**
+     * Record user activity
+     */
+    recordActivity: function() {
+        this.lastActivity = Date.now();
+
+        // If we've been idle for a while, send a new heartbeat right away
+        if (this.lastHeartbeat && (this.lastActivity - this.lastHeartbeat > this.idleTimeout)) {
+            console.log('🕒 Returning from idle, sending immediate heartbeat');
+            this.sendHeartbeat();
+        }
+    },
+
+    /**
+     * Start the heartbeat timer
+     */
+    startHeartbeatTimer: function() {
+        console.log('🕒 Starting heartbeat timer');
+
+        // Clear any existing timer
+        if (this.heartbeatTimer) {
+            clearInterval(this.heartbeatTimer);
+        }
+
+        // Set up new timer
+        this.heartbeatTimer = setInterval(() => {
+            // Only send heartbeat if there was activity since last heartbeat
+            if (this.lastActivity && (!this.lastHeartbeat || this.lastActivity > this.lastHeartbeat)) {
+                this.sendHeartbeat();
+            }
+        }, this.heartbeatInterval);
+    },
+
+    /**
+     * Send a heartbeat to the Hackatime API
+     */
+    sendHeartbeat: function() {
+        // Check if we have activity to report
+        if (!this.lastActivity) {
+            console.log('🕒 No activity to report');
+            return;
+        }
+
+        // If we've been idle for too long, don't send a heartbeat
+        const now = Date.now();
+        if (now - this.lastActivity > this.idleTimeout) {
+            console.log('🕒 User has been idle too long, skipping heartbeat');
+            return;
+        }
+
+        // Create heartbeat data
+        const heartbeat = {
+            entity: this.projectInfo.entity,
+            type: 'file',
+            time: now / 1000, // Convert to seconds
+            project: this.projectInfo.name,
+            language: this.projectInfo.language,
+            is_write: true
+        };
+
+        console.log('🕒 Sending heartbeat:', heartbeat);
+
+        // Update when we last sent a heartbeat
         this.lastHeartbeat = now;
-        this.updateBadge(`Active: ${this.formatTime(this.totalSeconds)}`);
-      } else {
-        console.error('❌ Heartbeat rejected:', data);
-        this.updateBadge(`Error: ${data.message || 'Failed to send'}`);
-      }
-    })
-    .catch(error => {
-      console.error('❌ Error sending heartbeat:', error);
-      this.updateBadge('Error sending heartbeat');
-    });
-  },
-  
-  // Get current filename being edited
-  getCurrentFilename: function() {
-    // Try to get from active tab
-    const activeTab = document.querySelector('.file-tab.active');
-    if (activeTab) {
-      const filename = activeTab.getAttribute('data-filename');
-      console.log(`🕒 Found active tab: ${filename}`);
-      return filename;
+
+        // Add to queue
+        this.heartbeatQueue.push(heartbeat);
+
+        // Process queue
+        this.processHeartbeatQueue();
+
+        // Update the badge
+        this.updateBadge('Sending...');
+    },
+
+    /**
+     * Process the heartbeat queue
+     */
+    processHeartbeatQueue: function() {
+        if (this.isProcessing || this.heartbeatQueue.length === 0) {
+            return;
+        }
+
+        this.isProcessing = true;
+        const heartbeat = this.heartbeatQueue.shift();
+
+        fetch('/hackatime/heartbeat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(heartbeat)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('🕒 Heartbeat response:', data);
+
+            if (data.success) {
+                // Calculate time since last successful heartbeat
+                const timeSinceLast = (heartbeat.time - (this.lastSuccessfulHeartbeat || heartbeat.time));
+
+                // Update total time if reasonable (less than idle timeout)
+                if (timeSinceLast <= this.idleTimeout / 1000) {
+                    this.totalTime += timeSinceLast;
+                }
+
+                // Store this successful heartbeat time
+                this.lastSuccessfulHeartbeat = heartbeat.time;
+
+                // Format and display time
+                const formattedTime = this.formatTime(this.totalTime);
+                this.updateBadge(`Active: ${formattedTime}`);
+
+                console.log(`🕒 Heartbeat successful! Total coding time: ${formattedTime}`);
+            } else {
+                console.error('🕒 Heartbeat failed:', data.message);
+                this.updateBadge('Error sending heartbeat');
+            }
+        })
+        .catch(error => {
+            console.error('🕒 Error sending heartbeat:', error);
+            this.updateBadge('Connection error');
+
+            // Put the heartbeat back in the queue to retry
+            this.heartbeatQueue.unshift(heartbeat);
+        })
+        .finally(() => {
+            this.isProcessing = false;
+
+            // Process next item in queue if available
+            if (this.heartbeatQueue.length > 0) {
+                setTimeout(() => this.processHeartbeatQueue(), 1000);
+            }
+        });
+    },
+
+    /**
+     * Update the badge with current status
+     */
+    updateBadge: function(text) {
+        const badge = document.getElementById('hackatime-badge');
+        if (badge) {
+            badge.innerHTML = `<i class="fas fa-clock"></i> ${text}`;
+
+            // Show the badge if hidden
+            badge.style.display = 'flex';
+        }
+    },
+
+    /**
+     * Format seconds into readable time
+     */
+    formatTime: function(seconds) {
+        if (seconds < 60) {
+            return `${Math.floor(seconds)}s`;
+        } else if (seconds < 3600) {
+            const minutes = Math.floor(seconds / 60);
+            return `${minutes}m`;
+        } else {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${hours}h ${minutes}m`;
+        }
     }
-    
-    // For Python editor (single file)
-    const siteType = document.getElementById('site-type')?.value;
-    const siteSlug = document.getElementById('site-slug')?.value;
-    
-    if (siteType === 'python') {
-      console.log(`🕒 Python site detected: ${siteSlug}.py`);
-      return `${siteSlug || 'main'}.py`;
-    }
-    
-    // Default fallback
-    console.log('🕒 No specific file detected, using default: index.html');
-    return 'index.html';
-  },
-  
-  // Detect language from filename
-  detectLanguage: function(filename) {
-    if (!filename) return 'unknown';
-    
-    const ext = filename.split('.').pop().toLowerCase();
-    
-    const languageMap = {
-      'py': 'Python',
-      'js': 'JavaScript',
-      'html': 'HTML',
-      'css': 'CSS',
-      'json': 'JSON',
-      'md': 'Markdown',
-      'sql': 'SQL',
-      'java': 'Java',
-      'cpp': 'C++',
-      'c': 'C',
-      'php': 'PHP',
-      'rb': 'Ruby',
-      'go': 'Go',
-      'ts': 'TypeScript',
-      'jsx': 'React',
-      'tsx': 'React',
-    };
-    
-    return languageMap[ext] || 'unknown';
-  },
-  
-  // Stop tracking
-  stop: function() {
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = null;
-    }
-    
-    if (this.timeout) {
-      clearTimeout(this.timeout);
-      this.timeout = null;
-    }
-    
-    this.isActive = false;
-    this.updateBadgeStatus(false);
-    console.log('🕒 Hackatime tracker stopped');
-  }
 };
 
-// Add click handler to resume tracking if it's paused
+// Add event listener to update entity when tabs are clicked
 document.addEventListener('DOMContentLoaded', function() {
-  const badge = document.getElementById('hackatime-badge');
-  if (badge) {
-    badge.addEventListener('click', function() {
-      if (!HackatimeTracker.isActive) {
-        console.log('🕒 Manually resuming tracking');
-        HackatimeTracker.recordActivity();
-        HackatimeTracker.sendHeartbeat();
-      } else {
-        console.log('🕒 Current session stats:', {
-          totalTime: HackatimeTracker.formatTime(HackatimeTracker.totalSeconds),
-          sessionStart: HackatimeTracker.sessionStart,
-          isActive: HackatimeTracker.isActive
+    const fileTabs = document.querySelectorAll('.file-tab');
+    if (fileTabs.length > 0) {
+        fileTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                HackatimeTracker.projectInfo.entity = this.dataset.filename;
+                console.log('🕒 Entity updated to:', HackatimeTracker.projectInfo.entity);
+            });
         });
-      }
-    });
-  }
+    }
 });
