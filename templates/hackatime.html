@@ -1,0 +1,158 @@
+
+{% extends "base.html" %}
+
+{% block head %}
+<title>Connect Hackatime - Hack Club Spaces</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hackatime.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="hackatime-container">
+    <div class="hackatime-card">
+        <div class="header">
+            <h1 class="title">Connect with Hackatime</h1>
+            <div class="subtitle">Track your coding time and see your stats</div>
+        </div>
+        
+        <div class="hackatime-illustration">
+            <img src="{{ url_for('static', filename='images/hackatime-icon.svg') }}" alt="Hackatime" class="hackatime-icon">
+            <div class="glow-effect"></div>
+        </div>
+        
+        <div class="info-section">
+            <h2>What is Hackatime?</h2>
+            <p>Hackatime is Hack Club's coding time tracker that helps you visualize your programming activity and track progress over time.</p>
+            
+            <div class="connection-steps">
+                <h3>How to connect:</h3>
+                <ol>
+                    <li>Visit <a href="https://hackatime.hackclub.com/" target="_blank" rel="noopener">hackatime.hackclub.com</a></li>
+                    <li>Go to your account settings</li>
+                    <li>Copy your API key</li>
+                    <li>Paste it below to connect your account</li>
+                </ol>
+            </div>
+        </div>
+        
+        {% if current_user.wakatime_api_key %}
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                <p>Your Hackatime account is connected!</p>
+                <button id="disconnect-btn" class="disconnect-button">Disconnect Account</button>
+            </div>
+        {% else %}
+            <form id="hackatime-form" method="post" action="{{ url_for('hackatime_connect') }}" class="api-key-form">
+                <div class="form-group">
+                    <label for="api_key">Your Hackatime API Key</label>
+                    <div class="input-group">
+                        <input type="password" id="api_key" name="api_key" placeholder="Paste your API key here" required>
+                        <button type="button" id="toggle-visibility" class="toggle-btn">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="hint">The API key will be stored securely and only used to fetch your coding stats.</div>
+                </div>
+                
+                <button type="submit" class="connect-button">
+                    <span>Connect Hackatime</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+        {% endif %}
+        
+        <div class="benefits">
+            <div class="benefit-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Track your coding progress</span>
+            </div>
+            <div class="benefit-item">
+                <i class="fas fa-trophy"></i>
+                <span>Set goals and challenges</span>
+            </div>
+            <div class="benefit-item">
+                <i class="fas fa-users"></i>
+                <span>Compare with club members</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('toggle-visibility');
+    const apiKeyInput = document.getElementById('api_key');
+    const disconnectBtn = document.getElementById('disconnect-btn');
+    
+    if (toggleBtn && apiKeyInput) {
+        toggleBtn.addEventListener('click', function() {
+            const type = apiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            apiKeyInput.setAttribute('type', type);
+            
+            const icon = toggleBtn.querySelector('i');
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+    }
+    
+    if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to disconnect your Hackatime account?')) {
+                fetch('/hackatime/disconnect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to disconnect: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while disconnecting your account.');
+                });
+            }
+        });
+    }
+    
+    const form = document.getElementById('hackatime-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                alert('Please enter your Hackatime API key.');
+                return;
+            }
+            
+            fetch('/hackatime/connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    api_key: apiKey
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to connect: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while connecting your account.');
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
