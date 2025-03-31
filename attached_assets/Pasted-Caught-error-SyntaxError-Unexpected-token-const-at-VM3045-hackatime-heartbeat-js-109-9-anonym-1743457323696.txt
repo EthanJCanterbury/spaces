@@ -1,0 +1,28 @@
+Caught error: SyntaxError: Unexpected token 'const' (at VM3045 hackatime-heartbeat.js:109:9)
+(anonymous) @ error-handler.js:14Understand this errorAI
+error-handler.js:303 Caught error: {type: 'SyntaxError', message: "Unexpected token 'const'", file: 'https://f7bc0f17-097b-438f-9bf2-0c65c59817c4-00-3i…riker.replit.dev/static/js/hackatime-heartbeat.js', line: 109, column: 9, …}
+(anonymous) @ error-handler.js:303Understand this errorAI
+error-handler.js:14 Caught error: SyntaxError: Unexpected token 'const' (at hackatime-heartbeat.js:109:9)
+(anonymous) @ error-handler.js:14Understand this errorAI
+error-handler.js:303 Caught error: {type: 'SyntaxError', message: "Unexpected token 'const'", file: 'https://f7bc0f17-097b-438f-9bf2-0c65c59817c4-00-3i…riker.replit.dev/static/js/hackatime-heartbeat.js', line: 109, column: 9, …}
+(anonymous) @ error-handler.js:303Understand this errorAI
+231:462 🕒 Web editor loaded, checking for Hackatime integration
+error-handler.js:14 Caught error: ReferenceError: HackatimeTracker is not defined
+    at HTMLDocument.<anonymous> (231:465:5)
+(anonymous) @ error-handler.js:14Understand this errorAI
+error-handler.js:303 Caught error: {type: 'ReferenceError', message: 'HackatimeTracker is not defined', file: 'https://f7bc0f17-097b-438f-9bf2-0c65c59817c4-00-3il8vlkp86lkg.riker.replit.dev/edit/231', line: 465, column: 5, …}
+(anonymous) @ error-handler.js:303Understand this errorAI
+error-handler.js:306 
+            
+            
+           POST https://f7bc0f17-097b-438f-9bf2-0c65c59817c4-00-3il8vlkp86lkg.riker.replit.dev/api/log-error 404 (Not Found)
+(anonymous) @ error-handler.js:306Understand this errorAI
+error-handler.js:306 
+            
+            
+           POST https://f7bc0f17-097b-438f-9bf2-0c65c59817c4-00-3il8vlkp86lkg.riker.replit.dev/api/log-error 404 (Not Found)
+(anonymous) @ error-handler.js:306Understand this errorAI
+error-handler.js:306 
+            
+            
+           POST https://f7bc0f17-097b-438f-9bf2-0c65c59817c4-00-3il8vlkp86lkg.riker.replit.dev/api/log-error 404 (Not Found)
