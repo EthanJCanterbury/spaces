@@ -2553,10 +2553,18 @@ def hackatime_heartbeat():
         )
         
         if response.status_code == 201 or response.status_code == 200:
-            return jsonify({'success': True})
+            return jsonify({
+                'success': True, 
+                'message': 'Heartbeat recorded successfully',
+                'timestamp': heartbeat_data.get('time')
+            })
         else:
             app.logger.error(f'Hackatime API error: {response.status_code} - {response.text}')
-            return jsonify({'success': False, 'message': f'API error: {response.status_code}'})
+            return jsonify({
+                'success': False, 
+                'message': f'API error: {response.status_code}',
+                'response': response.text
+            })
     
     except Exception as e:
         app.logger.error(f'Error sending heartbeat: {str(e)}')
