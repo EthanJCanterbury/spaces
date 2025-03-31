@@ -579,7 +579,7 @@
         </div>
     </div>
 
-    <div id="toast-container" id="toastContainer"></div>
+    <div id="toast-container"></div>
 </div>
 
 <script>
@@ -1654,7 +1654,14 @@ function showToast(type, message) {
         clearTimeout(window.toastTimeout);
     }
     
-    const toastContainer = document.getElementById('toastContainer');
+    let toastContainer = document.getElementById('toast-container');
+    
+    // Create toast container if it doesn't exist
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        document.body.appendChild(toastContainer);
+    }
     
     // Remove any existing toasts
     while (toastContainer.firstChild) {

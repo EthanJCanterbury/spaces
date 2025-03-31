@@ -571,13 +571,13 @@ def welcome():
         Site.updated_at.desc()).all()
     max_sites = get_max_sites_per_user()
     
-    # Get shared spaces for the user
-    shared_spaces = db.session.query(ClubMembership).filter_by(user_id=current_user.id).all()
+    # Get club memberships for the user
+    club_memberships = db.session.query(ClubMembership).filter_by(user_id=current_user.id).all()
     
     return render_template('welcome.html', 
                           sites=sites, 
                           max_sites=max_sites, 
-                          shared_spaces=shared_spaces)
+                          club_memberships=club_memberships)
 
 
 @app.route('/access-code', methods=['GET', 'POST'])
@@ -1421,7 +1421,7 @@ def edit_user(user_id):
 @login_required
 @admin_required
 def toggle_club_leader(user_id):
-    """Toggle a user's club leader status."""
+    """Toggle a user's club leader status without creating a club automatically."""
     if user_id == current_user.id:
         return jsonify({'message': 'Cannot change your own club leader status'}), 400
         
@@ -1433,27 +1433,9 @@ def toggle_club_leader(user_id):
         # Check if user already has a club
         existing_club = Club.query.filter_by(leader_id=user.id).first()
         
-        if make_leader and not existing_club:
-            # Always set admin status for club leaders
-            user.is_admin = True
-            db.session.commit()  # Commit the admin status change first
-            
-            # Create a default club for the user
-            club = Club(
-                name=f"{user.username}'s Club",
-                leader_id=user.id
-            )
-            club.generate_join_code()
-            db.session.add(club)
-            db.session.commit()  # Commit to get the club ID
-            
-            # Now create membership with valid club_id
-            membership = ClubMembership(
-                user_id=user.id,
-                club_id=club.id,
-                role='co-leader'
-            )
-            db.session.add(membership)
+        if make_leader:
+            # Just mark them as club leader but don't automatically create a club
+            # They'll need to create one on the club dashboard
             
             # Record activity
             activity = UserActivity(
@@ -1474,9 +1456,6 @@ def toggle_club_leader(user_id):
             
             # Delete the club
             db.session.delete(existing_club)
-            
-            # Remove admin status if it was only for club leader
-            user.is_admin = False
             
             # Record activity
             activity = UserActivity(
@@ -2530,16 +2509,14 @@ def settings():
 @login_required
 def club_dashboard():
     """Club dashboard for club leaders to manage their clubs."""
+    # Import Club and ClubMembership at the beginning of the function
+    from models import Club, ClubMembership
+    
     # Check if user is a club leader
     club = Club.query.filter_by(leader_id=current_user.id).first()
     if not club:
         flash('You do not have permission to access the club dashboard.', 'error')
         return redirect(url_for('welcome'))
-        
-    # Get the user's club
-    from models import Club, ClubMembership
-    
-    club = Club.query.filter_by(leader_id=current_user.id).first()
     
     if not club:
         flash('You do not have a club. Create one below.', 'info')
