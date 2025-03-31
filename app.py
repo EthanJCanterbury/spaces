@@ -2462,6 +2462,28 @@ def hackatime():
 
 @app.route('/hackatime/connect', methods=['POST'])
 @login_required
+@app.route('/api/log-error', methods=['POST'])
+def log_error():
+    """Log client-side errors"""
+    try:
+        error_data = request.get_json()
+        app.logger.error(f"Client-side error: {error_data}")
+        return jsonify({'success': True})
+    except Exception as e:
+        app.logger.error(f"Error logging client error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/hackatime/check-connection', methods=['GET'])
+def check_hackatime_connection():
+    """Check if Hackatime API connection is valid"""
+    if not current_user.is_authenticated:
+        return jsonify({'success': False, 'message': 'Authentication required'})
+        
+    if not current_user.wakatime_api_key:
+        return jsonify({'success': False, 'message': 'No Hackatime API key found'})
+        
+    return jsonify({'success': True})
+
 def hackatime_connect():
     """Connect Hackatime account by saving API key"""
     try:

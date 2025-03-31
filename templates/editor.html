@@ -412,8 +412,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🕒 Web editor loaded, checking for Hackatime integration');
 
-    // Initialize Hackatime tracker
-    HackatimeTracker.init();
+    // Initialize Hackatime tracker if it exists
+    if (window.HackatimeTracker) {
+        window.HackatimeTracker.init();
 
     // Add event listeners to track activity
     let editor = document.getElementById('editor');
@@ -465,6 +466,7 @@ document.addEventListener('DOMContentLoaded', function() {
         apiKeyExists: Boolean({{ 'true' if current_user.wakatime_api_key else 'false' }}),
         userId: {{ current_user.id }}
     });
+    }
 });
 </script>
 {% endif %}
