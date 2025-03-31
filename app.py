@@ -3132,17 +3132,6 @@ def initialize_database():
         return False
 
 
-@app.route('/hackatime/check-connection', methods=['GET'])
-def check_hackatime_connection():
-    """Check if the API key exists and is valid"""
-    if not current_user.is_authenticated:
-        return jsonify({"success": False, "message": "Not authenticated"})
-        
-    if not current_user.wakatime_api_key:
-        return jsonify({"success": False, "message": "No API key found"})
-    
-    return jsonify({"success": True})
-
 @app.route('/hackatime/validate-key', methods=['POST'])
 @login_required
 def hackatime_validate_key():
