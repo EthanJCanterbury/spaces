@@ -571,13 +571,13 @@ def welcome():
         Site.updated_at.desc()).all()
     max_sites = get_max_sites_per_user()
     
-    # Get shared spaces for the user
-    shared_spaces = db.session.query(ClubMembership).filter_by(user_id=current_user.id).all()
+    # Get club memberships for the user
+    club_memberships = db.session.query(ClubMembership).filter_by(user_id=current_user.id).all()
     
     return render_template('welcome.html', 
                           sites=sites, 
                           max_sites=max_sites, 
-                          shared_spaces=shared_spaces)
+                          club_memberships=club_memberships)
 
 
 @app.route('/access-code', methods=['GET', 'POST'])
@@ -1434,10 +1434,6 @@ def toggle_club_leader(user_id):
         existing_club = Club.query.filter_by(leader_id=user.id).first()
         
         if make_leader and not existing_club:
-            # Always set admin status for club leaders
-            user.is_admin = True
-            db.session.commit()  # Commit the admin status change first
-            
             # Create a default club for the user
             club = Club(
                 name=f"{user.username}'s Club",
@@ -1475,8 +1471,8 @@ def toggle_club_leader(user_id):
             # Delete the club
             db.session.delete(existing_club)
             
-            # Remove admin status if it was only for club leader
-            user.is_admin = False
+            # Admin status is now managed separately from club leader status
+            # We don't automatically change it
             
             # Record activity
             activity = UserActivity(
