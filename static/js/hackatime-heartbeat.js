@@ -1,37 +1,35 @@
-
-// Prevent redeclaration
-if (typeof HackatimeTracker === 'undefined') {
-    const HackatimeTracker = {
-        lastActivity: 0,
-        isActive: false,
-        activityThreshold: 60000, // 1 minute
-        heartbeatInterval: 120000, // 2 minutes
-        currentEntity: 'index.html', // Default filename
-        currentLanguage: 'HTML', // Default language
-        intervalId: null,
-        apiKeyExists: false,
-        userId: null,
+// Define HackatimeTracker globally
+const HackatimeTracker = {
+    lastActivity: 0,
+    isActive: false,
+    activityThreshold: 60000, // 1 minute
+    heartbeatInterval: 120000, // 2 minutes
+    currentEntity: 'index.html', // Default filename
+    currentLanguage: 'HTML', // Default language
+    intervalId: null,
+    apiKeyExists: false,
+    userId: null,
 
     // Check if API connection is valid
     async checkApiConnection() {
         try {
             console.log('🕒 Checking Hackatime API connection...');
             const response = await fetch('/hackatime/check-connection');
-            
+
             if (response.status !== 200) {
                 console.log('🕒 Hackatime connection issue:', 'API error:', response.status);
                 this.updateBadge('Disconnected', false);
                 return false;
             }
-            
+
             const data = await response.json();
-            
+
             if (!data.success) {
                 console.log('🕒 Hackatime connection issue:', 'API error:', data.message);
                 this.updateBadge('Disconnected', false);
                 return false;
             }
-            
+
             console.log('🕒 Hackatime API connection successful');
             this.updateBadge('Connected', true);
             this.apiKeyExists = true;
@@ -42,7 +40,7 @@ if (typeof HackatimeTracker === 'undefined') {
             return false;
         }
     },
-    
+
     // Initialize the tracker
     async init() {
         try {
@@ -51,18 +49,18 @@ if (typeof HackatimeTracker === 'undefined') {
             if (userIdElement) {
                 this.userId = userIdElement.value;
             }
-            
-            // Check if API connection is valid first
+
+            // Check if API connection is valid
             if (await this.checkApiConnection()) {
                 this.detectLanguageFromURL();
                 this.detectCurrentFile();
                 this.startListening();
-                
+
                 console.log('🕒 Hackatime integration active:', {
                     apiKeyExists: this.apiKeyExists, 
                     userId: this.userId
                 });
-                
+
                 // Send initial heartbeat
                 setTimeout(() => this.sendHeartbeat(), 5000);
             } else {
@@ -72,143 +70,117 @@ if (typeof HackatimeTracker === 'undefined') {
             console.error('🕒 Failed to initialize Hackatime:', error);
         }
     },
-    
+
     // Update the badge in the UI if it exists
     updateBadge(status, isConnected) {
         const badge = document.getElementById('hackatime-badge');
         if (badge) {
-            badge.textContent = `Hackatime: ${status}`;
-            badge.className = isConnected ? 'badge-success' : 'badge-danger';
+            badge.innerHTML = `<i class="fas fa-clock"></i> ${status}`;
+            badge.className = `hackatime-badge ${isConnected ? 'badge-success' : 'badge-danger'}`;
         }
     },
-    
+
     // Start listening for heartbeat interval
     startListening() {
         // Clear any existing interval
         if (this.intervalId) {
             clearInterval(this.intervalId);
         }
-        
+
         // Set up the heartbeat interval
         this.intervalId = setInterval(() => {
             // Check if there's been activity since the last heartbeat
             if (this.isActive) {
                 this.sendHeartbeat();
-                this.isActive = false; // Reset activity state
+                this.isActive = false;
             }
         }, this.heartbeatInterval);
-        
-        console.log('🕒 Heartbeat listener started');
     },
-    
-    // Record activity
+
+    // Record user activity
     recordActivity() {
-        const now = Date.now();
-        
-        // If it's been more than the threshold since the last activity
-        if (now - this.lastActivity > this.activityThreshold) {
-            this.isActive = true;
-        }
-        
-        this.lastActivity = now;
-        
-        // If file tab changed, update the entity and language
-        this.detectCurrentFile();
+        this.lastActivity = Date.now();
+        this.isActive = true;
     },
-    
-    // Detect the current file from active tab or editor
-    detectCurrentFile() {
-        // Check for file tabs
-        const activeTabs = document.querySelectorAll('.file-tab.active');
-        if (activeTabs.length > 0) {
-            const filename = activeTabs[0].getAttribute('data-filename') || 
-                             activeTabs[0].textContent.trim();
-            
-            if (filename && filename !== this.currentEntity) {
-                this.currentEntity = filename;
-                this.detectLanguageFromFilename(filename);
-                console.log('🕒 Current file detected:', filename);
-            }
-            return;
-        }
-        
-        // Fallback to looking at editor title or URL
-        this.detectLanguageFromURL();
-    },
-    
-    // Detect language from URL or other sources
+
+    // Detect the current programming language from URL
     detectLanguageFromURL() {
-        const path = window.location.pathname;
-        
-        // Check if URL contains a filename
-        if (path.includes('/edit/') || path.includes('/python/')) {
-            const parts = path.split('/');
-            const lastPart = parts[parts.length - 1];
-            
-            if (lastPart.includes('.')) {
-                this.currentEntity = lastPart;
-                this.detectLanguageFromFilename(lastPart);
-                return;
+        const url = window.location.href;
+        if (url.includes('pythoneditor')) {
+            this.currentLanguage = 'Python';
+        } else if (url.includes('editor')) {
+            // Default to HTML for now, but we'll update based on open file
+            this.currentLanguage = 'HTML';
+        }
+    },
+
+    // Detect the current file being edited
+    detectCurrentFile() {
+        // Find active file tab if it exists
+        const activeTab = document.querySelector('.file-tab.active');
+        if (activeTab) {
+            const filename = activeTab.getAttribute('data-filename');
+            if (filename) {
+                this.currentEntity = filename;
+
+                // Determine language from file extension
+                const ext = filename.split('.').pop().toLowerCase();
+                switch (ext) {
+                    case 'html':
+                        this.currentLanguage = 'HTML';
+                        break;
+                    case 'css':
+                        this.currentLanguage = 'CSS';
+                        break;
+                    case 'js':
+                        this.currentLanguage = 'JavaScript';
+                        break;
+                    case 'py':
+                        this.currentLanguage = 'Python';
+                        break;
+                    default:
+                        // Keep current language if can't determine
+                        break;
+                }
+            }
+        } else {
+            // No tabs, so look for CodeMirror instance
+            const cm = document.querySelector('.CodeMirror');
+            if (cm && cm.CodeMirror) {
+                const mode = cm.CodeMirror.getMode().name;
+                if (mode === 'python') {
+                    this.currentLanguage = 'Python';
+                    this.currentEntity = 'main.py'; // Default Python file
+                }
             }
         }
-        
-        // If we get here, set defaults based on URL type
-        if (path.includes('/python/')) {
-            this.currentEntity = 'main.py';
-            this.currentLanguage = 'Python';
-        } else {
-            this.currentEntity = 'index.html';
-            this.currentLanguage = 'HTML';
-        }
     },
-    
-    // Detect language from filename
-    detectLanguageFromFilename(filename) {
-        const ext = filename.split('.').pop().toLowerCase();
-        
-        const langMap = {
-            'py': 'Python',
-            'js': 'JavaScript',
-            'html': 'HTML',
-            'css': 'CSS',
-            'json': 'JSON',
-            'md': 'Markdown',
-            'txt': 'Text',
-            'sh': 'Shell',
-            'jsx': 'JavaScript React',
-            'tsx': 'TypeScript React',
-            'ts': 'TypeScript'
-        };
-        
-        if (langMap[ext]) {
-            this.currentLanguage = langMap[ext];
-        } else if (ext === 'htm') {
-            this.currentLanguage = 'HTML';
-        } else if (ext === 'xml') {
-            this.currentLanguage = 'Xml';
-        } else {
-            // Default to the extension as language if unknown
-            this.currentLanguage = ext.charAt(0).toUpperCase() + ext.slice(1);
-        }
-    },
-    
-    // Send a heartbeat to the Hackatime API
+
+    // Send a heartbeat to the WakaTime-compatible API
     async sendHeartbeat() {
         try {
-            const timestamp = Date.now() / 1000; // Convert to seconds
-            
+            // Only send if we have the necessary info
+            if (!this.apiKeyExists) {
+                return false;
+            }
+
+            // Detect current file/language again to ensure it's up to date
+            this.detectCurrentFile();
+
+            const timestamp = Math.floor(Date.now() / 1000);
+
+            // Prepare the payload for the heartbeat
             const heartbeatData = {
-                type: 'file',
-                language: this.currentLanguage,
                 entity: this.currentEntity,
-                time: timestamp,
-                is_write: true,
-                category: 'coding',
-                user_agent: navigator.userAgent
+                type: 'file',
+                timestamp: timestamp,
+                language: this.currentLanguage,
+                is_write: true
             };
-            
+
             console.log('🕒 Sending heartbeat:', heartbeatData);
-            
+
+            // Send the heartbeat to our server, which will forward to WakaTime API
             const response = await fetch('/hackatime/heartbeat', {
                 method: 'POST',
                 headers: {
@@ -216,22 +188,21 @@ if (typeof HackatimeTracker === 'undefined') {
                 },
                 body: JSON.stringify(heartbeatData)
             });
-            
-            const data = await response.json();
-            console.log('🕒 Heartbeat response:', data);
-            
-            if (data.success) {
-                // Success!
+
+            const responseData = await response.json();
+
+            if (responseData.success) {
+                console.log('🕒 Heartbeat sent successfully');
+                this.updateBadge(`${this.currentLanguage} - ${this.currentEntity}`, true);
                 return true;
             } else {
-                console.log('🕒 Heartbeat failed:', data.message);
-                
-                // If authentication failed, check connection again
-                if (data.error_code === 401) {
+                console.log('🕒 Heartbeat failed:', responseData.message);
+
+                if (responseData.error === 'api_key_invalid') {
                     this.apiKeyExists = false;
                     this.updateBadge('API Key Invalid', false);
                 }
-                
+
                 return false;
             }
         } catch (error) {
@@ -240,12 +211,11 @@ if (typeof HackatimeTracker === 'undefined') {
         }
     }
 };
-} // Close the if (typeof HackatimeTracker === 'undefined') block
 
 // Add event listener to track tab changes - this helps detect file changes
 document.addEventListener('click', function(event) {
     const target = event.target;
-    
+
     // If clicking on a file tab
     if (target.classList && (
         target.classList.contains('file-tab') || 
@@ -267,5 +237,3 @@ document.addEventListener('visibilitychange', function() {
         HackatimeTracker.sendHeartbeat();
     }
 });
-
-console.log('🕒 Hackatime tracker loaded');

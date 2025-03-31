@@ -407,17 +407,7 @@
 <div id="hackatime-badge" class="hackatime-badge">
     <i class="fas fa-clock"></i> Initializing...
 </div>
-<script>
-  // Check if HackatimeTracker is already defined to prevent duplicate declarations
-  if (typeof HackatimeTracker === 'undefined') {
-    // Only load the script if HackatimeTracker is not already defined
-    const script = document.createElement('script');
-    script.src = "{{ url_for('static', filename='js/hackatime-heartbeat.js') }}";
-    document.head.appendChild(script);
-  } else {
-    console.log('🕒 HackatimeTracker already loaded, skipping duplicate script load');
-  }
-</script>pt>
+<script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🕒 Web editor loaded, checking for Hackatime integration');
