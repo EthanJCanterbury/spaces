@@ -7,8 +7,9 @@ if (typeof HackatimeTracker === 'undefined') {
         lastActivity: 0,
         isActive: false,
         activityThreshold: 60000, // 1 minute
-        heartbeatInterval: 300000, // Increased to 5 minutes
-        heartbeatCooldown: 30000, // 30 seconds minimum between heartbeats
+        heartbeatInterval: 300000, // 5 minutes
+        heartbeatCooldown: 60000, // 1 minute minimum between heartbeats
+        lastHeartbeatAttempt: 0, // Track last attempt regardless of success
         lastHeartbeatTime: 0,
         currentEntity: 'index.html', // Default filename
         currentLanguage: 'HTML', // Default language
@@ -138,19 +139,17 @@ if (typeof HackatimeTracker === 'undefined') {
             if (!this.intervalId) {
                 // Set next heartbeat time
                 this.nextHeartbeatTime = Date.now() + this.heartbeatInterval;
+                this.lastHeartbeatAttempt = 0; // Initialize attempt time
 
                 this.intervalId = setInterval(() => {
                     const now = Date.now();
 
                     // Check if we should send a heartbeat
-                    if (this.isActive && now >= this.nextHeartbeatTime) {
-                        // Only send if it's been long enough since the last one
-                        if (now - this.lastHeartbeatTime >= this.heartbeatCooldown) {
-                            this.sendHeartbeat();
-                            this.nextHeartbeatTime = now + this.heartbeatInterval;
-                        }
+                    if (now >= this.nextHeartbeatTime) {
+                        // The actual cooldown check is now inside sendHeartbeat
+                        this.sendHeartbeat();
                     }
-                }, 10000); // Check every 10 seconds
+                }, 30000); // Check every 30 seconds instead of 10
 
                 console.log('🕒 Heartbeat interval started');
             }
@@ -261,8 +260,17 @@ if (typeof HackatimeTracker === 'undefined') {
         // Send heartbeat to backend
         async sendHeartbeat() {
             try {
-                this.lastHeartbeatTime = Date.now();
-                console.log('🕒 sendHeartbeat called'); // Added logging
+                const now = Date.now();
+                
+                // Check if we're within the cooldown period from the last attempt
+                if (now - this.lastHeartbeatAttempt < this.heartbeatCooldown) {
+                    console.log('🕒 Heartbeat skipped: Within cooldown period');
+                    return false;
+                }
+                
+                // Update attempt time before anything else to prevent multiple calls
+                this.lastHeartbeatAttempt = now;
+                console.log('🕒 sendHeartbeat called');
 
                 if (!this.apiKeyExists) {
                     console.log('🕒 Heartbeat skipped: No API key exists');
@@ -290,7 +298,6 @@ if (typeof HackatimeTracker === 'undefined') {
                 }
 
                 // Are we currently active?
-                const now = Date.now();
                 const timeSinceLastActivity = now - this.lastActivity;
                 const isCurrentlyActive = timeSinceLastActivity < this.activityThreshold;
 
@@ -302,8 +309,8 @@ if (typeof HackatimeTracker === 'undefined') {
                 // Show 'Sending...' status briefly during the API call
                 this.updateBadge('Sending...', this.isActive ? 'active' : 'idle');
 
-                // Prepare heartbeat data in array format as expected by the API
-                const heartbeatData = [{
+                // Prepare heartbeat data
+                const heartbeatData = {
                     entity: this.currentEntity,
                     type: 'file',
                     time: Math.floor(now / 1000), // Convert to seconds as integer
@@ -311,23 +318,23 @@ if (typeof HackatimeTracker === 'undefined') {
                     is_write: true,
                     lines: Math.max(1, Math.floor(fileSize / 80)), // Estimate lines based on file size
                     project: window.location.pathname
-                }];
+                };
 
                 console.log('🕒 Sending heartbeat:', {
-                    entity: heartbeatData[0].entity,
-                    language: heartbeatData[0].language,
-                    time: heartbeatData[0].time
+                    entity: heartbeatData.entity,
+                    language: heartbeatData.language,
+                    time: heartbeatData.time
                 });
 
-                // Send the heartbeat - Added logging of the URL
-                const heartbeatUrl = '/hackatime/heartbeat'; // Assumed endpoint
+                // Send the heartbeat
+                const heartbeatUrl = '/hackatime/heartbeat';
                 console.log('🕒 Sending heartbeat to:', heartbeatUrl);
                 const response = await fetch(heartbeatUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(heartbeatData[0]) // Still send as object for backend compatibility
+                    body: JSON.stringify(heartbeatData)
                 });
 
                 if (response.status !== 200) {
@@ -345,8 +352,15 @@ if (typeof HackatimeTracker === 'undefined') {
                     return false;
                 }
 
+                // If we were rate limited by the server, still count as success but note it
+                if (responseData.rate_limited) {
+                    console.log('🕒 Heartbeat rate limited by server');
+                }
+
                 console.log('🕒 Heartbeat sent successfully', responseData);
                 this.lastHeartbeatSuccess = true;
+                this.lastHeartbeatTime = now;
+                
                 // Reset the timer for next heartbeat
                 this.nextHeartbeatTime = now + this.heartbeatInterval;
 

@@ -2624,7 +2624,7 @@ def hackatime_heartbeat():
                 app.logger.error(f'Missing required field {field} in heartbeat data')
                 return jsonify({'success': False, 'message': f'Missing required field: {field}'})
                 
-        # Add rate limiting - only allow 1 heartbeat per 15 seconds per user
+        # Add stronger rate limiting - only allow 1 heartbeat per 30 seconds per user
         # Use a timestamp in memory (could be moved to Redis in production)
         user_id = current_user.id
         current_time = time.time()
@@ -2635,8 +2635,8 @@ def hackatime_heartbeat():
             
         last_heartbeat_time = app.last_heartbeat_times.get(user_id, 0)
         
-        # Check if enough time has passed (15 seconds)
-        if current_time - last_heartbeat_time < 15:
+        # Check if enough time has passed (30 seconds)
+        if current_time - last_heartbeat_time < 30:
             app.logger.info(f'Rate limiting heartbeat for user {user_id}')
             return jsonify({
                 'success': True, 
