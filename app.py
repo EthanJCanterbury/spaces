@@ -2555,7 +2555,7 @@ def hackatime_heartbeat():
         app.logger.info(f'API key length: {len(api_key)}, user_id: {user_id}')
         
         # Construct heartbeat endpoint URL
-        heartbeat_url = f"https://waka.hackclub.com/users/{user_id}/heartbeats"
+        heartbeat_url = f"https://waka.hackclub.com/api/v1/users/{user_id}/heartbeats"
         app.logger.info(f'Sending heartbeat to: {heartbeat_url}')
         
         # Send heartbeat to Hackatime API

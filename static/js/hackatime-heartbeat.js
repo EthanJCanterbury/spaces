@@ -13,14 +13,14 @@ if (typeof HackatimeTracker === 'undefined') {
         totalTime: 0, 
         heartbeatQueue: [],
         isProcessing: false,
-        apiUrl: 'https://hackatime.hackclub.com/api/hackatime/v1',
+        apiUrl: 'https://waka.hackclub.com/api/v1/users/current/heartbeats', // Updated API URL
         projectInfo: {
             name: document.title || 'Unknown Project',
             language: null,
             entity: null,
         },
 
-   
+
         init: function() {
             console.log('🕒 Initializing Hackatime tracker');
 
@@ -47,7 +47,7 @@ if (typeof HackatimeTracker === 'undefined') {
             console.log('🕒 Hackatime tracker initialized with:', this.projectInfo);
         },
 
-  
+
         startHeartbeatTimer: function() {
             console.log('🕒 Starting heartbeat timer');
             setInterval(() => {
@@ -57,12 +57,12 @@ if (typeof HackatimeTracker === 'undefined') {
             }, this.heartbeatInterval);
         },
 
- 
+
         recordActivity: function() {
             this.lastActivity = Date.now();
         },
 
-     
+
         updateBadge: function(text) {
             const badge = document.getElementById('hackatime-badge');
             if (badge) {
@@ -83,15 +83,14 @@ if (typeof HackatimeTracker === 'undefined') {
             }
         },
 
-   
+
         sendHeartbeat: function() {
             if (!this.lastActivity) {
                 console.log('🕒 No activity to report');
                 return;
             }
 
-            this.apiUrl = 'https://hackatime.hackclub.com/api/hackatime/v1';
-
+            // this.apiUrl = 'https://waka.hackclub.com/api/v1/users/current/heartbeats'; //Redundant, already set in object.
             const now = Date.now();
             if (now - this.lastActivity > this.idleTimeout) {
                 console.log('🕒 User has been idle for too long, skipping heartbeat');
@@ -124,8 +123,8 @@ if (typeof HackatimeTracker === 'undefined') {
 
             console.log('🕒 Sending heartbeat:', heartbeat);
 
-            // Send to server
-            fetch('/hackatime/heartbeat', {
+            // Send to server - Updated fetch URL
+            fetch(this.apiUrl, { // Use the apiUrl from the object.
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
