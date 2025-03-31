@@ -1,12 +1,22 @@
 
-<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="60" cy="60" r="55" fill="#231747" stroke="#FF4D8D" stroke-width="3"/>
-  <path d="M60 30V60L80 80" stroke="#FF4D8D" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M35 40L45 50" stroke="#FF8C19" stroke-width="3" stroke-linecap="round"/>
-  <path d="M30 60H40" stroke="#FF8C19" stroke-width="3" stroke-linecap="round"/>
-  <path d="M38 78L48 68" stroke="#FF8C19" stroke-width="3" stroke-linecap="round"/>
-  <path d="M85 40L75 50" stroke="#FF8C19" stroke-width="3" stroke-linecap="round"/>
-  <path d="M90 60H80" stroke="#FF8C19" stroke-width="3" stroke-linecap="round"/>
-  <path d="M82 78L72 68" stroke="#FF8C19" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="60" cy="60" r="6" fill="#FF4D8D"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <style>
+    .clock-face { fill: white; stroke: #ed6663; stroke-width: 4; }
+    .clock-center { fill: #ed6663; }
+    .clock-hand { fill: #ed6663; }
+    .code-symbol { fill: #ed6663; }
+  </style>
+  
+  <!-- Clock Face -->
+  <circle class="clock-face" cx="60" cy="60" r="55" />
+  
+  <!-- Clock Center -->
+  <circle class="clock-center" cx="60" cy="60" r="5" />
+  
+  <!-- Clock Hands -->
+  <rect class="clock-hand" x="58" y="30" width="4" height="32" rx="2" />
+  <rect class="clock-hand" x="60" y="58" width="30" height="4" rx="2" transform="rotate(45 60 60)" />
+  
+  <!-- Code Symbol -->
+  <path class="code-symbol" d="M40,82 L32,75 L40,68 M80,82 L88,75 L80,68 M54,88 L66,62" stroke-width="4" stroke-linecap="round" fill="none" />
 </svg>
