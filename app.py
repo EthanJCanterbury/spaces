@@ -1421,7 +1421,7 @@ def edit_user(user_id):
 @login_required
 @admin_required
 def toggle_club_leader(user_id):
-    """Toggle a user's club leader status."""
+    """Toggle a user's club leader status without creating a club automatically."""
     if user_id == current_user.id:
         return jsonify({'message': 'Cannot change your own club leader status'}), 400
         
@@ -1433,23 +1433,9 @@ def toggle_club_leader(user_id):
         # Check if user already has a club
         existing_club = Club.query.filter_by(leader_id=user.id).first()
         
-        if make_leader and not existing_club:
-            # Create a default club for the user
-            club = Club(
-                name=f"{user.username}'s Club",
-                leader_id=user.id
-            )
-            club.generate_join_code()
-            db.session.add(club)
-            db.session.commit()  # Commit to get the club ID
-            
-            # Now create membership with valid club_id
-            membership = ClubMembership(
-                user_id=user.id,
-                club_id=club.id,
-                role='co-leader'
-            )
-            db.session.add(membership)
+        if make_leader:
+            # Just mark them as club leader but don't automatically create a club
+            # They'll need to create one on the club dashboard
             
             # Record activity
             activity = UserActivity(
@@ -1470,9 +1456,6 @@ def toggle_club_leader(user_id):
             
             # Delete the club
             db.session.delete(existing_club)
-            
-            # Admin status is now managed separately from club leader status
-            # We don't automatically change it
             
             # Record activity
             activity = UserActivity(

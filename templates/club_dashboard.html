@@ -894,6 +894,11 @@
     animation: fadeIn 0.2s ease;
 }
 
+/* Fix for invisible modals when displaying them */
+.modal[style*="display: flex"] {
+    display: flex !important;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -913,6 +918,12 @@
 @keyframes slideUp {
     from { transform: translateY(30px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
+}
+
+/* Additional class for ensuring modal visibility */
+.modal.visible {
+    display: flex !important;
+    opacity: 1;
 }
 
 .modal-header {
@@ -1364,13 +1375,18 @@ function generateJoinCode() {
     });
 }
 
-// Modal functions
+// Modal functions with improved visibility handling
 function openCreateClubModal() {
-    document.getElementById('createClubModal').style.display = 'flex';
+    const modal = document.getElementById('createClubModal');
+    modal.style.display = 'flex';
+    // Force repaint to ensure visibility
+    setTimeout(() => { modal.classList.add('visible'); }, 10);
 }
 
 function closeCreateClubModal() {
-    document.getElementById('createClubModal').style.display = 'none';
+    const modal = document.getElementById('createClubModal');
+    modal.style.display = 'none';
+    modal.classList.remove('visible');
     document.getElementById('createClubForm').reset();
 }
 
@@ -1387,7 +1403,11 @@ function openEditClubModal() {
             document.getElementById('editClubName').value = data.name || '';
             document.getElementById('editClubLocation').value = data.location || '';
             document.getElementById('editClubDescription').value = data.description || '';
-            document.getElementById('editClubModal').style.display = 'flex';
+            
+            const modal = document.getElementById('editClubModal');
+            modal.style.display = 'flex';
+            // Force repaint to ensure visibility
+            setTimeout(() => { modal.classList.add('visible'); }, 10);
         })
         .catch(error => {
             showToast('error', 'Failed to fetch club details');
@@ -1396,16 +1416,23 @@ function openEditClubModal() {
 }
 
 function closeEditClubModal() {
-    document.getElementById('editClubModal').style.display = 'none';
+    const modal = document.getElementById('editClubModal');
+    modal.style.display = 'none';
+    modal.classList.remove('visible');
     document.getElementById('editClubForm').reset();
 }
 
 function openAddMemberModal() {
-    document.getElementById('addMemberModal').style.display = 'flex';
+    const modal = document.getElementById('addMemberModal');
+    modal.style.display = 'flex';
+    // Force repaint to ensure visibility
+    setTimeout(() => { modal.classList.add('visible'); }, 10);
 }
 
 function closeAddMemberModal() {
-    document.getElementById('addMemberModal').style.display = 'none';
+    const modal = document.getElementById('addMemberModal');
+    modal.style.display = 'none';
+    modal.classList.remove('visible');
 }
 
 function openChangeRoleModal(membershipId, username, currentRole) {
@@ -1419,31 +1446,48 @@ function openChangeRoleModal(membershipId, username, currentRole) {
         document.getElementById('roleLeader').checked = true;
     }
 
-    document.getElementById('changeRoleModal').style.display = 'flex';
+    const modal = document.getElementById('changeRoleModal');
+    modal.style.display = 'flex';
+    // Force repaint to ensure visibility
+    setTimeout(() => { modal.classList.add('visible'); }, 10);
 }
 
 function closeChangeRoleModal() {
-    document.getElementById('changeRoleModal').style.display = 'none';
+    const modal = document.getElementById('changeRoleModal');
+    modal.style.display = 'none';
+    modal.classList.remove('visible');
 }
 
 function openRemoveMemberModal(membershipId, username) {
     document.getElementById('membershipIdForRemoval').value = membershipId;
     document.getElementById('removeUsername').textContent = username;
-    document.getElementById('removeMemberModal').style.display = 'flex';
+    
+    const modal = document.getElementById('removeMemberModal');
+    modal.style.display = 'flex';
+    // Force repaint to ensure visibility
+    setTimeout(() => { modal.classList.add('visible'); }, 10);
 }
 
 function closeRemoveMemberModal() {
-    document.getElementById('removeMemberModal').style.display = 'none';
+    const modal = document.getElementById('removeMemberModal');
+    modal.style.display = 'none';
+    modal.classList.remove('visible');
 }
 
 function openDeleteClubModal() {
-    document.getElementById('deleteClubModal').style.display = 'flex';
+    const modal = document.getElementById('deleteClubModal');
+    modal.style.display = 'flex';
+    // Force repaint to ensure visibility
+    setTimeout(() => { modal.classList.add('visible'); }, 10);
+    
     document.getElementById('deleteConfirmation').value = '';
     document.getElementById('confirmDeleteBtn').disabled = true;
 }
 
 function closeDeleteClubModal() {
-    document.getElementById('deleteClubModal').style.display = 'none';
+    const modal = document.getElementById('deleteClubModal');
+    modal.style.display = 'none';
+    modal.classList.remove('visible');
 }
 
 // Create club functionality
