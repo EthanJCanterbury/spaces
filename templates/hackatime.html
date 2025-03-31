@@ -131,6 +131,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            // Make sure the key is properly formatted
+            if (!validateApiKeyFormat(apiKey)) {
+                showValidationMessage('API key appears to be invalid. It should look like a long string of letters and numbers.', 'error');
+                return;
+            }
+            
             // Show loading state
             connectButton.disabled = true;
             connectButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating...';
@@ -145,7 +151,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     api_key: apiKey
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Server error:', response.status);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     showValidationMessage('API key is valid! Connecting your account...', 'success');
@@ -156,15 +167,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     connectButton.disabled = false;
                     connectButton.innerHTML = '<span>Connect Hackatime</span><i class="fas fa-arrow-right"></i>';
                     showValidationMessage(data.message, 'error');
+                    
+                    // If the error contains a 404 status, show a more helpful message
+                    if (data.message && data.message.includes('404')) {
+                        showValidationMessage('Error: Could not validate API key. Please make sure you\'re using the correct API key from your Hackatime account settings.', 'error');
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 connectButton.disabled = false;
                 connectButton.innerHTML = '<span>Connect Hackatime</span><i class="fas fa-arrow-right"></i>';
-                showValidationMessage('An error occurred while connecting your account.', 'error');
+                showValidationMessage('An error occurred while connecting your account. Please try again later.', 'error');
             });
         });
+    }
+    
+    // Simple validation for API key format
+    function validateApiKeyFormat(apiKey) {
+        // Hackatime API keys are typically alphanumeric and may include some special chars
+        // This is a simple validation to catch obvious mistakes
+        return apiKey.length > 10;
     }
     
     function showValidationMessage(message, type) {
