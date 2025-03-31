@@ -2523,6 +2523,45 @@ def hackatime_disconnect():
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Failed to disconnect Hackatime: {str(e)}'})
 
+@app.route('/hackatime/heartbeat', methods=['POST'])
+@login_required
+def hackatime_heartbeat():
+    """Send heartbeat to Hackatime API"""
+    if not current_user.wakatime_api_key:
+        return jsonify({'success': False, 'message': 'No Hackatime API key found'})
+    
+    try:
+        # Get heartbeat data from request
+        heartbeat_data = request.json
+        
+        # Add user ID to the heartbeat data
+        user_id = current_user.id
+        
+        # Encode API key in Base64 for Basic auth
+        import base64
+        api_key = current_user.wakatime_api_key.strip()
+        auth_header = f"Basic {base64.b64encode(api_key.encode()).decode()}"
+        
+        # Send heartbeat to Hackatime API
+        response = requests.post(
+            f"https://waka.hackclub.com/users/{user_id}/heartbeats",
+            headers={
+                "Authorization": auth_header,
+                "Content-Type": "application/json"
+            },
+            json=heartbeat_data
+        )
+        
+        if response.status_code == 201 or response.status_code == 200:
+            return jsonify({'success': True})
+        else:
+            app.logger.error(f'Hackatime API error: {response.status_code} - {response.text}')
+            return jsonify({'success': False, 'message': f'API error: {response.status_code}'})
+    
+    except Exception as e:
+        app.logger.error(f'Error sending heartbeat: {str(e)}')
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
+
 @app.route('/logout')
 @login_required
 def logout():

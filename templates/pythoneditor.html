@@ -13,6 +13,7 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/python-editor.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hackatime-badge.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -233,6 +234,12 @@
     <i class="fas fa-columns"></i>
 </div>
 
+{% if current_user.wakatime_api_key %}
+<div id="hackatime-badge" class="hackatime-badge">
+    <i class="fas fa-clock"></i> Initializing...
+</div>
+{% endif %}
+
 <!-- GitHub integration removed from Python editor -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
@@ -253,6 +260,34 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/comment-fold.min.js"></script>
 
 <script src="{{ url_for('static', filename='js/python-editor.js') }}"></script>
+{% if current_user.wakatime_api_key %}
+<script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Hackatime tracker
+    HackatimeTracker.init();
+    
+    // Add event listeners to track activity
+    let pythonEditor = document.getElementById('pythonEditor');
+    if (pythonEditor && pythonEditor.CodeMirror) {
+        pythonEditor.CodeMirror.on('keydown', function() {
+            HackatimeTracker.recordActivity();
+        });
+    } else {
+        // Wait for CodeMirror to initialize
+        let checkEditor = setInterval(function() {
+            if (document.querySelector('.CodeMirror') && document.querySelector('.CodeMirror').CodeMirror) {
+                let cm = document.querySelector('.CodeMirror').CodeMirror;
+                cm.on('keydown', function() {
+                    HackatimeTracker.recordActivity();
+                });
+                clearInterval(checkEditor);
+            }
+        }, 500);
+    }
+});
+</script>
+{% endif %}
 
 <!-- Editor initialization is handled by python-editor.js -->
 

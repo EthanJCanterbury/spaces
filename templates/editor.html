@@ -12,6 +12,7 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/github.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hackatime-badge.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -402,6 +403,12 @@
     </div>
 </div>
 
+{% if current_user.wakatime_api_key %}
+<div id="hackatime-badge" class="hackatime-badge">
+    <i class="fas fa-clock"></i> Initializing...
+</div>
+{% endif %}
+
 <!-- Include GitHub CSS -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/github-buttons.css') }}">
 <div id="ysws-widget">
@@ -504,6 +511,47 @@
 <script src="{{ url_for('static', filename='js/orphy.js') }}"></script>
 <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
 <script src="{{ url_for('static', filename='js/file-handling.js') }}"></script>
+
+{% if current_user.wakatime_api_key %}
+<script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Hackatime tracker
+    HackatimeTracker.init();
+    
+    // Add event listeners to track activity
+    let editor = document.getElementById('editor');
+    if (editor && editor.CodeMirror) {
+        editor.CodeMirror.on('keydown', function() {
+            HackatimeTracker.recordActivity();
+        });
+    } else {
+        // Wait for CodeMirror to initialize
+        let checkEditor = setInterval(function() {
+            if (document.querySelector('.CodeMirror') && document.querySelector('.CodeMirror').CodeMirror) {
+                let cm = document.querySelector('.CodeMirror').CodeMirror;
+                cm.on('keydown', function() {
+                    HackatimeTracker.recordActivity();
+                });
+                clearInterval(checkEditor);
+            }
+        }, 500);
+    }
+    
+    // Track file tab changes
+    const fileTabs = document.querySelectorAll('.file-tab');
+    if (fileTabs.length > 0) {
+        fileTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                setTimeout(() => {
+                    HackatimeTracker.sendHeartbeat();
+                }, 500);
+            });
+        });
+    }
+});
+</script>
+{% endif %}
 
 <script>
 function openYSWSModal() {
