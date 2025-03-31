@@ -2513,10 +2513,23 @@ def check_hackatime_connection():
     if not current_user.is_authenticated:
         return jsonify({'success': False, 'message': 'Authentication required'})
         
-    if not current_user.wakatime_api_key:
-        return jsonify({'success': False, 'message': 'No Hackatime API key found'})
+    # Get API key from database to ensure it's fresh
+    with db.engine.connect() as conn:
+        result = conn.execute(
+            db.text("SELECT wakatime_api_key FROM \"user\" WHERE id = :user_id"),
+            {"user_id": current_user.id}
+        ).fetchone()
+
+        api_key = result[0] if result else None
         
-    return jsonify({'success': True})
+    if not api_key:
+        return jsonify({'success': False, 'message': 'No Hackatime API key found'})
+    
+    # Verify the key has a reasonable length (basic validation)
+    if len(api_key) < 10:
+        return jsonify({'success': False, 'message': 'API key appears invalid'})
+        
+    return jsonify({'success': True, 'message': 'API connection valid'})
 
 def hackatime_connect():
     """Connect Hackatime account by saving API key"""
@@ -2611,9 +2624,6 @@ def hackatime_heartbeat():
                 app.logger.error(f'Missing required field {field} in heartbeat data')
                 return jsonify({'success': False, 'message': f'Missing required field: {field}'})
 
-        # Add user ID to the heartbeat data
-        user_id = current_user.id
-
         # Encode API key in Base64 for Basic auth
         import base64
 
@@ -2628,12 +2638,29 @@ def hackatime_heartbeat():
         auth_header = f"Basic {base64.b64encode(api_key.encode()).decode()}"
 
         # Log the API key length (not the actual key) for debugging
-        app.logger.info(f'API key length: {len(api_key)}, user_id: {user_id}')
+        app.logger.info(f'API key length: {len(api_key)}, user_id: {current_user.id}')
 
-        # Construct heartbeat endpoint URL
-        heartbeat_url = f"https://waka.hackclub.com/api/v1/users/current/heartbeats"
+        # Construct heartbeat endpoint URL - this is the correct endpoint for Hackatime
+        heartbeat_url = "https://waka.hackclub.com/api/v1/users/current/heartbeats"
         app.logger.info(f'Sending heartbeat to: {heartbeat_url}')
 
+        # Prepare the data in the format Hackatime expects
+        # Make sure all required fields are present and properly formatted
+        formatted_heartbeat = {
+            "entity": heartbeat_data.get('entity'),
+            "type": heartbeat_data.get('type', 'file'),
+            "time": heartbeat_data.get('time'),
+            "project": heartbeat_data.get('project', 'Hack Club Spaces'),
+            "language": heartbeat_data.get('language', 'HTML'),
+            "is_write": heartbeat_data.get('is_write', True),
+        }
+        
+        # Optional fields
+        if 'lines' in heartbeat_data:
+            formatted_heartbeat['lines'] = heartbeat_data.get('lines')
+        if 'file_size' in heartbeat_data:
+            formatted_heartbeat['lineno'] = heartbeat_data.get('file_size')
+        
         # Send heartbeat to Hackatime API
         response = requests.post(
             heartbeat_url,
@@ -2641,7 +2668,7 @@ def hackatime_heartbeat():
                 "Authorization": auth_header,
                 "Content-Type": "application/json"
             },
-            json=heartbeat_data,
+            json=formatted_heartbeat,
             timeout=10  # Add timeout to prevent hanging requests
         )
 

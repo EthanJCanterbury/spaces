@@ -1,4 +1,7 @@
 
+// Hackatime Tracker for Hack Club Spaces
+// This script tracks coding activity and sends heartbeats to the Hackatime API
+
 // Prevent redeclaration
 if (typeof HackatimeTracker === 'undefined') {
     const HackatimeTracker = {
@@ -206,15 +209,16 @@ if (typeof HackatimeTracker === 'undefined') {
                     time: now / 1000, // Convert to seconds
                     language: this.currentLanguage,
                     is_write: true,
-                    lines: 1, // Placeholder
+                    lines: Math.max(1, Math.floor(fileSize / 80)), // Estimate lines based on file size
                     file_size: fileSize,
                     project: window.location.pathname
                 };
 
                 console.log('🕒 Sending heartbeat:', {
                     entity: data.entity,
+                    type: data.type,
                     language: data.language,
-                    time: new Date(data.time * 1000).toISOString()
+                    time: data.time
                 });
 
                 // Send the heartbeat
@@ -237,6 +241,7 @@ if (typeof HackatimeTracker === 'undefined') {
                     return false;
                 }
 
+                console.log('🕒 Heartbeat sent successfully', responseData);
                 return true;
             } catch (error) {
                 console.log('🕒 Heartbeat failed: API error:', error);
@@ -274,5 +279,25 @@ document.addEventListener('visibilitychange', function() {
         // User is back, record activity and send a heartbeat
         window.HackatimeTracker.recordActivity();
         window.HackatimeTracker.sendHeartbeat();
+    }
+});
+
+// Record general activity
+document.addEventListener('mousemove', function() {
+    if (window.HackatimeTracker) {
+        window.HackatimeTracker.recordActivity();
+    }
+});
+
+document.addEventListener('keydown', function() {
+    if (window.HackatimeTracker) {
+        window.HackatimeTracker.recordActivity();
+    }
+});
+
+// Initialize tracker when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.HackatimeTracker) {
+        window.HackatimeTracker.init();
     }
 });

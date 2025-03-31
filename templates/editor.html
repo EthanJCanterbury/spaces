@@ -408,6 +408,11 @@
     <i class="fas fa-clock"></i> Initializing...
 </div>
 <script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
+<input type="hidden" id="user-id" value="{{ current_user.id }}">
+{% if site %}
+<input type="hidden" id="site-id" value="{{ site.id }}">
+<input type="hidden" id="site-type" value="{{ site.site_type or 'web' }}">
+{% endif %}pt>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🕒 Web editor loaded, checking for Hackatime integration');

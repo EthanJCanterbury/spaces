@@ -261,6 +261,13 @@
 <script src="{{ url_for('static', filename='js/python-editor.js') }}"></script>
 {% if current_user.wakatime_api_key %}
 <script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
+<script src="{{ url_for('static', filename='js/hackatime-heartbeat.js') }}"></script>
+<input type="hidden" id="user-id" value="{{ current_user.id }}">
+{% if site %}
+<input type="hidden" id="site-id" value="{{ site.id }}">
+<input type="hidden" id="site-type" value="python">
+{% endif %}
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🕒 Python editor loaded, checking for Hackatime integration');
