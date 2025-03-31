@@ -2628,7 +2628,12 @@ def hackatime_heartbeat():
         # Use a timestamp in memory (could be moved to Redis in production)
         user_id = current_user.id
         current_time = time.time()
-        last_heartbeat_time = getattr(g, f'last_heartbeat_{user_id}', 0)
+        
+        # Create a dictionary to store last heartbeat times if it doesn't exist
+        if not hasattr(app, 'last_heartbeat_times'):
+            app.last_heartbeat_times = {}
+            
+        last_heartbeat_time = app.last_heartbeat_times.get(user_id, 0)
         
         # Check if enough time has passed (15 seconds)
         if current_time - last_heartbeat_time < 15:
@@ -2641,7 +2646,7 @@ def hackatime_heartbeat():
             })
             
         # Update the last heartbeat time
-        setattr(g, f'last_heartbeat_{user_id}', current_time)
+        app.last_heartbeat_times[user_id] = current_time
 
         # Encode API key in Base64 for Basic auth
         import base64

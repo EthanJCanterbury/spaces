@@ -1,4 +1,3 @@
-
 // Hackatime Tracker for Hack Club Spaces
 // This script tracks coding activity and sends heartbeats to the Hackatime API
 
@@ -28,7 +27,7 @@ if (typeof HackatimeTracker === 'undefined') {
                 console.log('🕒 Checking Hackatime API connection...');
                 this.connectionStatus = 'initializing';
                 this.updateBadge('Connecting...', 'initializing');
-                
+
                 const response = await fetch('/hackatime/check-connection');
 
                 if (response.status !== 200) {
@@ -105,10 +104,10 @@ if (typeof HackatimeTracker === 'undefined') {
             }
 
             badge.innerHTML = `<i class="fas fa-clock"></i> ${displayText}`;
-            
+
             // Update badge class based on state
             badge.className = 'hackatime-badge';
-            
+
             // Add state-specific classes
             switch (state) {
                 case 'active':
@@ -139,10 +138,10 @@ if (typeof HackatimeTracker === 'undefined') {
             if (!this.intervalId) {
                 // Set next heartbeat time
                 this.nextHeartbeatTime = Date.now() + this.heartbeatInterval;
-                
+
                 this.intervalId = setInterval(() => {
                     const now = Date.now();
-                    
+
                     // Check if we should send a heartbeat
                     if (this.isActive && now >= this.nextHeartbeatTime) {
                         // Only send if it's been long enough since the last one
@@ -152,7 +151,7 @@ if (typeof HackatimeTracker === 'undefined') {
                         }
                     }
                 }, 10000); // Check every 10 seconds
-                
+
                 console.log('🕒 Heartbeat interval started');
             }
         },
@@ -162,22 +161,22 @@ if (typeof HackatimeTracker === 'undefined') {
             if (!this.timerIntervalId) {
                 this.timerIntervalId = setInterval(() => {
                     const now = Date.now();
-                    
+
                     // Update timing information
                     if (this.isActive && this.nextHeartbeatTime > now) {
                         const secondsRemaining = Math.round((this.nextHeartbeatTime - now) / 1000);
                         const minutes = Math.floor(secondsRemaining / 60);
                         const seconds = secondsRemaining % 60;
                         this.timerDisplay = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                        
+
                         // Determine current state for badge
                         let currentState = this.isActive ? 'active' : 'idle';
-                        
+
                         // If there was an error on the last heartbeat, show that status
                         if (this.lastHeartbeatSuccess === false) {
                             currentState = 'error';
                         }
-                        
+
                         // Update badge with current status and timer
                         this.updateBadge(
                             this.isActive ? 'Active' : 'Idle', 
@@ -251,7 +250,7 @@ if (typeof HackatimeTracker === 'undefined') {
         // Record user activity
         recordActivity() {
             this.lastActivity = Date.now();
-            
+
             // If wasn't active before, update UI
             if (!this.isActive) {
                 this.isActive = true;
@@ -263,7 +262,7 @@ if (typeof HackatimeTracker === 'undefined') {
         async sendHeartbeat() {
             try {
                 this.lastHeartbeatTime = Date.now();
-                
+
                 if (!this.apiKeyExists) {
                     console.log('🕒 Heartbeat skipped: No API key exists');
                     this.lastHeartbeatSuccess = false;
@@ -347,13 +346,13 @@ if (typeof HackatimeTracker === 'undefined') {
                 this.lastHeartbeatSuccess = true;
                 // Reset the timer for next heartbeat
                 this.nextHeartbeatTime = now + this.heartbeatInterval;
-                
+
                 // Update the badge to reflect success
                 this.updateBadge(
                     this.isActive ? 'Active' : 'Idle',
                     this.isActive ? 'active' : 'idle'
                 );
-                
+
                 return true;
             } catch (error) {
                 console.log('🕒 Heartbeat failed: API error:', error);
