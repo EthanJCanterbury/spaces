@@ -2475,32 +2475,29 @@ def hackatime_connect():
         
         # Try to send a test heartbeat to validate the API key
         try:
-            # Prepare auth header with Base64 encoded API key
-            # According to the docs, we need to send Basic auth with the API key
-            headers = {'Authorization': f'Basic {api_key}'}
-            
             # Log the request attempt
             app.logger.info(f"Attempting to validate Hackatime API key for user {current_user.username}")
             
             # Try the heartbeat endpoint directly to validate the API key
-            # This is the endpoint mentioned in the user's message
             test_heartbeat_endpoint = f"{api_url}/users/current/heartbeats"
             app.logger.info(f"Testing heartbeat endpoint: {test_heartbeat_endpoint}")
             
-            # Send a simple test heartbeat (POST request as specified)
-            test_data = {
-                "type": "test",
-                "time": 1631000000,
-                "entity": "test_file.py",
-                "category": "coding"
-            }
+            # Prepare headers with proper Authorization format
+            headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
+            
+            # Send a proper test heartbeat as specified in the documentation
+            current_time = int(time.time())
+            test_data = [{
+                "type": "file",
+                "time": current_time,
+                "entity": "test.txt",
+                "language": "Text"
+            }]
             
             response = requests.post(test_heartbeat_endpoint, headers=headers, json=test_data, timeout=5)
             
             # Log detailed response information
             app.logger.info(f"API validation response: {response.status_code}")
-            app.logger.debug(f"Response headers: {response.headers}")
-            app.logger.debug(f"Response body: {response.text[:200]}")  # Log only first 200 chars in case it's large
             
             if response.status_code >= 400:
                 # Try an alternative endpoint as backup validation
@@ -2508,9 +2505,8 @@ def hackatime_connect():
                 app.logger.info(f"Primary validation failed. Trying alternative endpoint: {alternative_endpoint}")
                 alternative_response = requests.get(alternative_endpoint, headers=headers, timeout=5)
                 
-                if alternative_response.status_code != 200:
+                if alternative_response.status_code >= 400:
                     app.logger.error(f"API key validation failed with status {response.status_code} and alternative status {alternative_response.status_code}")
-                    app.logger.error(f"Response body: {response.text[:200]}")
                     return jsonify({
                         'success': False, 
                         'message': f'Invalid API key or API endpoint not found. Please check your API key and try again.'
@@ -2518,15 +2514,9 @@ def hackatime_connect():
                 else:
                     # Alternative endpoint worked, so the API key is valid
                     app.logger.info(f"API key validation successful for user {current_user.username} using alternative endpoint")
-            elif response.status_code >= 400:
-                app.logger.error(f"API key validation failed with status {response.status_code}")
-                return jsonify({
-                    'success': False, 
-                    'message': f'Invalid API key. Please check your API key and try again. Status code: {response.status_code}'
-                })
-                
-            # If we get here, the API key is valid
-            app.logger.info(f"API key validation successful for user {current_user.username}")
+            else:
+                # If we get here, the API key is valid
+                app.logger.info(f"API key validation successful for user {current_user.username}")
             
         except requests.RequestException as e:
             app.logger.error(f"API key validation error: {str(e)}")
