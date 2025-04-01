@@ -17,7 +17,7 @@ class HackatimeTracker {
         this.popupVisible = false;
         this.lastActivityTime = Date.now();
         this.afkCheckInterval = null;
-        this.afkTimeoutMinutes = 5; // Auto-pause after 5 minutes of inactivity
+        this.afkTimeoutMinutes = 1.5; // Auto-pause after 1.5 minutes of inactivity
         
         // Safely get editor reference
         this.editor = null;
@@ -494,10 +494,10 @@ class HackatimeTracker {
         // Send initial heartbeat
         this.sendHeartbeat();
         
-        // Set up interval for regular heartbeats (every 30 seconds)
+        // Set up interval for regular heartbeats (every 1 minute)
         this.heartbeatInterval = setInterval(() => {
             this.sendHeartbeat();
-        }, 30000); // 30 seconds
+        }, 60000); // 1 minute
     }
     
     stopHeartbeatTracking() {
