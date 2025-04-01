@@ -212,6 +212,26 @@ def report_error():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
+@app.before_request
+def log_request_info():
+    """Log detailed information about each incoming request."""
+    app.logger.info('Request: %s %s from %s', request.method, request.path, request.remote_addr)
+    if request.args:
+        app.logger.info('Request Args: %s', dict(request.args))
+    if request.form:
+        app.logger.info('Form Data: %s', dict(request.form))
+    if request.json:
+        app.logger.info('JSON Data: %s', request.json)
+    if request.headers:
+        headers = {k: v for k, v in request.headers.items() if k.lower() not in ('cookie', 'authorization')}
+        app.logger.info('Headers: %s', headers)
+
+@app.after_request
+def log_response_info(response):
+    """Log information about the response."""
+    app.logger.info('Response: %s %s → %d', request.method, request.path, response.status_code)
+    return response
+
 @app.after_request
 def add_security_headers(response):
     is_preview = request.args.get('preview') == 'true'
@@ -3161,8 +3181,21 @@ def initialize_database():
 
 
 if __name__ == '__main__':
+    # Configure more detailed logging
+    import logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='[%(asctime)s] [%(levelname)s] %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    app.logger.info("Starting server directly from app.py")
+    
     try:
+        app.logger.info("Initializing database...")
         initialize_database()
+        app.logger.info("Database initialization complete")
     except Exception as e:
         app.logger.warning(f"Database initialization error: {e}")
+    
+    app.logger.info("Server running on http://0.0.0.0:3000")
     app.run(host='0.0.0.0', port=3000, debug=True)
