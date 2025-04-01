@@ -65,6 +65,33 @@
                 </div>
             </div>
 
+            <div class="integration-item">
+                <div class="integration-header">
+                    <i class="fas fa-robot"></i>
+                    <h3>Groq</h3>
+                </div>
+                <p>Connect your Groq account to access fast AI language models and enhance your experience.</p>
+                <div class="integration-actions">
+                    {% if current_user.groq_api_key %}
+                    <div class="integration-status-buttons">
+                        <button class="btn-secondary" disabled>
+                            <i class="fas fa-check"></i>
+                            Connected to Groq
+                        </button>
+                        <button class="btn-danger" onclick="disconnectGroq()">
+                            <i class="fas fa-unlink"></i>
+                            Disconnect
+                        </button>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('groq_page') }}" class="btn-groq">
+                        <i class="fas fa-robot"></i>
+                        Connect Groq
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
             <!-- Temporarily commented out Slack integration
             <div class="integration-item">
                 <div class="integration-header">
@@ -449,6 +476,22 @@
             }
         } catch (error) {
             showToast('error', 'Failed to disconnect from Hackatime');
+        }
+    }
+    
+    async function disconnectGroq() {
+        try {
+            const response = await fetch('/groq/disconnect', {
+                method: 'POST'
+            });
+            if (response.ok) {
+                showToast('success', 'Disconnected from Groq');
+                location.reload();
+            } else {
+                showToast('error', 'Failed to disconnect from Groq');
+            }
+        } catch (error) {
+            showToast('error', 'Failed to disconnect from Groq');
         }
     }
 

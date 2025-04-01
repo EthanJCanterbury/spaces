@@ -1,0 +1,197 @@
+
+{% extends "base.html" %}
+
+{% block head %}
+<title>Connect Groq - Hack Club Spaces</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hackatime.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="hackatime-container">
+    <div class="hackatime-card">
+        <div class="header">
+            <h1 class="title">Connect with Groq</h1>
+            <div class="subtitle">Enhance your experience with AI-powered features</div>
+        </div>
+        
+        
+        <div class="info-section">
+            <h2>What is Groq?</h2>
+            <p>Groq is a platform that offers fast and efficient AI language models to power your applications and enhance your creative workflows.</p>
+            
+            <div class="connection-steps">
+                <h3>How to connect:</h3>
+                <ol>
+                    <li>Visit <a href="https://console.groq.com/" target="_blank" rel="noopener">console.groq.com</a></li>
+                    <li>Create an account or sign in</li>
+                    <li>Go to API Keys section</li>
+                    <li>Create a new API key</li>
+                    <li>Copy your API key</li>
+                    <li>Paste it below to connect your account</li>
+                </ol>
+            </div>
+        </div>
+        
+        {% if current_user.groq_api_key %}
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                <p>Your Groq account is connected!</p>
+                <button id="disconnect-btn" class="disconnect-button">Disconnect Account</button>
+            </div>
+        {% else %}
+            <form id="groq-form" class="api-key-form">
+                <div class="form-group">
+                    <label for="api_key">Your Groq API Key</label>
+                    <div class="input-group">
+                        <input type="password" id="api_key" name="api_key" placeholder="Paste your API key here" required>
+                        <button type="button" id="toggle-visibility" class="toggle-btn">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="hint">The API key will be stored securely and only used to access Groq's AI features.</div>
+                    <div id="validation-message" class="validation-message"></div>
+                </div>
+                
+                <button type="submit" class="connect-button" id="connect-button">
+                    <span>Connect Groq</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+        {% endif %}
+        
+        <div class="benefits">
+            <div class="benefit-item">
+                <i class="fas fa-bolt"></i>
+                <span>Faster AI responses</span>
+            </div>
+            <div class="benefit-item">
+                <i class="fas fa-brain"></i>
+                <span>Advanced language models</span>
+            </div>
+            <div class="benefit-item">
+                <i class="fas fa-robot"></i>
+                <span>Enhanced AI features</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('toggle-visibility');
+    const apiKeyInput = document.getElementById('api_key');
+    const disconnectBtn = document.getElementById('disconnect-btn');
+    
+    if (toggleBtn && apiKeyInput) {
+        toggleBtn.addEventListener('click', function() {
+            const type = apiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            apiKeyInput.setAttribute('type', type);
+            
+            const icon = toggleBtn.querySelector('i');
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+    }
+    
+    if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to disconnect your Groq account?')) {
+                fetch('/groq/disconnect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to disconnect: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while disconnecting your account.');
+                });
+            }
+        });
+    }
+    
+    const form = document.getElementById('groq-form');
+    const connectButton = document.getElementById('connect-button');
+    const validationMessage = document.getElementById('validation-message');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                showValidationMessage('Please enter your Groq API key.', 'error');
+                return;
+            }
+            
+            // Make sure the key is properly formatted
+            if (!validateApiKeyFormat(apiKey)) {
+                showValidationMessage('API key appears to be invalid. It should look like a long string of letters and numbers.', 'error');
+                return;
+            }
+            
+            // Show loading state
+            connectButton.disabled = true;
+            connectButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating...';
+            showValidationMessage('Validating API key...', 'info');
+            
+            fetch('/groq/connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    api_key: apiKey
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Server error:', response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showValidationMessage('API key is valid! Connecting your account...', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    connectButton.disabled = false;
+                    connectButton.innerHTML = '<span>Connect Groq</span><i class="fas fa-arrow-right"></i>';
+                    showValidationMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                connectButton.disabled = false;
+                connectButton.innerHTML = '<span>Connect Groq</span><i class="fas fa-arrow-right"></i>';
+                showValidationMessage('An error occurred while connecting your account. Please try again later.', 'error');
+            });
+        });
+    }
+    
+    // Simple validation for API key format
+    function validateApiKeyFormat(apiKey) {
+        // Groq API keys are typically long alphanumeric strings
+        return apiKey.length > 10;
+    }
+    
+    function showValidationMessage(message, type) {
+        if (!validationMessage) return;
+        
+        validationMessage.textContent = message;
+        validationMessage.className = 'validation-message ' + type;
+        validationMessage.style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

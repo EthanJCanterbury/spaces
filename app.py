@@ -2654,6 +2654,156 @@ def hackatime_status():
             'message': f'Failed to check Hackatime status: {str(e)}'
         })
 
+@app.route('/groq')
+@login_required
+def groq_page():
+    """Page for Groq integration"""
+    return render_template('groq.html')
+
+@app.route('/groq/connect', methods=['POST'])
+@login_required
+def groq_connect():
+    """Connect Groq account by saving API key"""
+    try:
+        data = request.get_json()
+        api_key = data.get('api_key')
+
+        if not api_key:
+            return jsonify({
+                'success': False,
+                'message': 'API key is required'
+            })
+
+        # Validate the API key by making a request to the Groq API
+        import requests
+        import json
+
+        # Test endpoint URL
+        api_url = "https://api.groq.com/openai/v1/chat/completions"
+        
+        # Prepare headers with the API key
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {api_key}'
+        }
+        
+        # Simple test request
+        test_data = {
+            'model': 'llama-3.3-70b-versatile',
+            'messages': [{
+                'role': 'user',
+                'content': 'Explain the importance of fast language models'
+            }]
+        }
+        
+        app.logger.info(f"Testing Groq API key for user {current_user.username}")
+        
+        # Make the request to validate the API key
+        response = requests.post(
+            api_url,
+            headers=headers,
+            json=test_data,
+            timeout=10
+        )
+        
+        # Log the response status
+        app.logger.info(f"Groq API validation response: {response.status_code}")
+        
+        if response.status_code >= 400:
+            app.logger.error(f"Groq API key validation failed: {response.status_code} - {response.text}")
+            return jsonify({
+                'success': False,
+                'message': f'Invalid Groq API key. Please check your API key and try again.'
+            })
+        
+        # If we get here, the API key is valid
+        app.logger.info(f"Groq API key validation successful for user {current_user.username}")
+        
+        # Update user's groq_api_key in the database
+        with db.engine.connect() as conn:
+            conn.execute(
+                db.text(
+                    "UPDATE \"user\" SET groq_api_key = :api_key WHERE id = :user_id"
+                ), {
+                    "api_key": api_key,
+                    "user_id": current_user.id
+                })
+            conn.commit()
+        
+        # Record activity
+        activity = UserActivity(
+            activity_type="groq_connected",
+            message="User {username} connected Groq account",
+            username=current_user.username,
+            user_id=current_user.id)
+        db.session.add(activity)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Groq account connected successfully'
+        })
+        
+    except Exception as e:
+        app.logger.error(f'Error connecting Groq: {str(e)}')
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Failed to connect Groq: {str(e)}'
+        })
+
+@app.route('/groq/disconnect', methods=['POST'])
+@login_required
+def groq_disconnect():
+    """Disconnect Groq account by removing API key"""
+    try:
+        # Remove user's groq_api_key from the database
+        with db.engine.connect() as conn:
+            conn.execute(
+                db.text(
+                    "UPDATE \"user\" SET groq_api_key = NULL WHERE id = :user_id"
+                ), {"user_id": current_user.id})
+            conn.commit()
+        
+        # Record activity
+        activity = UserActivity(
+            activity_type="groq_disconnected",
+            message="User {username} disconnected Groq account",
+            username=current_user.username,
+            user_id=current_user.id)
+        db.session.add(activity)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Groq account disconnected successfully'
+        })
+    except Exception as e:
+        app.logger.error(f'Error disconnecting Groq: {str(e)}')
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Failed to disconnect Groq: {str(e)}'
+        })
+
+@app.route('/groq/status', methods=['GET'])
+@login_required
+def groq_status():
+    """Check if user has a Groq API key connected"""
+    try:
+        has_api_key = hasattr(current_user, 'groq_api_key') and current_user.groq_api_key is not None
+        return jsonify({
+            'success': True,
+            'connected': has_api_key
+        })
+    except Exception as e:
+        app.logger.error(f'Error checking Groq status: {str(e)}')
+        return jsonify({
+            'success': False,
+            'connected': False,
+            'message': f'Failed to check Groq status: {str(e)}'
+        })
+
 @app.route('/hackatime/heartbeat', methods=['POST'])
 @login_required
 def hackatime_heartbeat():
