@@ -12,7 +12,8 @@ class HackatimeTracker {
         this.siteName = document.querySelector('.topbar-left h1')?.textContent || 'Unknown Project';
         this.isPaused = false;
         this.timeLogged = 0;
-        this.sessionStartTime = Date.now();
+        this.lastHeartbeatTime = null; // Track time of last successful heartbeat
+        this.heartbeatSuccesses = 0; // Count successful heartbeats
         this.popupVisible = false;
         this.lastActivityTime = Date.now();
         this.afkCheckInterval = null;
@@ -28,6 +29,12 @@ class HackatimeTracker {
     }
 
     init() {
+        // Reset time tracking variables
+        this.timeLogged = 0;
+        this.lastHeartbeatTime = null;
+        this.heartbeatSuccesses = 0;
+        this.hiddenPause = false;
+        
         // First check if Hackatime is connected before doing anything else
         this.checkHackatimeStatus();
 
@@ -318,19 +325,21 @@ class HackatimeTracker {
         }
     }
 
-    updateTimeLogged() {
-        // Calculate minutes logged
-        const currentTime = Date.now();
-        const sessionMinutes = Math.floor((currentTime - this.sessionStartTime) / 60000);
-        const totalMinutes = this.timeLogged + (this.isPaused ? 0 : sessionMinutes);
+    updateTimeLogged(addHeartbeatTime = false) {
+        // If this is a successful heartbeat, add time for this interval
+        if (addHeartbeatTime && this.lastHeartbeatTime !== null) {
+            // Add 1.5 minutes (90 seconds) for each successful heartbeat
+            // This is more accurate than session-based tracking
+            this.timeLogged += 1.5;
+        }
 
         // Format time string
         let timeStr;
-        if (totalMinutes < 60) {
-            timeStr = `${totalMinutes} min`;
+        if (this.timeLogged < 60) {
+            timeStr = `${Math.floor(this.timeLogged)} min`;
         } else {
-            const hours = Math.floor(totalMinutes / 60);
-            const mins = totalMinutes % 60;
+            const hours = Math.floor(this.timeLogged / 60);
+            const mins = Math.floor(this.timeLogged % 60);
             timeStr = `${hours}h ${mins}m`;
         }
 
@@ -504,7 +513,8 @@ class HackatimeTracker {
     }
 
     sendHeartbeat() {
-        if (!this.isActive || this.isPaused) return;
+        // Don't send heartbeats if not active, paused, or page is hidden
+        if (!this.isActive || this.isPaused || document.hidden || this.hiddenPause) return;
 
         // Show syncing status briefly
         this.updateBadgeStatus('syncing');
@@ -610,8 +620,13 @@ class HackatimeTracker {
             console.log(`[Hackatime] Heartbeat response:`, data);
             if (data.success) {
                 this.lastHeartbeat = new Date();
+                this.lastHeartbeatTime = Date.now();
+                this.heartbeatSuccesses++;
                 this.updateBadgeStatus(this.status);
                 console.log(`[Hackatime] Heartbeat successful for ${currentFile}`);
+                
+                // Update time logged based on successful heartbeat
+                this.updateTimeLogged(true);
 
                 // Update popup data if visible
                 if (this.popupVisible) {
@@ -723,11 +738,18 @@ class HackatimeTracker {
             // Page is hidden
             console.log(`[Hackatime] Page hidden, pausing tracking`);
             this.stopHeartbeatTracking();
+            
+            // Set a temporary flag to indicate tracking is paused due to visibility
+            this.hiddenPause = true;
         } else {
             // Page is visible again
             console.log(`[Hackatime] Page visible, resuming tracking`);
             if (!this.isPaused) {
                 this.startHeartbeatTracking();
+                this.hiddenPause = false;
+                
+                // Only update last activity time if we're actually resuming
+                this.updateLastActivityTime();
             }
         }
     }
