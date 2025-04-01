@@ -15,6 +15,9 @@ class HackatimeTracker {
         this.timeLogged = 0;
         this.sessionStartTime = Date.now();
         this.popupVisible = false;
+        this.lastActivityTime = Date.now();
+        this.afkCheckInterval = null;
+        this.afkTimeoutMinutes = 5; // Auto-pause after 5 minutes of inactivity
         
         // Safely get editor reference
         this.editor = null;
@@ -28,6 +31,31 @@ class HackatimeTracker {
     init() {
         // First check if Hackatime is connected before doing anything else
         this.checkHackatimeStatus();
+        
+        // Start AFK check interval to detect inactivity
+        this.startAfkCheckInterval();
+    }
+    
+    startAfkCheckInterval() {
+        // Check for AFK status every minute
+        this.afkCheckInterval = setInterval(() => {
+            if (!this.isActive || this.isPaused) return;
+            
+            const currentTime = Date.now();
+            const minutesSinceLastActivity = (currentTime - this.lastActivityTime) / (1000 * 60);
+            
+            if (minutesSinceLastActivity >= this.afkTimeoutMinutes) {
+                console.log(`[Hackatime] No activity detected for ${this.afkTimeoutMinutes} minutes, auto-pausing tracking`);
+                this.wasAutoPaused = true;
+                if (!this.isPaused) {
+                    this.togglePause();
+                    // Show a toast notification
+                    if (typeof showToast === 'function') {
+                        showToast('info', `Hackatime tracking paused due to ${this.afkTimeoutMinutes} minutes of inactivity`);
+                    }
+                }
+            }
+        }, 60000); // Check every minute
     }
     
     checkHackatimeStatus() {
@@ -63,9 +91,15 @@ class HackatimeTracker {
                 console.log(`[Hackatime] File changed: ${currentFile} in project "${this.siteName}"`);
                 this.status = 'active';
                 this.updateBadgeStatus('active');
+                this.updateLastActivityTime();
                 
                 // Log the file change event for hackatime
                 console.log(`[Hackatime] File: ${currentFile}, Project: "${this.siteName}", Type: ${this.editorType}`);
+            });
+            
+            // Also track cursor activity as a form of user activity
+            this.editor.on('cursorActivity', () => {
+                this.updateLastActivityTime();
             });
         }
         
@@ -75,11 +109,38 @@ class HackatimeTracker {
                 const filename = tab.getAttribute('data-filename');
                 console.log(`[Hackatime] Switched to file: ${filename}`);
                 this.entityName = filename;
+                this.updateLastActivityTime();
             });
         });
         
+        // Track user keyboard and mouse activity
+        document.addEventListener('keydown', () => this.updateLastActivityTime());
+        document.addEventListener('mousedown', () => this.updateLastActivityTime());
+        document.addEventListener('mousemove', debounce(() => this.updateLastActivityTime(), 500));
+        
         // Setup visibility change listener
         document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
+    }
+    
+    updateLastActivityTime() {
+        this.lastActivityTime = Date.now();
+        // If tracking was auto-paused due to inactivity and user is active again, auto-resume
+        if (this.isPaused && this.wasAutoPaused) {
+            console.log('[Hackatime] User is active again, auto-resuming tracking');
+            this.wasAutoPaused = false;
+            this.togglePause();
+        }
+    }
+    
+    // Simple debounce function if not already available
+    debounce(func, delay) {
+        let timeout;
+        return function() {
+            const context = this;
+            const args = arguments;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
     }
     
     createBadge() {
@@ -139,6 +200,10 @@ class HackatimeTracker {
                         <div class="hackatime-info-row">
                             <span>Last heartbeat:</span>
                             <span id="hackatime-last-heartbeat">Never</span>
+                        </div>
+                        <div class="hackatime-info-row">
+                            <span>Auto-pause:</span>
+                            <span id="hackatime-afk-timeout">Active</span>
                         </div>
                     </div>
                     <div class="hackatime-popup-actions">
@@ -233,7 +298,11 @@ class HackatimeTracker {
         document.getElementById('hackatime-project').textContent = this.siteName;
         
         // Update status
-        document.getElementById('hackatime-popup-status').textContent = this.isPaused ? 'Paused' : this.status.charAt(0).toUpperCase() + this.status.slice(1);
+        let statusText = this.isPaused ? 'Paused' : this.status.charAt(0).toUpperCase() + this.status.slice(1);
+        if (this.isPaused && this.wasAutoPaused) {
+            statusText += ' (Auto)';
+        }
+        document.getElementById('hackatime-popup-status').textContent = statusText;
         
         // Update time logged
         this.updateTimeLogged();
@@ -243,6 +312,15 @@ class HackatimeTracker {
         
         // Update pause button text
         document.getElementById('hackatime-toggle-pause').textContent = this.isPaused ? 'Resume Tracking' : 'Pause Tracking';
+        
+        // Add info about AFK timeout
+        const timeoutInfo = document.getElementById('hackatime-afk-timeout');
+        if (timeoutInfo) {
+            const minutesRemaining = this.isPaused ? 0 : Math.max(0, this.afkTimeoutMinutes - ((Date.now() - this.lastActivityTime) / (1000 * 60))).toFixed(1);
+            timeoutInfo.textContent = this.isPaused ? 
+                'Tracking paused' : 
+                `Auto-pause in ${minutesRemaining} minutes of inactivity`;
+        }
     }
     
     updateTimeLogged() {
@@ -294,13 +372,21 @@ class HackatimeTracker {
         } else {
             this.startHeartbeatTracking();
             this.updateBadgeStatus(this.status);
+            // Reset activity time when manually resuming
+            this.updateLastActivityTime();
         }
         
-        // Update pause button text
-        document.getElementById('hackatime-toggle-pause').textContent = this.isPaused ? 'Resume Tracking' : 'Pause Tracking';
+        // Update pause button text if popup is open
+        const pauseButton = document.getElementById('hackatime-toggle-pause');
+        if (pauseButton) {
+            pauseButton.textContent = this.isPaused ? 'Resume Tracking' : 'Pause Tracking';
+        }
         
-        // Update status in popup
-        document.getElementById('hackatime-popup-status').textContent = this.isPaused ? 'Paused' : this.status.charAt(0).toUpperCase() + this.status.slice(1);
+        // Update status in popup if popup is open
+        const popupStatus = document.getElementById('hackatime-popup-status');
+        if (popupStatus) {
+            popupStatus.textContent = this.isPaused ? 'Paused' : this.status.charAt(0).toUpperCase() + this.status.slice(1);
+        }
     }
     
     disconnectHackatime() {
@@ -308,6 +394,12 @@ class HackatimeTracker {
         if (confirm('Are you sure you want to disconnect Hackatime? You will need to reconnect on the Hackatime settings page.')) {
             // Stop tracking
             this.stopHeartbeatTracking();
+            
+            // Clear AFK check interval
+            if (this.afkCheckInterval) {
+                clearInterval(this.afkCheckInterval);
+                this.afkCheckInterval = null;
+            }
             
             // Send disconnect request to server
             fetch('/hackatime/disconnect', {
