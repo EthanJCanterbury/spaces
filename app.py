@@ -2471,7 +2471,7 @@ def hackatime_connect():
             return jsonify({'success': False, 'message': 'API key is required'})
         
         # Validate the API key by making a request to the Hackatime API
-        api_url = "https://hackatime.hackclub.com/api/hackatime/v1"
+        api_url = "https://hackatime.hackclub.com/api/hackatime/v1
         
         # Try to send a test heartbeat to validate the API key
         try:
