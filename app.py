@@ -2471,7 +2471,7 @@ def hackatime_connect():
             return jsonify({'success': False, 'message': 'API key is required'})
         
         # Validate the API key by making a request to the Hackatime API
-        api_url = "https://hackatime.hackclub.com/api/hackatime/v1
+        api_url = "https://hackatime.hackclub.com/api/hackatime/v1"
         
         # Try to send a test heartbeat to validate the API key
         try:
@@ -2483,7 +2483,9 @@ def hackatime_connect():
             app.logger.info(f"Attempting to validate Hackatime API key for user {current_user.username}")
             
             # First try a GET request to health endpoint to check connection
-            health_response = requests.get(f"{api_url.replace('/hackatime/v1', '')}/health", headers=headers, timeout=5)
+            health_endpoint = f"{api_url.replace('/hackatime/v1', '')}/health"
+            app.logger.info(f"Checking health endpoint: {health_endpoint}")
+            health_response = requests.get(health_endpoint, headers=headers, timeout=5)
             app.logger.info(f"Health check response: {health_response.status_code}")
             
             if health_response.status_code != 200:
@@ -2493,8 +2495,20 @@ def hackatime_connect():
                     'message': f'Could not connect to Hackatime API. Status code: {health_response.status_code}'
                 })
             
-            # Now try a more specific endpoint to validate the API key
-            response = requests.get(f"{api_url}/heartbeat", headers=headers, timeout=5)
+            # Now try the heartbeat endpoint to validate the API key
+            # This is the endpoint mentioned in the user's message
+            test_heartbeat_endpoint = f"{api_url}/users/current/heartbeats"
+            app.logger.info(f"Testing heartbeat endpoint: {test_heartbeat_endpoint}")
+            
+            # Send a simple test heartbeat (POST request as specified)
+            test_data = {
+                "type": "test",
+                "time": 1631000000,
+                "entity": "test_file.py",
+                "category": "coding"
+            }
+            
+            response = requests.post(test_heartbeat_endpoint, headers=headers, json=test_data, timeout=5)
             
             # Log detailed response information
             app.logger.info(f"API validation response: {response.status_code}")
@@ -2502,8 +2516,10 @@ def hackatime_connect():
             app.logger.debug(f"Response body: {response.text[:200]}")  # Log only first 200 chars in case it's large
             
             if response.status_code == 404:
-                # Try an alternative endpoint if /heartbeat doesn't exist
-                alternative_response = requests.get(f"{api_url.replace('/hackatime/v1', '')}/users/current", headers=headers, timeout=5)
+                # If specific endpoint fails, try an alternative endpoint
+                alternative_endpoint = f"{api_url}/users/current"
+                app.logger.info(f"Trying alternative endpoint: {alternative_endpoint}")
+                alternative_response = requests.get(alternative_endpoint, headers=headers, timeout=5)
                 
                 if alternative_response.status_code != 200:
                     app.logger.error(f"API key validation failed with status {response.status_code} and alternative status {alternative_response.status_code}")
@@ -2514,7 +2530,7 @@ def hackatime_connect():
                 else:
                     # Alternative endpoint worked, so the API key is valid
                     app.logger.info(f"API key validation successful for user {current_user.username} using alternative endpoint")
-            elif response.status_code != 200:
+            elif response.status_code >= 400:
                 app.logger.error(f"API key validation failed with status {response.status_code}")
                 return jsonify({
                     'success': False, 
