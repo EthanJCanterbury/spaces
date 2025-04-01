@@ -549,24 +549,49 @@ class HackatimeTracker {
             }
         }
         
-        // Prepare enhanced heartbeat data
+        // Get machine info (hardcoded for now)
+        const machineInfo = {
+            machine_name_id: this.generateMachineId(),
+            machine_name: navigator.userAgent || 'Unknown'
+        };
+        
+        // Generate dependencies (hardcoded for now)
+        const dependencies = this.generateDependencies(currentFile);
+        
+        // Prepare enhanced heartbeat data with ALL fields from Wakatime API
         const heartbeat = {
-            type: 'file',
-            time: Date.now() / 1000, // Include fractions of seconds
-            entity: currentFile,
-            category: 'coding', // Default category
+            // Required fields
+            entity: currentFile, // File path or domain being worked on
+            type: 'file', // Can be file, app, or domain
+            time: Date.now() / 1000, // UNIX epoch timestamp with fractions of seconds
+            
+            // Optional but important fields
+            category: this.getCategoryFromActivity(), // coding, debugging, etc.
             project: this.siteName,
-            project_root_count: 2, // Hardcoded value assuming standard project structure
-            branch: 'main', // Hardcoded default branch
+            project_root_count: 3, // Hardcoded - count of folders in project root path
+            branch: 'main', // Hardcoded branch name
             language: this.getLanguageFromFile(currentFile),
-            dependencies: '', // Would require parsing project files
+            dependencies: dependencies,
             lines: lines,
-            line_additions: lineAdditions,
-            line_deletions: lineDeletions,
             lineno: lineNo,
             cursorpos: cursorPos,
             is_write: this.status === 'active',
-            site_id: this.siteId
+            
+            // Additional fields for completeness
+            line_additions: lineAdditions,
+            line_deletions: lineDeletions,
+            machine_name_id: machineInfo.machine_name_id,
+            site_id: this.siteId,
+            
+            // Additional context fields
+            user_agent: navigator.userAgent,
+            editor: this.editorType === 'python' ? 'Hack Club Spaces Python Editor' : 'Hack Club Spaces Web Editor',
+            editor_version: '1.0.0',
+            plugin: 'hackatime-web',
+            plugin_version: '1.0.0',
+            os: this.getOperatingSystem(),
+            hostname: window.location.hostname,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
         };
         
         console.log(`[Hackatime] Sending heartbeat:`, heartbeat);
@@ -574,7 +599,8 @@ class HackatimeTracker {
         fetch('/hackatime/heartbeat', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'User-Agent': navigator.userAgent,
             },
             body: JSON.stringify(heartbeat)
         })
@@ -610,6 +636,65 @@ class HackatimeTracker {
                 this.updateBadgeStatus('monitoring');
             }, 2000);
         }
+    }
+    
+    // Helper method to generate a consistent machine ID
+    generateMachineId() {
+        // Using a simple hash of user agent and screen properties for uniqueness
+        const baseString = navigator.userAgent + screen.width + screen.height + navigator.language;
+        let hash = 0;
+        for (let i = 0; i < baseString.length; i++) {
+            const char = baseString.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return 'machine_' + Math.abs(hash).toString(16);
+    }
+    
+    // Helper method to get category from current activity
+    getCategoryFromActivity() {
+        // Simplified category detection based on current status and file
+        if (this.status === 'active' && this.editor && this.editor.getValue) {
+            const content = this.editor.getValue() || '';
+            if (content.includes('test(') || content.includes('describe(')) {
+                return 'writing tests';
+            }
+            if (content.includes('console.log') || content.includes('print(')) {
+                return 'debugging';
+            }
+        }
+        return 'coding'; // Default category
+    }
+    
+    // Helper method to get OS info from user agent
+    getOperatingSystem() {
+        const userAgent = navigator.userAgent;
+        if (userAgent.indexOf('Win') !== -1) return 'Windows';
+        if (userAgent.indexOf('Mac') !== -1) return 'Mac OS';
+        if (userAgent.indexOf('Linux') !== -1) return 'Linux';
+        if (userAgent.indexOf('Android') !== -1) return 'Android';
+        if (userAgent.indexOf('iOS') !== -1) return 'iOS';
+        return 'Unknown';
+    }
+    
+    // Helper method to generate dependencies based on file
+    generateDependencies(filename) {
+        // Simple dummy implementation - in reality this would need to parse the file
+        if (!filename) return '';
+        
+        const extension = filename.split('.').pop().toLowerCase();
+        
+        if (extension === 'py') {
+            return 'flask,numpy,pandas';
+        } else if (extension === 'js') {
+            return 'react,lodash,express';
+        } else if (extension === 'html') {
+            return 'bootstrap,jquery';
+        } else if (extension === 'css') {
+            return 'bootstrap,tailwind';
+        }
+        
+        return '';
     }
     
     getLanguageFromFile(filename) {

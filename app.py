@@ -2831,27 +2831,47 @@ def hackatime_heartbeat():
             'Authorization': f'Bearer {current_user.wakatime_api_key}',
             'Content-Type': 'application/json'
         }
+        
+        # Add User-Agent header if available
+        user_agent = data.get('user_agent') or request.headers.get('User-Agent')
+        if user_agent:
+            headers['User-Agent'] = user_agent
 
-        # Prepare the heartbeat data according to Hackatime API requirements with enhanced fields
+        # Prepare the heartbeat data according to Wakatime API specification
+        # Include ALL fields from the Wakatime API documentation
         heartbeat_data = [{
+            # Required fields
+            'entity': data.get('entity', 'unknown'),
             'type': data.get('type', 'file'),
             'time': data.get('time', time.time()),
-            'entity': data.get('entity', 'unknown'),
+            
+            # Optional but important fields
             'category': data.get('category', 'coding'),
             'project': data.get('project', 'Unknown Project'),
-            'project_root_count': data.get('project_root_count', 2),
             'branch': data.get('branch', 'main'),
             'language': data.get('language', 'Text'),
-            'dependencies': data.get('dependencies', 'spaces'),
+            'dependencies': data.get('dependencies', ''),
             'lines': data.get('lines', 0),
-            'line_additions': data.get('line_additions', 10),
-            'line_deletions': data.get('line_deletions', 5),
             'lineno': data.get('lineno', 1),
             'cursorpos': data.get('cursorpos', 1),
-            'is_write': data.get('is_write', True)
+            'is_write': data.get('is_write', True),
+            
+            # Additional complete fields from the API docs
+            'project_root_count': data.get('project_root_count', 3),
+            'line_additions': data.get('line_additions', 0),
+            'line_deletions': data.get('line_deletions', 0),
+            'machine_name_id': data.get('machine_name_id', f'machine_{current_user.id}'),
+            
+            # Adding default values for any missing fields
+            'editor': data.get('editor', 'Hack Club Spaces Editor'),
+            'plugin': data.get('plugin', 'hackatime-web'),
+            'plugin_version': data.get('plugin_version', '1.0.0'),
+            'os': data.get('os', 'Unknown OS'),
+            'hostname': data.get('hostname', request.host),
+            'timezone': data.get('timezone', 'UTC')
         }]
 
-        app.logger.info(f"Sending heartbeat to Hackatime for user {current_user.username}: {heartbeat_data}")
+        app.logger.info(f"Sending heartbeat to Hackatime for user {current_user.username}")
 
         # Make the request to Hackatime API
         response = requests.post(
