@@ -115,7 +115,7 @@ class HackatimeTracker {
         // Track user keyboard and mouse activity
         document.addEventListener('keydown', () => this.updateLastActivityTime());
         document.addEventListener('mousedown', () => this.updateLastActivityTime());
-        document.addEventListener('mousemove', debounce(() => this.updateLastActivityTime(), 500));
+        document.addEventListener('mousemove', this.debounce(() => this.updateLastActivityTime(), 500));
 
         // Setup visibility change listener
         document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
