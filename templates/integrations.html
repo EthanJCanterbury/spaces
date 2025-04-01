@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block head %}
@@ -9,24 +8,25 @@
         margin: 40px auto;
         padding: 0 20px;
     }
-    
+
     .integrations-header {
         text-align: center;
         margin-bottom: 40px;
+        padding-top: 20px;
     }
-    
+
     .integrations-header h1 {
         font-size: 2.5rem;
         color: var(--text);
         margin-bottom: 0.5rem;
         font-family: var(--font-heading);
     }
-    
+
     .integrations-subtitle {
         color: var(--text-light);
         font-size: 1.1rem;
     }
-    
+
     .search-container {
         margin-bottom: 30px;
         display: flex;
@@ -36,13 +36,13 @@
         padding: 10px 15px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-    
+
     .search-container i {
         color: var(--text-light);
         margin-right: 10px;
         font-size: 1.2rem;
     }
-    
+
     .search-input {
         flex: 1;
         border: none;
@@ -52,13 +52,13 @@
         padding: 8px 0;
         outline: none;
     }
-    
+
     .integration-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
         gap: 25px;
     }
-    
+
     .integration-card {
         background: rgba(255, 255, 255, 0.9);
         border-radius: 16px;
@@ -71,12 +71,12 @@
         display: flex;
         flex-direction: column;
     }
-    
+
     .integration-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 12px 40px rgba(31, 45, 61, 0.15);
     }
-    
+
     .integration-icon {
         width: 60px;
         height: 60px;
@@ -87,25 +87,25 @@
         justify-content: center;
         margin-bottom: 20px;
     }
-    
+
     .integration-icon i {
         font-size: 28px;
         color: white;
     }
-    
+
     .integration-title {
         display: flex;
         align-items: center;
         gap: 15px;
         margin-bottom: 15px;
     }
-    
+
     .integration-title h2 {
         margin: 0;
         font-size: 1.5rem;
         color: var(--text);
     }
-    
+
     .integration-status {
         display: inline-flex;
         align-items: center;
@@ -114,29 +114,30 @@
         font-size: 0.8rem;
         font-weight: 500;
         margin-left: auto;
+        gap: 5px;
     }
-    
+
     .status-connected {
         background-color: rgba(46, 213, 115, 0.15);
         color: #2ed573;
     }
-    
+
     .status-disconnected {
         background-color: rgba(94, 114, 228, 0.15);
         color: #5e72e4;
     }
-    
+
     .integration-description {
         color: var(--text-light);
         line-height: 1.6;
         margin-bottom: 20px;
         flex-grow: 1;
     }
-    
+
     .integration-actions {
         margin-top: auto;
     }
-    
+
     .btn-connect {
         display: inline-flex;
         align-items: center;
@@ -153,61 +154,69 @@
         border: none;
         cursor: pointer;
     }
-    
+
     .btn-connect:hover {
         background: var(--primary-dark);
         color: white;
         text-decoration: none;
     }
-    
+
     .btn-disconnect {
         margin-top: 10px;
-        background: transparent;
+        background: rgba(236, 55, 80, 0.1);
         color: var(--danger);
         border: 1px solid var(--danger);
-        padding: 8px 16px;
+        padding: 10px 18px;
         border-radius: 8px;
         text-decoration: none;
         font-weight: 500;
-        transition: all 0.2s;
+        transition: all 0.2s ease;
         width: 100%;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 10px;
         cursor: pointer;
+        box-shadow: 0 2px 5px rgba(236, 55, 80, 0.1);
     }
-    
+
     .btn-disconnect:hover {
         background: var(--danger);
         color: white;
         text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(236, 55, 80, 0.2);
     }
-    
+
+    .btn-disconnect:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 3px rgba(236, 55, 80, 0.1);
+    }
+
     .btn-github {
         background: #24292e;
     }
-    
+
     .btn-github:hover {
         background: #0366d6;
     }
-    
+
     .btn-hackatime {
         background: #ec695c;
     }
-    
+
     .btn-hackatime:hover {
         background: #e84c3d;
     }
-    
+
     .btn-groq {
         background: #6366f1;
     }
-    
+
     .btn-groq:hover {
         background: #4f46e5;
     }
-    
+
     .no-results {
         grid-column: 1 / -1;
         text-align: center;
@@ -216,13 +225,13 @@
         background: rgba(255, 255, 255, 0.8);
         border-radius: 16px;
     }
-    
+
     .no-results i {
         font-size: 3rem;
         margin-bottom: 15px;
         display: block;
     }
-    
+
     @media (max-width: 768px) {
         .integration-grid {
             grid-template-columns: 1fr;
@@ -237,12 +246,12 @@
         <h1>Manage Integrations</h1>
         <p class="integrations-subtitle">Connect your favorite services to enhance your Hack Club experience</p>
     </div>
-    
+
     <div class="search-container">
         <i class="fas fa-search"></i>
         <input type="text" id="integration-search" class="search-input" placeholder="Search integrations...">
     </div>
-    
+
     <div class="integration-grid" id="integration-grid">
         <!-- GitHub Integration -->
         <div class="integration-card" data-name="github">
@@ -261,11 +270,11 @@
                 </span>
                 {% endif %}
             </div>
-            
+
             <div class="integration-description">
                 Connect your GitHub account to enable version control and repository management. Push your code directly to GitHub repositories.
             </div>
-            
+
             <div class="integration-actions">
                 {% if current_user.github_token %}
                 <div class="connected-info">
@@ -283,7 +292,7 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <!-- Hackatime Integration -->
         <div class="integration-card" data-name="hackatime coding time tracker">
             <div class="integration-title">
@@ -301,11 +310,11 @@
                 </span>
                 {% endif %}
             </div>
-            
+
             <div class="integration-description">
                 Connect your Hackatime account to track your coding time and see your stats. Visualize your programming activity and track progress over time.
             </div>
-            
+
             <div class="integration-actions">
                 {% if current_user.wakatime_api_key %}
                 <div class="connected-info">
@@ -323,7 +332,7 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <!-- Groq Integration -->
         <div class="integration-card" data-name="groq ai language model">
             <div class="integration-title">
@@ -341,11 +350,11 @@
                 </span>
                 {% endif %}
             </div>
-            
+
             <div class="integration-description">
                 Connect your Groq account to access fast AI language models and enhance your experience. Leverage cutting-edge AI technology to boost your productivity.
             </div>
-            
+
             <div class="integration-actions">
                 {% if current_user.groq_api_key %}
                 <div class="connected-info">
@@ -363,7 +372,7 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <!-- Empty state for no search results -->
         <div class="no-results" id="no-results" style="display: none;">
             <i class="fas fa-search"></i>
@@ -378,17 +387,17 @@
         const searchInput = document.getElementById('integration-search');
         const integrationCards = document.querySelectorAll('.integration-card');
         const noResults = document.getElementById('no-results');
-        
+
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
             let hasResults = false;
-            
+
             integrationCards.forEach(card => {
                 const cardText = card.getAttribute('data-name').toLowerCase();
                 const cardTitle = card.querySelector('h2').textContent.toLowerCase();
                 const cardDescription = card.querySelector('.integration-description').textContent.toLowerCase();
                 const searchContent = cardText + ' ' + cardTitle + ' ' + cardDescription;
-                
+
                 if (searchContent.includes(searchTerm)) {
                     card.style.display = 'flex';
                     hasResults = true;
@@ -396,7 +405,7 @@
                     card.style.display = 'none';
                 }
             });
-            
+
             if (hasResults) {
                 noResults.style.display = 'none';
             } else {
@@ -404,7 +413,7 @@
             }
         });
     });
-    
+
     async function disconnectGithub() {
         if (confirm('Are you sure you want to disconnect your GitHub account?')) {
             try {
@@ -422,7 +431,7 @@
             }
         }
     }
-    
+
     async function disconnectHackatime() {
         if (confirm('Are you sure you want to disconnect your Hackatime account?')) {
             try {
@@ -440,7 +449,7 @@
             }
         }
     }
-    
+
     async function disconnectGroq() {
         if (confirm('Are you sure you want to disconnect your Groq account?')) {
             try {
@@ -458,7 +467,7 @@
             }
         }
     }
-    
+
     function showToast(type, message) {
         const toastContainer = document.getElementById('toast-container');
         const toast = document.createElement('div');
