@@ -587,8 +587,7 @@ def welcome():
     club_memberships = db.session.query(ClubMembership).filter_by(
         user_id=current_user.id).all()
 
-
-return render_template('welcome.html',
+    return render_template('welcome.html',
                            sites=sites,
                            max_sites=max_sites,
                            club_memberships=club_memberships)
