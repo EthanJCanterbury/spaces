@@ -1826,7 +1826,7 @@ def search_users():
 def search_sites():
     try:
         search_term = request.args.get('term', '')
-if not search_term or len(search_term) < 2:
+        if not search_term or len(search_term) < 2:
             return jsonify(
                 {'error': 'Search term must be at least 2 characters'}), 400
 
