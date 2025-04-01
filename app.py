@@ -2837,30 +2837,39 @@ def hackatime_heartbeat():
         if user_agent:
             headers['User-Agent'] = user_agent
 
-        # Prepare the heartbeat data according to Wakatime API specification
-        # Include ALL fields from the Wakatime API documentation
+        # Extract data - API now expects an array of heartbeats
+        if isinstance(data, list):
+            # Handle data sent as array
+            first_heartbeat = data[0] if data else {}
+        else:
+            # Handle data sent as single object
+            first_heartbeat = data
+            
+        # Prepare the heartbeat data according to Hackatime API controller expectations
+        # Include only fields from the heartbeat_keys list in the controller
         heartbeat_data = [{
             # Required fields
-            'entity': data.get('entity', 'unknown'),
-            'type': data.get('type', 'file'),
-            'time': data.get('time', time.time()),
+            'entity': first_heartbeat.get('entity', 'unknown'),
+            'type': first_heartbeat.get('type', 'file'),
+            'time': first_heartbeat.get('time', time.time()),
             
-            # Optional but important fields
-            'category': data.get('category', 'coding'),
-            'project': data.get('project', 'Unknown Project'),
-            'branch': data.get('branch', 'main'),
-            'language': data.get('language', 'Text'),
-            'dependencies': data.get('dependencies', ''),
-            'lines': data.get('lines', 0),
-            'lineno': data.get('lineno', 1),
-            'cursorpos': data.get('cursorpos', 1),
-            'is_write': data.get('is_write', True),
-            
-            # Additional complete fields from the API docs
-            'project_root_count': data.get('project_root_count', 3),
-            'line_additions': data.get('line_additions', 0),
-            'line_deletions': data.get('line_deletions', 0),
-            'machine_name_id': data.get('machine_name_id', f'machine_{current_user.id}'),
+            # Fields that match exactly with API controller heartbeat_keys
+            'category': first_heartbeat.get('category', 'coding'),
+            'project': first_heartbeat.get('project', 'Unknown Project'),
+            'branch': first_heartbeat.get('branch', 'main'),
+            'language': first_heartbeat.get('language', 'Text'),
+            'dependencies': first_heartbeat.get('dependencies', ''),
+            'lines': first_heartbeat.get('lines', 0),
+            'lineno': first_heartbeat.get('lineno', 1),
+            'cursorpos': first_heartbeat.get('cursorpos', 1),
+            'is_write': first_heartbeat.get('is_write', True),
+            'project_root_count': first_heartbeat.get('project_root_count', 3),
+            'line_additions': first_heartbeat.get('line_additions', 0),
+            'line_deletions': first_heartbeat.get('line_deletions', 0),
+            'machine': first_heartbeat.get('machine', f'machine_{current_user.id}'),
+            'editor': first_heartbeat.get('editor', 'Hack Club Spaces Editor'),
+            'user_agent': first_heartbeat.get('user_agent', request.headers.get('User-Agent')),
+            'operating_system': first_heartbeat.get('operating_system', ''),
             
             # Adding default values for any missing fields
             'editor': data.get('editor', 'Hack Club Spaces Editor'),

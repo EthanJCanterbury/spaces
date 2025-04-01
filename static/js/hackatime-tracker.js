@@ -558,20 +558,20 @@ class HackatimeTracker {
         // Generate dependencies (hardcoded for now)
         const dependencies = this.generateDependencies(currentFile);
         
-        // Prepare enhanced heartbeat data with ALL fields from Wakatime API
+        // Prepare heartbeat data exactly matching fields accepted by the API
         const heartbeat = {
-            // Required fields - absolute essentials for tracking
+            // Required fields from the controller's accepted keys
             entity: currentFile, // File path or domain being worked on
             type: 'file', // Can be file, app, or domain
             time: Math.floor(Date.now() / 1000), // UNIX epoch timestamp as integer
             
-            // Important fields that affect time tracking
+            // Important tracking fields (all exact matches to API keys)
             category: this.getCategoryFromActivity(), // coding, debugging, etc.
             project: this.siteName,
             language: this.getLanguageFromFile(currentFile),
             is_write: this.status === 'active',
             
-            // User activity details
+            // Editor and file details
             lines: lines,
             lineno: lineNo,
             cursorpos: cursorPos,
@@ -583,12 +583,11 @@ class HackatimeTracker {
             branch: 'main',
             dependencies: dependencies,
             
-            // Environment information
-            machine_name_id: machineInfo.machine_name_id,
-            site_id: this.siteId,
-            user_agent: navigator.userAgent,
+            // System information (using keys expected by API)
+            machine: machineInfo.machine_name_id, // Note: API expects 'machine', not 'machine_name_id'
             editor: this.editorType === 'python' ? 'Hack Club Spaces Python Editor' : 'Hack Club Spaces Web Editor',
-            editor_version: '1.0.0',
+            operating_system: this.getOperatingSystem(),
+            user_agent: navigator.userAgent,
             plugin: 'hackatime-web',
             plugin_version: '1.0.0',
             os: this.getOperatingSystem(),
@@ -598,13 +597,15 @@ class HackatimeTracker {
         
         console.log(`[Hackatime] Sending heartbeat:`, heartbeat);
         
+        // Make sure we're sending in the format expected by the controller
+        // The controller expects either a direct heartbeat or a JSON array (_json format)
         fetch('/hackatime/heartbeat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'User-Agent': navigator.userAgent,
             },
-            body: JSON.stringify(heartbeat)
+            body: JSON.stringify([heartbeat]) // Send as array to match _json format
         })
         .then(response => {
             console.log(`[Hackatime] Heartbeat response status: ${response.status}`);
