@@ -220,8 +220,8 @@ def log_request_info():
         app.logger.info('Request Args: %s', dict(request.args))
     if request.form:
         app.logger.info('Form Data: %s', dict(request.form))
-    if request.json:
-        app.logger.info('JSON Data: %s', request.json)
+    if request.is_json and request.get_json(silent=True):
+        app.logger.info('JSON Data: %s', request.get_json(silent=True))
     if request.headers:
         headers = {k: v for k, v in request.headers.items() if k.lower() not in ('cookie', 'authorization')}
         app.logger.info('Headers: %s', headers)
