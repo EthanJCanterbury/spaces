@@ -2833,52 +2833,68 @@ def hackatime_heartbeat():
         }
         
         # Add User-Agent header if available
-        user_agent = data.get('user_agent') or request.headers.get('User-Agent')
+        user_agent = request.headers.get('User-Agent')
         if user_agent:
             headers['User-Agent'] = user_agent
 
-        # Extract data - API now expects an array of heartbeats
+        # Process the heartbeat data
+        heartbeat_data = []
+        
+        # Handle different input formats
+        heartbeats_to_process = []
         if isinstance(data, list):
-            # Handle data sent as array
-            first_heartbeat = data[0] if data else {}
+            # Data is already a list of heartbeats
+            heartbeats_to_process = data
         else:
-            # Handle data sent as single object
-            first_heartbeat = data
+            # Data is a single heartbeat object
+            heartbeats_to_process = [data]
             
-        # Prepare the heartbeat data according to Hackatime API controller expectations
-        # Include only fields from the heartbeat_keys list in the controller
-        heartbeat_data = [{
-            # Required fields
-            'entity': first_heartbeat.get('entity', 'unknown'),
-            'type': first_heartbeat.get('type', 'file'),
-            'time': first_heartbeat.get('time', time.time()),
-            
-            # Fields that match exactly with API controller heartbeat_keys
-            'category': first_heartbeat.get('category', 'coding'),
-            'project': first_heartbeat.get('project', 'Unknown Project'),
-            'branch': first_heartbeat.get('branch', 'main'),
-            'language': first_heartbeat.get('language', 'Text'),
-            'dependencies': first_heartbeat.get('dependencies', ''),
-            'lines': first_heartbeat.get('lines', 0),
-            'lineno': first_heartbeat.get('lineno', 1),
-            'cursorpos': first_heartbeat.get('cursorpos', 1),
-            'is_write': first_heartbeat.get('is_write', True),
-            'project_root_count': first_heartbeat.get('project_root_count', 3),
-            'line_additions': first_heartbeat.get('line_additions', 0),
-            'line_deletions': first_heartbeat.get('line_deletions', 0),
-            'machine': first_heartbeat.get('machine', f'machine_{current_user.id}'),
-            'editor': first_heartbeat.get('editor', 'Hack Club Spaces Editor'),
-            'user_agent': first_heartbeat.get('user_agent', request.headers.get('User-Agent')),
-            'operating_system': first_heartbeat.get('operating_system', ''),
-            
-            # Adding default values for any missing fields
-            'editor': data.get('editor', 'Hack Club Spaces Editor'),
-            'plugin': data.get('plugin', 'hackatime-web'),
-            'plugin_version': data.get('plugin_version', '1.0.0'),
-            'os': data.get('os', 'Unknown OS'),
-            'hostname': data.get('hostname', request.host),
-            'timezone': data.get('timezone', 'UTC')
-        }]
+        # Process each heartbeat
+        for hb in heartbeats_to_process:
+            if isinstance(hb, dict):
+                processed_heartbeat = {
+                    # Required fields
+                    'entity': hb.get('entity', 'unknown'),
+                    'type': hb.get('type', 'file'),
+                    'time': hb.get('time', int(time.time())),
+                    
+                    # Common fields
+                    'category': hb.get('category', 'coding'),
+                    'project': hb.get('project', 'Unknown Project'),
+                    'branch': hb.get('branch', 'main'),
+                    'language': hb.get('language', 'Text'),
+                    'dependencies': hb.get('dependencies', ''),
+                    'lines': hb.get('lines', 0),
+                    'lineno': hb.get('lineno', 1),
+                    'cursorpos': hb.get('cursorpos', 1),
+                    'is_write': hb.get('is_write', True),
+                    'project_root_count': hb.get('project_root_count', 3),
+                    'line_additions': hb.get('line_additions', 0),
+                    'line_deletions': hb.get('line_deletions', 0),
+                    'machine': hb.get('machine', f'machine_{current_user.id}'),
+                    'editor': hb.get('editor', 'Hack Club Spaces Editor'),
+                    'user_agent': hb.get('user_agent', user_agent),
+                    
+                    # Additional fields
+                    'plugin': hb.get('plugin', 'hackatime-web'),
+                    'plugin_version': hb.get('plugin_version', '1.0.0'),
+                    'os': hb.get('os', 'Unknown OS'),
+                    'hostname': hb.get('hostname', request.host),
+                    'timezone': hb.get('timezone', 'UTC')
+                }
+                heartbeat_data.append(processed_heartbeat)
+        
+        # If no valid heartbeats were processed, create a default one
+        if not heartbeat_data:
+            heartbeat_data = [{
+                'entity': 'unknown',
+                'type': 'file',
+                'time': int(time.time()),
+                'category': 'coding',
+                'project': 'Unknown Project',
+                'machine': f'machine_{current_user.id}',
+                'editor': 'Hack Club Spaces Editor'
+            }]
 
         app.logger.info(f"Sending heartbeat to Hackatime for user {current_user.username}")
 
