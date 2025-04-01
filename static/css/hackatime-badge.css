@@ -1,0 +1,107 @@
+
+/* Hackatime Badge Styles */
+.hackatime-badge {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    background: #2d3748;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 50px;
+    font-size: 14px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.hackatime-badge:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+.hackatime-badge-icon {
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+}
+
+.hackatime-badge-icon i {
+    font-size: 16px;
+    color: #ff6b6b;
+}
+
+.hackatime-badge-status {
+    font-weight: 500;
+}
+
+/* Status-specific styles */
+.hackatime-badge.active {
+    background: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
+}
+
+.hackatime-badge.active .hackatime-badge-icon i {
+    color: #ebf8ff;
+}
+
+.hackatime-badge.idle {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+}
+
+.hackatime-badge.error {
+    background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+}
+
+.hackatime-badge.error .hackatime-badge-icon i {
+    color: #fff5f5;
+}
+
+.hackatime-badge.connecting {
+    background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);
+}
+
+.hackatime-badge.syncing {
+    background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
+}
+
+/* Animation for syncing state */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.hackatime-badge.syncing {
+    animation: pulse 1s infinite;
+}
+
+/* Ensure the badge doesn't interfere with other UI elements */
+@media (max-width: 768px) {
+    .hackatime-badge {
+        bottom: 10px;
+        right: 10px;
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
+    .hackatime-badge-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .hackatime-badge-icon i {
+        font-size: 14px;
+    }
+}

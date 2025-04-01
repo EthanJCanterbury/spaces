@@ -2616,6 +2616,109 @@ def hackatime_disconnect():
             'message': f'Failed to disconnect Hackatime: {str(e)}'
         })
 
+@app.route('/hackatime/status', methods=['GET'])
+@login_required
+def hackatime_status():
+    """Check if user has a Hackatime API key connected"""
+    try:
+        has_api_key = current_user.wakatime_api_key is not None
+        return jsonify({
+            'success': True,
+            'connected': has_api_key
+        })
+    except Exception as e:
+        app.logger.error(f'Error checking Hackatime status: {str(e)}')
+        return jsonify({
+            'success': False,
+            'connected': False,
+            'message': f'Failed to check Hackatime status: {str(e)}'
+        })
+
+@app.route('/hackatime/heartbeat', methods=['POST'])
+@login_required
+def hackatime_heartbeat():
+    """Send a heartbeat to Hackatime API"""
+    try:
+        # Check if user has API key
+        if not current_user.wakatime_api_key:
+            return jsonify({
+                'success': False,
+                'message': 'No Hackatime API key found'
+            })
+        
+        # Get heartbeat data from request
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': 'No heartbeat data provided'
+            })
+            
+        # Send heartbeat to Hackatime API
+        api_url = "https://hackatime.hackclub.com/api/hackatime/v1/users/current/heartbeats"
+        headers = {
+            'Authorization': f'Bearer {current_user.wakatime_api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Prepare the heartbeat data according to Hackatime API requirements
+        heartbeat_data = [{
+            'type': data.get('type', 'file'),
+            'time': data.get('time', int(time.time())),
+            'entity': data.get('entity', 'unknown'),
+            'language': data.get('language', 'Text'),
+            'is_write': data.get('is_write', True)
+        }]
+        
+        app.logger.info(f"Sending heartbeat to Hackatime for user {current_user.username}: {heartbeat_data}")
+        
+        # Make the request to Hackatime API
+        response = requests.post(
+            api_url,
+            headers=headers,
+            json=heartbeat_data,
+            timeout=5
+        )
+        
+        if response.status_code >= 400:
+            app.logger.error(f"Hackatime heartbeat failed: {response.status_code} - {response.text}")
+            return jsonify({
+                'success': False,
+                'message': f'Heartbeat failed with status code {response.status_code}'
+            })
+        
+        # Record activity for first heartbeat of the day
+        now = datetime.utcnow()
+        day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+        
+        heartbeat_today = UserActivity.query.filter(
+            UserActivity.user_id == current_user.id,
+            UserActivity.activity_type == "hackatime_heartbeat",
+            UserActivity.timestamp >= day_start,
+            UserActivity.timestamp < day_end
+        ).first()
+        
+        if not heartbeat_today:
+            activity = UserActivity(
+                activity_type="hackatime_heartbeat",
+                message="User {username} sent first Hackatime heartbeat of the day",
+                username=current_user.username,
+                user_id=current_user.id)
+            db.session.add(activity)
+            db.session.commit()
+            
+        return jsonify({
+            'success': True,
+            'message': 'Heartbeat sent successfully'
+        })
+    except Exception as e:
+        app.logger.error(f'Error sending Hackatime heartbeat: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'Failed to send heartbeat: {str(e)}'
+        })
+
 
 @app.route('/logout')
 @login_required

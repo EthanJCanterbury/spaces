@@ -13,6 +13,7 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/python-editor.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hackatime-badge.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -253,6 +254,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/comment-fold.min.js"></script>
 
 <script src="{{ url_for('static', filename='js/python-editor.js') }}"></script>
+<script src="{{ url_for('static', filename='js/hackatime-tracker.js') }}"></script>
 
 <!-- Editor initialization is handled by python-editor.js -->
 
