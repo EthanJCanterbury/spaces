@@ -5,11 +5,12 @@ class HackatimeTracker {
         this.isActive = false;
         this.heartbeatInterval = null;
         this.lastHeartbeat = null;
-        this.status = 'idle';
+        this.status = 'monitoring'; // Changed from 'idle' to 'monitoring'
         this.editorType = document.getElementById('site-type')?.value || 'unknown';
         this.siteId = document.getElementById('site-id')?.value || 'unknown';
         this.entityName = this.editorType === 'python' ? 'main.py' : 'index.html';
         this.language = this.editorType === 'python' ? 'Python' : 'HTML';
+        this.siteName = document.querySelector('.topbar-left h1')?.textContent || 'Unknown Project';
         
         // Safely get editor reference
         this.editor = null;
@@ -26,6 +27,7 @@ class HackatimeTracker {
     }
     
     checkHackatimeStatus() {
+        console.log(`[Hackatime] Checking connection status...`);
         fetch('/hackatime/status', {
             method: 'GET',
             headers: {
@@ -35,6 +37,7 @@ class HackatimeTracker {
         .then(response => response.json())
         .then(data => {
             this.isActive = data.connected;
+            console.log(`[Hackatime] Connected: ${this.isActive}`);
             if (this.isActive) {
                 this.createBadge();
                 this.setupEditorListeners();
@@ -42,7 +45,7 @@ class HackatimeTracker {
             }
         })
         .catch(error => {
-            console.error('Error checking Hackatime status:', error);
+            console.error('[Hackatime] Error checking status:', error);
             this.isActive = false;
         });
     }
@@ -51,10 +54,21 @@ class HackatimeTracker {
         // Listen for editor changes to track activity
         if (this.editor && typeof this.editor.on === 'function') {
             this.editor.on('changes', () => {
+                const currentFile = document.querySelector('.file-tab.active')?.getAttribute('data-filename') || this.entityName;
+                console.log(`[Hackatime] File changed: ${currentFile} in project "${this.siteName}"`);
                 this.status = 'active';
                 this.updateBadgeStatus('active');
             });
         }
+        
+        // Listen for file tab changes
+        document.querySelectorAll('.file-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const filename = tab.getAttribute('data-filename');
+                console.log(`[Hackatime] Switched to file: ${filename}`);
+                this.entityName = filename;
+            });
+        });
         
         // Setup visibility change listener
         document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
@@ -99,9 +113,9 @@ class HackatimeTracker {
                 statusElement.textContent = 'Active';
                 badge.className = 'hackatime-badge active';
                 break;
-            case 'idle':
-                statusElement.textContent = 'Idle';
-                badge.className = 'hackatime-badge idle';
+            case 'monitoring': // Changed from 'idle' to 'monitoring'
+                statusElement.textContent = 'Monitoring';
+                badge.className = 'hackatime-badge idle'; // Keep the same CSS class
                 break;
             case 'error':
                 statusElement.textContent = 'Error';
@@ -126,6 +140,8 @@ class HackatimeTracker {
             clearInterval(this.heartbeatInterval);
         }
         
+        console.log(`[Hackatime] Starting heartbeat tracking for project "${this.siteName}"`);
+        
         // Send initial heartbeat
         this.sendHeartbeat();
         
@@ -137,6 +153,7 @@ class HackatimeTracker {
     
     stopHeartbeatTracking() {
         if (this.heartbeatInterval) {
+            console.log(`[Hackatime] Stopping heartbeat tracking`);
             clearInterval(this.heartbeatInterval);
             this.heartbeatInterval = null;
         }
@@ -148,15 +165,20 @@ class HackatimeTracker {
         // Show syncing status briefly
         this.updateBadgeStatus('syncing');
         
+        // Get current file from active tab
+        const currentFile = document.querySelector('.file-tab.active')?.getAttribute('data-filename') || this.entityName;
+        
         // Prepare heartbeat data
         const heartbeat = {
             type: 'file',
             time: Math.floor(Date.now() / 1000),
-            entity: this.entityName,
-            language: this.language,
+            entity: currentFile,
+            language: this.getLanguageFromFile(currentFile),
             is_write: this.status === 'active',
             site_id: this.siteId
         };
+        
+        console.log(`[Hackatime] Sending heartbeat:`, heartbeat);
         
         fetch('/hackatime/heartbeat', {
             method: 'POST',
@@ -165,35 +187,66 @@ class HackatimeTracker {
             },
             body: JSON.stringify(heartbeat)
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log(`[Hackatime] Heartbeat response status: ${response.status}`);
+            return response.json();
+        })
         .then(data => {
+            console.log(`[Hackatime] Heartbeat response:`, data);
             if (data.success) {
                 this.lastHeartbeat = new Date();
                 this.updateBadgeStatus(this.status);
+                console.log(`[Hackatime] Heartbeat successful for ${currentFile}`);
             } else {
                 this.updateBadgeStatus('error');
+                console.error(`[Hackatime] Heartbeat failed:`, data.message);
             }
         })
         .catch(error => {
-            console.error('Error sending heartbeat:', error);
+            console.error('[Hackatime] Error sending heartbeat:', error);
             this.updateBadgeStatus('error');
         });
         
-        // Reset status to idle after sending heartbeat if it was active
+        // Reset status to monitoring after sending heartbeat if it was active
         if (this.status === 'active') {
             setTimeout(() => {
-                this.status = 'idle';
-                this.updateBadgeStatus('idle');
+                this.status = 'monitoring'; // Changed from 'idle' to 'monitoring'
+                this.updateBadgeStatus('monitoring');
             }, 2000);
+        }
+    }
+    
+    getLanguageFromFile(filename) {
+        if (!filename) return this.language;
+        
+        const extension = filename.split('.').pop().toLowerCase();
+        
+        switch (extension) {
+            case 'py':
+                return 'Python';
+            case 'js':
+                return 'JavaScript';
+            case 'html':
+                return 'HTML';
+            case 'css':
+                return 'CSS';
+            case 'json':
+                return 'JSON';
+            case 'md':
+                return 'Markdown';
+            default:
+                return this.language;
         }
     }
     
     handleVisibilityChange() {
         if (document.hidden) {
             // Page is hidden
+            console.log(`[Hackatime] Page hidden, pausing tracking`);
             this.stopHeartbeatTracking();
         } else {
             // Page is visible again
+            console.log(`[Hackatime] Page visible, resuming tracking`);
             this.startHeartbeatTracking();
         }
     }
@@ -201,6 +254,7 @@ class HackatimeTracker {
 
 // Initialize the tracker when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[Hackatime] Initializing tracker');
     const hackatimeTracker = new HackatimeTracker();
     hackatimeTracker.init();
     
