@@ -176,7 +176,7 @@ class HackatimeTracker {
             popup.style.display = 'none';
             popup.innerHTML = `
                 <div class="hackatime-popup-header">
-                    <h3>Hackatime</h3>
+                    <h3>Hackatime Integration</h3>
                     <button id="hackatime-close-popup" class="hackatime-close-btn">×</button>
                 </div>
                 <div class="hackatime-popup-content">
@@ -319,7 +319,7 @@ class HackatimeTracker {
             const minutesRemaining = this.isPaused ? 0 : Math.max(0, this.afkTimeoutMinutes - ((Date.now() - this.lastActivityTime) / (1000 * 60))).toFixed(1);
             timeoutInfo.textContent = this.isPaused ? 
                 'Tracking paused' : 
-                `Auto-pause in ${minutesRemaining} minutes of inactivity`;
+                `In ${minutesRemaining} minutes of inactivity`;
         }
     }
     
