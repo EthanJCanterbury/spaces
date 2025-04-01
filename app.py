@@ -2893,7 +2893,7 @@ def hackatime_heartbeat():
                 'category': 'coding',
                 'project': 'Unknown Project',
                 'machine': f'machine_{current_user.id}',
-                'editor': 'Hack Club Spaces Editor'
+                'editor': 'Spaces IDE'
             }]
 
         app.logger.info(f"Sending heartbeat to Hackatime for user {current_user.username}")
