@@ -494,10 +494,10 @@ class HackatimeTracker {
         // Send initial heartbeat
         this.sendHeartbeat();
         
-        // Set up interval for regular heartbeats (every 1 minute)
+        // Set up interval for regular heartbeats (every 30 seconds)
         this.heartbeatInterval = setInterval(() => {
             this.sendHeartbeat();
-        }, 60000); // 1 minute
+        }, 30000); // 30 seconds - to stay under the 2-minute timeout interval
     }
     
     stopHeartbeatTracking() {
@@ -560,30 +560,32 @@ class HackatimeTracker {
         
         // Prepare enhanced heartbeat data with ALL fields from Wakatime API
         const heartbeat = {
-            // Required fields
+            // Required fields - absolute essentials for tracking
             entity: currentFile, // File path or domain being worked on
             type: 'file', // Can be file, app, or domain
-            time: Date.now() / 1000, // UNIX epoch timestamp with fractions of seconds
+            time: Math.floor(Date.now() / 1000), // UNIX epoch timestamp as integer
             
-            // Optional but important fields
+            // Important fields that affect time tracking
             category: this.getCategoryFromActivity(), // coding, debugging, etc.
             project: this.siteName,
-            project_root_count: 3, // Hardcoded - count of folders in project root path
-            branch: 'main', // Hardcoded branch name
             language: this.getLanguageFromFile(currentFile),
-            dependencies: dependencies,
+            is_write: this.status === 'active',
+            
+            // User activity details
             lines: lines,
             lineno: lineNo,
             cursorpos: cursorPos,
-            is_write: this.status === 'active',
-            
-            // Additional fields for completeness
             line_additions: lineAdditions,
             line_deletions: lineDeletions,
+            
+            // Project structure information
+            project_root_count: 3,
+            branch: 'main',
+            dependencies: dependencies,
+            
+            // Environment information
             machine_name_id: machineInfo.machine_name_id,
             site_id: this.siteId,
-            
-            // Additional context fields
             user_agent: navigator.userAgent,
             editor: this.editorType === 'python' ? 'Hack Club Spaces Python Editor' : 'Hack Club Spaces Web Editor',
             editor_version: '1.0.0',
