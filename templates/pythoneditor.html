@@ -254,7 +254,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/comment-fold.min.js"></script>
 
 <script src="{{ url_for('static', filename='js/python-editor.js') }}"></script>
+{% if current_user.wakatime_api_key %}
 <script src="{{ url_for('static', filename='js/hackatime-tracker.js') }}"></script>
+{% endif %}
 
 <!-- Editor initialization is handled by python-editor.js -->
 

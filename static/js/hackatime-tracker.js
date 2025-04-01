@@ -10,26 +10,19 @@ class HackatimeTracker {
         this.siteId = document.getElementById('site-id')?.value || 'unknown';
         this.entityName = this.editorType === 'python' ? 'main.py' : 'index.html';
         this.language = this.editorType === 'python' ? 'Python' : 'HTML';
-        this.editor = window.pythonEditor || window.editor;
+        
+        // Safely get editor reference
+        this.editor = null;
+        if (window.pythonEditor) {
+            this.editor = window.pythonEditor;
+        } else if (window.editor && typeof window.editor.on === 'function') {
+            this.editor = window.editor;
+        }
     }
 
     init() {
-        // Check if Hackatime is connected (badge will only appear if it is)
+        // First check if Hackatime is connected before doing anything else
         this.checkHackatimeStatus();
-        
-        // Create the badge if Hackatime is connected
-        this.createBadge();
-        
-        // Setup event listeners
-        document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
-        
-        // Listen for editor changes to track activity
-        if (this.editor) {
-            this.editor.on('changes', () => {
-                this.status = 'active';
-                this.updateBadgeStatus('active');
-            });
-        }
     }
     
     checkHackatimeStatus() {
@@ -44,6 +37,7 @@ class HackatimeTracker {
             this.isActive = data.connected;
             if (this.isActive) {
                 this.createBadge();
+                this.setupEditorListeners();
                 this.startHeartbeatTracking();
             }
         })
@@ -51,6 +45,19 @@ class HackatimeTracker {
             console.error('Error checking Hackatime status:', error);
             this.isActive = false;
         });
+    }
+    
+    setupEditorListeners() {
+        // Listen for editor changes to track activity
+        if (this.editor && typeof this.editor.on === 'function') {
+            this.editor.on('changes', () => {
+                this.status = 'active';
+                this.updateBadgeStatus('active');
+            });
+        }
+        
+        // Setup visibility change listener
+        document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
     }
     
     createBadge() {

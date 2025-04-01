@@ -2641,10 +2641,11 @@ def hackatime_heartbeat():
     try:
         # Check if user has API key
         if not current_user.wakatime_api_key:
+            app.logger.warning(f"User {current_user.username} attempted to send heartbeat without API key")
             return jsonify({
                 'success': False,
                 'message': 'No Hackatime API key found'
-            })
+            }), 403
         
         # Get heartbeat data from request
         data = request.get_json()
@@ -2652,7 +2653,7 @@ def hackatime_heartbeat():
             return jsonify({
                 'success': False,
                 'message': 'No heartbeat data provided'
-            })
+            }), 400
             
         # Send heartbeat to Hackatime API
         api_url = "https://hackatime.hackclub.com/api/hackatime/v1/users/current/heartbeats"
@@ -2685,7 +2686,7 @@ def hackatime_heartbeat():
             return jsonify({
                 'success': False,
                 'message': f'Heartbeat failed with status code {response.status_code}'
-            })
+            }), 400
         
         # Record activity for first heartbeat of the day
         now = datetime.utcnow()
@@ -2717,7 +2718,7 @@ def hackatime_heartbeat():
         return jsonify({
             'success': False,
             'message': f'Failed to send heartbeat: {str(e)}'
-        })
+        }), 500
 
 
 @app.route('/logout')
