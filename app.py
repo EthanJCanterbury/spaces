@@ -2835,17 +2835,17 @@ def hackatime_heartbeat():
         # Prepare the heartbeat data according to Hackatime API requirements with enhanced fields
         heartbeat_data = [{
             'type': data.get('type', 'file'),
-            'time': data.get('time', time.time()), # Use float time to include fractions of seconds
+            'time': data.get('time', time.time()),
             'entity': data.get('entity', 'unknown'),
             'category': data.get('category', 'coding'),
             'project': data.get('project', 'Unknown Project'),
             'project_root_count': data.get('project_root_count', 2),
             'branch': data.get('branch', 'main'),
             'language': data.get('language', 'Text'),
-            'dependencies': data.get('dependencies', ''),
+            'dependencies': data.get('dependencies', 'spaces'),
             'lines': data.get('lines', 0),
-            'line_additions': data.get('line_additions', 0),
-            'line_deletions': data.get('line_deletions', 0),
+            'line_additions': data.get('line_additions', 10),
+            'line_deletions': data.get('line_deletions', 5),
             'lineno': data.get('lineno', 1),
             'cursorpos': data.get('cursorpos', 1),
             'is_write': data.get('is_write', True)
