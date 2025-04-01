@@ -1436,7 +1436,6 @@ def toggle_club_leader(user_id):
                             leader_id=user.id)
                 db.session.add(club)
 
-            # Record activity
             activity = UserActivity(
                 activity_type="admin_action",
                 message=
@@ -2451,6 +2450,171 @@ def remove_admin_user():
 @app.route('/up')
 def health_check():
     return '', 200
+
+
+@app.route('/hackatime')
+@login_required
+def hackatime():
+    """Page for Hackatime integration"""
+    return render_template('hackatime.html')
+
+
+@app.route('/hackatime/connect', methods=['POST'])
+@login_required
+def hackatime_connect():
+    """Connect Hackatime account by saving API key"""
+    try:
+        data = request.get_json()
+        api_key = data.get('api_key')
+
+        if not api_key:
+            return jsonify({
+                'success': False,
+                'message': 'API key is required'
+            })
+
+        # Validate the API key by making a request to the Hackatime API
+        api_url = "https://hackatime.hackclub.com/api/hackatime/v1"
+
+        # Try to send a test heartbeat to validate the API key
+        try:
+            # Log the request attempt
+            app.logger.info(
+                f"Attempting to validate Hackatime API key for user {current_user.username}"
+            )
+
+            # Try the heartbeat endpoint directly to validate the API key
+            test_heartbeat_endpoint = f"{api_url}/users/current/heartbeats"
+            app.logger.info(
+                f"Testing heartbeat endpoint: {test_heartbeat_endpoint}")
+
+            # Prepare headers with proper Authorization format
+            headers = {
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json'
+            }
+
+            # Send a proper test heartbeat as specified in the documentation
+            current_time = int(time.time())
+            test_data = [{
+                "type": "file",
+                "time": current_time,
+                "entity": "test.txt",
+                "language": "Text"
+            }]
+
+            response = requests.post(test_heartbeat_endpoint,
+                                     headers=headers,
+                                     json=test_data,
+                                     timeout=5)
+
+            # Log detailed response information
+            app.logger.info(f"API validation response: {response.status_code}")
+
+            if response.status_code >= 400:
+                # Try an alternative endpoint as backup validation
+                alternative_endpoint = f"{api_url}/users/current"
+                app.logger.info(
+                    f"Primary validation failed. Trying alternative endpoint: {alternative_endpoint}"
+                )
+                alternative_response = requests.get(alternative_endpoint,
+                                                    headers=headers,
+                                                    timeout=5)
+
+                if alternative_response.status_code >= 400:
+                    app.logger.error(
+                        f"API key validation failed with status {response.status_code} and alternative status {alternative_response.status_code}"
+                    )
+                    return jsonify({
+                        'success':
+                        False,
+                        'message':
+                        f'Invalid API key or API endpoint not found. Please check your API key and try again.'
+                    })
+                else:
+                    # Alternative endpoint worked, so the API key is valid
+                    app.logger.info(
+                        f"API key validation successful for user {current_user.username} using alternative endpoint"
+                    )
+            else:
+                # If we get here, the API key is valid
+                app.logger.info(
+                    f"API key validation successful for user {current_user.username}"
+                )
+
+        except requests.RequestException as e:
+            app.logger.error(f"API key validation error: {str(e)}")
+            return jsonify({
+                'success': False,
+                'message': f'Error validating API key: {str(e)}'
+            })
+
+        # Update user's wakatime_api_key
+        with db.engine.connect() as conn:
+            conn.execute(
+                db.text(
+                    "UPDATE \"user\" SET wakatime_api_key = :api_key WHERE id = :user_id"
+                ), {
+                    "api_key": api_key,
+                    "user_id": current_user.id
+                })
+            conn.commit()
+
+        # Record activity
+        activity = UserActivity(
+            activity_type="hackatime_connected",
+            message="User {username} connected Hackatime account",
+            username=current_user.username,
+            user_id=current_user.id)
+        db.session.add(activity)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Hackatime account connected successfully'
+        })
+    except Exception as e:
+        app.logger.error(f'Error connecting Hackatime: {str(e)}')
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Failed to connect Hackatime: {str(e)}'
+        })
+
+
+@app.route('/hackatime/disconnect', methods=['POST'])
+@login_required
+def hackatime_disconnect():
+    """Disconnect Hackatime account by removing API key"""
+    try:
+        # Remove user's wakatime_api_key
+        with db.engine.connect() as conn:
+            conn.execute(
+                db.text(
+                    "UPDATE \"user\" SET wakatime_api_key = NULL WHERE id = :user_id"
+                ), {"user_id": current_user.id})
+            conn.commit()
+
+        # Record activity
+        activity = UserActivity(
+            activity_type="hackatime_disconnected",
+            message="User {username} disconnected Hackatime account",
+            username=current_user.username,
+            user_id=current_user.id)
+        db.session.add(activity)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Hackatime account disconnected successfully'
+        })
+    except Exception as e:
+        app.logger.error(f'Error disconnecting Hackatime: {str(e)}')
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Failed to disconnect Hackatime: {str(e)}'
+        })
 
 
 @app.route('/logout')

@@ -1,0 +1,325 @@
+/* Hackatime page styles */
+:root {
+  --primary: #ed6663;
+  --primary-dark: #d64550;
+  --primary-gradient: linear-gradient(135deg, #fa8072 0%, #e57363 100%);
+  --background: #f5f7fa;
+  --text: #1f2d3d;
+  --text-light: #8492a6;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.hackatime-container {
+  margin-top: 80px; /* Increased to prevent navbar overlap */
+  padding: 2rem 1rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hackatime-card {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.header {
+  background: var(--primary-gradient);
+  color: white;
+  padding: 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  color: #ffffff; /* Make sure text is clearly visible */
+}
+
+.hackatime-illustration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 0;
+  position: relative;
+}
+
+.hackatime-icon {
+  width: 120px;
+  height: 120px;
+  z-index: 2;
+}
+
+.glow-effect {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(250, 128, 114, 0.2) 0%, rgba(250, 128, 114, 0) 70%);
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.info-section {
+  padding: 2rem;
+  border-bottom: 1px solid #eee;
+}
+
+.info-section h2 {
+  color: var(--primary);
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.info-section p {
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.connection-steps {
+  background-color: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 1.5rem;
+}
+
+.connection-steps h3 {
+  color: var(--primary);
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.connection-steps ol {
+  padding-left: 1.5rem;
+}
+
+.connection-steps li {
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.connection-steps a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.connection-steps a:hover {
+  text-decoration: underline;
+}
+
+.api-key-form {
+  padding: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.input-group {
+  display: flex;
+  position: relative;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(237, 102, 99, 0.2);
+}
+
+.toggle-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #8492a6;
+  cursor: pointer;
+}
+
+.toggle-btn:hover {
+  color: var(--primary);
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 0.5rem;
+}
+
+.connect-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.connect-button:hover {
+  box-shadow: 0 4px 8px rgba(250, 128, 114, 0.25);
+  transform: translateY(-1px);
+}
+
+.disconnect-button {
+  display: block;
+  margin: 1rem auto;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.disconnect-button:hover {
+  background-color: rgba(237, 102, 99, 0.1);
+}
+
+.success-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.success-message i {
+  font-size: 3rem;
+  color: #10B981;
+  margin-bottom: 1rem;
+}
+
+.success-message p {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  color: var(--text);
+}
+
+.benefits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background-color: #f9f9f9;
+  border-radius: 0 0 12px 12px;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.benefit-item i {
+  color: var(--primary);
+  font-size: 1.2rem;
+}
+
+.benefit-item span {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.validation-message {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  display: none;
+}
+
+.validation-message.error {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #d32f2f;
+  border-left: 3px solid #d32f2f;
+}
+
+.validation-message.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+  border-left: 3px solid #2e7d32;
+}
+
+.validation-message.info {
+  background-color: rgba(33, 150, 243, 0.1);
+  color: #1976d2;
+  border-left: 3px solid #1976d2;
+}
+
+.connect-button {
+  min-width: 180px;
+}
+
+.connect-button .fa-spinner {
+  margin-right: 5px;
+}
+
+@media (max-width: 768px) {
+  .benefits {
+    grid-template-columns: 1fr;
+  }
+
+  .hackatime-container {
+    margin-top: 70px;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .header {
+    padding: 1.5rem 1rem;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .info-section, .api-key-form {
+    padding: 1.5rem 1rem;
+  }
+}

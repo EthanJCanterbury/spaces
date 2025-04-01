@@ -83,6 +83,7 @@ class User(UserMixin, db.Model):
     github_token = db.Column(db.Text, nullable=True)
     github_username = db.Column(db.String(100), nullable=True)
     slack_id = db.Column(db.String(50), nullable=True)
+    wakatime_api_key = db.Column(db.String(100), nullable=True)
     is_suspended = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
     has_special_access = db.Column(db.Boolean, default=False)
