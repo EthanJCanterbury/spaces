@@ -2482,20 +2482,7 @@ def hackatime_connect():
             # Log the request attempt
             app.logger.info(f"Attempting to validate Hackatime API key for user {current_user.username}")
             
-            # First try a GET request to health endpoint to check connection
-            health_endpoint = f"{api_url.replace('/hackatime/v1', '')}/health"
-            app.logger.info(f"Checking health endpoint: {health_endpoint}")
-            health_response = requests.get(health_endpoint, headers=headers, timeout=5)
-            app.logger.info(f"Health check response: {health_response.status_code}")
-            
-            if health_response.status_code != 200:
-                app.logger.error(f"Health check failed: {health_response.status_code} - {health_response.text}")
-                return jsonify({
-                    'success': False, 
-                    'message': f'Could not connect to Hackatime API. Status code: {health_response.status_code}'
-                })
-            
-            # Now try the heartbeat endpoint to validate the API key
+            # Try the heartbeat endpoint directly to validate the API key
             # This is the endpoint mentioned in the user's message
             test_heartbeat_endpoint = f"{api_url}/users/current/heartbeats"
             app.logger.info(f"Testing heartbeat endpoint: {test_heartbeat_endpoint}")
@@ -2515,14 +2502,15 @@ def hackatime_connect():
             app.logger.debug(f"Response headers: {response.headers}")
             app.logger.debug(f"Response body: {response.text[:200]}")  # Log only first 200 chars in case it's large
             
-            if response.status_code == 404:
-                # If specific endpoint fails, try an alternative endpoint
+            if response.status_code >= 400:
+                # Try an alternative endpoint as backup validation
                 alternative_endpoint = f"{api_url}/users/current"
-                app.logger.info(f"Trying alternative endpoint: {alternative_endpoint}")
+                app.logger.info(f"Primary validation failed. Trying alternative endpoint: {alternative_endpoint}")
                 alternative_response = requests.get(alternative_endpoint, headers=headers, timeout=5)
                 
                 if alternative_response.status_code != 200:
                     app.logger.error(f"API key validation failed with status {response.status_code} and alternative status {alternative_response.status_code}")
+                    app.logger.error(f"Response body: {response.text[:200]}")
                     return jsonify({
                         'success': False, 
                         'message': f'Invalid API key or API endpoint not found. Please check your API key and try again.'
