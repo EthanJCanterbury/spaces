@@ -588,32 +588,7 @@ def welcome():
         user_id=current_user.id).all()
 
 
-@app.route('/hackatime/disconnect', methods=['POST'])
-@login_required
-def hackatime_disconnect():
-    """Disconnect Hackatime by removing API key"""
-    try:
-        if current_user.wakatime_api_key:
-            current_user.wakatime_api_key = None
-            db.session.commit()
-            app.logger.info(f"User {current_user.username} disconnected Hackatime")
-            return jsonify({
-                'success': True,
-                'message': 'Hackatime disconnected successfully'
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'message': 'No Hackatime API key found'
-            })
-    except Exception as e:
-        app.logger.error(f'Error disconnecting Hackatime: {str(e)}')
-        return jsonify({
-            'success': False,
-            'message': f'Failed to disconnect Hackatime: {str(e)}'
-        })
-
-    return render_template('welcome.html',
+return render_template('welcome.html',
                            sites=sites,
                            max_sites=max_sites,
                            club_memberships=club_memberships)
