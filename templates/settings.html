@@ -12,90 +12,13 @@
             <div class="card-icon"><i class="fas fa-plug"></i></div>
             <div class="integrations-header-section">
                 <h2>Integrations</h2>
+            </div>
+            <p class="integrations-description">Connect your favorite services to enhance your Hack Club experience.</p>
+            <div class="integrations-cta">
                 <a href="{{ url_for('integrations') }}" class="btn-manage-integrations">
                     <i class="fas fa-cog"></i>
                     Manage Integrations
                 </a>
-            </div>
-            <div class="integration-item">
-                <div class="integration-header">
-                    <i class="fab fa-github"></i>
-                    <h3>GitHub</h3>
-                </div>
-                <p>Connect your GitHub account to enable version control and repository management.</p>
-                <div class="integration-actions">
-                    {% if current_user.github_token %}
-                    <div class="integration-status-buttons">
-                        <button class="btn-secondary" disabled>
-                            <i class="fas fa-check"></i>
-                            Connected to @{{ current_user.github_username }}
-                        </button>
-                        <button class="btn-danger" onclick="disconnectGithub()">
-                            <i class="fas fa-unlink"></i>
-                            Disconnect
-                        </button>
-                    </div>
-                    {% else %}
-                    <a href="{{ url_for('github.github_login') }}" class="btn-github">
-                        <i class="fab fa-github"></i>
-                        Connect GitHub
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="integration-item">
-                <div class="integration-header">
-                    <i class="fas fa-clock"></i>
-                    <h3>Hackatime</h3>
-                </div>
-                <p>Connect your Hackatime account to track your coding time and see your stats.</p>
-                <div class="integration-actions">
-                    {% if current_user.wakatime_api_key %}
-                    <div class="integration-status-buttons">
-                        <button class="btn-secondary" disabled>
-                            <i class="fas fa-check"></i>
-                            Connected to Hackatime
-                        </button>
-                        <button class="btn-danger" onclick="disconnectHackatime()">
-                            <i class="fas fa-unlink"></i>
-                            Disconnect
-                        </button>
-                    </div>
-                    {% else %}
-                    <a href="{{ url_for('hackatime') }}" class="btn-hackatime">
-                        <i class="fas fa-clock"></i>
-                        Connect Hackatime
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="integration-item">
-                <div class="integration-header">
-                    <i class="fas fa-robot"></i>
-                    <h3>Groq</h3>
-                </div>
-                <p>Connect your Groq account to access fast AI language models and enhance your experience.</p>
-                <div class="integration-actions">
-                    {% if current_user.groq_api_key %}
-                    <div class="integration-status-buttons">
-                        <button class="btn-secondary" disabled>
-                            <i class="fas fa-check"></i>
-                            Connected to Groq
-                        </button>
-                        <button class="btn-danger" onclick="disconnectGroq()">
-                            <i class="fas fa-unlink"></i>
-                            Disconnect
-                        </button>
-                    </div>
-                    {% else %}
-                    <a href="{{ url_for('groq_page') }}" class="btn-groq">
-                        <i class="fas fa-robot"></i>
-                        Connect Groq
-                    </a>
-                    {% endif %}
-                </div>
             </div>
         </div>
         <div class="settings-card profile-card">
@@ -481,30 +404,7 @@
 
 </script>
 <style>
-/* Style for Groq button */
-.btn-groq {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: #6366f1;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background 0.2s;
-    width: 100%;
-    justify-content: center;
-    margin-bottom: 1rem;
-}
-
-.btn-groq:hover {
-    background: #4f46e5;
-    color: white;
-    text-decoration: none;
-}
-
-/* Add scrolling to integrations card */
+/* Add styling for the integrations card */
 .integrations-card {
     display: flex;
     flex-direction: column;
@@ -516,38 +416,57 @@
     flex-shrink: 0;
 }
 
-.integrations-card > div:not(.card-icon):not(.integrations-header-section) {
-    overflow-y: auto;
-    max-height: 450px;
-    padding-right: 8px;
-}
-
-/* Manage integrations button */
+/* Integrations section styles */
 .integrations-header-section {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
+.integrations-description {
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    font-size: 1.05rem;
+}
+
+.integrations-cta {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+/* Enhanced manage integrations button */
 .btn-manage-integrations {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color: white;
-    padding: 0.5rem 0.75rem;
-    border-radius: 6px;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 1.1rem;
     font-weight: 500;
-    transition: background 0.2s;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 118, 255, 0.2);
+    width: 90%;
+    max-width: 300px;
 }
 
 .btn-manage-integrations:hover {
-    background: var(--primary-dark);
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 118, 255, 0.3);
     color: white;
     text-decoration: none;
+}
+
+.btn-manage-integrations:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 8px rgba(0, 118, 255, 0.2);
 }
 
 .club-card {
