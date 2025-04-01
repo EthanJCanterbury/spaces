@@ -296,11 +296,8 @@ class HackatimeTracker {
         // Update project name
         document.getElementById('hackatime-project').textContent = this.siteName;
 
-        // Update status
+        // Update status - hide auto-pause indication
         let statusText = this.isPaused ? 'Paused' : this.status.charAt(0).toUpperCase() + this.status.slice(1);
-        if (this.isPaused && this.wasAutoPaused) {
-            statusText += ' (Auto)';
-        }
         document.getElementById('hackatime-popup-status').textContent = statusText;
 
         // Update time logged
@@ -312,13 +309,12 @@ class HackatimeTracker {
         // Update pause button text
         document.getElementById('hackatime-toggle-pause').textContent = this.isPaused ? 'Resume Tracking' : 'Pause Tracking';
 
-        // Add info about AFK timeout
+        // Hide AFK timeout info to prevent bypassing the auto-pause
         const timeoutInfo = document.getElementById('hackatime-afk-timeout');
         if (timeoutInfo) {
-            const minutesRemaining = this.isPaused ? 0 : Math.max(0, this.afkTimeoutMinutes - ((Date.now() - this.lastActivityTime) / (1000 * 60))).toFixed(1);
             timeoutInfo.textContent = this.isPaused ? 
                 'Tracking paused' : 
-                `In ${minutesRemaining} minutes of inactivity`;
+                'Activity tracking enabled';
         }
     }
 
@@ -493,10 +489,10 @@ class HackatimeTracker {
         // Send initial heartbeat
         this.sendHeartbeat();
 
-        // Set up interval for regular heartbeats (every 30 seconds)
+        // Set up interval for regular heartbeats (every 1.5 minutes)
         this.heartbeatInterval = setInterval(() => {
             this.sendHeartbeat();
-        }, 30000); // 30 seconds - to stay under the 2-minute timeout interval
+        }, 90000); // 1.5 minutes (90 seconds)
     }
 
     stopHeartbeatTracking() {
