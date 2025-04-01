@@ -10,7 +10,13 @@
     <div class="settings-grid">
         <div class="settings-card integrations-card">
             <div class="card-icon"><i class="fas fa-plug"></i></div>
-            <h2>Integrations</h2>
+            <div class="integrations-header-section">
+                <h2>Integrations</h2>
+                <a href="{{ url_for('integrations') }}" class="btn-manage-integrations">
+                    <i class="fas fa-cog"></i>
+                    Manage Integrations
+                </a>
+            </div>
             <div class="integration-item">
                 <div class="integration-header">
                     <i class="fab fa-github"></i>
@@ -91,37 +97,6 @@
                     {% endif %}
                 </div>
             </div>
-
-            <!-- Temporarily commented out Slack integration
-            <div class="integration-item">
-                <div class="integration-header">
-                    <i class="fab fa-slack"></i>
-                    <h3>Slack</h3>
-                </div>
-                <p>Connect your Slack account for easy login and authentication.</p>
-                <div class="integration-actions">
-                    {% if current_user.slack_id %}
-                        <div class="integration-status connected">
-                            <i class="fas fa-check-circle"></i>
-                            Connected via Slack (ID: {{ current_user.slack_id }})
-                        </div>
-                        <button class="btn-secondary" onclick="disconnectSlack()" title="Disconnect Slack">
-                            <i class="fas fa-unlink"></i>
-                            Disconnect
-                        </button>
-                        {% else %}
-                        <div class="integration-status">
-                            <i class="fas fa-circle"></i>
-                            Not connected
-                        </div>
-                        <a href="{{ url_for('slack.slack_login') }}" class="btn-slack">
-                            <i class="fab fa-slack"></i>
-                            Connect with Slack
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-            -->
         </div>
         <div class="settings-card profile-card">
             <div class="card-icon"><i class="fas fa-user"></i></div>
@@ -506,6 +481,75 @@
 
 </script>
 <style>
+/* Style for Groq button */
+.btn-groq {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #6366f1;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.2s;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.btn-groq:hover {
+    background: #4f46e5;
+    color: white;
+    text-decoration: none;
+}
+
+/* Add scrolling to integrations card */
+.integrations-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.integrations-card > h2,
+.integrations-card > .card-icon,
+.integrations-card > .integrations-header-section {
+    flex-shrink: 0;
+}
+
+.integrations-card > div:not(.card-icon):not(.integrations-header-section) {
+    overflow-y: auto;
+    max-height: 450px;
+    padding-right: 8px;
+}
+
+/* Manage integrations button */
+.integrations-header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.btn-manage-integrations {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--primary);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.btn-manage-integrations:hover {
+    background: var(--primary-dark);
+    color: white;
+    text-decoration: none;
+}
+
 .club-card {
     margin-bottom: 20px;
 }

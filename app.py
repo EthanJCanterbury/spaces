@@ -1071,15 +1071,15 @@ def create_python_site():
 def main():
     """Main function that runs when this script is executed."""
     print("Hello, World!")
-    
+
     # Try adding your own code below:
     name = "Python Coder"
     print(f"Welcome, {name}!")
-    
+
     # You can use loops:
     for i in range(3):
         print(f"Count: {i}")
-    
+
     # And conditions:
     if name == "Python Coder":
         print("You're a Python coder!")
@@ -1826,7 +1826,7 @@ def search_users():
 def search_sites():
     try:
         search_term = request.args.get('term', '')
-        if not search_term or len(search_term) < 2:
+if not search_term or len(search_term) < 2:
             return jsonify(
                 {'error': 'Search term must be at least 2 characters'}), 400
 
@@ -2680,13 +2680,13 @@ def groq_connect():
 
         # Test endpoint URL
         api_url = "https://api.groq.com/openai/v1/chat/completions"
-        
+
         # Prepare headers with the API key
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {api_key}'
         }
-        
+
         # Simple test request
         test_data = {
             'model': 'llama-3.3-70b-versatile',
@@ -2695,9 +2695,9 @@ def groq_connect():
                 'content': 'Explain the importance of fast language models'
             }]
         }
-        
+
         app.logger.info(f"Testing Groq API key for user {current_user.username}")
-        
+
         # Make the request to validate the API key
         response = requests.post(
             api_url,
@@ -2705,20 +2705,20 @@ def groq_connect():
             json=test_data,
             timeout=10
         )
-        
+
         # Log the response status
         app.logger.info(f"Groq API validation response: {response.status_code}")
-        
+
         if response.status_code >= 400:
             app.logger.error(f"Groq API key validation failed: {response.status_code} - {response.text}")
             return jsonify({
                 'success': False,
                 'message': f'Invalid Groq API key. Please check your API key and try again.'
             })
-        
+
         # If we get here, the API key is valid
         app.logger.info(f"Groq API key validation successful for user {current_user.username}")
-        
+
         # Update user's groq_api_key in the database
         with db.engine.connect() as conn:
             conn.execute(
@@ -2729,7 +2729,7 @@ def groq_connect():
                     "user_id": current_user.id
                 })
             conn.commit()
-        
+
         # Record activity
         activity = UserActivity(
             activity_type="groq_connected",
@@ -2738,12 +2738,12 @@ def groq_connect():
             user_id=current_user.id)
         db.session.add(activity)
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'message': 'Groq account connected successfully'
         })
-        
+
     except Exception as e:
         app.logger.error(f'Error connecting Groq: {str(e)}')
         db.session.rollback()
@@ -2764,7 +2764,7 @@ def groq_disconnect():
                     "UPDATE \"user\" SET groq_api_key = NULL WHERE id = :user_id"
                 ), {"user_id": current_user.id})
             conn.commit()
-        
+
         # Record activity
         activity = UserActivity(
             activity_type="groq_disconnected",
@@ -2773,7 +2773,7 @@ def groq_disconnect():
             user_id=current_user.id)
         db.session.add(activity)
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'message': 'Groq account disconnected successfully'
@@ -2816,7 +2816,7 @@ def hackatime_heartbeat():
                 'success': False,
                 'message': 'No Hackatime API key found'
             }), 403
-        
+
         # Get heartbeat data from request
         data = request.get_json()
         if not data:
@@ -2824,14 +2824,14 @@ def hackatime_heartbeat():
                 'success': False,
                 'message': 'No heartbeat data provided'
             }), 400
-            
+
         # Send heartbeat to Hackatime API
         api_url = "https://hackatime.hackclub.com/api/hackatime/v1/users/current/heartbeats"
         headers = {
             'Authorization': f'Bearer {current_user.wakatime_api_key}',
             'Content-Type': 'application/json'
         }
-        
+
         # Prepare the heartbeat data according to Hackatime API requirements
         heartbeat_data = [{
             'type': data.get('type', 'file'),
@@ -2840,9 +2840,9 @@ def hackatime_heartbeat():
             'language': data.get('language', 'Text'),
             'is_write': data.get('is_write', True)
         }]
-        
+
         app.logger.info(f"Sending heartbeat to Hackatime for user {current_user.username}: {heartbeat_data}")
-        
+
         # Make the request to Hackatime API
         response = requests.post(
             api_url,
@@ -2850,26 +2850,26 @@ def hackatime_heartbeat():
             json=heartbeat_data,
             timeout=5
         )
-        
+
         if response.status_code >= 400:
             app.logger.error(f"Hackatime heartbeat failed: {response.status_code} - {response.text}")
             return jsonify({
                 'success': False,
                 'message': f'Heartbeat failed with status code {response.status_code}'
             }), 400
-        
+
         # Record activity for first heartbeat of the day
         now = datetime.utcnow()
         day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
-        
+
         heartbeat_today = UserActivity.query.filter(
             UserActivity.user_id == current_user.id,
             UserActivity.activity_type == "hackatime_heartbeat",
             UserActivity.timestamp >= day_start,
             UserActivity.timestamp < day_end
         ).first()
-        
+
         if not heartbeat_today:
             activity = UserActivity(
                 activity_type="hackatime_heartbeat",
@@ -2878,7 +2878,7 @@ def hackatime_heartbeat():
                 user_id=current_user.id)
             db.session.add(activity)
             db.session.commit()
-            
+
         return jsonify({
             'success': True,
             'message': 'Heartbeat sent successfully'
@@ -3330,6 +3330,11 @@ def initialize_database():
         return False
 
 
+@app.route('/integrations')
+@login_required
+def integrations():
+    return render_template('integrations.html')
+
 if __name__ == '__main__':
     # Configure more detailed logging
     import logging
@@ -3339,13 +3344,13 @@ if __name__ == '__main__':
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     app.logger.info("Starting server directly from app.py")
-    
+
     try:
         app.logger.info("Initializing database...")
         initialize_database()
         app.logger.info("Database initialization complete")
     except Exception as e:
         app.logger.warning(f"Database initialization error: {e}")
-    
+
     app.logger.info("Server running on http://0.0.0.0:3000")
     app.run(host='0.0.0.0', port=3000, debug=True)
