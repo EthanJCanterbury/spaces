@@ -33,7 +33,7 @@
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('welcome') }}" class="nav-button">Dashboard</a>
                     {% if current_user.is_authenticated and current_user.is_club_leader %}
-                    <a href="{{ url_for('club_dashboard') }}" class="nav-button">Club Dashboard</a>
+                    <a href="{{ url_for('club_dashboard') }}" class="nav-button">Clubs</a>
                     {% endif %}
                     <a href="{{ url_for('settings') }}" class="nav-button">Settings</a>
                     <a href="{{ url_for('logout') }}" class="nav-button">Logout</a>
