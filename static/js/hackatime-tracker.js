@@ -11,6 +11,10 @@ class HackatimeTracker {
         this.entityName = this.editorType === 'python' ? 'main.py' : 'index.html';
         this.language = this.editorType === 'python' ? 'Python' : 'HTML';
         this.siteName = document.querySelector('.topbar-left h1')?.textContent || 'Unknown Project';
+        this.isPaused = false;
+        this.timeLogged = 0;
+        this.sessionStartTime = Date.now();
+        this.popupVisible = false;
         
         // Safely get editor reference
         this.editor = null;
@@ -42,6 +46,7 @@ class HackatimeTracker {
                 this.createBadge();
                 this.setupEditorListeners();
                 this.startHeartbeatTracking();
+                this.updateTimeLogged();
             }
         })
         .catch(error => {
@@ -58,6 +63,9 @@ class HackatimeTracker {
                 console.log(`[Hackatime] File changed: ${currentFile} in project "${this.siteName}"`);
                 this.status = 'active';
                 this.updateBadgeStatus('active');
+                
+                // Log the file change event for hackatime
+                console.log(`[Hackatime] File: ${currentFile}, Project: "${this.siteName}", Type: ${this.editorType}`);
             });
         }
         
@@ -99,6 +107,243 @@ class HackatimeTracker {
             
             // Set initial status
             this.updateBadgeStatus('connecting');
+            
+            // Add popup container
+            const popup = document.createElement('div');
+            popup.id = 'hackatime-popup';
+            popup.className = 'hackatime-popup';
+            popup.style.display = 'none';
+            popup.innerHTML = `
+                <div class="hackatime-popup-header">
+                    <h3>Hackatime</h3>
+                    <button id="hackatime-close-popup" class="hackatime-close-btn">×</button>
+                </div>
+                <div class="hackatime-popup-content">
+                    <div class="hackatime-popup-info">
+                        <div class="hackatime-info-row">
+                            <span>Project:</span>
+                            <span id="hackatime-project">${this.siteName}</span>
+                        </div>
+                        <div class="hackatime-info-row">
+                            <span>Current file:</span>
+                            <span id="hackatime-file">${this.entityName}</span>
+                        </div>
+                        <div class="hackatime-info-row">
+                            <span>Status:</span>
+                            <span id="hackatime-popup-status">Connecting...</span>
+                        </div>
+                        <div class="hackatime-info-row">
+                            <span>Time logged:</span>
+                            <span id="hackatime-time-logged">0 min</span>
+                        </div>
+                        <div class="hackatime-info-row">
+                            <span>Last heartbeat:</span>
+                            <span id="hackatime-last-heartbeat">Never</span>
+                        </div>
+                    </div>
+                    <div class="hackatime-popup-actions">
+                        <button id="hackatime-toggle-pause" class="hackatime-btn">Pause Tracking</button>
+                        <button id="hackatime-disconnect" class="hackatime-btn hackatime-btn-danger">Disconnect</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(popup);
+            
+            // Add event listeners to badge and popup
+            badge.addEventListener('click', () => this.togglePopup());
+            document.getElementById('hackatime-close-popup').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.hidePopup();
+            });
+            document.getElementById('hackatime-toggle-pause').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.togglePause();
+            });
+            document.getElementById('hackatime-disconnect').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.disconnectHackatime();
+            });
+            
+            // Close popup when clicking outside
+            document.addEventListener('click', (e) => {
+                if (this.popupVisible && !badge.contains(e.target) && !popup.contains(e.target)) {
+                    this.hidePopup();
+                }
+            });
+        }
+    }
+    
+    togglePopup() {
+        const popup = document.getElementById('hackatime-popup');
+        if (!popup) return;
+        
+        if (this.popupVisible) {
+            this.hidePopup();
+        } else {
+            this.showPopup();
+        }
+    }
+    
+    showPopup() {
+        const popup = document.getElementById('hackatime-popup');
+        if (!popup) return;
+        
+        const badge = document.getElementById('hackatime-badge');
+        if (!badge) return;
+        
+        // Update popup data
+        this.updatePopupData();
+        
+        // Position popup above badge
+        const badgeRect = badge.getBoundingClientRect();
+        popup.style.bottom = (window.innerHeight - badgeRect.top + 10) + 'px';
+        popup.style.right = (window.innerWidth - badgeRect.right + badgeRect.width/2) + 'px';
+        
+        // Show popup
+        popup.style.display = 'block';
+        this.popupVisible = true;
+        
+        // Animate popup
+        setTimeout(() => {
+            popup.style.opacity = '1';
+            popup.style.transform = 'translateY(0)';
+        }, 50);
+    }
+    
+    hidePopup() {
+        const popup = document.getElementById('hackatime-popup');
+        if (!popup) return;
+        
+        popup.style.opacity = '0';
+        popup.style.transform = 'translateY(10px)';
+        
+        setTimeout(() => {
+            popup.style.display = 'none';
+            this.popupVisible = false;
+        }, 300);
+    }
+    
+    updatePopupData() {
+        // Update current file
+        const currentFile = document.querySelector('.file-tab.active')?.getAttribute('data-filename') || this.entityName;
+        document.getElementById('hackatime-file').textContent = currentFile;
+        
+        // Update project name
+        document.getElementById('hackatime-project').textContent = this.siteName;
+        
+        // Update status
+        document.getElementById('hackatime-popup-status').textContent = this.isPaused ? 'Paused' : this.status.charAt(0).toUpperCase() + this.status.slice(1);
+        
+        // Update time logged
+        this.updateTimeLogged();
+        
+        // Update last heartbeat
+        document.getElementById('hackatime-last-heartbeat').textContent = this.lastHeartbeat ? this.formatTimeAgo(this.lastHeartbeat) : 'Never';
+        
+        // Update pause button text
+        document.getElementById('hackatime-toggle-pause').textContent = this.isPaused ? 'Resume Tracking' : 'Pause Tracking';
+    }
+    
+    updateTimeLogged() {
+        // Calculate minutes logged
+        const currentTime = Date.now();
+        const sessionMinutes = Math.floor((currentTime - this.sessionStartTime) / 60000);
+        const totalMinutes = this.timeLogged + (this.isPaused ? 0 : sessionMinutes);
+        
+        // Format time string
+        let timeStr;
+        if (totalMinutes < 60) {
+            timeStr = `${totalMinutes} min`;
+        } else {
+            const hours = Math.floor(totalMinutes / 60);
+            const mins = totalMinutes % 60;
+            timeStr = `${hours}h ${mins}m`;
+        }
+        
+        // Update UI if popup is open
+        const timeElement = document.getElementById('hackatime-time-logged');
+        if (timeElement) {
+            timeElement.textContent = timeStr;
+        }
+        
+        return timeStr;
+    }
+    
+    formatTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        if (seconds < 60) return 'Just now';
+        
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+        
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+        
+        const days = Math.floor(hours / 24);
+        return `${days} day${days !== 1 ? 's' : ''} ago`;
+    }
+    
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        
+        if (this.isPaused) {
+            this.stopHeartbeatTracking();
+            this.updateBadgeStatus('paused');
+        } else {
+            this.startHeartbeatTracking();
+            this.updateBadgeStatus(this.status);
+        }
+        
+        // Update pause button text
+        document.getElementById('hackatime-toggle-pause').textContent = this.isPaused ? 'Resume Tracking' : 'Pause Tracking';
+        
+        // Update status in popup
+        document.getElementById('hackatime-popup-status').textContent = this.isPaused ? 'Paused' : this.status.charAt(0).toUpperCase() + this.status.slice(1);
+    }
+    
+    disconnectHackatime() {
+        // Show confirmation dialog
+        if (confirm('Are you sure you want to disconnect Hackatime? You will need to reconnect on the Hackatime settings page.')) {
+            // Stop tracking
+            this.stopHeartbeatTracking();
+            
+            // Send disconnect request to server
+            fetch('/hackatime/disconnect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove badge
+                    const badge = document.getElementById('hackatime-badge');
+                    if (badge) badge.remove();
+                    
+                    // Remove popup
+                    const popup = document.getElementById('hackatime-popup');
+                    if (popup) popup.remove();
+                    
+                    // Set not active
+                    this.isActive = false;
+                    
+                    // Show success message
+                    alert('Hackatime has been disconnected.');
+                    
+                    // Optionally reload the page
+                    // window.location.reload();
+                } else {
+                    console.error('[Hackatime] Failed to disconnect:', data.message);
+                    alert('Failed to disconnect Hackatime: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('[Hackatime] Error disconnecting:', error);
+                alert('Error disconnecting Hackatime. Please try again.');
+            });
         }
     }
     
@@ -117,6 +362,10 @@ class HackatimeTracker {
                 statusElement.textContent = 'Monitoring';
                 badge.className = 'hackatime-badge idle'; // Keep the same CSS class
                 break;
+            case 'paused':
+                statusElement.textContent = 'Paused';
+                badge.className = 'hackatime-badge paused';
+                break;
             case 'error':
                 statusElement.textContent = 'Error';
                 badge.className = 'hackatime-badge error';
@@ -132,6 +381,14 @@ class HackatimeTracker {
             default:
                 statusElement.textContent = 'Connected';
                 badge.className = 'hackatime-badge';
+        }
+        
+        // Update popup status if open
+        if (this.popupVisible) {
+            const popupStatus = document.getElementById('hackatime-popup-status');
+            if (popupStatus) {
+                popupStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            }
         }
     }
     
@@ -160,7 +417,7 @@ class HackatimeTracker {
     }
     
     sendHeartbeat() {
-        if (!this.isActive) return;
+        if (!this.isActive || this.isPaused) return;
         
         // Show syncing status briefly
         this.updateBadgeStatus('syncing');
@@ -197,6 +454,11 @@ class HackatimeTracker {
                 this.lastHeartbeat = new Date();
                 this.updateBadgeStatus(this.status);
                 console.log(`[Hackatime] Heartbeat successful for ${currentFile}`);
+                
+                // Update popup data if visible
+                if (this.popupVisible) {
+                    this.updatePopupData();
+                }
             } else {
                 this.updateBadgeStatus('error');
                 console.error(`[Hackatime] Heartbeat failed:`, data.message);
@@ -247,7 +509,9 @@ class HackatimeTracker {
         } else {
             // Page is visible again
             console.log(`[Hackatime] Page visible, resuming tracking`);
-            this.startHeartbeatTracking();
+            if (!this.isPaused) {
+                this.startHeartbeatTracking();
+            }
         }
     }
 }

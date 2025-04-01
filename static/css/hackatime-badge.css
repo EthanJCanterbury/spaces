@@ -54,6 +54,10 @@
     background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
 }
 
+.hackatime-badge.paused {
+    background: linear-gradient(135deg, #6b46c1 0%, #553c9a 100%);
+}
+
 .hackatime-badge.error {
     background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
 }
@@ -87,6 +91,104 @@
     animation: pulse 1s infinite;
 }
 
+/* Hackatime Popup Styles */
+.hackatime-popup {
+    position: fixed;
+    width: 320px;
+    background: white;
+    color: #1a202c;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.hackatime-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #2d3748;
+    color: white;
+}
+
+.hackatime-popup-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.hackatime-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+}
+
+.hackatime-popup-content {
+    padding: 16px;
+}
+
+.hackatime-popup-info {
+    margin-bottom: 16px;
+}
+
+.hackatime-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.hackatime-info-row:last-child {
+    border-bottom: none;
+}
+
+.hackatime-info-row span:first-child {
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.hackatime-popup-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hackatime-btn {
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.hackatime-btn {
+    background: #4a5568;
+    color: white;
+}
+
+.hackatime-btn:hover {
+    background: #2d3748;
+}
+
+.hackatime-btn-danger {
+    background: #e53e3e;
+}
+
+.hackatime-btn-danger:hover {
+    background: #c53030;
+}
+
 /* Ensure the badge doesn't interfere with other UI elements */
 @media (max-width: 768px) {
     .hackatime-badge {
@@ -103,5 +205,9 @@
     
     .hackatime-badge-icon i {
         font-size: 14px;
+    }
+    
+    .hackatime-popup {
+        width: 280px;
     }
 }
