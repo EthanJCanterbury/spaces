@@ -87,7 +87,6 @@ class User(UserMixin, db.Model):
     groq_api_key = db.Column(db.String(100), nullable=True)
     is_suspended = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
-    has_special_access = db.Column(db.Boolean, default=False)
     
     @property
     def is_club_leader(self):

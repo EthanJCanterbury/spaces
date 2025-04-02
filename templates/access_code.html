@@ -1,21 +1,15 @@
-
 {% extends "base.html" %}
 
 {% block content %}
 <div class="access-code-container">
     <div class="access-code-card">
         <div class="card-header">
-            <i class="fas fa-lock"></i>
-            <h1>Enter Access Code</h1>
+            <i class="fas fa-check-circle"></i>
+            <h1>Welcome!</h1>
         </div>
         <div class="card-body">
-            <p>Please enter your special access code to continue.</p>
-            <form method="POST">
-                <div class="form-group">
-                    <input type="text" name="code" placeholder="Enter access code" required autofocus>
-                </div>
-                <button type="submit" class="btn-primary">Submit</button>
-            </form>
+            <p>Welcome to HackClub Spaces! You now have full access to all features.</p>
+            <a href="{{ url_for('index') }}" class="btn-primary">Get Started</a>
         </div>
     </div>
 </div>
@@ -60,30 +54,18 @@
     margin-bottom: 2rem;
 }
 
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: border-color 0.3s;
-}
-
-.form-group input:focus {
-    border-color: var(--primary);
-    outline: none;
-}
-
 .btn-primary {
+    display: inline-block;
     width: 100%;
     padding: 12px;
     font-size: 1rem;
     font-weight: 600;
     transition: transform 0.2s;
+    text-decoration: none;
+    color: white;
+    background-color: var(--primary);
+    border-radius: 8px;
+    text-align: center;
 }
 
 .btn-primary:hover {
