@@ -22,6 +22,13 @@ def slugify(text):
     text = re.sub(r'[^\w\s-]', '', text)
     text = re.sub(r'\s+', '-', text)
     text = text.strip('-')
+    # Ensure slug is not empty and has only valid characters
+    if not text or not re.match(r'^[\w-]+$', text):
+        import random
+        import string
+        # Generate random slug if invalid
+        random_string = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+        text = f"space-{random_string}"
     return text
 
 
@@ -142,6 +149,12 @@ def not_found_error(error):
 @app.errorhandler(403)
 def forbidden_error(error):
     context = get_error_context(error)
+    # Check if user is authenticated
+    if current_user.is_authenticated:
+        context['message'] = "You don't have permission to access this resource."
+    else:
+        context['message'] = "Please log in to access this page."
+    
     return render_template('errors/403.html', **context), 403
 
 
@@ -512,6 +525,12 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
 
+        # Validate email format
+        import re
+        if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            flash('Please enter a valid email address', 'error')
+            return render_template('login.html')
+
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
             login_user(user)
@@ -589,7 +608,12 @@ def welcome():
 @login_required
 def edit_site(site_id):
     try:
-        site = Site.query.get_or_404(site_id)
+        site = Site.query.get(site_id)
+        
+        if not site:
+            app.logger.warning(f'Site with ID {site_id} not found')
+            flash('This space does not exist.', 'error')
+            return redirect(url_for('welcome'))
 
         is_admin = current_user.is_admin
         is_owner = site.user_id == current_user.id
@@ -598,7 +622,8 @@ def edit_site(site_id):
             app.logger.warning(
                 f'User {current_user.id} attempted to access site {site_id} owned by {site.user_id}'
             )
-            abort(403)
+            flash('You do not have permission to edit this space.', 'error')
+            return redirect(url_for('welcome'))
 
         app.logger.info(f'User {current_user.id} editing site {site_id}')
 
@@ -844,13 +869,24 @@ def create_site():
             return jsonify({'message':
                             'Please enter a name for your space'}), 400
 
-        name = str(name)
-
+        # Name validation
+        name = str(name).strip()
+        if len(name) < 1 or len(name) > 50:
+            return jsonify({'message': 
+                           'Space name must be between 1 and 50 characters'}), 400
+            
+        # Check for potentially problematic characters
+        import re
+        if re.search(r'[<>{}[\]()\'";]', name):
+            return jsonify({'message': 
+                           'Space name contains invalid characters'}), 400
+            
         try:
             slug = slugify(name)
         except Exception as e:
             app.logger.error(f'Error slugifying name: {str(e)}')
             return jsonify({'message': 'Invalid site name provided'}), 400
+            
         existing_site = Site.query.filter_by(slug=slug).first()
         if existing_site:
             app.logger.warning(f'Site with slug {slug} already exists')

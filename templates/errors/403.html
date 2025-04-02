@@ -51,7 +51,7 @@ Access Denied
 {% block error_message %}
 <div class="error-content">
     <i class="fas fa-shield-alt shield"></i>
-    <p>Sorry, but you don't have permission to access this page.</p>
+    <p>{{ message|default('Sorry, but you don\'t have permission to access this page.') }}</p>
     <p>If you believe this is a mistake, try signing in or contact the administrator.</p>
 </div>
 {% endblock %}
