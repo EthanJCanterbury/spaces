@@ -2827,6 +2827,8 @@ def hackatime_heartbeat():
 
         # Send heartbeat to Hackatime API
         api_url = "https://hackatime.hackclub.com/api/hackatime/v1/users/current/heartbeats"
+        
+        # The API controller expects a Bearer token
         headers = {
             'Authorization': f'Bearer {current_user.wakatime_api_key}',
             'Content-Type': 'application/json'
@@ -2837,81 +2839,45 @@ def hackatime_heartbeat():
         if user_agent:
             headers['User-Agent'] = user_agent
 
-        # Process the heartbeat data
-        heartbeat_data = []
-
-        # Handle different input formats
-        heartbeats_to_process = []
+        # Always ensure we have an entity name - use test.txt as fallback
+        # This is recognized by the API as a test entry
+        if isinstance(data, dict) and (not data.get('entity') or data.get('entity') == 'null'):
+            data['entity'] = 'test.txt'
+            data['type'] = 'file'
+            app.logger.info("Setting default entity to test.txt")
+            
+        # If data is a list, ensure each heartbeat has an entity
         if isinstance(data, list):
-            # Data is already a list of heartbeats
-            heartbeats_to_process = data
-        else:
-            # Data is a single heartbeat object
-            heartbeats_to_process = [data]
-
-        # Process each heartbeat
-        for hb in heartbeats_to_process:
-            if isinstance(hb, dict):
-                processed_heartbeat = {
-                    # Required fields
-                    'entity': hb.get('entity', 'unknown'),
-                    'type': hb.get('type', 'file'),
-                    'time': hb.get('time', int(time.time())),
-
-                    # Common fields
-                    'category': hb.get('category', 'coding'),
-                    'project': hb.get('project', 'Unknown Project'),
-                    'branch': hb.get('branch', 'main'),
-                    'language': hb.get('language', 'Text'),
-                    'dependencies': hb.get('dependencies', ''),
-                    'lines': hb.get('lines', 0),
-                    'lineno': hb.get('lineno', 1),
-                    'cursorpos': hb.get('cursorpos', 1),
-                    'is_write': hb.get('is_write', True),
-                    'project_root_count': hb.get('project_root_count', 3),
-                    'line_additions': hb.get('line_additions', 0),
-                    'line_deletions': hb.get('line_deletions', 0),
-                    'machine': hb.get('machine', f'machine_{current_user.id}'),
-                    'editor': hb.get('editor', 'Hack Club Spaces Editor'),
-                    'user_agent': hb.get('user_agent', user_agent),
-
-                    # Additional fields
-                    'plugin': hb.get('plugin', 'hackatime-web'),
-                    'plugin_version': hb.get('plugin_version', '1.0.0'),
-                    'os': hb.get('os', 'Unknown OS'),
-                    'hostname': hb.get('hostname', request.host),
-                    'timezone': hb.get('timezone', 'UTC')
-                }
-                heartbeat_data.append(processed_heartbeat)
-
-        # If no valid heartbeats were processed, create a default one
-        if not heartbeat_data:
-            heartbeat_data = [{
-                'entity': 'unknown',
-                'type': 'file',
-                'time': int(time.time()),
-                'category': 'coding',
-                'project': 'Unknown Project',
-                'machine': f'machine_{current_user.id}',
-                'editor': 'Spaces IDE'
-            }]
-
+            for hb in data:
+                if isinstance(hb, dict) and (not hb.get('entity') or hb.get('entity') == 'null'):
+                    hb['entity'] = 'test.txt'
+                    hb['type'] = 'file'
+        
+        # Make sure to send data in the format expected by the controller
+        # If data is not a list, wrap it in a list
+        heartbeat_payload = data if isinstance(data, list) else [data]
+        
         app.logger.info(f"Sending heartbeat to Hackatime for user {current_user.username}")
-
+        app.logger.debug(f"Heartbeat payload: {heartbeat_payload}")
+        
         # Make the request to Hackatime API
         response = requests.post(
             api_url,
             headers=headers,
-            json=heartbeat_data,
-            timeout=5
+            json=heartbeat_payload,
+            timeout=10
         )
-
+        
+        app.logger.info(f"Hackatime API response status: {response.status_code}")
+        
         if response.status_code >= 400:
-            app.logger.error(f"Hackatime heartbeat failed: {response.status_code} - {response.text}")
+            error_text = response.text
+            app.logger.error(f"Hackatime heartbeat failed: {response.status_code} - {error_text}")
             return jsonify({
                 'success': False,
-                'message': f'Heartbeat failed with status code {response.status_code}'
-            }), 400
+                'message': f'Heartbeat failed with status code {response.status_code}',
+                'details': error_text
+            }), response.status_code
 
         # Record activity for first heartbeat of the day
         now = datetime.utcnow()
@@ -2934,10 +2900,20 @@ def hackatime_heartbeat():
             db.session.add(activity)
             db.session.commit()
 
-        return jsonify({
-            'success': True,
-            'message': 'Heartbeat sent successfully'
-        })
+        # Try to parse the response content
+        try:
+            response_data = response.json()
+            return jsonify({
+                'success': True,
+                'message': 'Heartbeat sent successfully',
+                'response': response_data
+            })
+        except:
+            # If we can't parse the JSON, but the status code was good, still return success
+            return jsonify({
+                'success': True,
+                'message': 'Heartbeat sent successfully'
+            })
     except Exception as e:
         app.logger.error(f'Error sending Hackatime heartbeat: {str(e)}')
         return jsonify({

@@ -1,3 +1,4 @@
+
 // Hackatime Tracker Module
 class HackatimeTracker {
     constructor() {
@@ -138,7 +139,7 @@ class HackatimeTracker {
         }
     }
 
-    // Simple debounce function if not already available
+    // Simple debounce function 
     debounce(func, delay) {
         let timeout;
         return function() {
@@ -514,13 +515,25 @@ class HackatimeTracker {
 
     sendHeartbeat() {
         // Don't send heartbeats if not active, paused, or page is hidden
-        if (!this.isActive || this.isPaused || document.hidden || this.hiddenPause) return;
+        if (!this.isActive || this.isPaused || document.hidden || this.hiddenPause) {
+            console.log('[Hackatime] Skipping heartbeat - tracking inactive or paused');
+            return;
+        }
 
         // Show syncing status briefly
         this.updateBadgeStatus('syncing');
 
         // Get current file from active tab
         const currentFile = document.querySelector('.file-tab.active')?.getAttribute('data-filename') || this.entityName;
+        
+        // Make sure we have a valid entity name
+        if (!currentFile || currentFile === 'null' || currentFile === 'undefined') {
+            console.warn('[Hackatime] Invalid file name, using default');
+            // Use test.txt as fallback which is recognized by the API as a test entry
+            this.entityName = 'test.txt';
+        } else {
+            this.entityName = currentFile;
+        }
 
         // Get editor information if available
         let lines = 0;
@@ -554,26 +567,27 @@ class HackatimeTracker {
             }
         }
 
-        // Get machine info (hardcoded for now)
+        // Get machine info
         const machineInfo = {
             machine_name_id: this.generateMachineId(),
             machine_name: navigator.userAgent || 'Unknown'
         };
 
         // Generate dependencies (hardcoded for now)
-        const dependencies = this.generateDependencies(currentFile);
+        const dependencies = this.generateDependencies(this.entityName);
 
         // Prepare heartbeat data exactly matching fields accepted by the API
         const heartbeat = {
             // Required fields from the controller's accepted keys
-            entity: currentFile, // File path or domain being worked on
+            entity: this.entityName, // File path or domain being worked on
             type: 'file', // Can be file, app, or domain
             time: Math.floor(Date.now() / 1000), // UNIX epoch timestamp as integer
 
             // Important tracking fields (all exact matches to API keys)
             category: this.getCategoryFromActivity(), // coding, debugging, etc.
             project: this.siteName, // Updated to use siteName
-            language: this.getLanguageFromFile(currentFile),
+            branch: 'main',
+            language: this.getLanguageFromFile(this.entityName),
             is_write: this.status === 'active',
 
             // Editor and file details
@@ -585,35 +599,31 @@ class HackatimeTracker {
 
             // Project structure information
             project_root_count: 3,
-            branch: 'main',
             dependencies: dependencies,
 
             // System information (using keys expected by API)
             machine: machineInfo.machine_name_id, 
-            editor: 'Spaces IDE', // As requested: Spaces IDE
+            editor: 'Spaces IDE', 
             operating_system: this.getOperatingSystem(),
-            user_agent: navigator.userAgent,
-            plugin: 'hackatime-web',
-            plugin_version: '1.0.0',
-            os: this.getOperatingSystem(),
-            hostname: window.location.hostname,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+            user_agent: navigator.userAgent
         };
 
         console.log(`[Hackatime] Sending heartbeat:`, heartbeat);
 
-        // Make sure we're sending in the format expected by the controller
-        // The controller expects either a direct heartbeat or a JSON array (_json format)
+        // Send heartbeat to our server proxy endpoint, which will forward to Hackatime API
         fetch('/hackatime/heartbeat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'User-Agent': navigator.userAgent,
+                'User-Agent': navigator.userAgent
             },
-            body: JSON.stringify(heartbeat.length ? heartbeat : [heartbeat]) // Ensure we're sending as an array
+            body: JSON.stringify(heartbeat) // Send as single object, our server will handle it
         })
         .then(response => {
             console.log(`[Hackatime] Heartbeat response status: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
             return response.json();
         })
         .then(data => {
@@ -623,7 +633,7 @@ class HackatimeTracker {
                 this.lastHeartbeatTime = Date.now();
                 this.heartbeatSuccesses++;
                 this.updateBadgeStatus(this.status);
-                console.log(`[Hackatime] Heartbeat successful for ${currentFile}`);
+                console.log(`[Hackatime] Heartbeat successful for ${this.entityName}`);
                 
                 // Update time logged based on successful heartbeat
                 this.updateTimeLogged(true);
@@ -634,7 +644,7 @@ class HackatimeTracker {
                 }
             } else {
                 this.updateBadgeStatus('error');
-                console.error(`[Hackatime] Heartbeat failed:`, data.message);
+                console.error(`[Hackatime] Heartbeat failed:`, data.message || 'Unknown error');
             }
         })
         .catch(error => {
@@ -645,7 +655,7 @@ class HackatimeTracker {
         // Reset status to monitoring after sending heartbeat if it was active
         if (this.status === 'active') {
             setTimeout(() => {
-                this.status = 'monitoring'; // Changed from 'idle' to 'monitoring'
+                this.status = 'monitoring';
                 this.updateBadgeStatus('monitoring');
             }, 2000);
         }
