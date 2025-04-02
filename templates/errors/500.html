@@ -180,6 +180,9 @@
     <i class="fas fa-cog fa-3x gear-animation gear-1"></i>
     <i class="fas fa-cog fa-4x gear-animation gear-2"></i>
     <p>{{ error_message or 'Oops! Something went wrong on our end. Our team has been notified and is working to fix it.' }}</p>
+    {% if error_type == 'HTTP 403' %}
+    <p>You don't have permission to access this resource. Please check if you're logged in and have the proper permissions.</p>
+    {% endif %}
     
     {% if file_name or line_number %}
     <div class="error-metadata">
