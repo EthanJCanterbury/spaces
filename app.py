@@ -2831,7 +2831,7 @@ def hackatime_heartbeat():
             'Authorization': f'Bearer {current_user.wakatime_api_key}',
             'Content-Type': 'application/json'
         }
-        
+
         # Add User-Agent header if available
         user_agent = request.headers.get('User-Agent')
         if user_agent:
@@ -2839,7 +2839,7 @@ def hackatime_heartbeat():
 
         # Process the heartbeat data
         heartbeat_data = []
-        
+
         # Handle different input formats
         heartbeats_to_process = []
         if isinstance(data, list):
@@ -2848,7 +2848,7 @@ def hackatime_heartbeat():
         else:
             # Data is a single heartbeat object
             heartbeats_to_process = [data]
-            
+
         # Process each heartbeat
         for hb in heartbeats_to_process:
             if isinstance(hb, dict):
@@ -2857,7 +2857,7 @@ def hackatime_heartbeat():
                     'entity': hb.get('entity', 'unknown'),
                     'type': hb.get('type', 'file'),
                     'time': hb.get('time', int(time.time())),
-                    
+
                     # Common fields
                     'category': hb.get('category', 'coding'),
                     'project': hb.get('project', 'Unknown Project'),
@@ -2874,7 +2874,7 @@ def hackatime_heartbeat():
                     'machine': hb.get('machine', f'machine_{current_user.id}'),
                     'editor': hb.get('editor', 'Hack Club Spaces Editor'),
                     'user_agent': hb.get('user_agent', user_agent),
-                    
+
                     # Additional fields
                     'plugin': hb.get('plugin', 'hackatime-web'),
                     'plugin_version': hb.get('plugin_version', '1.0.0'),
@@ -2883,7 +2883,7 @@ def hackatime_heartbeat():
                     'timezone': hb.get('timezone', 'UTC')
                 }
                 heartbeat_data.append(processed_heartbeat)
-        
+
         # If no valid heartbeats were processed, create a default one
         if not heartbeat_data:
             heartbeat_data = [{

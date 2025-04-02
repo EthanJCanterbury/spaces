@@ -589,8 +589,8 @@ class HackatimeTracker {
             dependencies: dependencies,
 
             // System information (using keys expected by API)
-            machine: machineInfo.machine_name_id, // Note: API expects 'machine', not 'machine_name_id'
-            editor: 'Spaces IDE', // Updated to 'Spaces IDE'
+            machine: machineInfo.machine_name_id, 
+            editor: 'Spaces IDE', // As requested: Spaces IDE
             operating_system: this.getOperatingSystem(),
             user_agent: navigator.userAgent,
             plugin: 'hackatime-web',
@@ -610,7 +610,7 @@ class HackatimeTracker {
                 'Content-Type': 'application/json',
                 'User-Agent': navigator.userAgent,
             },
-            body: JSON.stringify([heartbeat]) // Send as array to match _json format
+            body: JSON.stringify(heartbeat.length ? heartbeat : [heartbeat]) // Ensure we're sending as an array
         })
         .then(response => {
             console.log(`[Hackatime] Heartbeat response status: ${response.status}`);
