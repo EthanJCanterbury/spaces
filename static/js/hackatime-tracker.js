@@ -1,11 +1,12 @@
 
 // Hackatime Tracker Module
+// 80% AI (aka i have no clue how to do this myself lol)
 class HackatimeTracker {
     constructor() {
         this.isActive = false;
         this.heartbeatInterval = null;
         this.lastHeartbeat = null;
-        this.status = 'monitoring'; // Changed from 'idle' to 'monitoring'
+        this.status = 'monitoring'; 
         this.editorType = document.getElementById('site-type')?.value || 'unknown';
         this.siteId = document.getElementById('site-id')?.value || 'unknown';
         this.entityName = this.editorType === 'python' ? 'main.py' : 'index.html';
@@ -13,14 +14,13 @@ class HackatimeTracker {
         this.siteName = document.querySelector('.topbar-left h1')?.textContent || 'Unknown Project';
         this.isPaused = false;
         this.timeLogged = 0;
-        this.lastHeartbeatTime = null; // Track time of last successful heartbeat
-        this.heartbeatSuccesses = 0; // Count successful heartbeats
+        this.lastHeartbeatTime = null; 
+        this.heartbeatSuccesses = 0; 
         this.popupVisible = false;
         this.lastActivityTime = Date.now();
         this.afkCheckInterval = null;
-        this.afkTimeoutMinutes = 1.5; // Auto-pause after 1.5 minutes of inactivity
+        this.afkTimeoutMinutes = 1.5; 
 
-        // Safely get editor reference
         this.editor = null;
         if (window.pythonEditor) {
             this.editor = window.pythonEditor;
@@ -30,21 +30,18 @@ class HackatimeTracker {
     }
 
     init() {
-        // Reset time tracking variables
         this.timeLogged = 0;
         this.lastHeartbeatTime = null;
         this.heartbeatSuccesses = 0;
         this.hiddenPause = false;
         
-        // First check if Hackatime is connected before doing anything else
+
         this.checkHackatimeStatus();
 
-        // Start AFK check interval to detect inactivity
         this.startAfkCheckInterval();
     }
 
     startAfkCheckInterval() {
-        // Check for AFK status every minute
         this.afkCheckInterval = setInterval(() => {
             if (!this.isActive || this.isPaused) return;
 

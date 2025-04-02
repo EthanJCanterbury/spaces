@@ -182,9 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Simple validation for API key format
     function validateApiKeyFormat(apiKey) {
-        // Hackatime API keys are typically alphanumeric and may include some special chars
         // This is a simple validation to catch obvious mistakes
         return apiKey.length > 10;
     }
