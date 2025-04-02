@@ -550,7 +550,8 @@ def signup():
             flash('Username already taken', 'error')
             return render_template('signup.html')
 
-        user = User(username=username, email=email, preview_code_verified=True)  # Set to True for all users
+        # Create user with automatic access
+        user = User(username=username, email=email, preview_code_verified=True)
         user.set_password(password)
 
         db.session.add(user)
@@ -568,20 +569,8 @@ def signup():
     return render_template('signup.html')
 
 
-def check_access_code(f):
-
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_admin and not current_user.has_special_access:
-            return redirect(url_for('access_code'))
-        return f(*args, **kwargs)
-
-    return decorated_function
-
-
 @app.route('/welcome')
 @login_required
-@check_access_code
 def welcome():
     sites = Site.query.filter_by(user_id=current_user.id).order_by(
         Site.updated_at.desc()).all()
@@ -596,23 +585,8 @@ def welcome():
                            club_memberships=club_memberships)
 
 
-@app.route('/access-code', methods=['GET', 'POST'])
-@login_required
-def access_code():
-    if request.method == 'POST':
-        code = request.form.get('code')
-        if code == 'SD2191305':
-            current_user.has_special_access = True
-            db.session.commit()
-            flash('Special access granted!', 'success')
-            return redirect(url_for('welcome'))
-        flash('Invalid access code', 'error')
-    return render_template('access_code.html')
-
-
 @app.route('/edit/<int:site_id>')
 @login_required
-@check_access_code
 def edit_site(site_id):
     try:
         site = Site.query.get_or_404(site_id)
@@ -1256,17 +1230,7 @@ def admin_required(f):
     return decorated_function
 
 
-@app.route('/special-access', methods=['POST'])
-@login_required
-def special_access():
-    code = request.form.get('code')
-    if code == 'SD2191305':
-        current_user.has_special_access = True
-        db.session.commit()
-        flash('Special access granted!', 'success')
-        return redirect(url_for('welcome'))
-    flash('Invalid access code', 'error')
-    return redirect(url_for('welcome'))
+# Special access function removed - access granted to all users
 
 
 @app.route('/admin')

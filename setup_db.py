@@ -118,6 +118,7 @@ def setup_database():
 
             test_user = User.query.filter_by(username='test_user').first()
             if not test_user:
+                # Create test user with automatic access
                 test_user = User(username='test_user',
                                  email='test@example.com',
                                  preview_code_verified=True)
