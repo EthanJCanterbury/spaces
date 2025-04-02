@@ -212,6 +212,34 @@ def report_error():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
+@app.before_request
+def log_request_info():
+    """Log detailed information about each incoming request."""
+    app.logger.info('Request: %s %s from %s', request.method, request.path,
+                    request.remote_addr)
+    if request.args:
+        app.logger.info('Request Args: %s', dict(request.args))
+    if request.form:
+        app.logger.info('Form Data: %s', dict(request.form))
+    if request.is_json and request.get_json(silent=True):
+        app.logger.info('JSON Data: %s', request.get_json(silent=True))
+    if request.headers:
+        headers = {
+            k: v
+            for k, v in request.headers.items()
+            if k.lower() not in ('cookie', 'authorization')
+        }
+        app.logger.info('Headers: %s', headers)
+
+
+@app.after_request
+def log_response_info(response):
+    """Log information about the response."""
+    app.logger.info('Response: %s %s → %d', request.method, request.path,
+                    response.status_code)
+    return response
+
+
 @app.after_request
 def add_security_headers(response):
     is_preview = request.args.get('preview') == 'true'
@@ -1051,15 +1079,15 @@ def create_python_site():
 def main():
     """Main function that runs when this script is executed."""
     print("Hello, World!")
-    
+
     # Try adding your own code below:
     name = "Python Coder"
     print(f"Welcome, {name}!")
-    
+
     # You can use loops:
     for i in range(3):
         print(f"Count: {i}")
-    
+
     # And conditions:
     if name == "Python Coder":
         print("You're a Python coder!")
@@ -2617,6 +2645,309 @@ def hackatime_disconnect():
         })
 
 
+@app.route('/hackatime/status', methods=['GET'])
+@login_required
+def hackatime_status():
+    """Check if user has a Hackatime API key connected"""
+    try:
+        has_api_key = current_user.wakatime_api_key is not None
+        return jsonify({'success': True, 'connected': has_api_key})
+    except Exception as e:
+        app.logger.error(f'Error checking Hackatime status: {str(e)}')
+        return jsonify({
+            'success': False,
+            'connected': False,
+            'message': f'Failed to check Hackatime status: {str(e)}'
+        })
+
+
+@app.route('/groq')
+@login_required
+def groq_page():
+    """Page for Groq integration"""
+    return render_template('groq.html')
+
+
+@app.route('/groq/connect', methods=['POST'])
+@login_required
+def groq_connect():
+    """Connect Groq account by saving API key"""
+    try:
+        data = request.get_json()
+        api_key = data.get('api_key')
+
+        if not api_key:
+            return jsonify({
+                'success': False,
+                'message': 'API key is required'
+            })
+
+        # Validate the API key by making a request to the Groq API
+        import requests
+        import json
+
+        # Test endpoint URL
+        api_url = "https://api.groq.com/openai/v1/chat/completions"
+
+        # Prepare headers with the API key
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {api_key}'
+        }
+
+        # Simple test request
+        test_data = {
+            'model':
+            'llama-3.3-70b-versatile',
+            'messages': [{
+                'role':
+                'user',
+                'content':
+                'Explain the importance of fast language models'
+            }]
+        }
+
+        app.logger.info(
+            f"Testing Groq API key for user {current_user.username}")
+
+        # Make the request to validate the API key
+        response = requests.post(api_url,
+                                 headers=headers,
+                                 json=test_data,
+                                 timeout=10)
+
+        # Log the response status
+        app.logger.info(
+            f"Groq API validation response: {response.status_code}")
+
+        if response.status_code >= 400:
+            app.logger.error(
+                f"Groq API key validation failed: {response.status_code} - {response.text}"
+            )
+            return jsonify({
+                'success':
+                False,
+                'message':
+                f'Invalid Groq API key. Please check your API key and try again.'
+            })
+
+        # If we get here, the API key is valid
+        app.logger.info(
+            f"Groq API key validation successful for user {current_user.username}"
+        )
+
+        # Update user's groq_api_key in the database
+        with db.engine.connect() as conn:
+            conn.execute(
+                db.text(
+                    "UPDATE \"user\" SET groq_api_key = :api_key WHERE id = :user_id"
+                ), {
+                    "api_key": api_key,
+                    "user_id": current_user.id
+                })
+            conn.commit()
+
+        # Record activity
+        activity = UserActivity(
+            activity_type="groq_connected",
+            message="User {username} connected Groq account",
+            username=current_user.username,
+            user_id=current_user.id)
+        db.session.add(activity)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Groq account connected successfully'
+        })
+
+    except Exception as e:
+        app.logger.error(f'Error connecting Groq: {str(e)}')
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Failed to connect Groq: {str(e)}'
+        })
+
+
+@app.route('/groq/disconnect', methods=['POST'])
+@login_required
+def groq_disconnect():
+    """Disconnect Groq account by removing API key"""
+    try:
+        # Remove user's groq_api_key from the database
+        with db.engine.connect() as conn:
+            conn.execute(
+                db.text(
+                    "UPDATE \"user\" SET groq_api_key = NULL WHERE id = :user_id"
+                ), {"user_id": current_user.id})
+            conn.commit()
+
+        # Record activity
+        activity = UserActivity(
+            activity_type="groq_disconnected",
+            message="User {username} disconnected Groq account",
+            username=current_user.username,
+            user_id=current_user.id)
+        db.session.add(activity)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Groq account disconnected successfully'
+        })
+    except Exception as e:
+        app.logger.error(f'Error disconnecting Groq: {str(e)}')
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Failed to disconnect Groq: {str(e)}'
+        })
+
+
+@app.route('/groq/status', methods=['GET'])
+@login_required
+def groq_status():
+    """Check if user has a Groq API key connected"""
+    try:
+        has_api_key = hasattr(
+            current_user,
+            'groq_api_key') and current_user.groq_api_key is not None
+        return jsonify({'success': True, 'connected': has_api_key})
+    except Exception as e:
+        app.logger.error(f'Error checking Groq status: {str(e)}')
+        return jsonify({
+            'success': False,
+            'connected': False,
+            'message': f'Failed to check Groq status: {str(e)}'
+        })
+
+
+@app.route('/hackatime/heartbeat', methods=['POST'])
+@login_required
+def hackatime_heartbeat():
+    """Send a heartbeat to Hackatime API"""
+    try:
+        # Check if user has API key
+        if not current_user.wakatime_api_key:
+            app.logger.warning(
+                f"User {current_user.username} attempted to send heartbeat without API key"
+            )
+            return jsonify({
+                'success': False,
+                'message': 'No Hackatime API key found'
+            }), 403
+
+        # Get heartbeat data from request
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': 'No heartbeat data provided'
+            }), 400
+
+        # Send heartbeat to Hackatime API
+        api_url = "https://hackatime.hackclub.com/api/hackatime/v1/users/current/heartbeats"
+
+        # The API controller expects a Bearer token
+        headers = {
+            'Authorization': f'Bearer {current_user.wakatime_api_key}',
+            'Content-Type': 'application/json'
+        }
+
+        # Add User-Agent header if available
+        user_agent = request.headers.get('User-Agent')
+        if user_agent:
+            headers['User-Agent'] = user_agent
+
+        # Always ensure we have an entity name - use test.txt as fallback
+        # This is recognized by the API as a test entry
+        if isinstance(data, dict) and (not data.get('entity')
+                                       or data.get('entity') == 'null'):
+            data['entity'] = 'test.txt'
+            data['type'] = 'file'
+            app.logger.info("Setting default entity to test.txt")
+
+        # If data is a list, ensure each heartbeat has an entity
+        if isinstance(data, list):
+            for hb in data:
+                if isinstance(hb, dict) and (not hb.get('entity')
+                                             or hb.get('entity') == 'null'):
+                    hb['entity'] = 'test.txt'
+                    hb['type'] = 'file'
+
+        # Make sure to send data in the format expected by the controller
+        # If data is not a list, wrap it in a list
+        heartbeat_payload = data if isinstance(data, list) else [data]
+
+        app.logger.info(
+            f"Sending heartbeat to Hackatime for user {current_user.username}")
+        app.logger.debug(f"Heartbeat payload: {heartbeat_payload}")
+
+        # Make the request to Hackatime API
+        response = requests.post(api_url,
+                                 headers=headers,
+                                 json=heartbeat_payload,
+                                 timeout=10)
+
+        app.logger.info(
+            f"Hackatime API response status: {response.status_code}")
+
+        if response.status_code >= 400:
+            error_text = response.text
+            app.logger.error(
+                f"Hackatime heartbeat failed: {response.status_code} - {error_text}"
+            )
+            return jsonify({
+                'success': False,
+                'message':
+                f'Heartbeat failed with status code {response.status_code}',
+                'details': error_text
+            }), response.status_code
+
+        # Record activity for first heartbeat of the day
+        now = datetime.utcnow()
+        day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+
+        heartbeat_today = UserActivity.query.filter(
+            UserActivity.user_id == current_user.id,
+            UserActivity.activity_type == "hackatime_heartbeat",
+            UserActivity.timestamp >= day_start, UserActivity.timestamp
+            < day_end).first()
+
+        if not heartbeat_today:
+            activity = UserActivity(
+                activity_type="hackatime_heartbeat",
+                message=
+                "User {username} sent first Hackatime heartbeat of the day",
+                username=current_user.username,
+                user_id=current_user.id)
+            db.session.add(activity)
+            db.session.commit()
+
+        # Try to parse the response content
+        try:
+            response_data = response.json()
+            return jsonify({
+                'success': True,
+                'message': 'Heartbeat sent successfully',
+                'response': response_data
+            })
+        except:
+            # If we can't parse the JSON, but the status code was good, still return success
+            return jsonify({
+                'success': True,
+                'message': 'Heartbeat sent successfully'
+            })
+    except Exception as e:
+        app.logger.error(f'Error sending Hackatime heartbeat: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'Failed to send heartbeat: {str(e)}'
+        }), 500
+
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -2851,13 +3182,11 @@ def join_club():
         if not join_code:
             return jsonify({'error': 'Join code is required'}), 400
 
-        # Find the club with this join code
         club = Club.query.filter_by(join_code=join_code).first()
 
         if not club:
             return jsonify({'error': 'Invalid join code'}), 404
 
-        # Check if user is already a member
         existing_membership = ClubMembership.query.filter_by(
             user_id=current_user.id, club_id=club.id).first()
 
@@ -2865,13 +3194,11 @@ def join_club():
             return jsonify({'error':
                             'You are already a member of this club'}), 400
 
-        # Add user as a member
         membership = ClubMembership(user_id=current_user.id,
                                     club_id=club.id,
                                     role='member')
         db.session.add(membership)
 
-        # Record activity
         activity = UserActivity(
             activity_type="club_join",
             message=f'{{username}} joined club "{club.name}"',
@@ -3056,9 +3383,26 @@ def initialize_database():
         return False
 
 
+@app.route('/integrations')
+@login_required
+def integrations():
+    return render_template('integrations.html')
+
+
 if __name__ == '__main__':
+    # Configure more detailed logging
+    import logging
+    logging.basicConfig(level=logging.INFO,
+                        format='[%(asctime)s] [%(levelname)s] %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
+    app.logger.info("Starting server directly from app.py")
+
     try:
+        app.logger.info("Initializing database...")
         initialize_database()
+        app.logger.info("Database initialization complete")
     except Exception as e:
         app.logger.warning(f"Database initialization error: {e}")
+
+    app.logger.info("Server running on http://0.0.0.0:3000")
     app.run(host='0.0.0.0', port=3000, debug=True)

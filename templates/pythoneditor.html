@@ -13,6 +13,7 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/python-editor.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hackatime-badge.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -24,7 +25,7 @@
             <div class="loading-spinner-shadow"></div>
         </div>
         <div class="loading-text-container">
-            <p class="loading-text">Setting Up Python Environment</p>
+            <p class="loading-text">Building Your Space :D</p>
         </div>
         <div class="loading-progress-container">
             <div class="loading-progress-bar">
@@ -33,7 +34,7 @@
         </div>
         <div class="loading-facts">
             <div class="fact-container">
-                <p class="loading-fact">Preparing your Python environment...</p>
+                <p class="loading-fact">Building your digital canvas...</p>
             </div>
         </div>
     </div>
@@ -253,6 +254,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/comment-fold.min.js"></script>
 
 <script src="{{ url_for('static', filename='js/python-editor.js') }}"></script>
+{% if current_user.wakatime_api_key %}
+<script src="{{ url_for('static', filename='js/hackatime-tracker.js') }}"></script>
+{% endif %}
 
 <!-- Editor initialization is handled by python-editor.js -->
 

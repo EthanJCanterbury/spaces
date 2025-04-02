@@ -2,7 +2,7 @@
 {% extends "base.html" %}
 
 {% block head %}
-<title>Connect Hackatime - Hack Club Spaces</title>
+<title>Connect Groq - Hack Club Spaces</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/hackatime.css') }}">
 {% endblock %}
 
@@ -10,48 +10,50 @@
 <div class="hackatime-container">
     <div class="hackatime-card">
         <div class="header">
-            <h1 class="title">Connect with Hackatime</h1>
-            <div class="subtitle">Track your coding time and see your stats</div>
+            <h1 class="title">Connect with Groq</h1>
+            <div class="subtitle">Enhance your experience with AI-powered features</div>
         </div>
         
         
         <div class="info-section">
-            <h2>What is Hackatime?</h2>
-            <p>Hackatime is Hack Club's coding time tracker that helps you visualize your programming activity and track progress over time.</p>
+            <h2>What is Groq?</h2>
+            <p>Groq is a platform that offers fast and efficient AI language models to power your applications and enhance your creative workflows.</p>
             
             <div class="connection-steps">
                 <h3>How to connect:</h3>
                 <ol>
-                    <li>Visit <a href="https://hackatime.hackclub.com/" target="_blank" rel="noopener">hackatime.hackclub.com</a></li>
-                    <li>Go to your account settings</li>
+                    <li>Visit <a href="https://console.groq.com/" target="_blank" rel="noopener">console.groq.com</a></li>
+                    <li>Create an account or sign in</li>
+                    <li>Go to API Keys section</li>
+                    <li>Create a new API key</li>
                     <li>Copy your API key</li>
                     <li>Paste it below to connect your account</li>
                 </ol>
             </div>
         </div>
         
-        {% if current_user.wakatime_api_key %}
+        {% if current_user.groq_api_key %}
             <div class="success-message">
                 <i class="fas fa-check-circle"></i>
-                <p>Your Hackatime account is connected!</p>
+                <p>Your Groq account is connected!</p>
                 <button id="disconnect-btn" class="disconnect-button">Disconnect Account</button>
             </div>
         {% else %}
-            <form id="hackatime-form" class="api-key-form">
+            <form id="groq-form" class="api-key-form">
                 <div class="form-group">
-                    <label for="api_key">Your Hackatime API Key</label>
+                    <label for="api_key">Your Groq API Key</label>
                     <div class="input-group">
                         <input type="password" id="api_key" name="api_key" placeholder="Paste your API key here" required>
                         <button type="button" id="toggle-visibility" class="toggle-btn">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
-                    <div class="hint">The API key will be stored securely and only used to fetch your coding stats.</div>
+                    <div class="hint">The API key will be stored securely and only used to access Groq's AI features.</div>
                     <div id="validation-message" class="validation-message"></div>
                 </div>
                 
                 <button type="submit" class="connect-button" id="connect-button">
-                    <span>Connect Hackatime</span>
+                    <span>Connect Groq</span>
                     <i class="fas fa-arrow-right"></i>
                 </button>
             </form>
@@ -59,16 +61,16 @@
         
         <div class="benefits">
             <div class="benefit-item">
-                <i class="fas fa-chart-line"></i>
-                <span>Track your coding progress</span>
+                <i class="fas fa-bolt"></i>
+                <span>Faster AI responses</span>
             </div>
             <div class="benefit-item">
-                <i class="fas fa-trophy"></i>
-                <span>Set goals and challenges</span>
+                <i class="fas fa-brain"></i>
+                <span>Advanced language models</span>
             </div>
             <div class="benefit-item">
-                <i class="fas fa-users"></i>
-                <span>Compare with club members</span>
+                <i class="fas fa-robot"></i>
+                <span>Enhanced AI features</span>
             </div>
         </div>
     </div>
@@ -93,8 +95,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (disconnectBtn) {
         disconnectBtn.addEventListener('click', function() {
-            if (confirm('Are you sure you want to disconnect your Hackatime account?')) {
-                fetch('/hackatime/disconnect', {
+            if (confirm('Are you sure you want to disconnect your Groq account?')) {
+                fetch('/groq/disconnect', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -116,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    const form = document.getElementById('hackatime-form');
+    const form = document.getElementById('groq-form');
     const connectButton = document.getElementById('connect-button');
     const validationMessage = document.getElementById('validation-message');
     
@@ -126,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const apiKey = apiKeyInput.value.trim();
             if (!apiKey) {
-                showValidationMessage('Please enter your Hackatime API key.', 'error');
+                showValidationMessage('Please enter your Groq API key.', 'error');
                 return;
             }
             
@@ -141,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
             connectButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating...';
             showValidationMessage('Validating API key...', 'info');
             
-            fetch('/hackatime/connect', {
+            fetch('/groq/connect', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -164,26 +166,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 1000);
                 } else {
                     connectButton.disabled = false;
-                    connectButton.innerHTML = '<span>Connect Hackatime</span><i class="fas fa-arrow-right"></i>';
+                    connectButton.innerHTML = '<span>Connect Groq</span><i class="fas fa-arrow-right"></i>';
                     showValidationMessage(data.message, 'error');
-                    
-                    // If the error contains a 404 status, show a more helpful message
-                    if (data.message && data.message.includes('404')) {
-                        showValidationMessage('Error: Could not validate API key. Please make sure you\'re using the correct API key from your Hackatime account settings.', 'error');
-                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 connectButton.disabled = false;
-                connectButton.innerHTML = '<span>Connect Hackatime</span><i class="fas fa-arrow-right"></i>';
+                connectButton.innerHTML = '<span>Connect Groq</span><i class="fas fa-arrow-right"></i>';
                 showValidationMessage('An error occurred while connecting your account. Please try again later.', 'error');
             });
         });
     }
     
+    // Simple validation for API key format
     function validateApiKeyFormat(apiKey) {
-        // This is a simple validation to catch obvious mistakes
+        // Groq API keys are typically long alphanumeric strings
         return apiKey.length > 10;
     }
     

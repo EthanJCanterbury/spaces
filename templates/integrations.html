@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>Manage Integrations - Hack Club Spaces</title>
+<style>
+    .integrations-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .integrations-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-top: 20px;
+    }
+
+    .integrations-header h1 {
+        font-size: 2.5rem;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+        font-family: var(--font-heading);
+    }
+
+    .integrations-subtitle {
+        color: var(--text-light);
+        font-size: 1.1rem;
+    }
+
+    .search-container {
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 10px 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-container i {
+        color: var(--text-light);
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+
+    .search-input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        font-size: 1rem;
+        color: var(--text);
+        padding: 8px 0;
+        outline: none;
+    }
+
+    .integration-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 25px;
+    }
+
+    .integration-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 8px 32px rgba(31, 45, 61, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .integration-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(31, 45, 61, 0.15);
+    }
+
+    .integration-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .integration-icon i {
+        font-size: 28px;
+        color: white;
+    }
+
+    .integration-title {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .integration-title h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: var(--text);
+    }
+
+    .integration-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-left: auto;
+        gap: 5px;
+    }
+
+    .status-connected {
+        background-color: rgba(46, 213, 115, 0.15);
+        color: #2ed573;
+    }
+
+    .status-disconnected {
+        background-color: rgba(94, 114, 228, 0.15);
+        color: #5e72e4;
+    }
+
+    .integration-description {
+        color: var(--text-light);
+        line-height: 1.6;
+        margin-bottom: 20px;
+        flex-grow: 1;
+    }
+
+    .integration-actions {
+        margin-top: auto;
+    }
+
+    .btn-connect {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--primary);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.2s;
+        width: 100%;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-connect:hover {
+        background: var(--primary-dark);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-disconnect {
+        margin-top: 10px;
+        background: rgba(236, 55, 80, 0.1);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+        padding: 10px 18px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(236, 55, 80, 0.1);
+    }
+
+    .btn-disconnect:hover {
+        background: var(--danger);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(236, 55, 80, 0.2);
+    }
+
+    .btn-disconnect:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 3px rgba(236, 55, 80, 0.1);
+    }
+
+    .btn-github {
+        background: #24292e;
+    }
+
+    .btn-github:hover {
+        background: #0366d6;
+    }
+
+    .btn-hackatime {
+        background: #ec695c;
+    }
+
+    .btn-hackatime:hover {
+        background: #e84c3d;
+    }
+
+    .btn-groq {
+        background: #6366f1;
+    }
+
+    .btn-groq:hover {
+        background: #4f46e5;
+    }
+
+    .no-results {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 40px;
+        color: var(--text-light);
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 16px;
+    }
+
+    .no-results i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    @media (max-width: 768px) {
+        .integration-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="integrations-container">
+    <br>
+    <div class="integrations-header">
+        <h1>Manage Integrations</h1>
+        <p class="integrations-subtitle">Connect your favorite services to enhance your Hack Club experience</p>
+    </div>
+
+    <div class="search-container">
+        <i class="fas fa-search"></i>
+        <input type="text" id="integration-search" class="search-input" placeholder="Search integrations...">
+    </div>
+
+    <div class="integration-grid" id="integration-grid">
+        <!-- GitHub Integration -->
+        <div class="integration-card" data-name="github">
+            <div class="integration-title">
+                <div class="integration-icon">
+                    <i class="fab fa-github"></i>
+                </div>
+                <h2>GitHub</h2>
+                {% if current_user.github_token %}
+                <span class="integration-status status-connected">
+                    <i class="fas fa-check-circle"></i> Connected
+                </span>
+                {% else %}
+                <span class="integration-status status-disconnected">
+                    <i class="fas fa-circle"></i> Not Connected
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="integration-description">
+                Connect your GitHub account to enable version control and repository management. Push your code directly to GitHub repositories.
+            </div>
+
+            <div class="integration-actions">
+                {% if current_user.github_token %}
+                <div class="connected-info">
+                    <p>Connected to @{{ current_user.github_username }}</p>
+                    <button class="btn-disconnect" onclick="disconnectGithub()">
+                        <i class="fas fa-unlink"></i>
+                        Disconnect
+                    </button>
+                </div>
+                {% else %}
+                <a href="{{ url_for('github.github_login') }}" class="btn-connect btn-github">
+                    <i class="fab fa-github"></i>
+                    Connect GitHub
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Hackatime Integration -->
+        <div class="integration-card" data-name="hackatime coding time tracker">
+            <div class="integration-title">
+                <div class="integration-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h2>Hackatime</h2>
+                {% if current_user.wakatime_api_key %}
+                <span class="integration-status status-connected">
+                    <i class="fas fa-check-circle"></i> Connected
+                </span>
+                {% else %}
+                <span class="integration-status status-disconnected">
+                    <i class="fas fa-circle"></i> Not Connected
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="integration-description">
+                Connect your Hackatime account to track your coding time and see your stats. Visualize your programming activity and track progress over time.
+            </div>
+
+            <div class="integration-actions">
+                {% if current_user.wakatime_api_key %}
+                <div class="connected-info">
+                    <p>Connected to Hackatime</p>
+                    <button class="btn-disconnect" onclick="disconnectHackatime()">
+                        <i class="fas fa-unlink"></i>
+                        Disconnect
+                    </button>
+                </div>
+                {% else %}
+                <a href="{{ url_for('hackatime') }}" class="btn-connect btn-hackatime">
+                    <i class="fas fa-clock"></i>
+                    Connect Hackatime
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Groq Integration -->
+        <div class="integration-card" data-name="groq ai language model">
+            <div class="integration-title">
+                <div class="integration-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h2>Groq</h2>
+                {% if current_user.groq_api_key %}
+                <span class="integration-status status-connected">
+                    <i class="fas fa-check-circle"></i> Connected
+                </span>
+                {% else %}
+                <span class="integration-status status-disconnected">
+                    <i class="fas fa-circle"></i> Not Connected
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="integration-description">
+                Connect your Groq account to access fast AI language models and enhance your experience. Leverage cutting-edge AI technology to boost your productivity.
+            </div>
+
+            <div class="integration-actions">
+                {% if current_user.groq_api_key %}
+                <div class="connected-info">
+                    <p>Connected to Groq</p>
+                    <button class="btn-disconnect" onclick="disconnectGroq()">
+                        <i class="fas fa-unlink"></i>
+                        Disconnect
+                    </button>
+                </div>
+                {% else %}
+                <a href="{{ url_for('groq_page') }}" class="btn-connect btn-groq">
+                    <i class="fas fa-robot"></i>
+                    Connect Groq
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Empty state for no search results -->
+        <div class="no-results" id="no-results" style="display: none;">
+            <i class="fas fa-search"></i>
+            <h3>No integrations found</h3>
+            <p>Try a different search term or check back later for new integrations.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('integration-search');
+        const integrationCards = document.querySelectorAll('.integration-card');
+        const noResults = document.getElementById('no-results');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let hasResults = false;
+
+            integrationCards.forEach(card => {
+                const cardText = card.getAttribute('data-name').toLowerCase();
+                const cardTitle = card.querySelector('h2').textContent.toLowerCase();
+                const cardDescription = card.querySelector('.integration-description').textContent.toLowerCase();
+                const searchContent = cardText + ' ' + cardTitle + ' ' + cardDescription;
+
+                if (searchContent.includes(searchTerm)) {
+                    card.style.display = 'flex';
+                    hasResults = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (hasResults) {
+                noResults.style.display = 'none';
+            } else {
+                noResults.style.display = 'block';
+            }
+        });
+    });
+
+    async function disconnectGithub() {
+        if (confirm('Are you sure you want to disconnect your GitHub account?')) {
+            try {
+                const response = await fetch('/api/github/disconnect-account', {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    showToast('success', 'Disconnected from GitHub');
+                    location.reload();
+                } else {
+                    showToast('error', 'Failed to disconnect from GitHub');
+                }
+            } catch (error) {
+                showToast('error', 'Failed to disconnect from GitHub');
+            }
+        }
+    }
+
+    async function disconnectHackatime() {
+        if (confirm('Are you sure you want to disconnect your Hackatime account?')) {
+            try {
+                const response = await fetch('/hackatime/disconnect', {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    showToast('success', 'Disconnected from Hackatime');
+                    location.reload();
+                } else {
+                    showToast('error', 'Failed to disconnect from Hackatime');
+                }
+            } catch (error) {
+                showToast('error', 'Failed to disconnect from Hackatime');
+            }
+        }
+    }
+
+    async function disconnectGroq() {
+        if (confirm('Are you sure you want to disconnect your Groq account?')) {
+            try {
+                const response = await fetch('/groq/disconnect', {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    showToast('success', 'Disconnected from Groq');
+                    location.reload();
+                } else {
+                    showToast('error', 'Failed to disconnect from Groq');
+                }
+            } catch (error) {
+                showToast('error', 'Failed to disconnect from Groq');
+            }
+        }
+    }
+
+    function showToast(type, message) {
+        const toastContainer = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        toast.offsetHeight;
+
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+</script>
+{% endblock %}

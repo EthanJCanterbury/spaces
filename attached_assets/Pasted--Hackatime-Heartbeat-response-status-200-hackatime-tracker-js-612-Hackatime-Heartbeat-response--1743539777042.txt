@@ -1,0 +1,207 @@
+[Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+ Website loaded successfully!
+ uBOL: Generic cosmetic filtering stopped because no more DOM changes
+ Website loaded successfully!
+ uBOL: Generic cosmetic filtering stopped because no more DOM changes
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+ uBOL: Generic cosmetic filtering stopped because no more DOM changes
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+246:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this errorAI
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:48 [Hackatime] No activity detected for 1.5 minutes, auto-pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:129 [Hackatime] User is active again, auto-resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:48 [Hackatime] No activity detected for 1.5 minutes, auto-pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:129 [Hackatime] User is active again, auto-resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:48 [Hackatime] No activity detected for 1.5 minutes, auto-pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:129 [Hackatime] User is active again, auto-resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+Console.js:61 Website loaded successfully!
+css-generic.js:236 uBOL: Generic cosmetic filtering stopped because no more DOM changes
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: Object
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: Object
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: {entity: 'index.html', type: 'file', time: 1743539156.459, category: 'coding', project: 'HT-test', …}
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: {message: 'Heartbeat sent successfully', success: true}
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: {entity: 'index.html', type: 'file', time: 1743539216.459, category: 'coding', project: 'HT-test', …}
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: {message: 'Heartbeat sent successfully', success: true}
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: {entity: 'index.html', type: 'file', time: 1743539252.536, category: 'coding', project: 'HT-test', …}
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: {message: 'Heartbeat sent successfully', success: true}
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: {entity: 'index.html', type: 'file', time: 1743539312.54, category: 'coding', project: 'HT-test', …}
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: {message: 'Heartbeat sent successfully', success: true}
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: {entity: 'index.html', type: 'file', time: 1743539329.719, category: 'coding', project: 'HT-test', …}
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: {message: 'Heartbeat sent successfully', success: true}
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: {entity: 'index.html', type: 'file', time: 1743539383.727, category: 'coding', project: 'HT-test', …}
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: {message: 'Heartbeat sent successfully', success: true}
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: {entity: 'index.html', type: 'file', time: 1743539387.555, category: 'coding', project: 'HT-test', …}
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: {message: 'Heartbeat sent successfully', success: true}
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:48 [Hackatime] No activity detected for 1.5 minutes, auto-pausing tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:129 [Hackatime] User is active again, auto-resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: {entity: 'index.html', type: 'file', time: 1743539449.329, category: 'coding', project: 'HT-test', …}
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: {message: 'Heartbeat sent successfully', success: true}
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: {entity: 'index.html', type: 'file', time: 1743539501.241, category: 'coding', project: 'HT-test', …}
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: {message: 'Heartbeat sent successfully', success: true}
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:48 [Hackatime] No activity detected for 1.5 minutes, auto-pausing tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:129 [Hackatime] User is active again, auto-resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: {entity: 'index.html', type: 'file', time: 1743539712.935, category: 'coding', project: 'HT-test', …}
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: {message: 'Heartbeat sent successfully', success: true}
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html
+hackatime-tracker.js:726 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:505 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:730 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:492 [Hackatime] Starting heartbeat tracking for project "HT-test"
+hackatime-tracker.js:597 [Hackatime] Sending heartbeat: {entity: 'index.html', type: 'file', time: 1743539750.423, category: 'coding', project: 'HT-test', …}
+hackatime-tracker.js:608 [Hackatime] Heartbeat response status: 200
+hackatime-tracker.js:612 [Hackatime] Heartbeat response: {message: 'Heartbeat sent successfully', success: true}
+hackatime-tracker.js:616 [Hackatime] Heartbeat successful for index.html

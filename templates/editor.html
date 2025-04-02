@@ -12,6 +12,7 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/github.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hackatime-badge.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -504,6 +505,9 @@
 <script src="{{ url_for('static', filename='js/orphy.js') }}"></script>
 <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
 <script src="{{ url_for('static', filename='js/file-handling.js') }}"></script>
+{% if current_user.wakatime_api_key %}
+<script src="{{ url_for('static', filename='js/hackatime-tracker.js') }}"></script>
+{% endif %}
 
 <script>
 function openYSWSModal() {
