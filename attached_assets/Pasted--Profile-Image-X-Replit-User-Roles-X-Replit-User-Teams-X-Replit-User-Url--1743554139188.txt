@@ -1,0 +1,38 @@
+-Profile-Image': '', 'X-Replit-User-Roles': '', 'X-Replit-User-Teams': '', 'X-Replit-User-Url': ''}
+[2025-04-02 00:35:09,541] [INFO] Locating template 'welcome.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /home/runner/workspace/templates
+       -> found ('/home/runner/workspace/templates/welcome.html')
+[2025-04-02 00:35:09] [INFO] Locating template 'welcome.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /home/runner/workspace/templates
+       -> found ('/home/runner/workspace/templates/welcome.html')
+[2025-04-02 00:35:09,697] [ERROR] Unhandled Exception: {'error_type': 'BuildError', 'error_message': "Could not build url for endpoint 'special_access'. Did you mean 'search_users' instead?", 'error_details': None, 'file_name': None, 'line_number': None, 'code_snippet': None, 'traceback': '  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request\n    rv = self.dispatch_request()\n         ^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request\n    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view\n    return current_app.ensure_sync(func)(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/app.py", line 582, in welcome\n    return render_template(\'welcome.html\',\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 152, in render_template\n    return _render(app, template, context)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 133, in _render\n    rv = template.render(context)\n         ^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 1295, in render\n    self.environment.handle_exception()\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 942, in handle_exception\n    raise rewrite_traceback_stack(source=source)\n  File "/home/runner/workspace/templates/welcome.html", line 1, in top-level template code\n    {% extends "base.html" %}\n  File "/home/runner/workspace/templates/base.html", line 47, in top-level template code\n    {% block content %}{% endblock %}\n    ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/templates/welcome.html", line 280, in block \'content\'\n    <form action="{{ url_for(\'special_access\') }}" method="POST">\n    ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1071, in url_for\n    return self.handle_url_build_error(error, endpoint, values)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1060, in url_for\n    rv = url_adapter.build(  # type: ignore[union-attr]\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/routing/map.py", line 924, in build\n    raise BuildError(endpoint, values, method, self)\n', 'suggestions': []}
+[2025-04-02 00:35:09] [ERROR] Unhandled Exception: {'error_type': 'BuildError', 'error_message': "Could not build url for endpoint 'special_access'. Did you mean 'search_users' instead?", 'error_details': None, 'file_name': None, 'line_number': None, 'code_snippet': None, 'traceback': '  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request\n    rv = self.dispatch_request()\n         ^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request\n    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view\n    return current_app.ensure_sync(func)(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/app.py", line 582, in welcome\n    return render_template(\'welcome.html\',\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 152, in render_template\n    return _render(app, template, context)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 133, in _render\n    rv = template.render(context)\n         ^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 1295, in render\n    self.environment.handle_exception()\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 942, in handle_exception\n    raise rewrite_traceback_stack(source=source)\n  File "/home/runner/workspace/templates/welcome.html", line 1, in top-level template code\n    {% extends "base.html" %}\n  File "/home/runner/workspace/templates/base.html", line 47, in top-level template code\n    {% block content %}{% endblock %}\n    ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/templates/welcome.html", line 280, in block \'content\'\n    <form action="{{ url_for(\'special_access\') }}" method="POST">\n    ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1071, in url_for\n    return self.handle_url_build_error(error, endpoint, values)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1060, in url_for\n    rv = url_adapter.build(  # type: ignore[union-attr]\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/routing/map.py", line 924, in build\n    raise BuildError(endpoint, values, method, self)\n', 'suggestions': []}
+[2025-04-02 00:35:09,698] [INFO] Locating template 'errors/generic.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /home/runner/workspace/templates
+       -> found ('/home/runner/workspace/templates/errors/generic.html')
+[2025-04-02 00:35:09] [INFO] Locating template 'errors/generic.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /home/runner/workspace/templates
+       -> found ('/home/runner/workspace/templates/errors/generic.html')
+[2025-04-02 00:35:09,920] [INFO] Response: GET /welcome → 500
+[2025-04-02 00:35:09] [INFO] Response: GET /welcome → 500
+[2025-04-02 00:35:09] [INFO] 172.31.128.72 - - [02/Apr/2025 00:35:09] "GET /welcome HTTP/1.1" 500 -
