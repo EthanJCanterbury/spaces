@@ -541,11 +541,6 @@ def signup():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
-        preview_code = request.form.get('preview_code')
-
-        if preview_code != 'iloveboba':
-            flash('Invalid preview code', 'error')
-            return render_template('signup.html')
 
         if User.query.filter_by(email=email).first():
             flash('Email already registered', 'error')
@@ -555,7 +550,7 @@ def signup():
             flash('Username already taken', 'error')
             return render_template('signup.html')
 
-        user = User(username=username, email=email, preview_code_verified=True)
+        user = User(username=username, email=email, preview_code_verified=True)  # Set to True for all users
         user.set_password(password)
 
         db.session.add(user)
