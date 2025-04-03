@@ -59,7 +59,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 }
 
 app.config['PREFERRED_URL_SCHEME'] = 'https'
-app.config['EXPLAIN_TEMPLATE_LOADING'] = False
+app.config['EXPLAIN_TEMPLATE_LOADING'] = True
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 
@@ -227,19 +227,29 @@ def report_error():
 
 @app.before_request
 def log_request_info():
-    """Log minimal information about incoming requests only for non-static paths"""
-    # Skip logging for static file requests to reduce noise
-    if not request.path.startswith('/static/'):
-        app.logger.info('Request: %s %s', request.method, request.path)
+    """Log detailed information about each incoming request."""
+    app.logger.info('Request: %s %s from %s', request.method, request.path,
+                    request.remote_addr)
+    if request.args:
+        app.logger.info('Request Args: %s', dict(request.args))
+    if request.form:
+        app.logger.info('Form Data: %s', dict(request.form))
+    if request.is_json and request.get_json(silent=True):
+        app.logger.info('JSON Data: %s', request.get_json(silent=True))
+    if request.headers:
+        headers = {
+            k: v
+            for k, v in request.headers.items()
+            if k.lower() not in ('cookie', 'authorization')
+        }
+        app.logger.info('Headers: %s', headers)
 
 
 @app.after_request
 def log_response_info(response):
-    """Log minimal information about responses only for non-static paths and non-success responses"""
-    # Only log non-static paths and error responses (status >= 400)
-    if not request.path.startswith('/static/') and response.status_code >= 400:
-        app.logger.info('Response: %s %s → %d', request.method, request.path,
-                        response.status_code)
+    """Log information about the response."""
+    app.logger.info('Response: %s %s → %d', request.method, request.path,
+                    response.status_code)
     return response
 
 
