@@ -1,6 +1,132 @@
 
 import os
 import time
+import logging
+import requests
+import json
+from datetime import datetime
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger('hackatime_service')
+
+def send_heartbeat(api_key, heartbeat_data):
+    """
+    Send a heartbeat to the Hackatime API with detailed heartbeat data
+    """
+    try:
+        if not api_key:
+            logger.warning("No API key provided. Cannot send heartbeat.")
+            return False
+            
+        api_url = "https://hackatime.hackclub.com/api/hackatime/v1/users/current/heartbeats"
+        
+        # Prepare heartbeat payload
+        current_time = int(time.time())
+        user_agent = "Hack Club Spaces/1.0 Python/3.10"
+        
+        # Format any array data correctly for PostgreSQL
+        # If 'dependencies' is a comma-separated string, properly format it as a PostgreSQL array string
+        if isinstance(heartbeat_data, dict) and 'dependencies' in heartbeat_data and isinstance(heartbeat_data['dependencies'], str):
+            # Convert "bootstrap,jquery" to "{bootstrap,jquery}"
+            deps = heartbeat_data['dependencies']
+            if deps and not deps.startswith('{') and not deps.endswith('}'):
+                heartbeat_data['dependencies'] = "{" + deps + "}"
+        
+        # Use default values if not provided
+        default_heartbeat = {
+            "entity": "main.py",
+            "type": "file",
+            "time": current_time,
+            "category": "coding",
+            "project": "Hack Club Spaces",
+            "branch": "main",
+            "language": "Python",
+            "is_write": True,
+            "lines": 150,
+            "lineno": 1,
+            "cursorpos": 0,
+            "line_additions": 0,
+            "line_deletions": 0
+        }
+        
+        # Process input data and ensure all required fields
+        if isinstance(heartbeat_data, dict):
+            # Single heartbeat
+            complete_heartbeat = default_heartbeat.copy()
+            complete_heartbeat.update(heartbeat_data)
+            heartbeat_payload = [complete_heartbeat]
+        elif isinstance(heartbeat_data, list):
+            # Multiple heartbeats
+            heartbeat_payload = []
+            for hb in heartbeat_data:
+                if isinstance(hb, dict):
+                    complete_hb = default_heartbeat.copy()
+                    complete_hb.update(hb)
+                    heartbeat_payload.append(complete_hb)
+                else:
+                    # Invalid item in list
+                    complete_hb = default_heartbeat.copy()
+                    heartbeat_payload.append(complete_hb)
+        else:
+            # Fallback to default if data format is unexpected
+            heartbeat_payload = [default_heartbeat]
+            
+        # Set up headers
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
+            'User-Agent': user_agent
+        }
+        
+        # Log detailed request information
+        logger.info(f"Sending heartbeat to Hackatime API: {api_url}")
+        # Format headers for better readability in logs
+        formatted_headers = {
+            'Authorization': f'Bearer {api_key[:5]}...{api_key[-5:]}',  # Mask most of the API key for security
+            'Content-Type': headers['Content-Type'],
+            'User-Agent': headers['User-Agent']
+        }
+        logger.info(f"Request Headers: {formatted_headers}")
+        logger.info(f"Payload: {heartbeat_payload}")
+        
+        response = requests.post(
+            api_url,
+            headers=headers,
+            json=heartbeat_payload,
+            timeout=10
+        )
+        
+        if response.status_code >= 400:
+            logger.error(f"Failed to send heartbeat: {response.status_code}")
+            logger.error(f"Response: {response.text}")
+            return False
+            
+        logger.info("Heartbeat sent successfully")
+        logger.debug(f"Response: {response.text}")
+        return True
+    except Exception as e:
+        logger.error(f"Error sending heartbeat: {str(e)}")
+        return False
+
+def poll_hackatime_data():
+    """Main function to poll for Hackatime data and send heartbeats"""
+    # Poll logic would go here
+    pass
+
+if __name__ == "__main__":
+    logger.info("Hackatime service started")
+    # Service startup logic would go here
+
+
+import os
+import time
 import hashlib
 import logging
 import requests
