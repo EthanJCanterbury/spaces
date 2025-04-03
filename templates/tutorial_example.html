@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutorial System Example</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/tutorial.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f5f7fa;
+    }
+    
+    .container {
+      text-align: center;
+    }
+    
+    .main-button {
+      background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(79, 84, 200, 0.3);
+      transition: all 0.2s ease;
+    }
+    
+    .main-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(79, 84, 200, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Interactive Tutorial System</h1>
+    <p>Click the button below to open the tutorial</p>
+    <button class="main-button" onclick="openTutorialModal()">
+      <i class="fas fa-graduation-cap"></i> Launch Tutorial
+    </button>
+  </div>
+  
+  <!-- Tutorial Widget -->
+  <div id="tutorial-widget">
+    <div class="tutorial-header">
+      <h2><i class="fas fa-book"></i> Web Development Tutorial</h2>
+      <button class="close-btn" onclick="closeTutorialModal()">&times;</button>
+    </div>
+    
+    <div class="tutorial-content-wrapper">
+      <!-- Navigation Controls -->
+      <div class="tutorial-navigation">
+        <button id="prev-tutorial" onclick="prevTutorialStep()" class="tutorial-nav-btn tutorial-prev-btn" disabled>
+          <i class="fas fa-arrow-left"></i> Previous
+        </button>
+        <div class="tutorial-step-counter">
+          <span id="tutorial-step-indicator">1/5</span>
+        </div>
+        <button id="next-tutorial" onclick="nextTutorialStep()" class="tutorial-nav-btn tutorial-next-btn">
+          Next <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+      
+      <!-- Tutorial Content -->
+      <div class="tutorial-content">
+        <!-- Step 1 -->
+        <div class="tutorial-step" data-step="1">
+          <h3>Getting Started with HTML</h3>
+          <p>HTML (HyperText Markup Language) is the backbone of any website. It defines the structure and content of your web page.</p>
+          
+          <div class="tutorial-code-block">
+            <h4>Basic HTML Structure:</h4>
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;My First Website&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Hello World!&lt;/h1&gt;
+    &lt;p&gt;This is my first web page.&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+          
+          <div class="tutorial-info-box">
+            <p><strong>Tip:</strong> HTML documents always start with a doctype declaration, followed by the html element which contains head and body sections.</p>
+          </div>
+        </div>
+        
+        <!-- Step 2 -->
+        <div class="tutorial-step" data-step="2">
+          <h3>Adding More Content</h3>
+          <p>Let's add more elements to make your page more interesting and informative.</p>
+          
+          <div class="tutorial-code-block">
+            <h4>Common HTML Elements:</h4>
+            <ul>
+              <li><strong>&lt;h1&gt; to &lt;h6&gt;</strong> - Headings (h1 is largest, h6 is smallest)</li>
+              <li><strong>&lt;p&gt;</strong> - Paragraph</li>
+              <li><strong>&lt;a&gt;</strong> - Links to other pages</li>
+              <li><strong>&lt;img&gt;</strong> - Images</li>
+              <li><strong>&lt;ul&gt; and &lt;ol&gt;</strong> - Unordered and ordered lists</li>
+              <li><strong>&lt;div&gt;</strong> - Container for grouping elements</li>
+            </ul>
+          </div>
+          
+          <p>Try adding different headings, paragraphs, and links to your page!</p>
+        </div>
+        
+        <!-- Step 3 -->
+        <div class="tutorial-step" data-step="3">
+          <h3>Introduction to CSS</h3>
+          <p>CSS (Cascading Style Sheets) is used to style your HTML elements and make your website look attractive.</p>
+          
+          <div class="tutorial-code-block">
+            <h4>Basic CSS Syntax:</h4>
+            <pre>selector {
+  property: value;
+  another-property: another-value;
+}</pre>
+          </div>
+          
+          <div class="tutorial-code-block">
+            <h4>Example CSS:</h4>
+            <pre>body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  color: #4e54c8;
+  text-align: center;
+}
+
+p {
+  line-height: 1.6;
+  color: #333;
+}</pre>
+          </div>
+          
+          <div class="tutorial-warning-box">
+            <p><strong>Note:</strong> CSS can be added in three ways: inline, internal (using style tags), or external (using a separate CSS file).</p>
+          </div>
+        </div>
+        
+        <!-- Step 4 -->
+        <div class="tutorial-step" data-step="4">
+          <h3>Working with JavaScript</h3>
+          <p>JavaScript allows you to add interactivity to your website.</p>
+          
+          <div class="tutorial-code-block">
+            <h4>Simple JavaScript Example:</h4>
+            <pre>&lt;button id="myButton"&gt;Click Me!&lt;/button&gt;
+
+&lt;script&gt;
+  document.getElementById('myButton').addEventListener('click', function() {
+    alert('Button was clicked!');
+  });
+&lt;/script&gt;</pre>
+          </div>
+          
+          <p>JavaScript enables you to:</p>
+          <ul>
+            <li>Respond to user actions (clicks, mouse movements, etc.)</li>
+            <li>Modify the HTML content dynamically</li>
+            <li>Validate forms before submission</li>
+            <li>Create animations and visual effects</li>
+          </ul>
+        </div>
+        
+        <!-- Step 5 -->
+        <div class="tutorial-step" data-step="5">
+          <h3>Next Steps & Resources</h3>
+          <p>Congratulations on completing this brief tutorial! Here are some resources to continue your learning:</p>
+          
+          <div class="tutorial-code-block">
+            <h4>Helpful Resources:</h4>
+            <ul>
+              <li><a href="https://www.w3schools.com/" target="_blank">W3Schools</a> - Comprehensive tutorials and references</li>
+              <li><a href="https://developer.mozilla.org/en-US/" target="_blank">MDN Web Docs</a> - Detailed documentation for web technologies</li>
+              <li><a href="https://css-tricks.com/" target="_blank">CSS-Tricks</a> - Tips and tricks for CSS</li>
+            </ul>
+          </div>
+          
+          <p>Remember to practice regularly and build small projects to reinforce your learning!</p>
+          
+          <div class="tutorial-info-box">
+            <p><strong>Pro Tip:</strong> Start with simple projects and gradually increase complexity as your skills improve.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/static/js/tutorial.js"></script>
+</body>
+</html>
