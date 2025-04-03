@@ -1809,3 +1809,54 @@ iframe {
 .html-icon { background-color: #e34c26; }
 .css-icon { background-color: #264de4; }
 .js-icon { background-color: #f0db4f; }
+
+/* Tutorial Navigation Button Styles */
+.tutorial-nav-btn {
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.tutorial-nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tutorial-prev-btn {
+  margin-right: 10px;
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+
+.tutorial-prev-btn:hover:not(:disabled) {
+  background-color: #e2e8f0;
+}
+
+.tutorial-next-btn {
+  margin-left: 10px;
+  background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
+  color: white;
+}
+
+.tutorial-next-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3f44b1 0%, #7f84eb 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(79, 84, 200, 0.3);
+}
+
+.tutorial-step-counter {
+  display: flex;
+  align-items: center;
+  margin: 0 15px;
+  font-size: 14px;
+  color: #4a5568;
+  font-weight: 500;
+}
