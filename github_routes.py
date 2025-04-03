@@ -787,7 +787,7 @@ def hackatime_heartbeat():
     """Send a heartbeat to Hackatime API"""
     try:
         # Check if user has API key
-        if not current_user.hackatime_api_key:
+        if not current_user.wakatime_api_key:
             print(f"User {current_user.username} attempted to send heartbeat without API key")
             return jsonify({
                 'success': False,
