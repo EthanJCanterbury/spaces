@@ -605,7 +605,10 @@ class HackatimeTracker {
             user_agent: navigator.userAgent
         };
 
-        console.log(`[Hackatime] Sending heartbeat:`, heartbeat);
+        // Only log heartbeat in development mode
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log(`[Hackatime] Sending heartbeat`)
+        };
 
         // Send heartbeat to our server proxy endpoint, which will forward to Hackatime API
         fetch('/hackatime/heartbeat', {

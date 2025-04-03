@@ -906,7 +906,6 @@ def ensure_complete_heartbeat(heartbeat):
     """Ensure the heartbeat has all required fields"""
     # Define default values for required fields
     current_time = int(time.time())
-    print(f"Processing heartbeat data in github_routes.py")
     # Get current user from flask_login
     from flask_login import current_user
     
