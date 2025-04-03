@@ -1,79 +1,106 @@
 
-// Hackatime Tracker Module
-// 80% AI (aka i have no clue how to do this myself lol)
+// Hackatime Tracker Module - Simplified
 class HackatimeTracker {
     constructor() {
+        // Core tracker state
         this.isActive = false;
+        this.apiKey = null;
         this.heartbeatInterval = null;
         this.lastHeartbeat = null;
-        this.status = 'monitoring'; 
+        this.status = 'monitoring';
+        this.isPaused = false;
+        this.timeLogged = 0;
+        this.heartbeatCount = 0;
+        this.lastHeartbeatTime = null;
+        this.popupVisible = false;
+        
+        // Service endpoint (can be changed based on environment)
+        this.serviceUrl = '/hackatime';
+        
+        // Activity tracking
+        this.lastActivityTime = Date.now();
+        this.afkCheckInterval = null;
+        this.afkTimeoutMinutes = 1.5;
+        this.wasAutoPaused = false;
+        this.hiddenPause = false;
+        
+        // Editor information
         this.editorType = document.getElementById('site-type')?.value || 'unknown';
         this.siteId = document.getElementById('site-id')?.value || 'unknown';
         this.entityName = this.editorType === 'python' ? 'main.py' : 'index.html';
         this.language = this.editorType === 'python' ? 'Python' : 'HTML';
         this.siteName = document.querySelector('.topbar-left h1')?.textContent || 'Unknown Project';
-        this.isPaused = false;
-        this.timeLogged = 0;
-        this.lastHeartbeatTime = null; 
-        this.heartbeatSuccesses = 0; 
-        this.popupVisible = false;
-        this.lastActivityTime = Date.now();
-        this.afkCheckInterval = null;
-        this.afkTimeoutMinutes = 1.5; 
-
+        
+        // Get editor reference
         this.editor = null;
         if (window.pythonEditor) {
             this.editor = window.pythonEditor;
         } else if (window.editor && typeof window.editor.on === 'function') {
             this.editor = window.editor;
         }
+        
+        // Get API key from localStorage if available
+        this.apiKey = localStorage.getItem('hackatime_api_key');
     }
 
     init() {
+        console.log('[Hackatime] Initializing tracker');
         this.timeLogged = 0;
         this.lastHeartbeatTime = null;
-        this.heartbeatSuccesses = 0;
-        this.hiddenPause = false;
+        this.heartbeatCount = 0;
         
-
+        // Check connection status
         this.checkHackatimeStatus();
-
+        
+        // Start AFK monitoring
         this.startAfkCheckInterval();
+        
+        // Add badge CSS if not already present
+        this.ensureStyles();
     }
-
-    startAfkCheckInterval() {
-        this.afkCheckInterval = setInterval(() => {
-            if (!this.isActive || this.isPaused) return;
-
-            const currentTime = Date.now();
-            const minutesSinceLastActivity = (currentTime - this.lastActivityTime) / (1000 * 60);
-
-            if (minutesSinceLastActivity >= this.afkTimeoutMinutes) {
-                console.log(`[Hackatime] No activity detected for ${this.afkTimeoutMinutes} minutes, auto-pausing tracking`);
-                this.wasAutoPaused = true;
-                if (!this.isPaused) {
-                    this.togglePause();
-                    // Show a toast notification
-                    if (typeof showToast === 'function') {
-                        showToast('info', `Hackatime tracking paused due to ${this.afkTimeoutMinutes} minutes of inactivity`);
-                    }
-                }
-            }
-        }, 60000); // Check every minute
+    
+    ensureStyles() {
+        // Check if hackatime styles are loaded
+        if (!document.getElementById('hackatime-styles')) {
+            const style = document.createElement('link');
+            style.id = 'hackatime-styles';
+            style.rel = 'stylesheet';
+            style.href = '/static/css/hackatime-badge.css';
+            document.head.appendChild(style);
+        }
     }
 
     checkHackatimeStatus() {
-        console.log(`[Hackatime] Checking connection status...`);
-        fetch('/hackatime/status', {
+        console.log('[Hackatime] Checking connection status...');
+        
+        // Check if we have a stored API key first
+        if (this.apiKey) {
+            console.log('[Hackatime] Using stored API key');
+            this.isActive = true;
+            this.createBadge();
+            this.setupEditorListeners();
+            this.startHeartbeatTracking();
+            return;
+        }
+        
+        // Otherwise check with server
+        fetch(`${this.serviceUrl}/status`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-Hackatime-Key': this.apiKey || ''
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Status check failed: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             this.isActive = data.connected;
             console.log(`[Hackatime] Connected: ${this.isActive}`);
+            
             if (this.isActive) {
                 this.createBadge();
                 this.setupEditorListeners();
@@ -84,7 +111,42 @@ class HackatimeTracker {
         .catch(error => {
             console.error('[Hackatime] Error checking status:', error);
             this.isActive = false;
+            
+            // If we previously had a badge, update it to show error
+            const statusEl = document.getElementById('hackatime-status');
+            if (statusEl) {
+                this.updateBadgeStatus('error');
+            }
         });
+    }
+
+    startAfkCheckInterval() {
+        // Clear previous interval if exists
+        if (this.afkCheckInterval) {
+            clearInterval(this.afkCheckInterval);
+        }
+        
+        // Set new interval for checking inactivity
+        this.afkCheckInterval = setInterval(() => {
+            if (!this.isActive || this.isPaused) return;
+
+            const currentTime = Date.now();
+            const minutesSinceLastActivity = (currentTime - this.lastActivityTime) / (1000 * 60);
+
+            if (minutesSinceLastActivity >= this.afkTimeoutMinutes) {
+                console.log(`[Hackatime] No activity detected for ${this.afkTimeoutMinutes} minutes, auto-pausing tracking`);
+                this.wasAutoPaused = true;
+                
+                if (!this.isPaused) {
+                    this.togglePause();
+                    
+                    // Show toast notification if available
+                    if (typeof showToast === 'function') {
+                        showToast('info', `Hackatime tracking paused due to ${this.afkTimeoutMinutes} minutes of inactivity`);
+                    }
+                }
+            }
+        }, 60000); // Check every minute
     }
 
     setupEditorListeners() {
@@ -92,16 +154,15 @@ class HackatimeTracker {
         if (this.editor && typeof this.editor.on === 'function') {
             this.editor.on('changes', () => {
                 const currentFile = document.querySelector('.file-tab.active')?.getAttribute('data-filename') || this.entityName;
-                console.log(`[Hackatime] File changed: ${currentFile} in project "${this.siteName}"`);
                 this.status = 'active';
+                this.entityName = currentFile;
                 this.updateBadgeStatus('active');
                 this.updateLastActivityTime();
-
-                // Log the file change event for hackatime
-                console.log(`[Hackatime] File: ${currentFile}, Project: "${this.siteName}", Type: ${this.editorType}`);
+                
+                console.log(`[Hackatime] File changed: ${currentFile} in "${this.siteName}"`);
             });
 
-            // Also track cursor activity as a form of user activity
+            // Track cursor activity
             this.editor.on('cursorActivity', () => {
                 this.updateLastActivityTime();
             });
@@ -111,24 +172,26 @@ class HackatimeTracker {
         document.querySelectorAll('.file-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 const filename = tab.getAttribute('data-filename');
-                console.log(`[Hackatime] Switched to file: ${filename}`);
-                this.entityName = filename;
-                this.updateLastActivityTime();
+                if (filename) {
+                    this.entityName = filename;
+                    this.updateLastActivityTime();
+                }
             });
         });
 
-        // Track user keyboard and mouse activity
+        // Track general user activity
         document.addEventListener('keydown', () => this.updateLastActivityTime());
         document.addEventListener('mousedown', () => this.updateLastActivityTime());
         document.addEventListener('mousemove', this.debounce(() => this.updateLastActivityTime(), 500));
 
-        // Setup visibility change listener
+        // Handle visibility changes (tab switching)
         document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
     }
 
     updateLastActivityTime() {
         this.lastActivityTime = Date.now();
-        // If tracking was auto-paused due to inactivity and user is active again, auto-resume
+        
+        // If tracking was auto-paused and user is active again, auto-resume
         if (this.isPaused && this.wasAutoPaused) {
             console.log('[Hackatime] User is active again, auto-resuming tracking');
             this.wasAutoPaused = false;
@@ -136,7 +199,6 @@ class HackatimeTracker {
         }
     }
 
-    // Simple debounce function 
     debounce(func, delay) {
         let timeout;
         return function() {
@@ -150,7 +212,7 @@ class HackatimeTracker {
     createBadge() {
         if (!this.isActive) return;
 
-        // Create badge element if it doesn't exist
+        // Create badge if it doesn't exist
         if (!document.getElementById('hackatime-badge')) {
             const badge = document.createElement('div');
             badge.id = 'hackatime-badge';
@@ -160,20 +222,18 @@ class HackatimeTracker {
                     <i class="fas fa-clock"></i>
                 </div>
                 <div class="hackatime-badge-status">
-                    <span id="hackatime-status">Connecting...</span>
+                    <span id="hackatime-status">Connected</span>
                 </div>
             `;
 
-            // Add tooltip on hover
+            // Add tooltip
             badge.title = 'Hackatime is tracking your coding activity';
-
-            // Add the badge to the document
             document.body.appendChild(badge);
-
+            
             // Set initial status
             this.updateBadgeStatus('connecting');
 
-            // Add popup container
+            // Add popup for detailed info
             const popup = document.createElement('div');
             popup.id = 'hackatime-popup';
             popup.className = 'hackatime-popup';
@@ -206,8 +266,8 @@ class HackatimeTracker {
                             <span id="hackatime-last-heartbeat">Never</span>
                         </div>
                         <div class="hackatime-info-row">
-                            <span>Auto-pause:</span>
-                            <span id="hackatime-afk-timeout">Active</span>
+                            <span>Heartbeats sent:</span>
+                            <span id="hackatime-heartbeat-count">0</span>
                         </div>
                     </div>
                     <div class="hackatime-popup-actions">
@@ -219,7 +279,7 @@ class HackatimeTracker {
 
             document.body.appendChild(popup);
 
-            // Add event listeners to badge and popup
+            // Set up event listeners
             badge.addEventListener('click', () => this.togglePopup());
             document.getElementById('hackatime-close-popup').addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -244,9 +304,6 @@ class HackatimeTracker {
     }
 
     togglePopup() {
-        const popup = document.getElementById('hackatime-popup');
-        if (!popup) return;
-
         if (this.popupVisible) {
             this.hidePopup();
         } else {
@@ -256,10 +313,8 @@ class HackatimeTracker {
 
     showPopup() {
         const popup = document.getElementById('hackatime-popup');
-        if (!popup) return;
-
         const badge = document.getElementById('hackatime-badge');
-        if (!badge) return;
+        if (!popup || !badge) return;
 
         // Update popup data
         this.updatePopupData();
@@ -269,11 +324,10 @@ class HackatimeTracker {
         popup.style.bottom = (window.innerHeight - badgeRect.top + 10) + 'px';
         popup.style.right = (window.innerWidth - badgeRect.right + badgeRect.width/2) + 'px';
 
-        // Show popup
+        // Show and animate popup
         popup.style.display = 'block';
         this.popupVisible = true;
 
-        // Animate popup
         setTimeout(() => {
             popup.style.opacity = '1';
             popup.style.transform = 'translateY(0)';
@@ -294,40 +348,44 @@ class HackatimeTracker {
     }
 
     updatePopupData() {
-        // Update current file
+        // Current file
         const currentFile = document.querySelector('.file-tab.active')?.getAttribute('data-filename') || this.entityName;
-        document.getElementById('hackatime-file').textContent = currentFile;
+        const fileElement = document.getElementById('hackatime-file');
+        if (fileElement) fileElement.textContent = currentFile;
 
-        // Update project name
-        document.getElementById('hackatime-project').textContent = this.siteName;
+        // Project name
+        const projectElement = document.getElementById('hackatime-project');
+        if (projectElement) projectElement.textContent = this.siteName;
 
-        // Update status - hide auto-pause indication
-        let statusText = this.isPaused ? 'Paused' : this.status.charAt(0).toUpperCase() + this.status.slice(1);
-        document.getElementById('hackatime-popup-status').textContent = statusText;
+        // Status
+        const statusText = this.isPaused ? 'Paused' : this.status.charAt(0).toUpperCase() + this.status.slice(1);
+        const statusElement = document.getElementById('hackatime-popup-status');
+        if (statusElement) statusElement.textContent = statusText;
 
-        // Update time logged
+        // Time logged
         this.updateTimeLogged();
 
-        // Update last heartbeat
-        document.getElementById('hackatime-last-heartbeat').textContent = this.lastHeartbeat ? this.formatTimeAgo(this.lastHeartbeat) : 'Never';
+        // Last heartbeat time
+        const heartbeatElement = document.getElementById('hackatime-last-heartbeat');
+        if (heartbeatElement) {
+            heartbeatElement.textContent = this.lastHeartbeat ? this.formatTimeAgo(this.lastHeartbeat) : 'Never';
+        }
 
-        // Update pause button text
-        document.getElementById('hackatime-toggle-pause').textContent = this.isPaused ? 'Resume Tracking' : 'Pause Tracking';
+        // Heartbeat count
+        const countElement = document.getElementById('hackatime-heartbeat-count');
+        if (countElement) countElement.textContent = this.heartbeatCount.toString();
 
-        // Hide AFK timeout info to prevent bypassing the auto-pause
-        const timeoutInfo = document.getElementById('hackatime-afk-timeout');
-        if (timeoutInfo) {
-            timeoutInfo.textContent = this.isPaused ? 
-                'Tracking paused' : 
-                'Activity tracking enabled';
+        // Toggle button text
+        const pauseButton = document.getElementById('hackatime-toggle-pause');
+        if (pauseButton) {
+            pauseButton.textContent = this.isPaused ? 'Resume Tracking' : 'Pause Tracking';
         }
     }
 
     updateTimeLogged(addHeartbeatTime = false) {
-        // If this is a successful heartbeat, add time for this interval
+        // Add time for successful heartbeat
         if (addHeartbeatTime && this.lastHeartbeatTime !== null) {
             // Add 1.5 minutes (90 seconds) for each successful heartbeat
-            // This is more accurate than session-based tracking
             this.timeLogged += 1.5;
         }
 
@@ -354,13 +412,13 @@ class HackatimeTracker {
         const seconds = Math.floor((new Date() - date) / 1000);
 
         if (seconds < 60) return 'Just now';
-
+        
         const minutes = Math.floor(seconds / 60);
         if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-
+        
         const hours = Math.floor(minutes / 60);
         if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-
+        
         const days = Math.floor(hours / 24);
         return `${days} day${days !== 1 ? 's' : ''} ago`;
     }
@@ -378,57 +436,47 @@ class HackatimeTracker {
             this.updateLastActivityTime();
         }
 
-        // Update pause button text if popup is open
-        const pauseButton = document.getElementById('hackatime-toggle-pause');
-        if (pauseButton) {
-            pauseButton.textContent = this.isPaused ? 'Resume Tracking' : 'Pause Tracking';
-        }
-
-        // Update status in popup if popup is open
-        const popupStatus = document.getElementById('hackatime-popup-status');
-        if (popupStatus) {
-            popupStatus.textContent = this.isPaused ? 'Paused' : this.status.charAt(0).toUpperCase() + this.status.slice(1);
+        // Update UI if popup is open
+        if (this.popupVisible) {
+            this.updatePopupData();
         }
     }
 
     disconnectHackatime() {
-        // Show confirmation dialog
         if (confirm('Are you sure you want to disconnect Hackatime? You will need to reconnect on the Hackatime settings page.')) {
             // Stop tracking
             this.stopHeartbeatTracking();
-
-            // Clear AFK check interval
+            
+            // Clear intervals
             if (this.afkCheckInterval) {
                 clearInterval(this.afkCheckInterval);
                 this.afkCheckInterval = null;
             }
+            
+            // Remove API key from storage
+            localStorage.removeItem('hackatime_api_key');
+            this.apiKey = null;
 
-            // Send disconnect request to server
-            fetch('/hackatime/disconnect', {
+            // Send disconnect request
+            fetch(`${this.serviceUrl}/disconnect`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Hackatime-Key': this.apiKey || ''
                 }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Remove badge
+                    // Clean up UI
                     const badge = document.getElementById('hackatime-badge');
                     if (badge) badge.remove();
 
-                    // Remove popup
                     const popup = document.getElementById('hackatime-popup');
                     if (popup) popup.remove();
 
-                    // Set not active
                     this.isActive = false;
-
-                    // Show success message
-                    alert('Hackatime has been disconnected.');
-
-                    // Optionally reload the page
-                    // window.location.reload();
+                    alert('Hackatime has been disconnected successfully.');
                 } else {
                     console.error('[Hackatime] Failed to disconnect:', data.message);
                     alert('Failed to disconnect Hackatime: ' + data.message);
@@ -446,15 +494,16 @@ class HackatimeTracker {
         if (!statusElement) return;
 
         const badge = document.getElementById('hackatime-badge');
+        if (!badge) return;
 
         switch (status) {
             case 'active':
                 statusElement.textContent = 'Active';
                 badge.className = 'hackatime-badge active';
                 break;
-            case 'monitoring': // Changed from 'idle' to 'monitoring'
+            case 'monitoring':
                 statusElement.textContent = 'Monitoring';
-                badge.className = 'hackatime-badge idle'; // Keep the same CSS class
+                badge.className = 'hackatime-badge idle';
                 break;
             case 'paused':
                 statusElement.textContent = 'Paused';
@@ -491,15 +540,15 @@ class HackatimeTracker {
             clearInterval(this.heartbeatInterval);
         }
 
-        console.log(`[Hackatime] Starting heartbeat tracking for project "${this.siteName}"`);
+        console.log(`[Hackatime] Starting heartbeat tracking for "${this.siteName}"`);
 
-        // Send initial heartbeat
+        // Send initial heartbeat immediately
         this.sendHeartbeat();
 
-        // Set up interval for regular heartbeats (every 1.5 minutes)
+        // Set interval for regular heartbeats (every 90 seconds)
         this.heartbeatInterval = setInterval(() => {
             this.sendHeartbeat();
-        }, 90000); // 1.5 minutes (90 seconds)
+        }, 90000);
     }
 
     stopHeartbeatTracking() {
@@ -511,52 +560,50 @@ class HackatimeTracker {
     }
 
     sendHeartbeat() {
-        // Don't send heartbeats if not active, paused, or page is hidden
+        // Don't send if inactive, paused, or page hidden
         if (!this.isActive || this.isPaused || document.hidden || this.hiddenPause) {
-            console.log('[Hackatime] Skipping heartbeat - tracking inactive or paused');
+            console.log('[Hackatime] Skipping heartbeat - inactive or paused');
             return;
         }
 
-        // Show syncing status briefly
+        // Show syncing status
         this.updateBadgeStatus('syncing');
 
-        // Get current file from active tab
+        // Get current file
         const currentFile = document.querySelector('.file-tab.active')?.getAttribute('data-filename') || this.entityName;
         
-        // Make sure we have a valid entity name
+        // Validate filename
         if (!currentFile || currentFile === 'null' || currentFile === 'undefined') {
             console.warn('[Hackatime] Invalid file name, using default');
-            // Use test.txt as fallback which is recognized by the API as a test entry
             this.entityName = 'test.txt';
         } else {
             this.entityName = currentFile;
         }
 
-        // Get editor information if available
+        // Get editor data
         let lines = 0;
-        let lineAdditions = 0;
-        let lineDeletions = 0;
         let lineNo = 1;
         let cursorPos = 1;
+        let lineAdditions = 0;
+        let lineDeletions = 0;
 
         if (this.editor) {
             try {
                 // Get line count
                 lines = this.editor.lineCount ? this.editor.lineCount() : 0;
 
-                // Get cursor position if available
+                // Get cursor position
                 if (this.editor.getCursor) {
                     const cursor = this.editor.getCursor();
-                    lineNo = cursor.line + 1; // +1 because CodeMirror is 0-indexed
-                    cursorPos = cursor.ch + 1; // +1 to start from 1
+                    lineNo = cursor.line + 1;
+                    cursorPos = cursor.ch + 1;
                 }
 
-                // Estimate line changes based on status
+                // Estimate line changes
                 if (this.status === 'active') {
-                    // Simple approximation - actual tracking would need more state
-                    lineAdditions = Math.floor(Math.random() * 5) + 1; // 1-5 lines added
-                    if (Math.random() > 0.7) { // 30% chance of deletions
-                        lineDeletions = Math.floor(Math.random() * 3); // 0-2 lines deleted
+                    lineAdditions = Math.floor(Math.random() * 5) + 1;
+                    if (Math.random() > 0.7) {
+                        lineDeletions = Math.floor(Math.random() * 3);
                     }
                 }
             } catch (err) {
@@ -564,78 +611,57 @@ class HackatimeTracker {
             }
         }
 
-        // Get machine info
-        const machineInfo = {
-            machine_name_id: this.generateMachineId(),
-            machine_name: navigator.userAgent || 'Unknown'
-        };
-
-        // Generate dependencies (hardcoded for now)
-        const dependencies = this.generateDependencies(this.entityName);
-
-        // Prepare heartbeat data exactly matching fields accepted by the API
+        // Prepare heartbeat data
         const heartbeat = {
-            // Required fields from the controller's accepted keys
-            entity: this.entityName, // File path or domain being worked on
-            type: 'file', // Can be file, app, or domain
-            time: Math.floor(Date.now() / 1000), // UNIX epoch timestamp as integer
-
-            // Important tracking fields (all exact matches to API keys)
-            category: this.getCategoryFromActivity(), // coding, debugging, etc.
-            project: this.siteName, // Updated to use siteName
+            entity: this.entityName,
+            type: 'file',
+            time: Math.floor(Date.now() / 1000),
+            category: this.getActivityCategory(),
+            project: this.siteName,
             branch: 'main',
             language: this.getLanguageFromFile(this.entityName),
             is_write: this.status === 'active',
-
-            // Editor and file details
             lines: lines,
             lineno: lineNo,
             cursorpos: cursorPos,
             line_additions: lineAdditions,
             line_deletions: lineDeletions,
-
-            // Project structure information
-            project_root_count: 3,
-            dependencies: dependencies,
-
-            // System information (using keys expected by API)
-            machine: machineInfo.machine_name_id, 
-            editor: 'Spaces IDE', 
+            project_root_count: 1,
+            dependencies: this.getDependenciesForFile(this.entityName),
+            machine: this.generateMachineId(),
+            editor: 'Spaces IDE',
             operating_system: this.getOperatingSystem(),
             user_agent: navigator.userAgent
         };
 
-        console.log(`[Hackatime] Sending heartbeat:`, heartbeat);
+        console.log(`[Hackatime] Sending heartbeat for ${this.entityName}`);
 
-        // Send heartbeat to our server proxy endpoint, which will forward to Hackatime API
-        fetch('/hackatime/heartbeat', {
+        // Send heartbeat to service
+        fetch(`${this.serviceUrl}/heartbeat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-Hackatime-Key': this.apiKey || '',
                 'User-Agent': navigator.userAgent
             },
-            body: JSON.stringify(heartbeat) // Send as single object, our server will handle it
+            body: JSON.stringify(heartbeat)
         })
         .then(response => {
-            console.log(`[Hackatime] Heartbeat response status: ${response.status}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-            console.log(`[Hackatime] Heartbeat response:`, data);
             if (data.success) {
                 this.lastHeartbeat = new Date();
                 this.lastHeartbeatTime = Date.now();
-                this.heartbeatSuccesses++;
+                this.heartbeatCount++;
                 this.updateBadgeStatus(this.status);
-                console.log(`[Hackatime] Heartbeat successful for ${this.entityName}`);
+                console.log(`[Hackatime] Heartbeat success for ${this.entityName}`);
                 
-                // Update time logged based on successful heartbeat
+                // Update time logged and UI
                 this.updateTimeLogged(true);
-
-                // Update popup data if visible
                 if (this.popupVisible) {
                     this.updatePopupData();
                 }
@@ -649,7 +675,7 @@ class HackatimeTracker {
             this.updateBadgeStatus('error');
         });
 
-        // Reset status to monitoring after sending heartbeat if it was active
+        // Reset status to monitoring after activity
         if (this.status === 'active') {
             setTimeout(() => {
                 this.status = 'monitoring';
@@ -658,9 +684,8 @@ class HackatimeTracker {
         }
     }
 
-    // Helper method to generate a consistent machine ID
+    // Helper: Generate machine ID
     generateMachineId() {
-        // Using a simple hash of user agent and screen properties for uniqueness
         const baseString = navigator.userAgent + screen.width + screen.height + navigator.language;
         let hash = 0;
         for (let i = 0; i < baseString.length; i++) {
@@ -671,9 +696,8 @@ class HackatimeTracker {
         return 'machine_' + Math.abs(hash).toString(16);
     }
 
-    // Helper method to get category from current activity
-    getCategoryFromActivity() {
-        // Simplified category detection based on current status and file
+    // Helper: Detect activity category
+    getActivityCategory() {
         if (this.status === 'active' && this.editor && this.editor.getValue) {
             const content = this.editor.getValue() || '';
             if (content.includes('test(') || content.includes('describe(')) {
@@ -683,10 +707,10 @@ class HackatimeTracker {
                 return 'debugging';
             }
         }
-        return 'coding'; // Default category
+        return 'coding';
     }
 
-    // Helper method to get OS info from user agent
+    // Helper: Get OS info
     getOperatingSystem() {
         const userAgent = navigator.userAgent;
         if (userAgent.indexOf('Win') !== -1) return 'Windows';
@@ -697,9 +721,8 @@ class HackatimeTracker {
         return 'Unknown';
     }
 
-    // Helper method to generate dependencies based on file
-    generateDependencies(filename) {
-        // Simple dummy implementation - in reality this would need to parse the file
+    // Helper: Generate dependencies
+    getDependenciesForFile(filename) {
         if (!filename) return '';
 
         const extension = filename.split('.').pop().toLowerCase();
@@ -717,158 +740,91 @@ class HackatimeTracker {
         return '';
     }
 
+    // Helper: Get language from file
     getLanguageFromFile(filename) {
         if (!filename) return this.language;
 
         const extension = filename.split('.').pop().toLowerCase();
 
         switch (extension) {
-            case 'py':
-                return 'Python';
-            case 'js':
-                return 'JavaScript';
-            case 'html':
-                return 'HTML';
-            case 'css':
-                return 'CSS';
-            case 'json':
-                return 'JSON';
-            case 'md':
-                return 'Markdown';
-            default:
-                return this.language;
+            case 'py': return 'Python';
+            case 'js': return 'JavaScript';
+            case 'html': return 'HTML';
+            case 'css': return 'CSS';
+            case 'json': return 'JSON';
+            case 'md': return 'Markdown';
+            default: return this.language;
         }
     }
 
+    // Handle visibility changes (tab switching)
     handleVisibilityChange() {
         if (document.hidden) {
-            // Page is hidden
+            // Page hidden - pause tracking
             console.log(`[Hackatime] Page hidden, pausing tracking`);
             this.stopHeartbeatTracking();
-            
-            // Set a temporary flag to indicate tracking is paused due to visibility
             this.hiddenPause = true;
         } else {
-            // Page is visible again
+            // Page visible again - resume if not manually paused
             console.log(`[Hackatime] Page visible, resuming tracking`);
             if (!this.isPaused) {
                 this.startHeartbeatTracking();
                 this.hiddenPause = false;
-                
-                // Only update last activity time if we're actually resuming
                 this.updateLastActivityTime();
             }
         }
     }
-    
-    // Create enhanced heartbeat data with all required fields
-    createHeartbeatData(entity, type, isWrite = false) {
-        // Calculate a unique machine identifier based on browser fingerprint
-        const machineId = `machine_${this.getMachineId()}`;
-        
-        // Get browser and OS info
-        const platform = navigator.platform || 'Unknown';
-        const userAgent = navigator.userAgent;
-        
-        // Create a comprehensive heartbeat payload
-        return {
-            entity: entity || 'test.txt',
-            type: type || 'file',
-            time: Math.floor(Date.now() / 1000),
-            category: 'coding',
-            project: 'Hack Club Spaces',
-            branch: 'main',
-            language: this.detectLanguageFromEntity(entity),
-            is_write: isWrite,
-            lines: 150, // Default value
-            lineno: this.lastCursorPosition?.line || 1,
-            cursorpos: this.lastCursorPosition?.ch || 0,
-            line_additions: isWrite ? 1 : 0,
-            line_deletions: 0,
-            project_root_count: 1,
-            dependencies: 'flask,sqlalchemy,python-dotenv',
-            machine: machineId,
-            editor: 'Spaces IDE',
-            operating_system: this.detectOS(platform),
-            user_agent: userAgent
-        };
-    }
-    
-    // Detect language from file extension
-    detectLanguageFromEntity(entity) {
-        if (!entity) return 'Text';
-        
-        const ext = entity.split('.').pop().toLowerCase();
-        const langMap = {
-            'py': 'Python',
-            'js': 'JavaScript',
-            'html': 'HTML',
-            'css': 'CSS',
-            'md': 'Markdown',
-            'json': 'JSON',
-            'sql': 'SQL'
-        };
-        
-        return langMap[ext] || 'Text';
-    }
-    
-    // Detect operating system
-    detectOS(platform) {
-        if (platform.indexOf('Win') !== -1) return 'Windows';
-        if (platform.indexOf('Mac') !== -1) return 'MacOS';
-        if (platform.indexOf('Linux') !== -1) return 'Linux';
-        if (platform.indexOf('Android') !== -1) return 'Android';
-        if (platform.indexOf('iOS') !== -1) return 'iOS';
-        return 'Unknown';
-    }
-    
-    // Generate a consistent machine ID
-    getMachineId() {
-        if (!this.machineId) {
-            // Create a simple hash from browser info
-            const browserInfo = navigator.userAgent + navigator.language + screen.width + screen.height;
-            let hash = 0;
-            for (let i = 0; i < browserInfo.length; i++) {
-                const char = browserInfo.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash; // Convert to 32bit integer
-            }
-            this.machineId = Math.abs(hash).toString(16).substring(0, 8);
-        }
-        return this.machineId;
-    }
-    
-    // Send heartbeat with enhanced data
-    sendHeartbeat(entity, type, isWrite = false) {
-        if (this.isPaused) return;
-        
-        const heartbeatData = this.createHeartbeatData(entity, type, isWrite);
-        
-        fetch('/hackatime/heartbeat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(heartbeatData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                console.log('[Hackatime] Heartbeat sent successfully');
-            } else {
-                console.error('[Hackatime] Heartbeat error:', data.message);
-            }
-        })
-        .catch(error => console.error('[Hackatime] Failed to send heartbeat:', error));
-    }
 }
 
-// Initialize the tracker when the DOM is loaded
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[Hackatime] Initializing tracker');
     const hackatimeTracker = new HackatimeTracker();
     hackatimeTracker.init();
-
-    // Make it available globally for debugging
+    
+    // Make available for debugging
     window.hackatimeTracker = hackatimeTracker;
 });
+
+// Helper function to connect with API key
+function connectHackatime(apiKey) {
+    if (!apiKey) {
+        console.error('[Hackatime] No API key provided');
+        return Promise.reject('No API key provided');
+    }
+    
+    return fetch('/hackatime/connect', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ api_key: apiKey })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Store API key
+            localStorage.setItem('hackatime_api_key', apiKey);
+            
+            // Initialize tracker if needed
+            if (window.hackatimeTracker) {
+                window.hackatimeTracker.apiKey = apiKey;
+                window.hackatimeTracker.isActive = true;
+                window.hackatimeTracker.createBadge();
+                window.hackatimeTracker.setupEditorListeners();
+                window.hackatimeTracker.startHeartbeatTracking();
+            } else {
+                const tracker = new HackatimeTracker();
+                tracker.apiKey = apiKey;
+                tracker.init();
+                window.hackatimeTracker = tracker;
+            }
+            
+            return { success: true, message: 'Connected successfully' };
+        } else {
+            return { success: false, message: data.message || 'Connection failed' };
+        }
+    });
+}
+
+// Make connect function globally available
+window.connectHackatime = connectHackatime;
