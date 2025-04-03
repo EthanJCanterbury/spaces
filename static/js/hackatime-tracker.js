@@ -636,6 +636,9 @@ class HackatimeTracker {
 
         console.log(`[Hackatime] Sending heartbeat for ${this.entityName}`);
 
+        // Log heartbeat data to console
+        console.log('[Hackatime] Heartbeat payload:', heartbeat);
+        
         // Send heartbeat to service
         fetch(`${this.serviceUrl}/heartbeat`, {
             method: 'POST',
@@ -672,6 +675,11 @@ class HackatimeTracker {
         })
         .catch(error => {
             console.error('[Hackatime] Error sending heartbeat:', error);
+            console.error('[Hackatime] Error details:', {
+                endpoint: `${this.serviceUrl}/heartbeat`,
+                payload: heartbeat,
+                timestamp: new Date().toISOString()
+            });
             this.updateBadgeStatus('error');
         });
 

@@ -158,7 +158,7 @@ def hackatime_heartbeat():
             heartbeat_payload[i] = complete_hb
         
         # Send heartbeat to Hackatime API
-        api_url = "https://hackatime.hackclub.com/api/hackatime/v1/users/current/heartbeats"
+        api_url = "https://hackatime.hackclub.com/api/hackatime/v1/users/current/heartbeat.bulk"
         
         headers = {
             'Authorization': f'Bearer {api_key}',
@@ -166,7 +166,10 @@ def hackatime_heartbeat():
             'User-Agent': user_agent
         }
         
-        logger.info(f"Sending heartbeat to Hackatime API")
+        logger.info(f"Sending heartbeat to Hackatime API: {api_url}")
+        logger.info(f"Headers: {headers}")
+        logger.info(f"Payload: {heartbeat_payload}")
+        
         response = requests.post(
             api_url,
             headers=headers,
@@ -175,6 +178,7 @@ def hackatime_heartbeat():
         )
         
         logger.info(f"Hackatime API response status: {response.status_code}")
+        logger.info(f"Response content: {response.text[:500]}")
         
         if response.status_code >= 400:
             error_text = response.text
