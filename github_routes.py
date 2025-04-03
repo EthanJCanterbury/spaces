@@ -907,6 +907,12 @@ def ensure_complete_heartbeat(heartbeat):
     # Define default values for required fields
     current_time = int(time.time())
     print(f"Processing heartbeat data in github_routes.py")
+    # Get current user from flask_login
+    from flask_login import current_user
+    
+    # Create a machine ID for the current user
+    machine_id = f"machine_{hashlib.md5(current_user.username.encode()).hexdigest()[:8]}"
+    
     defaults = {
         "entity": "main.py",
         "type": "file",
