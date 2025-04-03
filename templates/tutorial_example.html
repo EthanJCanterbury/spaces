@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Development Tutorial</title>
+  <title>Tutorial System Example</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="stylesheet" href="/static/css/tutorial.css">
   <style>
@@ -21,8 +21,6 @@
     
     .container {
       text-align: center;
-      max-width: 800px;
-      padding: 20px;
     }
     
     .main-button {
@@ -38,7 +36,6 @@
       gap: 8px;
       box-shadow: 0 4px 12px rgba(79, 84, 200, 0.3);
       transition: all 0.2s ease;
-      margin-top: 20px;
     }
     
     .main-button:hover {
@@ -49,11 +46,10 @@
 </head>
 <body>
   <div class="container">
-    <h1>Web Development Tutorial</h1>
-    <p>Welcome to our comprehensive web development tutorial! This guide will walk you through the fundamentals of HTML, CSS, and JavaScript - the three core technologies of the web.</p>
-    <p>Click the button below to begin your learning journey.</p>
+    <h1>Interactive Tutorial System</h1>
+    <p>Click the button below to open the tutorial</p>
     <button class="main-button" onclick="openTutorialModal()">
-      <i class="fas fa-graduation-cap"></i> Start Tutorial
+      <i class="fas fa-graduation-cap"></i> Launch Tutorial
     </button>
   </div>
   
@@ -71,7 +67,7 @@
           <i class="fas fa-arrow-left"></i> Previous
         </button>
         <div class="tutorial-step-counter">
-          <span id="tutorial-step-indicator">1/10</span>
+          <span id="tutorial-step-indicator">1/5</span>
         </div>
         <button id="next-tutorial" onclick="nextTutorialStep()" class="tutorial-nav-btn tutorial-next-btn">
           Next <i class="fas fa-arrow-right"></i>
@@ -80,23 +76,17 @@
       
       <!-- Tutorial Content -->
       <div class="tutorial-content">
-        <!-- Step 1: Introduction to HTML -->
+        <!-- Step 1 -->
         <div class="tutorial-step" data-step="1">
-          <h3>Introduction to HTML</h3>
-          <p>HTML (HyperText Markup Language) is the standard markup language for creating web pages. It describes the structure of a web page and consists of a series of elements that tell the browser how to display the content.</p>
-          
-          <div class="tutorial-info-box">
-            <p><strong>Key Concept:</strong> HTML uses "markup" to annotate text, images, and other content for display in a web browser. HTML elements are represented by tags.</p>
-          </div>
+          <h3>Getting Started with HTML</h3>
+          <p>HTML (HyperText Markup Language) is the backbone of any website. It defines the structure and content of your web page.</p>
           
           <div class="tutorial-code-block">
-            <h4>Basic HTML Document Structure:</h4>
+            <h4>Basic HTML Structure:</h4>
             <pre>&lt;!DOCTYPE html&gt;
-&lt;html lang="en"&gt;
+&lt;html&gt;
   &lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;My First Webpage&lt;/title&gt;
+    &lt;title&gt;My First Website&lt;/title&gt;
   &lt;/head&gt;
   &lt;body&gt;
     &lt;h1&gt;Hello World!&lt;/h1&gt;
@@ -105,96 +95,47 @@
 &lt;/html&gt;</pre>
           </div>
           
-          <p>Let's break down this structure:</p>
-          <ul>
-            <li><strong>&lt;!DOCTYPE html&gt;</strong> - Declares the document type and version of HTML</li>
-            <li><strong>&lt;html&gt;</strong> - The root element that contains all other HTML elements</li>
-            <li><strong>&lt;head&gt;</strong> - Contains meta-information about the document that isn't displayed</li>
-            <li><strong>&lt;meta&gt;</strong> - Provides metadata about the HTML document</li>
-            <li><strong>&lt;title&gt;</strong> - Specifies the title of the document (shown in browser tab)</li>
-            <li><strong>&lt;body&gt;</strong> - Contains all the visible content of the webpage</li>
-            <li><strong>&lt;h1&gt;</strong> - Defines a large heading</li>
-            <li><strong>&lt;p&gt;</strong> - Defines a paragraph</li>
-          </ul>
+          <div class="tutorial-info-box">
+            <p><strong>Tip:</strong> HTML documents always start with a doctype declaration, followed by the html element which contains head and body sections.</p>
+          </div>
         </div>
         
-        <!-- Step 2: HTML Elements -->
+        <!-- Step 2 -->
         <div class="tutorial-step" data-step="2">
-          <h3>HTML Elements in Detail</h3>
-          <p>HTML elements are the building blocks of web pages. Each element serves a specific purpose and helps structure your content in a meaningful way.</p>
+          <h3>Adding More Content</h3>
+          <p>Let's add more elements to make your page more interesting and informative.</p>
           
           <div class="tutorial-code-block">
             <h4>Common HTML Elements:</h4>
-            <pre>&lt;body&gt;
-  &lt;h1&gt;Main Heading&lt;/h1&gt;
-  &lt;h2&gt;Subheading&lt;/h2&gt;
-  
-  &lt;p&gt;This is a paragraph with &lt;strong&gt;bold text&lt;/strong&gt; and &lt;em&gt;italic text&lt;/em&gt;.&lt;/p&gt;
-  
-  &lt;a href="https://example.com"&gt;This is a link&lt;/a&gt;
-  
-  &lt;img src="image.jpg" alt="Description of image"&gt;
-  
-  &lt;ul&gt;
-    &lt;li&gt;Unordered list item 1&lt;/li&gt;
-    &lt;li&gt;Unordered list item 2&lt;/li&gt;
-  &lt;/ul&gt;
-  
-  &lt;ol&gt;
-    &lt;li&gt;Ordered list item 1&lt;/li&gt;
-    &lt;li&gt;Ordered list item 2&lt;/li&gt;
-  &lt;/ol&gt;
-  
-  &lt;div&gt;A division or section in a document&lt;/div&gt;
-&lt;/body&gt;</pre>
+            <ul>
+              <li><strong>&lt;h1&gt; to &lt;h6&gt;</strong> - Headings (h1 is largest, h6 is smallest)</li>
+              <li><strong>&lt;p&gt;</strong> - Paragraph</li>
+              <li><strong>&lt;a&gt;</strong> - Links to other pages</li>
+              <li><strong>&lt;img&gt;</strong> - Images</li>
+              <li><strong>&lt;ul&gt; and &lt;ol&gt;</strong> - Unordered and ordered lists</li>
+              <li><strong>&lt;div&gt;</strong> - Container for grouping elements</li>
+            </ul>
           </div>
           
-          <p>Understanding these key HTML elements:</p>
-          <ul>
-            <li><strong>Headings (&lt;h1&gt; to &lt;h6&gt;)</strong> - Used for titles and subtitles, with h1 being the largest and h6 the smallest. They help structure your document and are important for SEO and accessibility.</li>
-            <li><strong>Paragraphs (&lt;p&gt;)</strong> - Define blocks of text. Browsers automatically add margin space before and after each paragraph.</li>
-            <li><strong>Text formatting (&lt;strong&gt;, &lt;em&gt;)</strong> - Used to emphasize text. &lt;strong&gt; indicates strong importance (typically bold), while &lt;em&gt; adds emphasis (typically italic).</li>
-            <li><strong>Links (&lt;a&gt;)</strong> - Create hyperlinks to other pages or resources. The href attribute specifies the destination URL.</li>
-            <li><strong>Images (&lt;img&gt;)</strong> - Embed images in your webpage. The src attribute points to the image file, while alt provides alternative text for accessibility.</li>
-            <li><strong>Lists (&lt;ul&gt;, &lt;ol&gt;, &lt;li&gt;)</strong> - Create unordered (bulleted) lists with &lt;ul&gt; or ordered (numbered) lists with &lt;ol&gt;. Each list item is defined with &lt;li&gt;.</li>
-            <li><strong>Divisions (&lt;div&gt;)</strong> - Generic container elements used to group content for styling and positioning.</li>
-          </ul>
+          <p>Try adding different headings, paragraphs, and links to your page!</p>
         </div>
         
-        <!-- Step 3: Introduction to CSS -->
+        <!-- Step 3 -->
         <div class="tutorial-step" data-step="3">
           <h3>Introduction to CSS</h3>
-          <p>CSS (Cascading Style Sheets) is a style sheet language used to describe the presentation of a document written in HTML. CSS describes how elements should be rendered on screen, on paper, in speech, or on other media.</p>
-          
-          <div class="tutorial-info-box">
-            <p><strong>Key Concept:</strong> CSS separates the content (HTML) from its presentation, allowing you to control the layout, colors, fonts, and more across multiple web pages from a single file.</p>
-          </div>
+          <p>CSS (Cascading Style Sheets) is used to style your HTML elements and make your website look attractive.</p>
           
           <div class="tutorial-code-block">
-            <h4>CSS Syntax:</h4>
+            <h4>Basic CSS Syntax:</h4>
             <pre>selector {
   property: value;
   another-property: another-value;
 }</pre>
           </div>
           
-          <p>There are three ways to include CSS in your HTML document:</p>
-          
-          <ol>
-            <li><strong>Inline CSS</strong> - Using the style attribute within HTML elements</li>
-            <li><strong>Internal CSS</strong> - Using the &lt;style&gt; element in the &lt;head&gt; section</li>
-            <li><strong>External CSS</strong> - Using an external CSS file linked with the &lt;link&gt; element</li>
-          </ol>
-          
           <div class="tutorial-code-block">
-            <h4>External CSS (Recommended):</h4>
-            <pre>&lt;!-- In the HTML head section --&gt;
-&lt;head&gt;
-  &lt;link rel="stylesheet" href="styles.css"&gt;
-&lt;/head&gt;
-
-/* In styles.css */
-body {
+            <h4>Example CSS:</h4>
+            <pre>body {
   font-family: Arial, sans-serif;
   background-color: #f4f4f4;
   margin: 0;
@@ -209,382 +150,57 @@ h1 {
 p {
   line-height: 1.6;
   color: #333;
-  margin-bottom: 16px;
 }</pre>
           </div>
           
           <div class="tutorial-warning-box">
-            <p><strong>Best Practice:</strong> Always prefer external CSS files for larger projects as they promote separation of concerns, reusability, and easier maintenance.</p>
+            <p><strong>Note:</strong> CSS can be added in three ways: inline, internal (using style tags), or external (using a separate CSS file).</p>
           </div>
         </div>
         
-        <!-- Step 4: CSS Selectors -->
+        <!-- Step 4 -->
         <div class="tutorial-step" data-step="4">
-          <h3>CSS Selectors</h3>
-          <p>CSS selectors are patterns used to select and style HTML elements. Understanding selectors is crucial for effective styling.</p>
+          <h3>Working with JavaScript</h3>
+          <p>JavaScript allows you to add interactivity to your website.</p>
           
           <div class="tutorial-code-block">
-            <h4>Common CSS Selectors:</h4>
-            <pre>/* Element Selector */
-p {
-  color: blue;
-}
+            <h4>Simple JavaScript Example:</h4>
+            <pre>&lt;button id="myButton"&gt;Click Me!&lt;/button&gt;
 
-/* ID Selector */
-#header {
-  background-color: black;
-  color: white;
-}
-
-/* Class Selector */
-.highlight {
-  background-color: yellow;
-}
-
-/* Attribute Selector */
-input[type="text"] {
-  border: 1px solid gray;
-}
-
-/* Descendant Selector */
-article p {
-  font-style: italic;
-}
-
-/* Pseudo-class Selector */
-a:hover {
-  text-decoration: underline;
-}</pre>
+&lt;script&gt;
+  document.getElementById('myButton').addEventListener('click', function() {
+    alert('Button was clicked!');
+  });
+&lt;/script&gt;</pre>
           </div>
           
-          <p>Types of CSS selectors explained:</p>
+          <p>JavaScript enables you to:</p>
           <ul>
-            <li><strong>Element Selector</strong> - Selects all elements of the specified type (e.g., p, h1, div)</li>
-            <li><strong>ID Selector (#)</strong> - Selects an element with a specific ID. IDs must be unique within a page.</li>
-            <li><strong>Class Selector (.)</strong> - Selects elements with a specific class attribute. Multiple elements can share the same class.</li>
-            <li><strong>Attribute Selector</strong> - Selects elements based on their attributes.</li>
-            <li><strong>Descendant Selector</strong> - Selects elements that are descendants of a specified element.</li>
-            <li><strong>Pseudo-class</strong> - Selects elements based on a specific state (like hover, focus, active).</li>
+            <li>Respond to user actions (clicks, mouse movements, etc.)</li>
+            <li>Modify the HTML content dynamically</li>
+            <li>Validate forms before submission</li>
+            <li>Create animations and visual effects</li>
           </ul>
-          
-          <div class="tutorial-info-box">
-            <p><strong>Understanding Specificity:</strong> When multiple selectors apply to the same element, CSS uses specificity to determine which styles to apply. Generally, ID selectors have higher specificity than class selectors, which have higher specificity than element selectors.</p>
-          </div>
         </div>
         
-        <!-- Step 5: CSS Box Model -->
+        <!-- Step 5 -->
         <div class="tutorial-step" data-step="5">
-          <h3>CSS Box Model</h3>
-          <p>The CSS Box Model is a fundamental concept that describes how elements are rendered on a web page. Every HTML element is treated as a rectangular box with content, padding, border, and margin areas.</p>
+          <h3>Next Steps & Resources</h3>
+          <p>Congratulations on completing this brief tutorial! Here are some resources to continue your learning:</p>
           
           <div class="tutorial-code-block">
-            <h4>Box Model Example:</h4>
-            <pre>.box {
-  width: 300px;
-  height: 200px;
-  padding: 20px;
-  border: 5px solid #333;
-  margin: 30px;
-  background-color: #f0f0f0;
-}</pre>
-          </div>
-          
-          <div class="tutorial-info-box">
-            <p><strong>Box Model Components:</strong></p>
+            <h4>Helpful Resources:</h4>
             <ul>
-              <li><strong>Content</strong> - The actual content of the box where text and images appear</li>
-              <li><strong>Padding</strong> - The space between the content and the border</li>
-              <li><strong>Border</strong> - A line that surrounds the padding (if specified)</li>
-              <li><strong>Margin</strong> - The space outside the border, separating the element from other elements</li>
+              <li><a href="https://www.w3schools.com/" target="_blank">W3Schools</a> - Comprehensive tutorials and references</li>
+              <li><a href="https://developer.mozilla.org/en-US/" target="_blank">MDN Web Docs</a> - Detailed documentation for web technologies</li>
+              <li><a href="https://css-tricks.com/" target="_blank">CSS-Tricks</a> - Tips and tricks for CSS</li>
             </ul>
           </div>
           
-          <p>By default, the width and height properties define the size of the content area only. This means that when you add padding, border, or margin, the total dimensions of the element will be larger than the specified width and height.</p>
-          
-          <div class="tutorial-code-block">
-            <h4>Changing the Box Model:</h4>
-            <pre>* {
-  box-sizing: border-box;
-}</pre>
-          </div>
-          
-          <p>The <code>box-sizing: border-box</code> property changes the box model so that padding and border are included in the element's width and height, making layout calculations much easier.</p>
-        </div>
-        
-        <!-- Step 6: CSS Layout -->
-        <div class="tutorial-step" data-step="6">
-          <h3>CSS Layout Techniques</h3>
-          <p>CSS offers several powerful techniques for creating layouts. Understanding these will help you create responsive and well-structured web pages.</p>
-          
-          <div class="tutorial-code-block">
-            <h4>Flexbox Layout:</h4>
-            <pre>.container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.item {
-  flex: 1;
-  margin: 10px;
-  padding: 20px;
-  background-color: #e9e9e9;
-}</pre>
-          </div>
-          
-          <div class="tutorial-code-block">
-            <h4>CSS Grid Layout:</h4>
-            <pre>.grid-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-gap: 20px;
-}
-
-.grid-item {
-  background-color: #e9e9e9;
-  padding: 20px;
-  text-align: center;
-}</pre>
-          </div>
-          
-          <p><strong>Comparing Layout Methods:</strong></p>
-          <ul>
-            <li><strong>Flexbox</strong> - Ideal for one-dimensional layouts (rows OR columns). Great for alignment, spacing, and ordering elements.</li>
-            <li><strong>CSS Grid</strong> - Perfect for two-dimensional layouts (rows AND columns). Excellent for complex grid-based designs.</li>
-            <li><strong>Floats</strong> - An older technique, now mostly used for specific cases like wrapping text around images.</li>
-            <li><strong>Positioning</strong> - Using position properties (relative, absolute, fixed) for specific layout requirements.</li>
-          </ul>
-          
-          <div class="tutorial-warning-box">
-            <p><strong>Responsive Design Tip:</strong> Modern layouts should be responsive, adapting to different screen sizes. Use techniques like media queries, flexible units (%, rem, em), and mobile-first design principles.</p>
-          </div>
-        </div>
-        
-        <!-- Step 7: Introduction to JavaScript -->
-        <div class="tutorial-step" data-step="7">
-          <h3>Introduction to JavaScript</h3>
-          <p>JavaScript is a programming language that enables interactive web pages. It allows you to create dynamic content, control multimedia, animate images, and pretty much everything else.</p>
+          <p>Remember to practice regularly and build small projects to reinforce your learning!</p>
           
           <div class="tutorial-info-box">
-            <p><strong>Key Concept:</strong> JavaScript is a client-side scripting language that runs in the browser. It can respond to events, manipulate HTML content, validate forms, create cookies, and much more.</p>
-          </div>
-          
-          <div class="tutorial-code-block">
-            <h4>How to Include JavaScript:</h4>
-            <pre>&lt;!-- At the end of the body for better performance --&gt;
-&lt;body&gt;
-  &lt;!-- Your HTML content --&gt;
-  
-  &lt;script&gt;
-    // Internal JavaScript
-    console.log('Hello, World!');
-  &lt;/script&gt;
-  
-  &lt;!-- External JavaScript --&gt;
-  &lt;script src="script.js"&gt;&lt;/script&gt;
-&lt;/body&gt;</pre>
-          </div>
-          
-          <div class="tutorial-code-block">
-            <h4>JavaScript Basics:</h4>
-            <pre>// Variables
-let name = 'John';
-const age = 30;
-
-// Functions
-function greet(personName) {
-  return 'Hello, ' + personName + '!';
-}
-
-// Calling a function
-let greeting = greet(name);
-console.log(greeting);  // Output: Hello, John!
-
-// Conditional statements
-if (age >= 18) {
-  console.log('Adult');
-} else {
-  console.log('Minor');
-}
-
-// Arrays
-let fruits = ['Apple', 'Banana', 'Cherry'];
-console.log(fruits[0]);  // Output: Apple
-
-// Loops
-for (let i = 0; i < fruits.length; i++) {
-  console.log(fruits[i]);
-}</pre>
-          </div>
-          
-          <p>JavaScript is an essential part of modern web development and is the foundation for many frameworks and libraries like React, Angular, and Vue.js.</p>
-        </div>
-        
-        <!-- Step 8: DOM Manipulation -->
-        <div class="tutorial-step" data-step="8">
-          <h3>JavaScript DOM Manipulation</h3>
-          <p>The Document Object Model (DOM) is a programming interface for HTML and XML documents. It represents the page so that programs can change the document structure, style, and content.</p>
-          
-          <div class="tutorial-code-block">
-            <h4>Common DOM Operations:</h4>
-            <pre>// Selecting elements
-const heading = document.getElementById('main-heading');
-const paragraphs = document.getElementsByTagName('p');
-const highlighted = document.getElementsByClassName('highlight');
-const firstParagraph = document.querySelector('p');
-const allButtons = document.querySelectorAll('button');
-
-// Modifying content
-heading.textContent = 'New Heading';
-heading.innerHTML = 'New &lt;span&gt;Heading&lt;/span&gt;';
-
-// Changing styles
-heading.style.color = 'blue';
-heading.style.fontSize = '24px';
-
-// Adding/removing classes
-heading.classList.add('active');
-heading.classList.remove('hidden');
-heading.classList.toggle('highlighted');
-
-// Creating new elements
-const newParagraph = document.createElement('p');
-newParagraph.textContent = 'This is a new paragraph.';
-document.body.appendChild(newParagraph);
-
-// Removing elements
-const oldElement = document.getElementById('outdated');
-oldElement.parentNode.removeChild(oldElement);
-// Modern method:
-// oldElement.remove();</pre>
-          </div>
-          
-          <div class="tutorial-info-box">
-            <p><strong>Events in JavaScript:</strong> Events are actions or occurrences that happen in the browser which you can respond to with JavaScript.</p>
-          </div>
-          
-          <div class="tutorial-code-block">
-            <h4>Event Handling:</h4>
-            <pre>// Method 1: Using event properties
-document.getElementById('myButton').onclick = function() {
-  alert('Button clicked!');
-};
-
-// Method 2: Using addEventListener (preferred)
-document.getElementById('myButton').addEventListener('click', function(event) {
-  alert('Button clicked!');
-  console.log(event); // The event object contains useful information
-});
-
-// Common events:
-// click, dblclick, mouseenter, mouseleave, keydown, keyup, submit, load, resize</pre>
-          </div>
-        </div>
-        
-        <!-- Step 9: API Integration -->
-        <div class="tutorial-step" data-step="9">
-          <h3>Working with Web APIs</h3>
-          <p>Web APIs (Application Programming Interfaces) allow your JavaScript code to interact with external services or access browser functionality. One common use is fetching data from servers.</p>
-          
-          <div class="tutorial-code-block">
-            <h4>Using the Fetch API:</h4>
-            <pre>// Basic fetch request
-fetch('https://api.example.com/data')
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log(data);
-    displayData(data);
-  })
-  .catch(error => {
-    console.error('There was a problem with the fetch operation:', error);
-  });
-
-// Function to display the data
-function displayData(data) {
-  const container = document.getElementById('data-container');
-  
-  data.forEach(item => {
-    const element = document.createElement('div');
-    element.classList.add('data-item');
-    element.textContent = item.name;
-    container.appendChild(element);
-  });
-}</pre>
-          </div>
-          
-          <div class="tutorial-code-block">
-            <h4>Using async/await (Modern Approach):</h4>
-            <pre>async function fetchData() {
-  try {
-    const response = await fetch('https://api.example.com/data');
-    
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    
-    const data = await response.json();
-    console.log(data);
-    displayData(data);
-  } catch (error) {
-    console.error('There was a problem with the fetch operation:', error);
-  }
-}
-
-// Call the function
-fetchData();</pre>
-          </div>
-          
-          <div class="tutorial-info-box">
-            <p><strong>Common Web APIs:</strong></p>
-            <ul>
-              <li><strong>Fetch API</strong> - For making HTTP requests</li>
-              <li><strong>Storage API</strong> (localStorage, sessionStorage) - For storing data in the browser</li>
-              <li><strong>Geolocation API</strong> - For accessing the user's location</li>
-              <li><strong>Canvas API</strong> - For drawing graphics</li>
-              <li><strong>Web Audio API</strong> - For sound processing and synthesis</li>
-            </ul>
-          </div>
-        </div>
-        
-        <!-- Step 10: Next Steps -->
-        <div class="tutorial-step" data-step="10">
-          <h3>Next Steps in Web Development</h3>
-          <p>Congratulations on completing this web development tutorial! You've learned the fundamentals of HTML, CSS, and JavaScript. Here are some paths to continue your journey:</p>
-          
-          <div class="tutorial-code-block">
-            <h4>Advanced Topics to Explore:</h4>
-            <ul>
-              <li><strong>Responsive Web Design</strong> - Creating websites that work well on all devices</li>
-              <li><strong>CSS Frameworks</strong> - Bootstrap, Tailwind CSS, Bulma</li>
-              <li><strong>JavaScript Frameworks</strong> - React, Vue.js, Angular</li>
-              <li><strong>Backend Development</strong> - Node.js, Python (Django/Flask), PHP</li>
-              <li><strong>Database Integration</strong> - SQL, MongoDB, Firebase</li>
-              <li><strong>Web Performance Optimization</strong> - Making websites faster</li>
-              <li><strong>Accessibility</strong> - Ensuring websites work for everyone</li>
-              <li><strong>Web Security</strong> - Protecting your website and users</li>
-            </ul>
-          </div>
-          
-          <div class="tutorial-info-box">
-            <p><strong>Learning Resources:</strong></p>
-            <ul>
-              <li><a href="https://developer.mozilla.org/en-US/" target="_blank">MDN Web Docs</a> - Comprehensive web technology documentation</li>
-              <li><a href="https://www.w3schools.com/" target="_blank">W3Schools</a> - Tutorials and references</li>
-              <li><a href="https://css-tricks.com/" target="_blank">CSS-Tricks</a> - Great articles about CSS</li>
-              <li><a href="https://javascript.info/" target="_blank">JavaScript.info</a> - Modern JavaScript tutorial</li>
-              <li><a href="https://frontendmasters.com/" target="_blank">Frontend Masters</a> - In-depth courses (paid)</li>
-            </ul>
-          </div>
-          
-          <p>Remember that web development is constantly evolving, so continuous learning is key. Build projects, contribute to open source, join communities, and keep experimenting!</p>
-          
-          <div class="tutorial-warning-box">
-            <p><strong>Pro Tip:</strong> The best way to learn is by doing. Start building real projects that solve problems or interest you. The challenges you face and overcome during these projects will be your most valuable learning experiences.</p>
+            <p><strong>Pro Tip:</strong> Start with simple projects and gradually increase complexity as your skills improve.</p>
           </div>
         </div>
       </div>
