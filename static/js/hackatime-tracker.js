@@ -1,4 +1,3 @@
-
 // Hackatime Tracker Module - Simplified
 class HackatimeTracker {
     constructor() {
@@ -9,28 +8,27 @@ class HackatimeTracker {
         this.lastHeartbeat = null;
         this.status = 'monitoring';
         this.isPaused = false;
-        this.timeLogged = 0;
         this.heartbeatCount = 0;
         this.lastHeartbeatTime = null;
         this.popupVisible = false;
-        
+
         // Service endpoint (can be changed based on environment)
         this.serviceUrl = '/hackatime';
-        
+
         // Activity tracking
         this.lastActivityTime = Date.now();
         this.afkCheckInterval = null;
         this.afkTimeoutMinutes = 1.5;
         this.wasAutoPaused = false;
         this.hiddenPause = false;
-        
+
         // Editor information
         this.editorType = document.getElementById('site-type')?.value || 'unknown';
         this.siteId = document.getElementById('site-id')?.value || 'unknown';
         this.entityName = this.editorType === 'python' ? 'main.py' : 'index.html';
         this.language = this.editorType === 'python' ? 'Python' : 'HTML';
         this.siteName = document.querySelector('.topbar-left h1')?.textContent || 'Unknown Project';
-        
+
         // Get editor reference
         this.editor = null;
         if (window.pythonEditor) {
@@ -38,27 +36,26 @@ class HackatimeTracker {
         } else if (window.editor && typeof window.editor.on === 'function') {
             this.editor = window.editor;
         }
-        
+
         // Get API key from localStorage if available
         this.apiKey = localStorage.getItem('hackatime_api_key');
     }
 
     init() {
         console.log('[Hackatime] Initializing tracker');
-        this.timeLogged = 0;
         this.lastHeartbeatTime = null;
         this.heartbeatCount = 0;
-        
+
         // Check connection status
         this.checkHackatimeStatus();
-        
+
         // Start AFK monitoring
         this.startAfkCheckInterval();
-        
+
         // Add badge CSS if not already present
         this.ensureStyles();
     }
-    
+
     ensureStyles() {
         // Check if hackatime styles are loaded
         if (!document.getElementById('hackatime-styles')) {
@@ -72,7 +69,7 @@ class HackatimeTracker {
 
     checkHackatimeStatus() {
         console.log('[Hackatime] Checking connection status...');
-        
+
         // Check if we have a stored API key first
         if (this.apiKey) {
             console.log('[Hackatime] Using stored API key');
@@ -82,7 +79,7 @@ class HackatimeTracker {
             this.startHeartbeatTracking();
             return;
         }
-        
+
         // Otherwise check with server
         fetch(`${this.serviceUrl}/status`, {
             method: 'GET',
@@ -100,18 +97,17 @@ class HackatimeTracker {
         .then(data => {
             this.isActive = data.connected;
             console.log(`[Hackatime] Connected: ${this.isActive}`);
-            
+
             if (this.isActive) {
                 this.createBadge();
                 this.setupEditorListeners();
                 this.startHeartbeatTracking();
-                this.updateTimeLogged();
             }
         })
         .catch(error => {
             console.error('[Hackatime] Error checking status:', error);
             this.isActive = false;
-            
+
             // If we previously had a badge, update it to show error
             const statusEl = document.getElementById('hackatime-status');
             if (statusEl) {
@@ -125,7 +121,7 @@ class HackatimeTracker {
         if (this.afkCheckInterval) {
             clearInterval(this.afkCheckInterval);
         }
-        
+
         // Set new interval for checking inactivity
         this.afkCheckInterval = setInterval(() => {
             if (!this.isActive || this.isPaused) return;
@@ -136,10 +132,10 @@ class HackatimeTracker {
             if (minutesSinceLastActivity >= this.afkTimeoutMinutes) {
                 console.log(`[Hackatime] No activity detected for ${this.afkTimeoutMinutes} minutes, auto-pausing tracking`);
                 this.wasAutoPaused = true;
-                
+
                 if (!this.isPaused) {
                     this.togglePause();
-                    
+
                     // Show toast notification if available
                     if (typeof showToast === 'function') {
                         showToast('info', `Hackatime tracking paused due to ${this.afkTimeoutMinutes} minutes of inactivity`);
@@ -158,7 +154,7 @@ class HackatimeTracker {
                 this.entityName = currentFile;
                 this.updateBadgeStatus('active');
                 this.updateLastActivityTime();
-                
+
                 console.log(`[Hackatime] File changed: ${currentFile} in "${this.siteName}"`);
             });
 
@@ -190,7 +186,7 @@ class HackatimeTracker {
 
     updateLastActivityTime() {
         this.lastActivityTime = Date.now();
-        
+
         // If tracking was auto-paused and user is active again, auto-resume
         if (this.isPaused && this.wasAutoPaused) {
             console.log('[Hackatime] User is active again, auto-resuming tracking');
@@ -229,7 +225,7 @@ class HackatimeTracker {
             // Add tooltip
             badge.title = 'Hackatime is tracking your coding activity';
             document.body.appendChild(badge);
-            
+
             // Set initial status
             this.updateBadgeStatus('connecting');
 
@@ -256,10 +252,6 @@ class HackatimeTracker {
                         <div class="hackatime-info-row">
                             <span>Status:</span>
                             <span id="hackatime-popup-status">Connecting...</span>
-                        </div>
-                        <div class="hackatime-info-row">
-                            <span>Time logged:</span>
-                            <span id="hackatime-time-logged">0 min</span>
                         </div>
                         <div class="hackatime-info-row">
                             <span>Last heartbeat:</span>
@@ -362,8 +354,6 @@ class HackatimeTracker {
         const statusElement = document.getElementById('hackatime-popup-status');
         if (statusElement) statusElement.textContent = statusText;
 
-        // Time logged
-        this.updateTimeLogged();
 
         // Last heartbeat time
         const heartbeatElement = document.getElementById('hackatime-last-heartbeat');
@@ -382,43 +372,17 @@ class HackatimeTracker {
         }
     }
 
-    updateTimeLogged(addHeartbeatTime = false) {
-        // Add time for successful heartbeat
-        if (addHeartbeatTime && this.lastHeartbeatTime !== null) {
-            // Add 1.5 minutes (90 seconds) for each successful heartbeat
-            this.timeLogged += 1.5;
-        }
-
-        // Format time string
-        let timeStr;
-        if (this.timeLogged < 60) {
-            timeStr = `${Math.floor(this.timeLogged)} min`;
-        } else {
-            const hours = Math.floor(this.timeLogged / 60);
-            const mins = Math.floor(this.timeLogged % 60);
-            timeStr = `${hours}h ${mins}m`;
-        }
-
-        // Update UI if popup is open
-        const timeElement = document.getElementById('hackatime-time-logged');
-        if (timeElement) {
-            timeElement.textContent = timeStr;
-        }
-
-        return timeStr;
-    }
-
     formatTimeAgo(date) {
         const seconds = Math.floor((new Date() - date) / 1000);
 
         if (seconds < 60) return 'Just now';
-        
+
         const minutes = Math.floor(seconds / 60);
         if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-        
+
         const hours = Math.floor(minutes / 60);
         if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-        
+
         const days = Math.floor(hours / 24);
         return `${days} day${days !== 1 ? 's' : ''} ago`;
     }
@@ -446,13 +410,13 @@ class HackatimeTracker {
         if (confirm('Are you sure you want to disconnect Hackatime? You will need to reconnect on the Hackatime settings page.')) {
             // Stop tracking
             this.stopHeartbeatTracking();
-            
+
             // Clear intervals
             if (this.afkCheckInterval) {
                 clearInterval(this.afkCheckInterval);
                 this.afkCheckInterval = null;
             }
-            
+
             // Remove API key from storage
             localStorage.removeItem('hackatime_api_key');
             this.apiKey = null;
@@ -571,7 +535,7 @@ class HackatimeTracker {
 
         // Get current file
         const currentFile = document.querySelector('.file-tab.active')?.getAttribute('data-filename') || this.entityName;
-        
+
         // Validate filename
         if (!currentFile || currentFile === 'null' || currentFile === 'undefined') {
             console.warn('[Hackatime] Invalid file name, using default');
@@ -638,7 +602,7 @@ class HackatimeTracker {
 
         // Log heartbeat data to console
         console.log('[Hackatime] Heartbeat payload:', heartbeat);
-        
+
         // Send heartbeat to service
         fetch(`${this.serviceUrl}/heartbeat`, {
             method: 'POST',
@@ -653,14 +617,14 @@ class HackatimeTracker {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
-            
+
             // Log response headers to console
             const headers = {};
             response.headers.forEach((value, key) => {
                 headers[key] = value;
             });
             console.log('[Hackatime] Response headers:', headers);
-            
+
             return response.json();
         })
         .then(data => {
@@ -671,12 +635,6 @@ class HackatimeTracker {
                 this.updateBadgeStatus(this.status);
                 console.log(`[Hackatime] Heartbeat success for ${this.entityName}`);
                 console.log('[Hackatime] Response data:', data);
-                
-                // Update time logged and UI
-                this.updateTimeLogged(true);
-                if (this.popupVisible) {
-                    this.updatePopupData();
-                }
             } else {
                 this.updateBadgeStatus('error');
                 console.error(`[Hackatime] Heartbeat failed:`, data.message || 'Unknown error');
@@ -798,7 +756,7 @@ class HackatimeTracker {
 document.addEventListener('DOMContentLoaded', () => {
     const hackatimeTracker = new HackatimeTracker();
     hackatimeTracker.init();
-    
+
     // Make available for debugging
     window.hackatimeTracker = hackatimeTracker;
 });
@@ -809,7 +767,7 @@ function connectHackatime(apiKey) {
         console.error('[Hackatime] No API key provided');
         return Promise.reject('No API key provided');
     }
-    
+
     return fetch('/hackatime/connect', {
         method: 'POST',
         headers: {
@@ -822,7 +780,7 @@ function connectHackatime(apiKey) {
         if (data.success) {
             // Store API key
             localStorage.setItem('hackatime_api_key', apiKey);
-            
+
             // Initialize tracker if needed
             if (window.hackatimeTracker) {
                 window.hackatimeTracker.apiKey = apiKey;
@@ -836,7 +794,7 @@ function connectHackatime(apiKey) {
                 tracker.init();
                 window.hackatimeTracker = tracker;
             }
-            
+
             return { success: true, message: 'Connected successfully' };
         } else {
             return { success: false, message: data.message || 'Connection failed' };
