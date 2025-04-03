@@ -166,8 +166,15 @@ def hackatime_heartbeat():
             'User-Agent': user_agent
         }
         
+        # Log detailed request information
         logger.info(f"Sending heartbeat to Hackatime API: {api_url}")
-        logger.info(f"Headers: {headers}")
+        # Format headers for better readability in logs
+        formatted_headers = {
+            'Authorization': f'Bearer {api_key[:5]}...{api_key[-5:]}',  # Mask most of the API key for security
+            'Content-Type': headers['Content-Type'],
+            'User-Agent': headers['User-Agent']
+        }
+        logger.info(f"Request Headers: {formatted_headers}")
         logger.info(f"Payload: {heartbeat_payload}")
         
         response = requests.post(
