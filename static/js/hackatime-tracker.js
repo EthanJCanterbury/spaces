@@ -264,6 +264,7 @@ class HackatimeTracker {
                     </div>
                     <div class="hackatime-popup-actions">
                         <button id="hackatime-toggle-pause" class="hackatime-btn">Pause Tracking</button>
+                        <a href="https://hackatime.hackclub.com/" target="_blank" class="hackatime-btn hackatime-btn-dashboard">Dashboard</a>
                         <button id="hackatime-disconnect" class="hackatime-btn hackatime-btn-danger">Disconnect</button>
                     </div>
                 </div>

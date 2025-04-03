@@ -189,6 +189,16 @@
     background: #c53030;
 }
 
+.hackatime-btn-dashboard {
+    background: #805ad5;
+    text-decoration: none;
+    text-align: center;
+}
+
+.hackatime-btn-dashboard:hover {
+    background: #6b46c1;
+}
+
 /* Ensure the badge doesn't interfere with other UI elements */
 @media (max-width: 768px) {
     .hackatime-badge {
