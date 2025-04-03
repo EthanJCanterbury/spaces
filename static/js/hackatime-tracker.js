@@ -744,17 +744,18 @@ class HackatimeTracker {
 
         const extension = filename.split('.').pop().toLowerCase();
 
+        // Return PostgreSQL array format with curly braces
         if (extension === 'py') {
-            return 'flask,numpy,pandas';
+            return '{flask,numpy,pandas}';
         } else if (extension === 'js') {
-            return 'react,lodash,express';
+            return '{react,lodash,express}';
         } else if (extension === 'html') {
-            return 'bootstrap,jquery';
+            return '{bootstrap,jquery}';
         } else if (extension === 'css') {
-            return 'bootstrap,tailwind';
+            return '{bootstrap,tailwind}';
         }
 
-        return '';
+        return '{}';
     }
 
     // Helper: Get language from file
