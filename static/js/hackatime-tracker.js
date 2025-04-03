@@ -653,6 +653,14 @@ class HackatimeTracker {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
+            
+            // Log response headers to console
+            const headers = {};
+            response.headers.forEach((value, key) => {
+                headers[key] = value;
+            });
+            console.log('[Hackatime] Response headers:', headers);
+            
             return response.json();
         })
         .then(data => {
@@ -662,6 +670,7 @@ class HackatimeTracker {
                 this.heartbeatCount++;
                 this.updateBadgeStatus(this.status);
                 console.log(`[Hackatime] Heartbeat success for ${this.entityName}`);
+                console.log('[Hackatime] Response data:', data);
                 
                 // Update time logged and UI
                 this.updateTimeLogged(true);

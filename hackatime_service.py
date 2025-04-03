@@ -178,6 +178,7 @@ def hackatime_heartbeat():
         )
         
         logger.info(f"Hackatime API response status: {response.status_code}")
+        logger.info(f"Response headers: {dict(response.headers)}")
         logger.info(f"Response content: {response.text[:500]}")
         
         if response.status_code >= 400:
