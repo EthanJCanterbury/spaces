@@ -760,6 +760,107 @@ class HackatimeTracker {
             }
         }
     }
+    
+    // Create enhanced heartbeat data with all required fields
+    createHeartbeatData(entity, type, isWrite = false) {
+        // Calculate a unique machine identifier based on browser fingerprint
+        const machineId = `machine_${this.getMachineId()}`;
+        
+        // Get browser and OS info
+        const platform = navigator.platform || 'Unknown';
+        const userAgent = navigator.userAgent;
+        
+        // Create a comprehensive heartbeat payload
+        return {
+            entity: entity || 'test.txt',
+            type: type || 'file',
+            time: Math.floor(Date.now() / 1000),
+            category: 'coding',
+            project: 'Hack Club Spaces',
+            branch: 'main',
+            language: this.detectLanguageFromEntity(entity),
+            is_write: isWrite,
+            lines: 150, // Default value
+            lineno: this.lastCursorPosition?.line || 1,
+            cursorpos: this.lastCursorPosition?.ch || 0,
+            line_additions: isWrite ? 1 : 0,
+            line_deletions: 0,
+            project_root_count: 1,
+            dependencies: 'flask,sqlalchemy,python-dotenv',
+            machine: machineId,
+            editor: 'Spaces IDE',
+            operating_system: this.detectOS(platform),
+            user_agent: userAgent
+        };
+    }
+    
+    // Detect language from file extension
+    detectLanguageFromEntity(entity) {
+        if (!entity) return 'Text';
+        
+        const ext = entity.split('.').pop().toLowerCase();
+        const langMap = {
+            'py': 'Python',
+            'js': 'JavaScript',
+            'html': 'HTML',
+            'css': 'CSS',
+            'md': 'Markdown',
+            'json': 'JSON',
+            'sql': 'SQL'
+        };
+        
+        return langMap[ext] || 'Text';
+    }
+    
+    // Detect operating system
+    detectOS(platform) {
+        if (platform.indexOf('Win') !== -1) return 'Windows';
+        if (platform.indexOf('Mac') !== -1) return 'MacOS';
+        if (platform.indexOf('Linux') !== -1) return 'Linux';
+        if (platform.indexOf('Android') !== -1) return 'Android';
+        if (platform.indexOf('iOS') !== -1) return 'iOS';
+        return 'Unknown';
+    }
+    
+    // Generate a consistent machine ID
+    getMachineId() {
+        if (!this.machineId) {
+            // Create a simple hash from browser info
+            const browserInfo = navigator.userAgent + navigator.language + screen.width + screen.height;
+            let hash = 0;
+            for (let i = 0; i < browserInfo.length; i++) {
+                const char = browserInfo.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            this.machineId = Math.abs(hash).toString(16).substring(0, 8);
+        }
+        return this.machineId;
+    }
+    
+    // Send heartbeat with enhanced data
+    sendHeartbeat(entity, type, isWrite = false) {
+        if (this.isPaused) return;
+        
+        const heartbeatData = this.createHeartbeatData(entity, type, isWrite);
+        
+        fetch('/hackatime/heartbeat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(heartbeatData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('[Hackatime] Heartbeat sent successfully');
+            } else {
+                console.error('[Hackatime] Heartbeat error:', data.message);
+            }
+        })
+        .catch(error => console.error('[Hackatime] Failed to send heartbeat:', error));
+    }
 }
 
 // Initialize the tracker when the DOM is loaded

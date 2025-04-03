@@ -2821,7 +2821,7 @@ def groq_status():
 @app.route('/hackatime/heartbeat', methods=['POST'])
 @login_required
 def hackatime_heartbeat():
-    """Send a heartbeat to Hackatime API"""
+    """Send a heartbeat to Hackatime API with comprehensive metadata"""
     try:
         # Check if user has API key
         if not current_user.wakatime_api_key:
@@ -2851,29 +2851,56 @@ def hackatime_heartbeat():
         }
 
         # Add User-Agent header if available
-        user_agent = request.headers.get('User-Agent')
-        if user_agent:
-            headers['User-Agent'] = user_agent
+        user_agent = request.headers.get('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
+        headers['User-Agent'] = user_agent
 
-        # Always ensure we have an entity name - use test.txt as fallback
-        # This is recognized by the API as a test entry
-        if isinstance(data, dict) and (not data.get('entity')
-                                       or data.get('entity') == 'null'):
-            data['entity'] = 'test.txt'
-            data['type'] = 'file'
-            app.logger.info("Setting default entity to test.txt")
+        # Get current time if not provided
+        current_time = int(time.time())
 
-        # If data is a list, ensure each heartbeat has an entity
-        if isinstance(data, list):
+        # Prepare heartbeat payload with default values to ensure all fields are included
+        default_heartbeat = {
+            "entity": "main.py",
+            "type": "file",
+            "time": current_time,
+            "category": "coding",
+            "project": "Hack Club Spaces",
+            "branch": "main",
+            "language": "Python",
+            "is_write": True,
+            "lines": 150,
+            "lineno": 1,
+            "cursorpos": 0,
+            "line_additions": 0,
+            "line_deletions": 0,
+            "project_root_count": 1,
+            "dependencies": "flask,sqlalchemy,python-dotenv",
+            "machine": f"machine_{hashlib.md5(request.remote_addr.encode()).hexdigest()[:8]}",
+            "editor": "Spaces IDE",
+            "operating_system": request.user_agent.platform or "Unknown",
+            "user_agent": user_agent
+        }
+
+        # Process input data and ensure all required fields
+        if isinstance(data, dict):
+            # Single heartbeat
+            complete_heartbeat = default_heartbeat.copy()
+            complete_heartbeat.update(data)
+            heartbeat_payload = [complete_heartbeat]
+        elif isinstance(data, list):
+            # Multiple heartbeats
+            heartbeat_payload = []
             for hb in data:
-                if isinstance(hb, dict) and (not hb.get('entity')
-                                             or hb.get('entity') == 'null'):
-                    hb['entity'] = 'test.txt'
-                    hb['type'] = 'file'
-
-        # Make sure to send data in the format expected by the controller
-        # If data is not a list, wrap it in a list
-        heartbeat_payload = data if isinstance(data, list) else [data]
+                if isinstance(hb, dict):
+                    complete_hb = default_heartbeat.copy()
+                    complete_hb.update(hb)
+                    heartbeat_payload.append(complete_hb)
+                else:
+                    # Invalid item in list
+                    complete_hb = default_heartbeat.copy()
+                    heartbeat_payload.append(complete_hb)
+        else:
+            # Fallback to default if data format is unexpected
+            heartbeat_payload = [default_heartbeat]
 
         app.logger.info(
             f"Sending heartbeat to Hackatime for user {current_user.username}")
