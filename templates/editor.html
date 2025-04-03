@@ -412,7 +412,7 @@
 <div id="tutorial-widget" style="display: none; position: fixed; width: 600px; max-width: 90%; height: auto; max-height: 80vh; background: white; border-radius: 12px; box-shadow: 0 5px 30px rgba(0, 0, 0, 0.2); z-index: 9999; opacity: 0; transition: opacity 0.3s ease; overflow: hidden;">
     <div class="orphy-header" style="background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%); cursor: grab; border-radius: 12px 12px 0 0;">
         <div class="orphy-title">
-            <h2>Web Development Tutorial <span class="orphy-emoji">📚</span></h2>
+            <h2>Personal Website Workshop <span class="orphy-emoji">📚</span></h2>
         </div>
         <button class="orphy-close-btn" onclick="closeTutorialModal()">&times;</button>
     </div>
@@ -431,8 +431,25 @@
 
         <div class="tutorial-content">
             <div class="tutorial-step" data-step="1" style="display: block;">
-                <h3 style="color: #4e54c8; margin-top: 0;">Getting Started with HTML</h3>
-                <p>HTML (HyperText Markup Language) is the backbone of any website. It defines the structure and content of your web page.</p>
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <img src="https://assets.hackclub.com/flag-standalone.svg" height="30" style="margin-right: 10px;">
+                    <h3 style="color: #4e54c8; margin: 0;">Personal Website Workshop</h3>
+                </div>
+                
+                <p><i>For a limited time: build your site & <a href="https://hack.club/boba" target="_blank">get a free bubble tea</a></i></p>
+                
+                <p>Prophet Orpheus, Hack Club's mascot, is here to guide you through making your own personal website!</p>
+                
+                <div style="margin: 15px 0; text-align: center;">
+                    <img src="https://cloud-4zpw37atj-hack-club-bot.vercel.app/2dino_site.png" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);" alt="Example dinosaur website">
+                </div>
+                
+                <p>This workshop will take about 45 minutes to complete. Let's get started!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="2" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Part I: The HTML File</h3>
+                <p>HTML stands for Hypertext Markup Language. Every website uses HTML to display content on the web.</p>
 
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                     <h4 style="margin-top: 0;">Basic HTML Structure:</h4>
@@ -449,12 +466,14 @@
 &lt;/html&gt;</pre>
                 </div>
 
-                <p><strong>Try it:</strong> Type this structure into your editor to create a basic webpage.</p>
+                <p>This structure is common to all HTML pages. In fact, you can take a look for yourself! Right-click on any web page and select "View page source" to see what's going on behind the scenes.</p>
+                
+                <p><strong>Try it:</strong> Type this code into your index.html file in the editor to create a basic webpage, then click "Run" to see your page in action!</p>
             </div>
 
-            <div class="tutorial-step" data-step="2" style="display: none;">
-                <h3 style="color: #4e54c8; margin-top: 0;">Adding More Content</h3>
-                <p>Let's add more elements to make your page more interesting and informative.</p>
+            <div class="tutorial-step" data-step="3" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Adding Content to Your HTML</h3>
+                <p>Let's add more content to make your page interesting!</p>
 
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                     <h4 style="margin-top: 0;">Common HTML Elements:</h4>
@@ -469,245 +488,291 @@
                 </div>
 
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                    <h4 style="margin-top: 0;">Example:</h4>
-                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
-&lt;body&gt;
-  &lt;h1&gt;My Website&lt;/h1&gt;
-  &lt;h2&gt;Welcome to my page!&lt;/h2&gt;
-
-  &lt;p&gt;This is a paragraph with &lt;strong&gt;bold text&lt;/strong&gt; and &lt;em&gt;italic text&lt;/em&gt;.&lt;/p&gt;
-
-  &lt;h3&gt;My Favorite Foods&lt;/h3&gt;
-  &lt;ul&gt;
-    &lt;li&gt;Pizza&lt;/li&gt;
-    &lt;li&gt;Ice Cream&lt;/li&gt;
-    &lt;li&gt;Tacos&lt;/li&gt;
-  &lt;/ul&gt;
-
-  &lt;h3&gt;Check out this image:&lt;/h3&gt;
-  &lt;img src="https://hackclub.com/hackclub-flag.svg" alt="Hack Club Flag" width="300"&gt;
-
-  &lt;p&gt;&lt;a href="https://hackclub.com"&gt;Visit Hack Club&lt;/a&gt;&lt;/p&gt;
-&lt;/body&gt;</pre>
-                </div>
-            </div>
-
-            <div class="tutorial-step" data-step="3" style="display: none;">
-                <h3 style="color: #4e54c8; margin-top: 0;">Introduction to CSS</h3>
-                <p>CSS (Cascading Style Sheets) is used to style your HTML elements and make your website look attractive.</p>
-
-                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                    <h4 style="margin-top: 0;">Adding CSS:</h4>
-                    <p>You can add CSS in three ways:</p>
-                    <ol style="padding-left: 20px; line-height: 1.6;">
-                        <li><strong>Inline</strong> - Using the style attribute in HTML elements</li>
-                        <li><strong>Internal</strong> - Using the &lt;style&gt; element in the &lt;head&gt; section</li>
-                        <li><strong>External</strong> - Using a separate CSS file</li>
-                    </ol>
-                </div>
-
-                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                    <h4 style="margin-top: 0;">Basic CSS Example (Internal):</h4>
-                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
-&lt;head&gt;
-  &lt;title&gt;My Styled Website&lt;/title&gt;
-  &lt;style&gt;
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      margin: 0;
-      padding: 20px;
-      background-color: #f5f5f5;
-    }
-
-    h1 {
-      color: #4e54c8;
-      text-align: center;
-    }
-
-    p {
-      color: #333;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-  &lt;/style&gt;
-&lt;/head&gt;</pre>
-                </div>
-            </div>
-
-            <div class="tutorial-step" data-step="4" style="display: none;">
-                <h3 style="color: #4e54c8; margin-top: 0;">Putting It All Together</h3>
-                <p>Now let's combine HTML and CSS to create a complete webpage.</p>
-
-                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                    <h4 style="margin-top: 0;">Complete Webpage Example:</h4>
+                    <h4 style="margin-top: 0;">Let's add your name and description:</h4>
                     <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
-&lt;head&gt;
-  &lt;title&gt;My Awesome Website&lt;/title&gt;
-  &lt;style&gt;
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      line-height: 1.6;
-      margin: 0;
-      background-color: #f5f5f5;
-      color: #333;
-    }
-
-    .header {
-      background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
-      color: white;
-      text-align: center;
-      padding: 60px 20px;
-    }
-
-    .header h1 {
-      margin: 0;
-      font-size: 3rem;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-
-    .section {
-      margin-bottom: 30px;
-    }
-
-    .section h2 {
-      color: #4e54c8;
-      border-bottom: 2px solid #8f94fb;
-      padding-bottom: 10px;
-    }
-
-    .gallery {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      justify-content: center;
-    }
-
-    .gallery img {
-      width: 200px;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 5px;
-      transition: transform 0.3s;
-    }
-
-    .gallery img:hover {
-      transform: scale(1.05);
-    }
-
-    .footer {
-      text-align: center;
-      padding: 20px;
-      background: #333;
-      color: white;
-      margin-top: 30px;
-    }
-
-    a {
-      color: #4e54c8;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-  &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-  &lt;div class="header"&gt;
-    &lt;h1&gt;Welcome to My Website&lt;/h1&gt;
-    &lt;p&gt;A place to learn and create&lt;/p&gt;
-  &lt;/div&gt;
-
-  &lt;div class="container"&gt;
-    &lt;div class="section"&gt;
-      &lt;h2&gt;About Me&lt;/h2&gt;
-      &lt;p&gt;Hello! I'm a web developer learning HTML and CSS. This is my first website created with Hack Club Spaces.&lt;/pgt;.</p>
-    &lt;/div&gt;
-
-    &lt;div class="section"&gt;
-      &lt;h2&gt;My Interests&lt;/h2&gt;
-      &lt;ul&gt;
-        &lt;li&gt;Web Development&lt;/li&gt;
-        &lt;li&gt;Graphic Design&lt;/li&gt;
-        &lt;li&gt;Photography&lt;/li&gt;
-        &lt;li&gt;Artificial Intelligence&lt;/li&gt;
-      &lt;/ul&gt;
-    &lt;/div&gt;
-
-    &lt;div class="section"&gt;
-      &lt;h2&gt;Photo Gallery&lt;/h2&gt;
-      &lt;div class="gallery"&gt;
-        &lt;img src="https://source.unsplash.com/random/200x150?nature" alt="Nature"&gt;
-        &lt;img src="https://source.unsplash.com/random/200x150?technology" alt="Technology"&gt;
-        &lt;img src="https://source.unsplash.com/random/200x150?art" alt="Art"&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-
-    &lt;div class="section"&gt;
-      &lt;h2&gt;Contact Me&lt;/h2&gt;
-      &lt;p&gt;You can reach me at: &lt;a href="mailto:example@email.com"&gt;example@email.com&lt;/a&gt;&lt;/p&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-
-  &lt;div class="footer"&gt;
-    &lt;p&gt;&copy; 2023 My Website. All rights reserved. Made with Hack Club Spaces.&lt;/p&gt;
-  &lt;/div&gt;
-&lt;/body&gt;
+  &lt;head&gt;
+    &lt;title&gt;My Personal Website&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Prophet Orpheus&lt;/h1&gt;
+    &lt;p&gt;Coder Dino&lt;/p&gt;
+    &lt;p&gt;Will code for food&lt;/p&gt;
+  &lt;/body&gt;
 &lt;/html&gt;</pre>
                 </div>
+                
+                <p><strong>Try it:</strong> Replace the text with your own name and description, then click "Save Changes" and "Run" to see your updates!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="4" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Adding Images</h3>
+                <p>Let's add an image to make your website more visual!</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">The Image Tag:</h4>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+&lt;img src="https://github.com/hackclub/dinosaurs/raw/main/smart_dinosaur_docs.png" /&gt;</pre>
+                    <p>The <code>src</code> attribute specifies the URL where the image is located.</p>
+                </div>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Adding it to your page:</h4>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;My Personal Website&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;img src="https://github.com/hackclub/dinosaurs/raw/main/smart_dinosaur_docs.png" /&gt;
+    &lt;h1&gt;Prophet Orpheus&lt;/h1&gt;
+    &lt;p&gt;Coder Dino&lt;/p&gt;
+    &lt;p&gt;Will code for food&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+                </div>
+                
+                <div style="text-align: center; margin-top: 15px;">
+                    <img src="https://cloud-1lgnmk5nw-hack-club-bot.vercel.app/2no_css.png" style="max-width: 80%; border-radius: 8px;" alt="Example of HTML without CSS">
+                </div>
+                
+                <p><strong>Try it:</strong> Update your HTML with this image or find another image URL to use!</p>
             </div>
 
             <div class="tutorial-step" data-step="5" style="display: none;">
-                <h3 style="color: #4e54c8; margin-top: 0;">Adding Interactivity with JavaScript</h3>
-                <p>JavaScript allows you to add dynamic behavior to your website, making it more engaging for users.</p>
-            </div>
-            <div class="tutorial-step" data-step="6" style="display: none;">
-                <h3 style="color: #4e54c8; margin-top: 0;">Handling Events</h3>
-                <p>Learn how to respond to user interactions such as clicks and mouseovers.</p>
-            </div>
-            <div class="tutorial-step" data-step="7" style="display: none;">
-                <h3 style="color: #4e54c8; margin-top: 0;">Working with the DOM</h3>
-                <p>Manipulate the structure and content of your webpage dynamically.</p>
-            </div>
-            <div class="tutorial-step" data-step="8" style="display: none;">
-                <h3 style="color: #4e54c8; margin-top: 0;">Making Animations</h3>
-                <p>Create visually appealing animations using CSS and JavaScript.</p>
-            </div>
-            <div class="tutorial-step" data-step="9" style="display: none;">
-                <h3 style="color: #4e54c8; margin-top: 0;">Improving Your Website</h3>
-                <p>Tips and techniques for making your website better.</p>
-            </div>
-            <div class="tutorial-step" data-step="10" style="display: none;">
-                <h3 style="color: #4e54c8; margin-top: 0;">Next Steps & Resources</h3>
-                <p>Congratulations on creating your first website! Here are some tips for continuing your web development journey:</p>
+                <h3 style="color: #4e54c8; margin-top: 0;">Part II: Adding CSS</h3>
+                <p>CSS (Cascading Style Sheets) is used to style your HTML elements and make your website look attractive.</p>
 
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                    <h4 style="margin-top: 0;">Tips for Improving:</h4>
+                    <h4 style="margin-top: 0;">Creating a CSS File:</h4>
+                    <p>In Hack Club Spaces, you can click on the "styles.css" tab in the editor to add your CSS. If you're starting from scratch, first you'll need to link your CSS file to your HTML.</p>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+&lt;!-- Add this inside the &lt;head&gt; section of your HTML --&gt;
+&lt;link rel="stylesheet" href="styles.css" /&gt;</pre>
+                </div>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Basic CSS:</h4>
+                    <p>Now add the following to your styles.css file:</p>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+img {
+  width: 200px;
+}
+
+body {
+  text-align: center;
+  font-family: 'Arial';
+  background: azure;
+  color: purple;
+}</pre>
+                </div>
+                
+                <p><strong>Try it:</strong> Click on the "styles.css" tab and add these styles, then save your changes and run your page to see the difference!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="6" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Styling Your Page</h3>
+                <p>Let's add more styles to make your site unique!</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Improved CSS:</h4>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+body {
+  text-align: center;
+  font-family: 'Arial', sans-serif;
+  line-height: 1.5;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f0f8ff; /* azure */
+  color: #663399; /* purple */
+}
+
+img {
+  width: 200px;
+  border-radius: 10px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+  margin: 20px 0;
+}
+
+h1 {
+  color: #ff6b6b;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+p {
+  font-size: 1.1rem;
+  margin: 5px 0;
+}</pre>
+                </div>
+                
+                <p>This CSS adds:</p>
+                <ul style="padding-left: 20px; line-height: 1.6;">
+                    <li>Better spacing with line-height and margins</li>
+                    <li>Maximum width and centered content</li>
+                    <li>Rounded corners and shadow for the image</li>
+                    <li>Different colors and font sizes</li>
+                </ul>
+                
+                <p><strong>Try it:</strong> Update your CSS with these styles or experiment with your own colors and values!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="7" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Adding More Content</h3>
+                <p>Let's expand your website with more sections and content!</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Enhanced HTML Structure:</h4>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;My Personal Website&lt;/title&gt;
+    &lt;link rel="stylesheet" href="styles.css" /&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;header&gt;
+      &lt;img src="https://github.com/hackclub/dinosaurs/raw/main/smart_dinosaur_docs.png" alt="Profile picture" /&gt;
+      &lt;h1&gt;Prophet Orpheus&lt;/h1&gt;
+      &lt;p&gt;Coder Dino&lt;/p&gt;
+    &lt;/header&gt;
+    
+    &lt;section class="about"&gt;
+      &lt;h2&gt;About Me&lt;/h2&gt;
+      &lt;p&gt;Hello! I'm a coding dinosaur who loves to build websites. When I'm not coding, I enjoy reading books and eating leaves.&lt;/p&gt;
+    &lt;/section&gt;
+    
+    &lt;section class="skills"&gt;
+      &lt;h2&gt;My Skills&lt;/h2&gt;
+      &lt;ul&gt;
+        &lt;li&gt;HTML & CSS&lt;/li&gt;
+        &lt;li&gt;JavaScript&lt;/li&gt;
+        &lt;li&gt;Python&lt;/li&gt;
+        &lt;li&gt;Roaring&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/section&gt;
+    
+    &lt;section class="contact"&gt;
+      &lt;h2&gt;Contact Me&lt;/h2&gt;
+      &lt;p&gt;Email: &lt;a href="mailto:dino@example.com"&gt;dino@example.com&lt;/a&gt;&lt;/p&gt;
+      &lt;p&gt;&lt;a href="https://github.com"&gt;GitHub&lt;/a&gt; | &lt;a href="https://twitter.com"&gt;Twitter&lt;/a&gt;&lt;/p&gt;
+    &lt;/section&gt;
+    
+    &lt;footer&gt;
+      &lt;p&gt;&copy; 2023 Prophet Orpheus. Made with Hack Club Spaces.&lt;/p&gt;
+    &lt;/footer&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+                </div>
+                
+                <p>This HTML uses semantic tags like <code>&lt;header&gt;</code>, <code>&lt;section&gt;</code>, and <code>&lt;footer&gt;</code> to organize content better.</p>
+                
+                <p><strong>Try it:</strong> Update your HTML with this structure and customize it with your own information!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="8" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Styling the New Sections</h3>
+                <p>Let's style our new sections to look more organized and attractive!</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Extended CSS:</h4>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+/* Add these styles to your existing CSS */
+header {
+  margin-bottom: 40px;
+}
+
+section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 30px 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+
+h2 {
+  color: #4e54c8;
+  border-bottom: 2px solid #8f94fb;
+  padding-bottom: 5px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+ul li {
+  padding: 5px 0;
+  margin-left: 20px;
+}
+
+ul li:before {
+  content: "✓ ";
+  color: #4e54c8;
+}
+
+footer {
+  margin-top: 40px;
+  padding: 20px;
+  font-size: 0.9rem;
+  color: #666;
+  border-top: 1px solid #ddd;
+}
+
+a {
+  color: #4e54c8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: #ff6b6b;
+  text-decoration: underline;
+}</pre>
+                </div>
+                
+                <p><strong>Try it:</strong> Add these styles to your CSS file to make your sections look more polished and professional!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="9" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Part III: Publishing Your Site</h3>
+                <p>Now that you've created your website, it's time to share it with the world!</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Deploying with Hack Club Spaces:</h4>
                     <ol style="padding-left: 20px; line-height: 1.6;">
-                        <li>Add more pages to your website and link them together</li>
-                        <li>Learn about responsive design to make your site mobile-friendly</li>
-                        <li>Experiment with CSS animations and transitions</li>
-                        <li>Try incorporating JavaScript for interactivity</li>
-                        <li>Use the browser's developer tools to inspect and debug your code</li>
+                        <li>Make sure you've saved all your changes</li>
+                        <li>Click the "Deploy" button in the browser toolbar above the preview</li>
+                        <li>Your site will be available at the URL shown in the deploy modal</li>
                     </ol>
+                </div>
+                
+                <div style="margin: 15px 0; text-align: center;">
+                    <img src="https://cloud-4zpw37atj-hack-club-bot.vercel.app/1celebrate_rush_hour.gif" style="max-width: 100%; border-radius: 8px;" alt="Celebration GIF">
+                </div>
+                
+                <p><strong>Remember:</strong> Every time you make changes to your site, you'll need to save and deploy again to update your live site.</p>
+                
+                <p><i>For a limited time: <a href="https://hack.club/boba" target="_blank">get a free bubble tea</a> after your site deploys!</i></p>
+            </div>
+
+            <div class="tutorial-step" data-step="10" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Next Steps & Resources</h3>
+                <p>Congratulations on creating your personal website! Here are some ways to take it further:</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Ideas for Improvement:</h4>
+                    <ul style="padding-left: 20px; line-height: 1.6;">
+                        <li>Add a dark/light mode toggle using JavaScript</li>
+                        <li>Create a photo gallery or portfolio section</li>
+                        <li>Add animations to make elements fade in as you scroll</li>
+                        <li>Make your site responsive for mobile devices</li>
+                        <li>Add a contact form or blog section</li>
+                    </ul>
                 </div>
 
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
@@ -720,7 +785,16 @@
                     </ul>
                 </div>
 
-                <p style="margin-top: 20px; font-weight: bold;">Remember to save and deploy your site to share it with others!</p>
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Example Websites for Inspiration:</h4>
+                    <p>Check out these websites made by other Hack Club members:</p>
+                    <ul style="padding-left: 20px; line-height: 1.6;">
+                        <li><a href="https://cytronicoder.com/" target="_blank">Zeyu (Peter) Yao</a></li>
+                        <li><a href="https://kognise.dev/" target="_blank">Kognise</a></li>
+                        <li><a href="https://sarthakmohanty.me/" target="_blank">Sarthak Mohanty</a></li>
+                        <li><a href="https://sampoder.com/" target="_blank">Sam Poder</a></li>
+                    </ul>
+                </div>
 
                 <div style="text-align: center; margin-top: 20px;">
                     <button onclick="openYSWSModal()" class="btn-primary" style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #ff6b6b 0%, #8c52ff 100%);">
