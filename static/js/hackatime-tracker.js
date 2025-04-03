@@ -220,6 +220,9 @@ class HackatimeTracker {
                 <div class="hackatime-badge-status">
                     <span id="hackatime-status">Connected</span>
                 </div>
+                <div class="hackatime-badge-dashboard">
+                    <a href="https://hackatime.hackclub.com/" target="_blank" id="hackatime-dashboard-link">Dashboard</a>
+                </div>
             `;
 
             // Add tooltip
