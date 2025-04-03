@@ -911,7 +911,8 @@ a:hover {
 {% endif %}
 
 <script>
-function openYSWSModal() {
+// Make these functions globally available
+window.openYSWSModal = function() {
     const widget = document.getElementById('ysws-widget');
     widget.style.display = 'block';
 
@@ -930,10 +931,10 @@ function openYSWSModal() {
     }, 50);
 
     const dragHandle = widget.querySelector('.orphy-header');
-    makeDraggable(widget, dragHandle);
-}
+    window.makeDraggable(widget, dragHandle);
+};
 
-function openTutorialModal() {
+window.openTutorialModal = function() {
     const widget = document.getElementById('tutorial-widget');
     widget.style.display = 'block';
 
@@ -952,37 +953,37 @@ function openTutorialModal() {
     }, 50);
 
     const dragHandle = widget.querySelector('.orphy-header');
-    makeDraggable(widget, dragHandle);
+    window.makeDraggable(widget, dragHandle);
 
     // Reset to first step
     currentTutorialStep = 1;
     updateTutorialStep();
-}
+};
 
-function closeTutorialModal() {
+window.closeTutorialModal = function() {
     const widget = document.getElementById('tutorial-widget');
     widget.style.opacity = '0';
     setTimeout(() => {
         widget.style.display = 'none';
     }, 300);
-}
+};
 
 let currentTutorialStep = 1;
 const totalTutorialSteps = 10;
 
-function nextTutorialStep() {
+window.nextTutorialStep = function() {
     if (currentTutorialStep < totalTutorialSteps) {
         currentTutorialStep++;
         updateTutorialStep();
     }
-}
+};
 
-function prevTutorialStep() {
+window.prevTutorialStep = function() {
     if (currentTutorialStep > 1) {
         currentTutorialStep--;
         updateTutorialStep();
     }
-}
+};
 
 function updateTutorialStep() {
     // Update step indicator
@@ -999,15 +1000,15 @@ function updateTutorialStep() {
     });
 }
 
-function closeYSWSModal() {
+window.closeYSWSModal = function() {
     const widget = document.getElementById('ysws-widget');
     widget.style.opacity = '0';
     setTimeout(() => {
         widget.style.display = 'none';
     }, 300);
-}
+};
 
-function makeDraggable(element, dragHandle) {
+window.makeDraggable = function(element, dragHandle) {
     let offsetX = 0, offsetY = 0;
     let isDragging = false;
 
@@ -1044,7 +1045,28 @@ function makeDraggable(element, dragHandle) {
     dragHandle.addEventListener('mousedown', startDrag);
     document.addEventListener('mousemove', moveDrag);
     document.addEventListener('mouseup', endDrag);
-}
+};
+
+// Initialize the modals when the document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize YSWS widget
+    const yswsWidget = document.getElementById('ysws-widget');
+    if (yswsWidget) {
+        const yswsDragHandle = yswsWidget.querySelector('.orphy-header');
+        if (yswsDragHandle) {
+            window.makeDraggable(yswsWidget, yswsDragHandle);
+        }
+    }
+    
+    // Initialize tutorial widget
+    const tutorialWidget = document.getElementById('tutorial-widget');
+    if (tutorialWidget) {
+        const tutorialDragHandle = tutorialWidget.querySelector('.orphy-header');
+        if (tutorialDragHandle) {
+            window.makeDraggable(tutorialWidget, tutorialDragHandle);
+        }
+    }
+});
 </script>
 
 {% if additional_scripts %}
