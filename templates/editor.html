@@ -422,7 +422,7 @@
                 <i class="fas fa-arrow-left"></i> Previous
             </button>
             <div style="display: flex; align-items: center;">
-                <span id="tutorial-step-indicator">1/5</span>
+                <span id="tutorial-step-indicator">1/10</span>
             </div>
             <button id="next-tutorial" onclick="nextTutorialStep()" class="btn-primary" style="margin-left: 10px;">
                 Next <i class="fas fa-arrow-right"></i>
@@ -433,7 +433,7 @@
             <div class="tutorial-step" data-step="1" style="display: block;">
                 <h3 style="color: #4e54c8; margin-top: 0;">Getting Started with HTML</h3>
                 <p>HTML (HyperText Markup Language) is the backbone of any website. It defines the structure and content of your web page.</p>
-                
+
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                     <h4 style="margin-top: 0;">Basic HTML Structure:</h4>
                     <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
@@ -448,17 +448,14 @@
   &lt;/body&gt;
 &lt;/html&gt;</pre>
                 </div>
-                
+
                 <p><strong>Try it:</strong> Copy this code into your editor to create a basic webpage structure.</p>
-                <button onclick="copyToEditor('html-basic')" class="btn-primary" style="display: inline-block; padding: 8px 16px; margin-top: 10px;">
-                    <i class="fas fa-copy"></i> Copy to Editor
-                </button>
             </div>
-            
+
             <div class="tutorial-step" data-step="2" style="display: none;">
                 <h3 style="color: #4e54c8; margin-top: 0;">Adding More Content</h3>
                 <p>Let's add more elements to make your page more interesting and informative.</p>
-                
+
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                     <h4 style="margin-top: 0;">Common HTML Elements:</h4>
                     <ul style="padding-left: 20px; line-height: 1.6;">
@@ -470,39 +467,35 @@
                         <li><strong>&lt;div&gt;</strong> - Container for grouping elements</li>
                     </ul>
                 </div>
-                
+
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                     <h4 style="margin-top: 0;">Example:</h4>
                     <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
 &lt;body&gt;
   &lt;h1&gt;My Website&lt;/h1&gt;
   &lt;h2&gt;Welcome to my page!&lt;/h2&gt;
-  
+
   &lt;p&gt;This is a paragraph with &lt;strong&gt;bold text&lt;/strong&gt; and &lt;em&gt;italic text&lt;/em&gt;.&lt;/p&gt;
-  
+
   &lt;h3&gt;My Favorite Foods&lt;/h3&gt;
   &lt;ul&gt;
     &lt;li&gt;Pizza&lt;/li&gt;
     &lt;li&gt;Ice Cream&lt;/li&gt;
     &lt;li&gt;Tacos&lt;/li&gt;
   &lt;/ul&gt;
-  
+
   &lt;h3&gt;Check out this image:&lt;/h3&gt;
   &lt;img src="https://hackclub.com/hackclub-flag.svg" alt="Hack Club Flag" width="300"&gt;
-  
+
   &lt;p&gt;&lt;a href="https://hackclub.com"&gt;Visit Hack Club&lt;/a&gt;&lt;/p&gt;
 &lt;/body&gt;</pre>
                 </div>
-                
-                <button onclick="copyToEditor('html-content')" class="btn-primary" style="display: inline-block; padding: 8px 16px; margin-top: 10px;">
-                    <i class="fas fa-copy"></i> Copy to Editor
-                </button>
             </div>
-            
+
             <div class="tutorial-step" data-step="3" style="display: none;">
                 <h3 style="color: #4e54c8; margin-top: 0;">Introduction to CSS</h3>
                 <p>CSS (Cascading Style Sheets) is used to style your HTML elements and make your website look attractive.</p>
-                
+
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                     <h4 style="margin-top: 0;">Adding CSS:</h4>
                     <p>You can add CSS in three ways:</p>
@@ -512,7 +505,7 @@
                         <li><strong>External</strong> - Using a separate CSS file</li>
                     </ol>
                 </div>
-                
+
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                     <h4 style="margin-top: 0;">Basic CSS Example (Internal):</h4>
                     <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
@@ -526,16 +519,16 @@
       padding: 20px;
       background-color: #f5f5f5;
     }
-    
+
     h1 {
       color: #4e54c8;
       text-align: center;
     }
-    
+
     p {
       color: #333;
     }
-    
+
     .container {
       max-width: 800px;
       margin: 0 auto;
@@ -547,16 +540,12 @@
   &lt;/style&gt;
 &lt;/head&gt;</pre>
                 </div>
-                
-                <button onclick="copyToEditor('css-basic')" class="btn-primary" style="display: inline-block; padding: 8px 16px; margin-top: 10px;">
-                    <i class="fas fa-copy"></i> Copy to Editor
-                </button>
             </div>
-            
+
             <div class="tutorial-step" data-step="4" style="display: none;">
                 <h3 style="color: #4e54c8; margin-top: 0;">Putting It All Together</h3>
                 <p>Now let's combine HTML and CSS to create a complete webpage.</p>
-                
+
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                     <h4 style="margin-top: 0;">Complete Webpage Example:</h4>
                     <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
@@ -572,19 +561,19 @@
       background-color: #f5f5f5;
       color: #333;
     }
-    
+
     .header {
       background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
       color: white;
       text-align: center;
       padding: 60px 20px;
     }
-    
+
     .header h1 {
       margin: 0;
       font-size: 3rem;
     }
-    
+
     .container {
       max-width: 800px;
       margin: 20px auto;
@@ -593,24 +582,24 @@
       border-radius: 10px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-    
+
     .section {
       margin-bottom: 30px;
     }
-    
+
     .section h2 {
       color: #4e54c8;
       border-bottom: 2px solid #8f94fb;
       padding-bottom: 10px;
     }
-    
+
     .gallery {
       display: flex;
       flex-wrap: wrap;
       gap: 15px;
       justify-content: center;
     }
-    
+
     .gallery img {
       width: 200px;
       height: 150px;
@@ -618,11 +607,11 @@
       border-radius: 5px;
       transition: transform 0.3s;
     }
-    
+
     .gallery img:hover {
       transform: scale(1.05);
     }
-    
+
     .footer {
       text-align: center;
       padding: 20px;
@@ -630,12 +619,12 @@
       color: white;
       margin-top: 30px;
     }
-    
+
     a {
       color: #4e54c8;
       text-decoration: none;
     }
-    
+
     a:hover {
       text-decoration: underline;
     }
@@ -646,13 +635,13 @@
     &lt;h1&gt;Welcome to My Website&lt;/h1&gt;
     &lt;p&gt;A place to learn and create&lt;/p&gt;
   &lt;/div&gt;
-  
+
   &lt;div class="container"&gt;
     &lt;div class="section"&gt;
       &lt;h2&gt;About Me&lt;/h2&gt;
-      &lt;p&gt;Hello! I'm a web developer learning HTML and CSS. This is my first website created with Hack Club Spaces.&lt;/p&gt;
+      &lt;p&gt;Hello! I'm a web developer learning HTML and CSS. This is my first website created with Hack Club Spaces.&lt;/pgt;.</p>
     &lt;/div&gt;
-    
+
     &lt;div class="section"&gt;
       &lt;h2&gt;My Interests&lt;/h2&gt;
       &lt;ul&gt;
@@ -662,7 +651,7 @@
         &lt;li&gt;Artificial Intelligence&lt;/li&gt;
       &lt;/ul&gt;
     &lt;/div&gt;
-    
+
     &lt;div class="section"&gt;
       &lt;h2&gt;Photo Gallery&lt;/h2&gt;
       &lt;div class="gallery"&gt;
@@ -671,29 +660,45 @@
         &lt;img src="https://source.unsplash.com/random/200x150?art" alt="Art"&gt;
       &lt;/div&gt;
     &lt;/div&gt;
-    
+
     &lt;div class="section"&gt;
       &lt;h2&gt;Contact Me&lt;/h2&gt;
       &lt;p&gt;You can reach me at: &lt;a href="mailto:example@email.com"&gt;example@email.com&lt;/a&gt;&lt;/p&gt;
     &lt;/div&gt;
   &lt;/div&gt;
-  
+
   &lt;div class="footer"&gt;
     &lt;p&gt;&copy; 2023 My Website. All rights reserved. Made with Hack Club Spaces.&lt;/p&gt;
   &lt;/div&gt;
 &lt;/body&gt;
 &lt;/html&gt;</pre>
                 </div>
-                
-                <button onclick="copyToEditor('complete-website')" class="btn-primary" style="display: inline-block; padding: 8px 16px; margin-top: 10px;">
-                    <i class="fas fa-copy"></i> Copy to Editor
-                </button>
             </div>
-            
+
             <div class="tutorial-step" data-step="5" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Adding Interactivity with JavaScript</h3>
+                <p>JavaScript allows you to add dynamic behavior to your website, making it more engaging for users.</p>
+            </div>
+            <div class="tutorial-step" data-step="6" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Handling Events</h3>
+                <p>Learn how to respond to user interactions such as clicks and mouseovers.</p>
+            </div>
+            <div class="tutorial-step" data-step="7" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Working with the DOM</h3>
+                <p>Manipulate the structure and content of your webpage dynamically.</p>
+            </div>
+            <div class="tutorial-step" data-step="8" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Making Animations</h3>
+                <p>Create visually appealing animations using CSS and JavaScript.</p>
+            </div>
+            <div class="tutorial-step" data-step="9" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Improving Your Website</h3>
+                <p>Tips and techniques for making your website better.</p>
+            </div>
+            <div class="tutorial-step" data-step="10" style="display: none;">
                 <h3 style="color: #4e54c8; margin-top: 0;">Next Steps & Resources</h3>
                 <p>Congratulations on creating your first website! Here are some tips for continuing your web development journey:</p>
-                
+
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                     <h4 style="margin-top: 0;">Tips for Improving:</h4>
                     <ol style="padding-left: 20px; line-height: 1.6;">
@@ -704,7 +709,7 @@
                         <li>Use the browser's developer tools to inspect and debug your code</li>
                     </ol>
                 </div>
-                
+
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                     <h4 style="margin-top: 0;">Helpful Resources:</h4>
                     <ul style="padding-left: 20px; line-height: 1.6;">
@@ -714,9 +719,9 @@
                         <li><a href="https://hackclub.com/" target="_blank">Hack Club</a> - Community and resources for young developers</li>
                     </ul>
                 </div>
-                
+
                 <p style="margin-top: 20px; font-weight: bold;">Remember to save and deploy your site to share it with others!</p>
-                
+
                 <div style="text-align: center; margin-top: 20px;">
                     <button onclick="openYSWSModal()" class="btn-primary" style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #ff6b6b 0%, #8c52ff 100%);">
                         <i class="fa-solid fa-gift"></i> Apply for YSWS
@@ -738,7 +743,7 @@
         <div class="ysws-section" style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #ff6b6b;">
             <h3 style="color: #ff6b6b; margin-top: 0;"><i class="fa-solid fa-mug-hot"></i> Boba Drops</h3>
             <p style="font-size: 16px; line-height: 1.5;">Ship a website, get $5 for Boba!</p>
-            
+
             <div style="margin: 15px 0; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                 <h4 style="margin-top: 0;">Requirements:</h4>
                 <ul style="padding-left: 20px; line-height: 1.6;">
@@ -750,16 +755,16 @@
                     <li>You are in the USA!</li>
                 </ul>
             </div>
-            
+
             <a href="https://forms.hackclub.com/t/tLf8GYVBqSus" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease;">
                 <i class="fas fa-external-link-alt"></i> Apply for Boba Drops
             </a>
         </div>
-        
+
         <div class="ysws-section" style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #8c52ff;">
             <h3 style="color: #8c52ff; margin-top: 0;"><i class="fa-solid fa-ice-cream"></i> Swirl</h3>
             <p style="font-size: 16px; line-height: 1.5;">Build a website, Get free ice cream!</p>
-            
+
             <div style="margin: 15px 0; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                 <h4 style="margin-top: 0;">Requirements:</h4>
                 <ul style="padding-left: 20px; line-height: 1.6;">
@@ -774,12 +779,12 @@
                     <li>Your website is original (NO AI or copy-pasting from ANYWHERE)</li>
                 </ul>
             </div>
-            
+
             <a href="https://forms.hackclub.com/t/t1UL6ZK4Nyus" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #8c52ff 0%, #a56fff 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease;">
                 <i class="fas fa-external-link-alt"></i> Apply for Swirl
             </a>
         </div>
-        
+
         <div style="text-align: center; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 12px;">
             <h4 style="margin-top: 0; color: #ff9d00;"><i class="fas fa-lightbulb"></i> Quick Tip</h4>
             <p>Remember to save and deploy your site before applying. Good luck!</p>
@@ -835,21 +840,21 @@
 function openYSWSModal() {
     const widget = document.getElementById('ysws-widget');
     widget.style.display = 'block';
-    
+
     // Center the modal initially
     const windowHeight = window.innerHeight;
     const windowWidth = window.innerWidth;
     const modalWidth = 500; // Fixed width
     const modalHeight = 600; // Approximate height
-    
+
     widget.style.left = (windowWidth / 2 - modalWidth / 2) + 'px';
     widget.style.top = (windowHeight / 2 - modalHeight / 2) + 'px';
     widget.style.transform = 'none';
-    
+
     setTimeout(() => {
         widget.style.opacity = '1';
     }, 50);
-    
+
     const dragHandle = widget.querySelector('.orphy-header');
     makeDraggable(widget, dragHandle);
 }
@@ -857,24 +862,24 @@ function openYSWSModal() {
 function openTutorialModal() {
     const widget = document.getElementById('tutorial-widget');
     widget.style.display = 'block';
-    
+
     // Center the modal initially
     const windowHeight = window.innerHeight;
     const windowWidth = window.innerWidth;
     const modalWidth = 600; // Fixed width
     const modalHeight = 600; // Approximate height
-    
+
     widget.style.left = (windowWidth / 2 - modalWidth / 2) + 'px';
     widget.style.top = (windowHeight / 2 - modalHeight / 2) + 'px';
     widget.style.transform = 'none';
-    
+
     setTimeout(() => {
         widget.style.opacity = '1';
     }, 50);
-    
+
     const dragHandle = widget.querySelector('.orphy-header');
     makeDraggable(widget, dragHandle);
-    
+
     // Reset to first step
     currentTutorialStep = 1;
     updateTutorialStep();
@@ -889,7 +894,7 @@ function closeTutorialModal() {
 }
 
 let currentTutorialStep = 1;
-const totalTutorialSteps = 5;
+const totalTutorialSteps = 10;
 
 function nextTutorialStep() {
     if (currentTutorialStep < totalTutorialSteps) {
@@ -908,209 +913,16 @@ function prevTutorialStep() {
 function updateTutorialStep() {
     // Update step indicator
     document.getElementById('tutorial-step-indicator').textContent = `${currentTutorialStep}/${totalTutorialSteps}`;
-    
+
     // Enable/disable navigation buttons
     document.getElementById('prev-tutorial').disabled = (currentTutorialStep === 1);
     document.getElementById('next-tutorial').disabled = (currentTutorialStep === totalTutorialSteps);
-    
+
     // Show current step, hide others
     document.querySelectorAll('.tutorial-step').forEach(step => {
         const stepNum = parseInt(step.getAttribute('data-step'));
         step.style.display = (stepNum === currentTutorialStep) ? 'block' : 'none';
     });
-}
-
-// Sample templates for the "Copy to Editor" buttons
-const editorTemplates = {
-    'html-basic': `<!DOCTYPE html>
-<html>
-  <head>
-    <title>My First Website</title>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-    <p>This is my first web page.</p>
-  </body>
-</html>`,
-    'html-content': `<body>
-  <h1>My Website</h1>
-  <h2>Welcome to my page!</h2>
-  
-  <p>This is a paragraph with <strong>bold text</strong> and <em>italic text</em>.</p>
-  
-  <h3>My Favorite Foods</h3>
-  <ul>
-    <li>Pizza</li>
-    <li>Ice Cream</li>
-    <li>Tacos</li>
-  </ul>
-  
-  <h3>Check out this image:</h3>
-  <img src="https://hackclub.com/hackclub-flag.svg" alt="Hack Club Flag" width="300">
-  
-  <p><a href="https://hackclub.com">Visit Hack Club</a></p>
-</body>`,
-    'css-basic': `<head>
-  <title>My Styled Website</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      margin: 0;
-      padding: 20px;
-      background-color: #f5f5f5;
-    }
-    
-    h1 {
-      color: #4e54c8;
-      text-align: center;
-    }
-    
-    p {
-      color: #333;
-    }
-    
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-  </style>
-</head>`,
-    'complete-website': `<!DOCTYPE html>
-<html>
-<head>
-  <title>My Awesome Website</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      line-height: 1.6;
-      margin: 0;
-      background-color: #f5f5f5;
-      color: #333;
-    }
-    
-    .header {
-      background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
-      color: white;
-      text-align: center;
-      padding: 60px 20px;
-    }
-    
-    .header h1 {
-      margin: 0;
-      font-size: 3rem;
-    }
-    
-    .container {
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    .section {
-      margin-bottom: 30px;
-    }
-    
-    .section h2 {
-      color: #4e54c8;
-      border-bottom: 2px solid #8f94fb;
-      padding-bottom: 10px;
-    }
-    
-    .gallery {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      justify-content: center;
-    }
-    
-    .gallery img {
-      width: 200px;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 5px;
-      transition: transform 0.3s;
-    }
-    
-    .gallery img:hover {
-      transform: scale(1.05);
-    }
-    
-    .footer {
-      text-align: center;
-      padding: 20px;
-      background: #333;
-      color: white;
-      margin-top: 30px;
-    }
-    
-    a {
-      color: #4e54c8;
-      text-decoration: none;
-    }
-    
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>Welcome to My Website</h1>
-    <p>A place to learn and create</p>
-  </div>
-  
-  <div class="container">
-    <div class="section">
-      <h2>About Me</h2>
-      <p>Hello! I'm a web developer learning HTML and CSS. This is my first website created with Hack Club Spaces.</p>
-    </div>
-    
-    <div class="section">
-      <h2>My Interests</h2>
-      <ul>
-        <li>Web Development</li>
-        <li>Graphic Design</li>
-        <li>Photography</li>
-        <li>Artificial Intelligence</li>
-      </ul>
-    </div>
-    
-    <div class="section">
-      <h2>Photo Gallery</h2>
-      <div class="gallery">
-        <img src="https://source.unsplash.com/random/200x150?nature" alt="Nature">
-        <img src="https://source.unsplash.com/random/200x150?technology" alt="Technology">
-        <img src="https://source.unsplash.com/random/200x150?art" alt="Art">
-      </div>
-    </div>
-    
-    <div class="section">
-      <h2>Contact Me</h2>
-      <p>You can reach me at: <a href="mailto:example@email.com">example@email.com</a></p>
-    </div>
-  </div>
-  
-  <div class="footer">
-    <p>&copy; 2023 My Website. All rights reserved. Made with Hack Club Spaces.</p>
-  </div>
-</body>
-</html>`
-};
-
-function copyToEditor(templateName) {
-    const content = editorTemplates[templateName];
-    if (content && editor) {
-        editor.setValue(content);
-        showToast('success', 'Code copied to editor!');
-    }
 }
 
 function closeYSWSModal() {
@@ -1124,7 +936,7 @@ function closeYSWSModal() {
 function makeDraggable(element, dragHandle) {
     let offsetX = 0, offsetY = 0;
     let isDragging = false;
-    
+
     const startDrag = function(e) {
         isDragging = true;
         const rect = element.getBoundingClientRect();
@@ -1133,28 +945,28 @@ function makeDraggable(element, dragHandle) {
         dragHandle.style.cursor = 'grabbing';
         e.preventDefault();
     };
-    
+
     const moveDrag = function(e) {
         if (!isDragging) return;
-        
+
         const x = e.clientX - offsetX;
         const y = e.clientY - offsetY;
-        
+
         // Set boundaries to keep the modal within viewport
         const maxX = window.innerWidth - element.offsetWidth;
         const maxY = window.innerHeight - element.offsetHeight;
-        
+
         element.style.left = Math.min(Math.max(0, x), maxX) + 'px';
         element.style.top = Math.min(Math.max(0, y), maxY) + 'px';
         element.style.transform = 'none';
         e.preventDefault();
     };
-    
+
     const endDrag = function() {
         isDragging = false;
         dragHandle.style.cursor = 'grab';
     };
-    
+
     dragHandle.addEventListener('mousedown', startDrag);
     document.addEventListener('mousemove', moveDrag);
     document.addEventListener('mouseup', endDrag);
