@@ -56,8 +56,9 @@ function centerTutorialModal() {
   const modalHeight = Math.min(600, windowHeight * 0.8); // Approximate height
 
   // Set position
-  tutorialWidget.style.left = (windowWidth / 2 - modalWidth / 2) + 'px';
-  tutorialWidget.style.top = (windowHeight / 2 - modalHeight / 2) + 'px';
+  tutorialWidget.style.left = '50%';
+  tutorialWidget.style.top = '50%';
+  tutorialWidget.style.transform = 'translate(-50%, -50%)';
 }
 
 // Close the tutorial modal
@@ -167,6 +168,7 @@ function drag(e) {
   const newX = Math.min(Math.max(0, initialX + dx), maxX);
   const newY = Math.min(Math.max(0, initialY + dy), maxY);
   
+  tutorialWidget.style.transform = 'none'; // Remove transform when dragging
   tutorialWidget.style.left = newX + 'px';
   tutorialWidget.style.top = newY + 'px';
   

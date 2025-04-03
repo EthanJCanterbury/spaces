@@ -640,7 +640,7 @@
     &lt;div class="section"&gt;
       &lt;h2&gt;About Me&lt;/h2&gt;
       &lt;p&gt;Hello! I'm a web developer learning HTML and CSS. This is my first website created with Hack Club Spaces.&lt;/pgt;.</p>
-    &lt;/div&gt;
+    &lt;/div&gt
 
     &lt;div class="section"&gt;
       &lt;h2&gt;My Interests&lt;/h2&gt;
@@ -836,142 +836,7 @@
 <script src="{{ url_for('static', filename='js/hackatime-tracker.js') }}"></script>
 {% endif %}
 
-<script>
-function openYSWSModal() {
-    const widget = document.getElementById('ysws-widget');
-    widget.style.display = 'block';
-
-    // Center the modal initially
-    const windowHeight = window.innerHeight;
-    const windowWidth = window.innerWidth;
-    const modalWidth = 500; // Fixed width
-    const modalHeight = 600; // Approximate height
-
-    widget.style.left = (windowWidth / 2 - modalWidth / 2) + 'px';
-    widget.style.top = (windowHeight / 2 - modalHeight / 2) + 'px';
-    widget.style.transform = 'none';
-
-    setTimeout(() => {
-        widget.style.opacity = '1';
-    }, 50);
-
-    const dragHandle = widget.querySelector('.orphy-header');
-    makeDraggable(widget, dragHandle);
-}
-
-function openTutorialModal() {
-    const widget = document.getElementById('tutorial-widget');
-    widget.style.display = 'block';
-
-    // Center the modal initially
-    const windowHeight = window.innerHeight;
-    const windowWidth = window.innerWidth;
-    const modalWidth = 600; // Fixed width
-    const modalHeight = 600; // Approximate height
-
-    widget.style.left = (windowWidth / 2 - modalWidth / 2) + 'px';
-    widget.style.top = (windowHeight / 2 - modalHeight / 2) + 'px';
-    widget.style.transform = 'none';
-
-    setTimeout(() => {
-        widget.style.opacity = '1';
-    }, 50);
-
-    const dragHandle = widget.querySelector('.orphy-header');
-    makeDraggable(widget, dragHandle);
-
-    // Reset to first step
-    currentTutorialStep = 1;
-    updateTutorialStep();
-}
-
-function closeTutorialModal() {
-    const widget = document.getElementById('tutorial-widget');
-    widget.style.opacity = '0';
-    setTimeout(() => {
-        widget.style.display = 'none';
-    }, 300);
-}
-
-let currentTutorialStep = 1;
-const totalTutorialSteps = 10;
-
-function nextTutorialStep() {
-    if (currentTutorialStep < totalTutorialSteps) {
-        currentTutorialStep++;
-        updateTutorialStep();
-    }
-}
-
-function prevTutorialStep() {
-    if (currentTutorialStep > 1) {
-        currentTutorialStep--;
-        updateTutorialStep();
-    }
-}
-
-function updateTutorialStep() {
-    // Update step indicator
-    document.getElementById('tutorial-step-indicator').textContent = `${currentTutorialStep}/${totalTutorialSteps}`;
-
-    // Enable/disable navigation buttons
-    document.getElementById('prev-tutorial').disabled = (currentTutorialStep === 1);
-    document.getElementById('next-tutorial').disabled = (currentTutorialStep === totalTutorialSteps);
-
-    // Show current step, hide others
-    document.querySelectorAll('.tutorial-step').forEach(step => {
-        const stepNum = parseInt(step.getAttribute('data-step'));
-        step.style.display = (stepNum === currentTutorialStep) ? 'block' : 'none';
-    });
-}
-
-function closeYSWSModal() {
-    const widget = document.getElementById('ysws-widget');
-    widget.style.opacity = '0';
-    setTimeout(() => {
-        widget.style.display = 'none';
-    }, 300);
-}
-
-function makeDraggable(element, dragHandle) {
-    let offsetX = 0, offsetY = 0;
-    let isDragging = false;
-
-    const startDrag = function(e) {
-        isDragging = true;
-        const rect = element.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-        dragHandle.style.cursor = 'grabbing';
-        e.preventDefault();
-    };
-
-    const moveDrag = function(e) {
-        if (!isDragging) return;
-
-        const x = e.clientX - offsetX;
-        const y = e.clientY - offsetY;
-
-        // Set boundaries to keep the modal within viewport
-        const maxX = window.innerWidth - element.offsetWidth;
-        const maxY = window.innerHeight - element.offsetHeight;
-
-        element.style.left = Math.min(Math.max(0, x), maxX) + 'px';
-        element.style.top = Math.min(Math.max(0, y), maxY) + 'px';
-        element.style.transform = 'none';
-        e.preventDefault();
-    };
-
-    const endDrag = function() {
-        isDragging = false;
-        dragHandle.style.cursor = 'grab';
-    };
-
-    dragHandle.addEventListener('mousedown', startDrag);
-    document.addEventListener('mousemove', moveDrag);
-    document.addEventListener('mouseup', endDrag);
-}
-</script>
+<script src="/static/js/tutorial.js"></script>
 
 {% if additional_scripts %}
 {{ additional_scripts|safe }}
