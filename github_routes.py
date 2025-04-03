@@ -1,3 +1,5 @@
+import hashlib
+from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, redirect, url_for, session, flash
 from flask_login import current_user, login_required, login_user
 from github import Github, GithubException
@@ -777,3 +779,166 @@ def disconnect_account():
         print('Disconnect account error:', str(e))
         return jsonify(
             {'error': 'Failed to disconnect GitHub account: ' + str(e)}), 500
+
+@github_bp.route('/hackatime/heartbeat', methods=['POST'])
+@login_required
+def hackatime_heartbeat():
+    """Send a heartbeat to Hackatime API"""
+    try:
+        # Check if user has API key
+        if not current_user.hackatime_api_key:
+            app.logger.warning(
+                f"User {current_user.username} attempted to send heartbeat without API key"
+            )
+            return jsonify({
+                'success': False,
+                'message': 'No Hackatime API key found'
+            }), 403
+
+        # Get heartbeat data from request
+        data = request.get_json()
+        if not data:
+            # If no data is provided, create a default heartbeat with all required fields
+            data = [{
+                "entity": "main.py",
+                "type": "file",
+                "time": int(time.time()),
+                "category": "coding",
+                "project": "Hack Club Project",
+                "branch": "main",
+                "language": "Python",
+                "is_write": True,
+                "lines": 150,
+                "lineno": 42,
+                "cursorpos": 10,
+                "line_additions": 5,
+                "line_deletions": 2,
+                "project_root_count": 3,
+                "dependencies": "flask,numpy,pandas",
+                "machine": f"machine_{hashlib.md5(current_user.username.encode()).hexdigest()[:8]}",
+                "editor": "Spaces IDE",
+                "operating_system": "Unknown",
+                "user_agent": request.headers.get('User-Agent', 'Unknown')
+            }]
+            app.logger.info("Using default heartbeat data")
+
+        # Send heartbeat to Hackatime API
+        api_url = "https://hackatime.hackclub.com/api/hackatime/v1/users/current/heartbeats"
+
+        # The API controller expects a Bearer token
+        headers = {
+            'Authorization': f'Bearer {current_user.hackatime_api_key}',
+            'Content-Type': 'application/json',
+            'User-Agent': request.headers.get('User-Agent', 'Spaces IDE Client')
+        }
+
+        # Make sure heartbeat data has all required fields
+        if isinstance(data, dict):
+            # If data is a dict, convert to list with single item
+            heartbeat_payload = [ensure_complete_heartbeat(data)]
+        else:
+            # If data is already a list, ensure each item has all fields
+            heartbeat_payload = [ensure_complete_heartbeat(hb) for hb in data]
+
+        app.logger.info(
+            f"Sending heartbeat to Hackatime for user {current_user.username}")
+        app.logger.debug(f"Heartbeat payload: {heartbeat_payload}")
+
+        # Make the request to Hackatime API
+        response = requests.post(api_url,
+                                 headers=headers,
+                                 json=heartbeat_payload,
+                                 timeout=10)
+
+        app.logger.info(
+            f"Hackatime API response status: {response.status_code}")
+
+        if response.status_code >= 400:
+            error_text = response.text
+            app.logger.error(
+                f"Hackatime heartbeat failed: {response.status_code} - {error_text}"
+            )
+            return jsonify({
+                'success': False,
+                'message':
+                f'Heartbeat failed with status code {response.status_code}',
+                'details': error_text
+            }), response.status_code
+
+        # Record activity for first heartbeat of the day
+        now = datetime.utcnow()
+        day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+
+        heartbeat_today = UserActivity.query.filter(
+            UserActivity.user_id == current_user.id,
+            UserActivity.activity_type == "hackatime_heartbeat",
+            UserActivity.timestamp >= day_start, UserActivity.timestamp
+            < day_end).first()
+
+        if not heartbeat_today:
+            activity = UserActivity(
+                activity_type="hackatime_heartbeat",
+                message=
+                "User {username} sent first Hackatime heartbeat of the day",
+                username=current_user.username,
+                user_id=current_user.id)
+            db.session.add(activity)
+            db.session.commit()
+
+        # Try to parse the response content
+        try:
+            response_data = response.json()
+            return jsonify({
+                'success': True,
+                'message': 'Heartbeat sent successfully',
+                'response': response_data
+            })
+        except:
+            # If we can't parse the JSON, but the status code was good, still return success
+            return jsonify({
+                'success': True,
+                'message': 'Heartbeat sent successfully'
+            })
+    except Exception as e:
+        app.logger.error(f'Error sending Hackatime heartbeat: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'Failed to send heartbeat: {str(e)}'
+        }), 500
+
+def ensure_complete_heartbeat(heartbeat):
+    """Ensure the heartbeat has all required fields"""
+    # Define default values for required fields
+    current_time = int(time.time())
+    defaults = {
+        "entity": "main.py",
+        "type": "file",
+        "time": current_time,
+        "category": "coding",
+        "project": "Hack Club Project",
+        "branch": "main",
+        "language": "Python",
+        "is_write": True,
+        "lines": 150,
+        "lineno": 42,
+        "cursorpos": 10,
+        "line_additions": 5,
+        "line_deletions": 2,
+        "project_root_count": 3,
+        "dependencies": "flask,numpy,pandas",
+        "machine": f"machine_{hashlib.md5(current_user.username.encode()).hexdigest()[:8]}",
+        "editor": "Spaces IDE",
+        "operating_system": "Unknown",
+        "user_agent": request.headers.get('User-Agent', 'Unknown')
+    }
+
+    # Apply defaults for any missing fields
+    complete_heartbeat = defaults.copy()
+    complete_heartbeat.update(heartbeat)
+
+    # Ensure time is an integer
+    if not isinstance(complete_heartbeat["time"], int):
+        complete_heartbeat["time"] = current_time
+
+    return complete_heartbeat
