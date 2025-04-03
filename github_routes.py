@@ -1,4 +1,5 @@
 import hashlib
+import time
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, redirect, url_for, session, flash
 from flask_login import current_user, login_required, login_user
@@ -787,9 +788,7 @@ def hackatime_heartbeat():
     try:
         # Check if user has API key
         if not current_user.hackatime_api_key:
-            app.logger.warning(
-                f"User {current_user.username} attempted to send heartbeat without API key"
-            )
+            print(f"User {current_user.username} attempted to send heartbeat without API key")
             return jsonify({
                 'success': False,
                 'message': 'No Hackatime API key found'
@@ -840,9 +839,8 @@ def hackatime_heartbeat():
             # If data is already a list, ensure each item has all fields
             heartbeat_payload = [ensure_complete_heartbeat(hb) for hb in data]
 
-        app.logger.info(
-            f"Sending heartbeat to Hackatime for user {current_user.username}")
-        app.logger.debug(f"Heartbeat payload: {heartbeat_payload}")
+        print(f"Sending heartbeat to Hackatime for user {current_user.username}")
+        print(f"Heartbeat payload: {heartbeat_payload}")
 
         # Make the request to Hackatime API
         response = requests.post(api_url,
@@ -850,14 +848,11 @@ def hackatime_heartbeat():
                                  json=heartbeat_payload,
                                  timeout=10)
 
-        app.logger.info(
-            f"Hackatime API response status: {response.status_code}")
+        print(f"Hackatime API response status: {response.status_code}")
 
         if response.status_code >= 400:
             error_text = response.text
-            app.logger.error(
-                f"Hackatime heartbeat failed: {response.status_code} - {error_text}"
-            )
+            print(f"Hackatime heartbeat failed: {response.status_code} - {error_text}")
             return jsonify({
                 'success': False,
                 'message':
@@ -901,7 +896,7 @@ def hackatime_heartbeat():
                 'message': 'Heartbeat sent successfully'
             })
     except Exception as e:
-        app.logger.error(f'Error sending Hackatime heartbeat: {str(e)}')
+        print(f'Error sending Hackatime heartbeat: {str(e)}')
         return jsonify({
             'success': False,
             'message': f'Failed to send heartbeat: {str(e)}'
@@ -911,6 +906,7 @@ def ensure_complete_heartbeat(heartbeat):
     """Ensure the heartbeat has all required fields"""
     # Define default values for required fields
     current_time = int(time.time())
+    print(f"Processing heartbeat data in github_routes.py")
     defaults = {
         "entity": "main.py",
         "type": "file",
