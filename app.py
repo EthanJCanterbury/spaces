@@ -896,20 +896,13 @@ def create_site():
         app.logger.info(
             f'Creating new site "{name}" for user {current_user.id}')
 
-        default_html = f'''<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Website</title>
-    <link rel="stylesheet" href="/s/{slug}/styles.css">
-    <script src="/s/{slug}/script.js" defer></script>
-</head>
-<body>
-    <h1>Welcome to my website!</h1>
-    <p>This is a paragraph on my new site.</p>
-</body>
-</html>'''
+        default_html = f'''<link rel="stylesheet" href="/s/{slug}/styles.css"> <!--Dont remove!-->
+<script src="/s/{slug}/script.js" defer></script> <!--Dont remove!-->
+
+<!--We've got you started linking the scripts and styles since that is a bit tricky.-->
+<!--This is NOT how you set up an HTML file. Click the little tutorial button!-->
+
+<p>Welcome to your new space!</p> <!--This is a paragraph block!-->'''
 
         site = Site(name=name,
                     user_id=current_user.id,
@@ -917,20 +910,10 @@ def create_site():
         db.session.add(site)
         db.session.commit()
 
-        default_css = '''body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 20px;
-    color: #333;
-    max-width: 800px;
-    margin: 0 auto;
-}
+        default_css = '''
 
 h1 {
     color: #2c3e50;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
 }'''
 
         default_js = '''document.addEventListener('DOMContentLoaded', function() {
