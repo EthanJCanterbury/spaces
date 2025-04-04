@@ -179,56 +179,6 @@ function deleteFile(filename) {
 }
 
 
-function renameFile(oldFilename, newFilename) {
-  const siteId = document.getElementById('site-id').value;
-  
-  if (!newFilename || newFilename.trim() === '') {
-    showToast('error', 'Filename cannot be empty');
-    return;
-  }
-  
-  if (oldFilename === 'index.html' && newFilename !== 'index.html') {
-    showToast('error', 'Cannot rename index.html');
-    return;
-  }
-  
-  fetch(`/api/site/${siteId}/rename`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      old_filename: oldFilename,
-      new_filename: newFilename
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      showToast('success', `File renamed from ${oldFilename} to ${newFilename}`);
-      
-      // Update tab
-      const tab = document.querySelector(`.file-tab[data-filename="${oldFilename}"]`);
-      if (tab) {
-        tab.setAttribute('data-filename', newFilename);
-        tab.textContent = newFilename;
-      }
-      
-      // If this was the current file, reload it
-      if (currentFilename === oldFilename) {
-        currentFilename = newFilename;
-        switchToFile(newFilename);
-      }
-    } else {
-      showToast('error', data.message || 'Error renaming file');
-    }
-  })
-  .catch(error => {
-    console.error('Error renaming file:', error);
-    showToast('error', 'Error renaming file');
-  });
-}
-
 let contextMenu = null;
 let renameDialog = null;
 
@@ -279,17 +229,11 @@ function setupTabContextMenu() {
 }
 
 function showTabContextMenu(filename, x, y) {
-  // Create context menu if it doesn't exist
-  if (!contextMenu) {
-    contextMenu = document.createElement('div');
-    contextMenu.className = 'tab-context-menu';
-    document.body.appendChild(contextMenu);
+  if (contextMenu) {
+    contextMenu.classList.remove('visible');
   }
 
-  // Hide the menu first (reset state)
-  contextMenu.classList.remove('visible');
-
-  // Build menu items based on file
+  // Build menu items based on file (dont delete this, future Ethan!)
   let menuItems = '';
 
   menuItems += `<div class="context-menu-item rename-item" data-filename="${filename}">
@@ -302,24 +246,11 @@ function showTabContextMenu(filename, x, y) {
     </div>`;
   }
 
-  // Set content and position
   contextMenu.innerHTML = menuItems;
   contextMenu.style.left = `${x}px`;
   contextMenu.style.top = `${y}px`;
-  
-  // Make sure menu stays within viewport
-  const rect = contextMenu.getBoundingClientRect();
-  if (rect.right > window.innerWidth) {
-    contextMenu.style.left = `${window.innerWidth - rect.width - 10}px`;
-  }
-  if (rect.bottom > window.innerHeight) {
-    contextMenu.style.top = `${window.innerHeight - rect.height - 10}px`;
-  }
-  
-  // Show the menu
   contextMenu.classList.add('visible');
 
-  // Add event listeners to menu items
   contextMenu.querySelectorAll('.rename-item').forEach(item => {
     item.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -333,89 +264,22 @@ function showTabContextMenu(filename, x, y) {
       deleteFile(filename);
     });
   });
-  
-  // Close menu when clicking elsewhere
-  const closeMenu = function(e) {
-    if (!contextMenu.contains(e.target)) {
-      contextMenu.classList.remove('visible');
-      document.removeEventListener('click', closeMenu);
-    }
-  };
-  
-  // Add the event listener with a slight delay to prevent immediate closing
-  setTimeout(() => {
-    document.addEventListener('click', closeMenu);
-  }, 10);
 }
 
 function showRenameDialog(filename, x, y) {
-  // Create rename dialog if it doesn't exist
-  if (!renameDialog) {
-    renameDialog = document.createElement('div');
-    renameDialog.className = 'file-rename-dialog';
-    renameDialog.innerHTML = `
-      <input type="text" id="newFilenameInput">
-      <div class="file-rename-dialog-actions">
-        <button class="btn-secondary" id="cancelRename">Cancel</button>
-        <button class="btn-primary" id="confirmRename">Rename</button>
-      </div>
-    `;
-    document.body.appendChild(renameDialog);
-
-    document.getElementById('cancelRename').addEventListener('click', () => {
-      renameDialog.classList.remove('visible');
-    });
-
-    document.getElementById('confirmRename').addEventListener('click', () => {
-      const oldFilename = renameDialog.getAttribute('data-filename');
-      const newFilename = document.getElementById('newFilenameInput').value.trim();
-      
-      if (newFilename && newFilename !== oldFilename) {
-        renameFile(oldFilename, newFilename);
-      }
-      
-      renameDialog.classList.remove('visible');
-    });
-  }
-
-  // Hide context menu
   if (contextMenu) {
     contextMenu.classList.remove('visible');
   }
 
-  // Set up the rename dialog
   renameDialog.setAttribute('data-filename', filename);
   document.getElementById('newFilenameInput').value = filename;
 
-  // Position dialog
   renameDialog.style.left = `${x}px`;
   renameDialog.style.top = `${y}px`;
-  
-  // Make sure dialog stays within viewport
-  const rect = renameDialog.getBoundingClientRect();
-  if (rect.right > window.innerWidth) {
-    renameDialog.style.left = `${window.innerWidth - rect.width - 10}px`;
-  }
-  if (rect.bottom > window.innerHeight) {
-    renameDialog.style.top = `${window.innerHeight - rect.height - 10}px`;
-  }
-  
-  // Show the dialog
   renameDialog.classList.add('visible');
 
-  // Focus and select the input
   document.getElementById('newFilenameInput').focus();
   document.getElementById('newFilenameInput').select();
-  
-  // Handle Escape key to close dialog
-  const escHandler = (e) => {
-    if (e.key === 'Escape') {
-      renameDialog.classList.remove('visible');
-      document.removeEventListener('keydown', escHandler);
-    }
-  };
-  
-  document.addEventListener('keydown', escHandler);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
