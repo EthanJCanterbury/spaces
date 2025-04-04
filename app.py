@@ -1932,13 +1932,20 @@ def get_club_details(club_id):
         
         members = []
         for membership, user in memberships:
+            # Check explicitly if the user is a club leader
+            is_club_leader = Club.query.filter_by(leader_id=user.id).first() is not None
+            
             members.append({
                 'membership_id': membership.id,
                 'user_id': user.id,
                 'username': user.username,
                 'email': user.email,
                 'role': membership.role,
-                'joined_at': membership.joined_at.strftime('%Y-%m-%d %H:%M:%S')
+                'joined_at': membership.joined_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'is_suspended': user.is_suspended,
+                'is_club_leader': is_club_leader,
+                'sites_count': Site.query.filter_by(user_id=user.id).count(),
+                'created_at': user.created_at.strftime('%Y-%m-%d %H:%M:%S')
             })
         
         club_data = {
