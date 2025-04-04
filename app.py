@@ -154,7 +154,7 @@ def forbidden_error(error):
         context['message'] = "You don't have permission to access this resource."
     else:
         context['message'] = "Please log in to access this page."
-    
+
     return render_template('errors/403.html', **context), 403
 
 
@@ -609,7 +609,7 @@ def welcome():
 def edit_site(site_id):
     try:
         site = Site.query.get(site_id)
-        
+
         if not site:
             app.logger.warning(f'Site with ID {site_id} not found')
             flash('This space does not exist.', 'error')
@@ -874,19 +874,19 @@ def create_site():
         if len(name) < 1 or len(name) > 50:
             return jsonify({'message': 
                            'Space name must be between 1 and 50 characters'}), 400
-            
+
         # Check for potentially problematic characters
         import re
         if re.search(r'[<>{}[\]()\'";]', name):
             return jsonify({'message': 
                            'Space name contains invalid characters'}), 400
-            
+
         try:
             slug = slugify(name)
         except Exception as e:
             app.logger.error(f'Error slugifying name: {str(e)}')
             return jsonify({'message': 'Invalid site name provided'}), 400
-            
+
         existing_site = Site.query.filter_by(slug=slug).first()
         if existing_site:
             app.logger.warning(f'Site with slug {slug} already exists')
@@ -896,27 +896,72 @@ def create_site():
         app.logger.info(
             f'Creating new site "{name}" for user {current_user.id}')
 
-        default_html = f'''<!DOCTYPE html>
+        site_type = data.get('site_type', 'web') #default to web
+        if site_type == 'web':
+            default_html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/s/{slug}/styles.css">
-    <script src="/s/{slug}/script.js" defer></script>
+    <script src="/s/{slug}/script.js"`defer></script>
 </head>
 <body>
     <h1>Welcome to my website!</h1>
     <p>This is a paragraph on my new site.</p>
 </body>
 </html>'''
+            site = Site(name=name,
+                        user_id=current_user.id,
+                        html_content=default_html,
+                        site_type=site_type)
+        elif site_type == 'python':
+            default_python_content = '''# Welcome to your Python space!
+# This is where you can write and run Python code.
 
-        site = Site(name=name,
-                    user_id=current_user.id,
-                    html_content=default_html)
+def main():
+    """Main function that runs when this script is executed."""
+    print("Hello, World!")
+
+    # Try adding your own code below:
+    name = "Python Coder"
+    print(f"Welcome, {name}!")
+
+    # You can use loops:
+    for i in range(3):
+        print(f"Count: {i}")
+
+    # And conditions:
+    if name == "Python Coder":
+        print("You're a Python coder!")
+    else:
+        print("You can become a Python coder!")
+
+# Standard Python idiom to call the main function
+if __name__ == "__main__":
+    main()
+'''
+            site = Site(name=name,
+                        user_id=current_user.id,
+                        python_content=default_python_content,
+                        site_type=site_type)
+        elif site_type == 'ysws':
+            default_ysws_content = """<!-- Your Starter Web Space -->
+<!-- Add your HTML, CSS, and JavaScript here -->
+<!-- Remember to link your stylesheet and script files -->
+"""
+            site = Site(name=name,
+                        user_id=current_user.id,
+                        html_content=default_ysws_content,
+                        site_type=site_type)
+        else:
+            return jsonify({'message': 'Invalid site type'}), 400
+
         db.session.add(site)
         db.session.commit()
 
-        default_css = '''body {
+        if site_type == 'web':
+            default_css = '''body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
     margin: 0;
@@ -932,34 +977,34 @@ h1 {
     padding-bottom: 10px;
 }'''
 
-        default_js = '''document.addEventListener('DOMContentLoaded', function() {
+            default_js = '''document.addEventListener('DOMContentLoaded', function() {
     console.log('Website loaded successfully!');
 });'''
 
-        try:
-            css_page = SitePage(site_id=site.id,
-                                filename="styles.css",
-                                content=default_css,
-                                file_type="css")
+            try:
+                css_page = SitePage(site_id=site.id,
+                                    filename="styles.css",
+                                    content=default_css,
+                                    file_type="css")
 
-            js_page = SitePage(site_id=site.id,
-                               filename="script.js",
-                               content=default_js,
-                               file_type="js")
+                js_page = SitePage(site_id=site.id,
+                                   filename="script.js",
+                                   content=default_js,
+                                   file_type="js")
 
-            html_page = SitePage(site_id=site.id,
-                                 filename="index.html",
-                                 content=default_html,
-                                 file_type="html")
+                html_page = SitePage(site_id=site.id,
+                                     filename="index.html",
+                                     content=default_html,
+                                     file_type="html")
 
-            db.session.add_all([css_page, js_page, html_page])
-            db.session.commit()
+                db.session.add_all([css_page, js_page, html_page])
+                db.session.commit()
 
-            app.logger.info(
-                f"Successfully created site pages for site {site.id}")
-        except Exception as e:
-            app.logger.error(f"Error creating site pages: {str(e)}")
-            db.session.rollback()
+                app.logger.info(
+                    f"Successfully created site pages for site {site.id}")
+            except Exception as e:
+                app.logger.error(f"Error creating site pages: {str(e)}")
+                db.session.rollback()
 
         activity = UserActivity(activity_type="site_creation",
                                 message='New site "{}" created by {}'.format(
@@ -3408,6 +3453,58 @@ def initialize_database():
 @login_required
 def integrations():
     return render_template('integrations.html')
+
+
+@app.route('/api/sites/ysws', methods=['POST'])
+@login_required
+def create_ysws_site():
+    try:
+        site_count = Site.query.filter_by(user_id=current_user.id).count()
+        max_sites = get_max_sites_per_user()
+        if site_count >= max_sites:
+            return jsonify({
+                'message':
+                f'You have reached the maximum limit of {max_sites} sites per account'
+            }), 403
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'message': 'Invalid request data'}), 400
+
+        name = data.get('name')
+        if not name:
+            return jsonify({'message': 'Name is required'}), 400
+
+        default_ysws_content = """<!-- Your Starter Web Space -->
+<!-- Add your HTML, CSS, and JavaScript here -->
+<!-- Remember to link your stylesheet and script files -->
+"""
+
+        site = Site(name=name,
+                    user_id=current_user.id,
+                    html_content=default_ysws_content,
+                    site_type='ysws')
+        db.session.add(site)
+        db.session.commit()
+
+        activity = UserActivity(
+            activity_type="site_creation",
+            message='New YSWS space "{}" created by {}'.format(
+                name, current_user.username),
+            username=current_user.username,
+            user_id=current_user.id,
+            site_id=site.id)
+        db.session.add(activity)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'YSWS space created successfully',
+            'site_id': site.id
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Failed to create YSWS space'}), 500
+
 
 
 if __name__ == '__main__':
