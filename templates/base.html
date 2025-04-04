@@ -34,6 +34,9 @@
                     {% if current_user.is_authenticated and current_user.is_club_leader %}
                     <a href="{{ url_for('club_dashboard') }}" class="nav-button">Clubs</a>
                     {% endif %}
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <a href="{{ url_for('admin_panel') }}" class="nav-button">Admin</a>
+                    {% endif %}
                     <a href="{{ url_for('settings') }}" class="nav-button">Settings</a>
                     <a href="{{ url_for('logout') }}" class="nav-button">Logout</a>
                 {% else %}
