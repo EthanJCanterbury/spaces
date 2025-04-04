@@ -2714,10 +2714,14 @@ select:focus {
     background: white;
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    z-index: 100;
+    z-index: 1000;
     min-width: 150px;
     display: none;
     overflow: visible;
+}
+
+.action-dropdown:hover .action-dropdown-content {
+    display: block;
 }
 
 /* Fix for dropdown menus to ensure they appear above other elements */
@@ -2735,6 +2739,79 @@ tr, td, th {
 .actions-cell {
     position: relative;
     overflow: visible;
+}
+
+/* Tab context menu styling */
+.tab-context-menu {
+    position: fixed;
+    z-index: 1000;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 150px;
+    display: none;
+    overflow: visible;
+}
+
+.tab-context-menu.visible {
+    display: block;
+}
+
+.context-menu-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.context-menu-item:hover {
+    background: #f5f5f5;
+}
+
+.context-menu-item.danger {
+    color: #dc3545;
+}
+
+.context-menu-item.danger:hover {
+    background: rgba(220, 53, 69, 0.1);
+}
+
+/* File rename dialog */
+.file-rename-dialog {
+    position: fixed;
+    z-index: 1000;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 12px;
+    min-width: 250px;
+    display: none;
+}
+
+.file-rename-dialog.visible {
+    display: block;
+}
+
+.file-rename-dialog input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.file-rename-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.file-rename-dialog-actions button {
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .modal-actions button {
