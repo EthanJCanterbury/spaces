@@ -1,4 +1,3 @@
-
 .btn-hackatime {
     display: inline-flex;
     align-items: center;
@@ -1048,7 +1047,7 @@ footer {
 .sites-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    alignitems: center;
     margin-bottom: 1.5rem;
 }
 
@@ -2625,547 +2624,457 @@ footer {
     }
 }
 
-.repo-setup, .push-changes {
-    padding: 24px;
-}
-
-.repo-setup h3, .push-changes h3 {
-    color: var(--primary);
-    margin-bottom: 20px;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.loading-spinner {
+.github-status {
+    padding: 20px;
     text-align: center;
-    padding: 24px;
-    color: var(--text);
 }
 
-.btn-loading {
-    position: relative;
-    cursor: not-allowed !important;
-    opacity: 0.8;
+.github-status.connected {
+    background-color: #f8f9fa;
+    border-radius: 8px;
 }
 
-.btn-loading > * {
-    visibility: hidden;
+.github-status.error {
+    color: #dc3545;
 }
 
-.btn-loading::after {
-    content: '';
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    top: 50%;
-    left: 50%;
-    margin: -8px 0 0 -8px;
-    border-radius: 50%;
-    border: 2px solid currentColor;
-    border-right-color: transparent;
-    animation: button-spinner 0.75s linear infinite;
+.github-status.success {
+    color: #28a745;
 }
 
-@keyframes button-spinner {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.github-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
 }
 
-#githubModal .modal-body {
-    padding: 0;
-    min-height: 120px;
+.loading {
+    text-align: center;
+    padding: 20px;
 }
 
-#githubModal .form-group {
-    margin-bottom: 20px;
+.create-repo-form {
+    max-width: 300px;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-#githubModal .form-group:last-child {
-    margin-bottom: 0;
-}
-
-#githubModal .form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: var(--text);
-    font-weight: 500;
-}
-
-#githubModal .form-group input[type="text"] {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: 14px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-#githubModal .form-group input[type="text"]:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
-    outline: none;
-    transform: translateY(-1px);
-}
-
-.checkbox-group {
+.checkbox-label {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 0;
-    color: white;
-
-}
-
-.checkbox-group input[type="checkbox"] {
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--border);
-    border-radius: 4px;
-    margin: 0;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.2s;
     color: white;
 }
-
-.checkbox-group input[type="checkbox"]:checked {
-    background-color: var(--primary);
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
-}
-
-.checkbox-group input[type="checkbox"]:checked::after {
-    content: '✓';
-    color: white;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 12px;
-}
-
-.checkbox-group label {
-    font-size: 14px;
-    cursor: pointer;
-}
-
-#githubModal .modal-actions {
-    display: flex;
-    gap: 12px;
-    padding: 20px 24px;
-    border-top: 1px solid var(--border);
-    background: var(--bg-light);
-    border-radius: 0 0 12px 12px;
-}
-
-#githubModal .btn-github {
-    background: var(--primary);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: none;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-#githubModal .btn-github:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-#githubModal .btn-github i {
-    font-size: 16px;
-}
-
-#githubModal .btn-secondary {
-    background: var(--bg-light);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-}
-
-#githubModal .btn-secondary:hover {
-    background: var(--bg);
-    border-color: var(--primary);
-    color: var(--primary);
-    transform: translateY(-1px);
-}
-
-#githubModal .btn-danger {
-    background: var(--error);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: none;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-#githubModal .btn-danger:hover {
-    background: var(--error-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.repo-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 24px;
-    background: var(--bg-light);
-    border-radius: 6px;
-    margin-bottom: 20px;
-    position: relative;
-}
-
-.repo-actions {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: flex;
-    gap: 4px;
-}
-
-.repo-actions button {
-    background: #dc3545;
-    color: white;
-    border: none;
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
-    font-size: 12px;
-}
-
-.repo-actions button:hover {
-    background: #c82333;
-}
-
-.repo-info i {
-    font-size: 20px;
-    color: var(--text-light);
-}
-
-.repo-info .repo-details {
-    flex: 1;
-}
-
-.repo-info .repo-name {
-    font-weight: 500;
-    color: var(--text);
-    margin-bottom: 4px;
-}
-
-.repo-info .repo-url {
-    font-size: 13px;
-    color: var(--text-light);
-}
-
-.toast-error i {
-    color: var(--error);
-}
-
-.settings-container {
-    max-width: 1200px;
-    margin: 6rem auto 2rem;
-    padding: 0 2rem;
-}
-
-#githubModal {
-    position: fixed;
-    top: 0;
-    left: 0;
+/* Standardized input styles */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
     width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
-    z-index: 1000;
-    overflow-y: auto;
-}
-
-#githubModal.show {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#githubModal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow-y: auto;
-}
-
-#githubModal .modal-content {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-    width: 90%;
-    max-width: 600px;
-    position: relative;
-    margin: 20px;
-    overflow: hidden;
-    animation: modalFadeIn 0.3s ease-out;
-}
-
-@keyframes modalFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-#githubModal .modal-header {
-    padding: 20px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-#githubModal .modal-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: #24292e;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-#githubModal .modal-header .close-button {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 5px;
-    color: #666;
-}
-
-#githubModal .modal-body {
-    padding: 20px;
-}
-
-#githubModal .repo-info {
-    background: #f6f8fa;
-    border: 1px solid #e1e4e8;
-    border-radius: 6px;
-    padding: 15px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-#githubModal .repo-info i {
-    font-size: 24px;
-    color: #24292e;
-}
-
-#githubModal .repo-name {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #0366d6;
-    margin-bottom: 5px;
-}
-
-#githubModal .repo-url {
-    color: #586069;
-    word-break: break-all;
-}
-
-#githubModal .form-group {
-    margin-bottom: 20px;
-}
-
-#githubModal .form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: #24292e;
-}
-
-#githubModal .form-group input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 2px solid #d1d5da;
-    border-radius: 6px;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background-color: #fff;
     font-size: 14px;
-    background: #f6f8fa;
+    color: #333;
     transition: all 0.2s ease;
 }
 
-#githubModal .form-group input:focus {
-    background: white;
-    border-color: #0366d6;
-    box-shadow: 0 0 0 4px rgba(3, 102, 214, 0.8);
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(237, 102, 99, 0.2);
     outline: none;
 }
-
-#githubModal .form-group input {
-    border: 2px solid #e1e4e8;
 }
 
-#githubModal .checkbox-group {
-    margin: 15px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: white;
+/* Form group focus styles now use the standardized input focus styles */
 }
 
-#githubModal .text-muted {
-    color: #666;
+/* Dropdown styles added here */
+.action-dropdown {
+    position: relative;
+}
+
+.action-dropdown-content {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    min-width: 150px;
+    display: none;
+    overflow: visible;
+}
+
+/* Fix for dropdown menus to ensure they appear above other elements */
+.table-container {
+    overflow: visible;
+}
+
+/* Ensure table rows don't clip overflow content */
+tr, td, th {
+    position: relative;
+    overflow: visible;
+}
+
+/* Ensure actions cell properly positions dropdowns */
+.actions-cell {
+    position: relative;
+    overflow: visible;
+}
+
+.modal-actions button {
+    flex: 1;
+    height: 36px;
+    padding: 0 16px;
     font-size: 0.9rem;
-    margin-top: 5px;
+    font-weight: 500;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
 }
 
-#githubModal .modal-actions {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-#githubModal .btn-github {
+.btn-github, .modal-actions .btn-github {
     background: #2ea44f;
     color: white;
     border: 1px solid rgba(27, 31, 35, 0.15);
-    padding: 10px 16px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: center;
-    transition: all 0.2s ease;
-    height: 40px;
 }
 
-#githubModal .btn-github:hover {
+.btn-github:hover, .modal-actions .btn-github:hover {
     background: #2c974b;
 }
 
-#githubModal .btn-secondary {
-    background: #fafbfc;
-    color: #24292e;
-    border: 1px solid rgba(27, 31, 35, 0.15);
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 120px;
-    justify-content: center;
-    text-decoration: none;
-}
-
-#githubModal .btn-secondary:hover {
-    background: #f3f4f6;
-}
-
-#githubModal .btn-danger {
+.btn-danger, .modal-actions .btn-danger {
     background: #d73a49;
     color: white;
     border: 1px solid rgba(27, 31, 35, 0.15);
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 120px;
-    justify-content: center;
 }
 
-#githubModal .btn-danger:hover {
+.btn-danger:hover, .modal-actions .btn-danger:hover {
     background: #cb2431;
 }
 
-#githubModal .btn-loading {
+.btn-danger-delete, .modal-actions .btn-danger-delete {
+    background: #d73a49;
+    color: white;
+    border: 1px solid rgba(27, 31, 35, 0.15);
+}
+
+.btn-danger-delete:hover, .modal-actions .btn-danger-delete:hover {
+    background: #cb2431;
+}
+
+.btn-github:hover {
+    background: #1a1f24;
+}
+
+.btn-slack {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #4A154B;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.2s;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.btn-slack:hover {
+    background: #611f63;
+}
+
+.divider {
+    text-align: center;
+    margin: 1rem 0;
+    position: relative;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 45%;
+    height: 1px;
+    background: var(--border);
+}
+
+.divider::before {
+    left: 0;
+}
+
+.divider::after {
+    right: 0;
+}
+}
+
+.settings-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+    font-family: var(--font-heading);
+}
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.form-group label i {
+    color: var(--primary);
+}
+
+.form-group input {
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(132, 146, 166, 0.2);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(236, 55, 80, 0.1);
+}
+
+.space-type-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid rgba(132, 146, 166, 0.2);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+    color: var(--text);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+}
+
+.space-type-select:hover {
+    border-color: rgba(132, 146, 166, 0.4);
+}
+
+.btn-gradient {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-gradient:hover {
+    transform: translateY(-2px);
+}
+
+.btn-gradient:disabled {
     opacity: 0.7;
     cursor: not-allowed;
 }
 
-#githubModal .loading-spinner {
+#toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    style="color: #000000;
+}
+
+.toast {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 40px;
-    color: #666;
+    gap: 0.75rem;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    style="color: #000000;
 }
 
-#githubModal .required {
-    color: #d73a49;
-    margin-left: 4px;
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
 }
 
-#githubModal .text-center {
+.toast-success {
+    background: #10B981;
+    color: white;
+}
+
+.toast-error {
+    background: #EF4444;
+    color: white;
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.toast i {
+    font-size: 1.25rem;
+}
+
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 0 1rem;
+        margin: 1rem auto;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-header h1 {
+        font-size: 2rem;
+    }
+
+    .settings-card {
+        padding: 1.5rem;
+    }
+
+    #toast-container {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+    }
+}
+
+.github-status {
+    padding: 20px;
     text-align: center;
 }
 
-#githubModal .text-left {
-    text-align: left;
+.github-status.connected {
+    background-color: #f8f9fa;
+    border-radius: 8px;
 }
 
-#githubModal ul {
-    margin: 10px 0;
-    padding-left: 20px;
+.github-status.error {
+    color: #dc3545;
 }
 
-#githubModal li {
-    margin: 5px 0;
-    color: #586069;
+.github-status.success {
+    color: #28a745;
+}
+
+.github-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+}
+
+.create-repo-form {
+    max-width: 300px;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+}
+/* Standardized input styles */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background-color: #fff;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(237, 102, 99, 0.2);
+    outline: none;
+}
+}
+
+/* Form group focus styles now use the standardized input focus styles */
 }
 
 .settings-header {

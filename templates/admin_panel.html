@@ -1892,9 +1892,9 @@ function viewClubDetails(clubId) {
                 return;
             }
 
-            // Update club details section
+            // Update club details section with club ID data attribute
             clubDetailContent.innerHTML = `
-                <h3>${clubData.name}</h3>
+                <h3 data-club-id="${clubId}">${clubData.name}</h3>
                 <div class="club-meta">
                     <p><i class="fas fa-user-tie"></i> Leader: ${clubData.leader_username}</p>
                     <p><i class="fas fa-calendar-alt"></i> Created: ${clubData.created_at}</p>
@@ -2040,10 +2040,11 @@ function changeClubMemberRole(membershipId, username, currentRole) {
             return;
         }
         showToast('success', `Changed ${username}'s role to ${newRole}`);
-        // Refresh club details
-        const clubIdElem = document.querySelector('#clubDetailContent h3').dataset.clubId;
-        if (clubIdElem) {
-            viewClubDetails(clubIdElem);
+        
+        // Refresh club details - get the club ID properly from the h3 element
+        const clubHeader = document.querySelector('#clubDetailContent h3');
+        if (clubHeader && clubHeader.dataset.clubId) {
+            viewClubDetails(clubHeader.dataset.clubId);
         }
     })
     .catch(error => {
@@ -2058,7 +2059,12 @@ function removeClubMember(membershipId, username, clubId) {
     fetch(`/api/admin/clubs/members/${membershipId}`, {
         method: 'DELETE'
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.error) {
             showToast('error', data.error);
@@ -2070,7 +2076,7 @@ function removeClubMember(membershipId, username, clubId) {
     })
     .catch(error => {
         console.error('Error removing club member:', error);
-        showToast('error', 'Failed to remove club member');
+        showToast('error', 'Failed to remove club member: ' + error.message);
     });
 }
 
