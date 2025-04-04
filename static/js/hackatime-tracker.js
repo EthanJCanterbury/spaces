@@ -594,7 +594,7 @@ class HackatimeTracker {
             project_root_count: 1,
             dependencies: this.getDependenciesForFile(this.entityName),
             machine: this.generateMachineId(),
-            editor: 'Spaces IDE',
+            editor: "Spaces",
             operating_system: this.getOperatingSystem(),
             user_agent: navigator.userAgent
         };

@@ -272,8 +272,8 @@ def hackatime_heartbeat():
             "project_root_count": 1,
             "dependencies": "flask,sqlalchemy,python-dotenv",
             "machine": machine_id,
-            "editor": "Spaces IDE",
-            "operating_system": request.user_agent.platform or "Unknown",
+            "editor": "Spaces",
+            "operating_system": "Web",
             "user_agent": user_agent
         }
         
