@@ -632,41 +632,23 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>
-                                        <input type="checkbox" id="selectAllMembers" onchange="toggleSelectAllMembers()">
-                                    </th>
                                     <th>ID</th>
                                     <th>Username</th>
                                     <th>Email</th>
                                     <th>Role</th>
                                     <th>Joined At</th>
-                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="clubMembersTableBody">
                                 <tr>
-                                    <td colspan="8" class="text-center">
+                                    <td colspan="6" class="text-center">
                                         <div class="loading-spinner"></div>
                                         <p>Loading members...</p>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
-                    <div class="bulk-actions" style="margin-top: 15px;">
-                        <button class="btn-warning bulk-action" onclick="handleBulkMemberAction('suspend')" disabled id="suspendSelectedMembers">
-                            <i class="fas fa-user-lock"></i> Suspend Selected
-                        </button>
-                        <button class="btn-warning bulk-action" onclick="handleBulkMemberAction('unsuspend')" disabled id="unsuspendSelectedMembers">
-                            <i class="fas fa-user-check"></i> Unsuspend Selected
-                        </button>
-                        <button class="btn-danger bulk-action" onclick="handleBulkMemberAction('deleteSites')" disabled id="deleteSelectedMembersSites">
-                            <i class="fas fa-trash-alt"></i> Delete Sites
-                        </button>
-                        <button class="btn-danger bulk-action" onclick="handleBulkMemberAction('deleteUsers')" disabled id="deleteSelectedMembers">
-                            <i class="fas fa-user-times"></i> Delete Users
-                        </button>
                     </div>
                 </div>
             </div>
@@ -1892,7 +1874,7 @@ function viewClubDetails(clubId) {
 
     clubMembersTableBody.innerHTML = `
         <tr>
-            <td colspan="8" class="text-center">
+            <td colspan="6" class="text-center">
                 <div class="loading-spinner"></div>
                 <p>Loading members...</p>
             </td>
@@ -1932,9 +1914,6 @@ function viewClubDetails(clubId) {
                 clubData.members.forEach(member => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>
-                            <input type="checkbox" class="member-select" data-userid="${member.user_id}" data-username="${member.username}" onchange="updateBulkMemberActions()">
-                        </td>
                         <td>${member.user_id}</td>
                         <td>${member.username}</td>
                         <td>${member.email}</td>
@@ -1944,11 +1923,6 @@ function viewClubDetails(clubId) {
                             </span>
                         </td>
                         <td>${member.joined_at}</td>
-                        <td>
-                            <span class="status-badge ${member.is_suspended ? 'suspended' : 'active'}">
-                                ${member.is_suspended ? 'Suspended' : 'Active'}
-                            </span>
-                        </td>
                         <td class="actions-cell">
                             <div class="action-dropdown">
                                 <button class="action-dropdown-btn">
@@ -1956,32 +1930,16 @@ function viewClubDetails(clubId) {
                                 </button>
                                 <div class="action-dropdown-content">
                                     <button onclick="viewUserDetails(${member.user_id})" class="dropdown-item">
-                                        <i class="fas fa-eye"></i>
-                                        <span>View Details</span>
-                                    </button>
-                                    <button onclick="toggleSuspension(${member.user_id}, '${member.username}', ${!member.is_suspended})" class="dropdown-item">
-                                        <i class="fas fa-${member.is_suspended ? 'user-check' : 'user-lock'}"></i>
-                                        <span>${member.is_suspended ? 'Unsuspend' : 'Suspend'}</span>
-                                    </button>
-                                    <button onclick="toggleClubLeader(${member.user_id}, '${member.username}', ${!member.is_club_leader})" class="dropdown-item">
-                                        <i class="fas fa-${member.is_club_leader ? 'user-minus' : 'user-plus'}"></i>
-                                        <span>${member.is_club_leader ? 'Remove Club Leader' : 'Make Club Leader'}</span>
+                                        <i class="fas fa-user"></i>
+                                        <span>View User</span>
                                     </button>
                                     <button onclick="changeClubMemberRole(${member.membership_id}, '${member.username}', '${member.role}')" class="dropdown-item">
                                         <i class="fas fa-user-tag"></i>
                                         <span>Change Role</span>
                                     </button>
-                                    <button onclick="deleteAllSites(${member.user_id}, '${member.username}')" class="dropdown-item">
-                                        <i class="fas fa-trash-alt"></i>
-                                        <span>Delete All Sites</span>
-                                    </button>
-                                    <button onclick="deleteUser(${member.user_id}, '${member.username}')" class="dropdown-item text-danger">
-                                        <i class="fas fa-trash-alt"></i>
-                                        <span>Delete User</span>
-                                    </button>
                                     <button onclick="removeClubMember(${member.membership_id}, '${member.username}', ${clubId})" class="dropdown-item text-danger">
                                         <i class="fas fa-user-minus"></i>
-                                        <span>Remove from Club</span>
+                                        <span>Remove</span>
                                     </button>
                                 </div>
                             </div>
@@ -1992,7 +1950,7 @@ function viewClubDetails(clubId) {
             } else {
                 clubMembersTableBody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="text-center">
+                        <td colspan="6" class="text-center">
                             <p>No members found for this club</p>
                         </td>
                     </tr>
@@ -2008,100 +1966,6 @@ function viewClubDetails(clubId) {
                 </div>
             `;
         });
-}
-
-function toggleSelectAllMembers() {
-    const selectAll = document.getElementById('selectAllMembers');
-    const checkboxes = document.querySelectorAll('.member-select');
-
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = selectAll.checked;
-    });
-
-    updateBulkMemberActions();
-}
-
-function updateBulkMemberActions() {
-    const selectedMembers = document.querySelectorAll('.member-select:checked');
-    const bulkActions = document.querySelectorAll('#suspendSelectedMembers, #unsuspendSelectedMembers, #deleteSelectedMembersSites, #deleteSelectedMembers');
-
-    bulkActions.forEach(button => {
-        button.disabled = selectedMembers.length === 0;
-    });
-}
-
-function handleBulkMemberAction(action) {
-    const selectedMembers = Array.from(document.querySelectorAll('.member-select:checked')).map(checkbox => ({
-        id: checkbox.dataset.userid,
-        username: checkbox.dataset.username
-    }));
-
-    if (!selectedMembers.length) return;
-
-    const actionMessages = {
-        suspend: 'suspend',
-        unsuspend: 'unsuspend',
-        deleteSites: 'delete all sites for',
-        deleteUsers: 'delete'
-    };
-
-    const usernames = selectedMembers.map(user => user.username).join(', ');
-    if (!confirm(`Are you sure you want to ${actionMessages[action]} the following users: ${usernames}?`)) return;
-
-    showToast('info', `Processing bulk action: ${action}...`);
-
-    try {
-        const promises = selectedMembers.map(user => {
-            let endpoint;
-            let method = 'POST';
-            let body = null;
-
-            switch(action) {
-                case 'suspend':
-                    endpoint = `/api/admin/users/${user.id}/suspend`;
-                    body = JSON.stringify({ suspend: true });
-                    break;
-                case 'unsuspend':
-                    endpoint = `/api/admin/users/${user.id}/suspend`;
-                    body = JSON.stringify({ suspend: false });
-                    break;
-                case 'deleteSites':
-                    endpoint = `/api/admin/users/${user.id}/sites`;
-                    method = 'DELETE';
-                    break;
-                case 'deleteUsers':
-                    endpoint = `/api/admin/users/${user.id}`;
-                    method = 'DELETE';
-                    break;
-            }
-
-            return fetch(endpoint, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: body
-            }).then(response => {
-                if (!response.ok) {
-                    throw new Error(`Failed to ${action} user ${user.username}`);
-                }
-                return response;
-            });
-        });
-
-        Promise.all(promises)
-            .then(() => {
-                showToast('success', `Successfully performed ${action} on selected users`);
-                // Get the club ID from the club details header
-                const clubHeader = document.querySelector('#clubDetailContent h3');
-                if (clubHeader && clubHeader.dataset.clubId) {
-                    viewClubDetails(clubHeader.dataset.clubId);
-                }
-            })
-            .catch(error => {
-                showToast('error', error.message);
-            });
-    } catch (error) {
-        showToast('error', error.message);
-    }
 }
 
 function closeClubDetailModal() {
