@@ -1,0 +1,42 @@
+[Hackatime] Heartbeat success for index.html
+hackatime-tracker.js:638 [Hackatime] Response data: Object
+11Refused to apply style from '<URL>' because its MIME type ('text/html') is not a supported stylesheet MIME type, and strict MIME checking is enabled.Understand this errorAI
+script.js:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this errorAI
+6Refused to execute script from '<URL>' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.Understand this errorAI
+ uBOL: Generic cosmetic filtering stopped because no more DOM changes
+script.js:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this errorAI
+ uBOL: Generic cosmetic filtering stopped because no more DOM changes
+ uBOL: Generic cosmetic filtering stopped because no more DOM changes
+hackatime-tracker.js:602 [Hackatime] Sending heartbeat for index.html
+hackatime-tracker.js:605 [Hackatime] Heartbeat payload: Object
+hackatime-tracker.js:627 [Hackatime] Response headers: Object
+hackatime-tracker.js:637 [Hackatime] Heartbeat success for index.html
+hackatime-tracker.js:638 [Hackatime] Response data: Object
+script.js:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this errorAI
+script.js:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this errorAI
+hackatime-tracker.js:741 [Hackatime] Page hidden, pausing tracking
+hackatime-tracker.js:521 [Hackatime] Stopping heartbeat tracking
+hackatime-tracker.js:746 [Hackatime] Page visible, resuming tracking
+hackatime-tracker.js:508 [Hackatime] Starting heartbeat tracking for "Spaces - Getting started with HTML"
+hackatime-tracker.js:530 [Hackatime] Skipping heartbeat - inactive or paused
+script.js:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this errorAI
+ uBOL: Generic cosmetic filtering stopped because no more DOM changes
+script.js:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 (Not Found)
