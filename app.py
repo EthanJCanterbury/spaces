@@ -2746,7 +2746,7 @@ def groq_connect():
         }
 
         app.logger.info(
-            f""Testing Groq API key for user {current_user.username}")
+            f"Testing Groq API key for user {current_user.username}")
 
         # Make the request to validate the API key
         response = requests.post(api_url,
