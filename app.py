@@ -953,8 +953,6 @@ if __name__ == "__main__":
             site = Site(name=name,
                         user_id=current_user.id,
                         html_content=default_ysws_content,
-                        css_content="/* Put your CSS styles here */",
-                        js_content="// Put your JavaScript code here",
                         site_type=site_type)
         else:
             return jsonify({'message': 'Invalid site type'}), 400
@@ -3488,6 +3486,9 @@ def create_ysws_site():
                     site_type='ysws')
         db.session.add(site)
         db.session.commit()
+        
+        # Don't create any default CSS or JS files for YSWS sites
+        # This ensures the site truly starts from scratch
 
         activity = UserActivity(
             activity_type="site_creation",
