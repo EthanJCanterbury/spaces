@@ -946,12 +946,15 @@ if __name__ == "__main__":
                         site_type=site_type)
         elif site_type == 'ysws':
             default_ysws_content = """<!-- Put your HTML content here -->
-<!-- This is a blank YSWS Web Space with no preset CSS or JS -->
+<!-- This is a completely blank YSWS Web Space with no preset content -->
 <!-- Start creating from scratch! -->
 """
+            # Create site with only HTML comments and no preset CSS or JS
             site = Site(name=name,
                         user_id=current_user.id,
                         html_content=default_ysws_content,
+                        css_content="/* Put your CSS styles here */",
+                        js_content="// Put your JavaScript code here",
                         site_type=site_type)
         else:
             return jsonify({'message': 'Invalid site type'}), 400
