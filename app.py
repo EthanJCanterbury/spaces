@@ -908,8 +908,7 @@ def create_site():
 </head>
 <body>
     <h1>Welcome to my website!</h1>
-    <p>This is a paragraph on my new site.</p>
-</body>
+    <p>This is a paragraph on my new site.</p></body>
 </html>'''
             site = Site(name=name,
                         user_id=current_user.id,
@@ -946,9 +945,9 @@ if __name__ == "__main__":
                         python_content=default_python_content,
                         site_type=site_type)
         elif site_type == 'ysws':
-            default_ysws_content = """<!-- Your Starter Web Space -->
-<!-- Add your HTML, CSS, and JavaScript here -->
-<!-- Remember to link your stylesheet and script files -->
+            default_ysws_content = """<!-- Put your HTML content here -->
+<!-- This is a blank YSWS Web Space with no preset CSS or JS -->
+<!-- Start creating from scratch! -->
 """
             site = Site(name=name,
                         user_id=current_user.id,
@@ -2747,7 +2746,7 @@ def groq_connect():
         }
 
         app.logger.info(
-            f"Testing Groq API key for user {current_user.username}")
+            f""Testing Groq API key for user {current_user.username}")
 
         # Make the request to validate the API key
         response = requests.post(api_url,
@@ -3475,9 +3474,9 @@ def create_ysws_site():
         if not name:
             return jsonify({'message': 'Name is required'}), 400
 
-        default_ysws_content = """<!-- Your Starter Web Space -->
-<!-- Add your HTML, CSS, and JavaScript here -->
-<!-- Remember to link your stylesheet and script files -->
+        default_ysws_content = """<!-- Put your HTML content here -->
+<!-- This is a blank YSWS Web Space with no preset CSS or JS -->
+<!-- Start creating from scratch! -->
 """
 
         site = Site(name=name,
