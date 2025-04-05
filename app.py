@@ -257,7 +257,7 @@ def log_response_info(response):
 def add_security_headers(response):
     is_preview = request.args.get('preview') == 'true'
 
-    csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' wss: ws:;"
+    csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://webring.hackclub.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' wss: ws:;"
 
     if is_preview:
         csp += " frame-ancestors *;"
@@ -1285,6 +1285,8 @@ def admin_panel():
                                  Site.created_at, Site.updated_at,
                                  Site.user_id,
                                  User.username).join(User).limit(50).all()
+                                 
+        clubs = Club.query.all()
 
         version = '1.7.7'
         try:
@@ -1299,6 +1301,7 @@ def admin_panel():
         return render_template('admin_panel.html',
                                users=users,
                                sites=sites,
+                               clubs=clubs,
                                version=version,
                                Club=Club)
     except Exception as e:
@@ -1866,6 +1869,227 @@ def search_sites():
     except Exception as e:
         app.logger.error(f'Error searching sites: {str(e)}')
         return jsonify({'error': 'Failed to search sites'}), 500
+        
+@app.route('/api/admin/search/clubs')
+@login_required
+@admin_required
+def search_clubs():
+    try:
+        search_term = request.args.get('term', '')
+        if not search_term or len(search_term) < 2:
+            return jsonify(
+                {'error': 'Search term must be at least 2 characters'}), 400
+
+        clubs = db.session.query(
+            Club.id, Club.name, Club.description, Club.location, 
+            Club.join_code, Club.created_at, Club.leader_id, 
+            User.username.label('leader_username')
+        ).join(User, Club.leader_id == User.id).filter(
+            db.or_(
+                Club.name.ilike(f'%{search_term}%'),
+                Club.description.ilike(f'%{search_term}%'),
+                User.username.ilike(f'%{search_term}%')
+            )).limit(50).all()
+
+        result = []
+        for club in clubs:
+            # Count club members
+            member_count = ClubMembership.query.filter_by(club_id=club.id).count()
+            
+            result.append({
+                'id': club.id,
+                'name': club.name,
+                'description': club.description,
+                'location': club.location,
+                'join_code': club.join_code,
+                'created_at': club.created_at.strftime('%Y-%m-%d'),
+                'leader_id': club.leader_id,
+                'leader_username': club.leader_username,
+                'member_count': member_count
+            })
+
+        return jsonify({'clubs': result})
+    except Exception as e:
+        app.logger.error(f'Error searching clubs: {str(e)}')
+        return jsonify({'error': 'Failed to search clubs'}), 500
+
+@app.route('/api/admin/clubs/<int:club_id>')
+@login_required
+@admin_required
+def get_club_details(club_id):
+    try:
+        club = Club.query.get_or_404(club_id)
+        leader = User.query.get(club.leader_id)
+        
+        # Get all members with their details
+        memberships = db.session.query(
+            ClubMembership, User
+        ).join(
+            User, ClubMembership.user_id == User.id
+        ).filter(
+            ClubMembership.club_id == club_id
+        ).all()
+        
+        members = []
+        for membership, user in memberships:
+            members.append({
+                'membership_id': membership.id,
+                'user_id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': membership.role,
+                'joined_at': membership.joined_at.strftime('%Y-%m-%d %H:%M:%S')
+            })
+        
+        club_data = {
+            'id': club.id,
+            'name': club.name,
+            'description': club.description,
+            'location': club.location,
+            'join_code': club.join_code,
+            'created_at': club.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'leader_id': club.leader_id,
+            'leader_username': leader.username if leader else 'Unknown',
+            'members': members
+        }
+        
+        return jsonify(club_data)
+        
+    except Exception as e:
+        app.logger.error(f'Error getting club details: {str(e)}')
+        return jsonify({'error': 'Failed to get club details'}), 500
+
+@app.route('/api/admin/clubs/<int:club_id>', methods=['DELETE'])
+@login_required
+@admin_required
+def delete_club(club_id):
+    try:
+        club = Club.query.get_or_404(club_id)
+        
+        # Delete all memberships first
+        ClubMembership.query.filter_by(club_id=club_id).delete()
+        
+        # Delete the club itself
+        db.session.delete(club)
+        
+        # Record the activity
+        activity = UserActivity(
+            activity_type="admin_action",
+            message=f'Admin {{username}} deleted club "{club.name}"',
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        return jsonify({'message': 'Club deleted successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error deleting club: {str(e)}')
+        return jsonify({'error': 'Failed to delete club'}), 500
+
+@app.route('/api/admin/clubs/<int:club_id>/join-code', methods=['POST'])
+@login_required
+@admin_required
+def admin_reset_join_code(club_id):
+    try:
+        club = Club.query.get_or_404(club_id)
+        
+        # Generate new join code
+        club.generate_join_code()
+        
+        # Record the activity
+        activity = UserActivity(
+            activity_type="admin_action",
+            message=f'Admin {{username}} reset join code for club "{club.name}"',
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Join code reset successfully',
+            'join_code': club.join_code
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error resetting join code: {str(e)}')
+        return jsonify({'error': 'Failed to reset join code'}), 500
+
+@app.route('/api/admin/clubs/members/<int:membership_id>/role', methods=['PUT'])
+@login_required
+@admin_required
+def admin_change_member_role(membership_id):
+    try:
+        membership = ClubMembership.query.get_or_404(membership_id)
+        user = User.query.get(membership.user_id)
+        club = Club.query.get(membership.club_id)
+        
+        # Don't allow changing the club leader's role
+        if user.id == club.leader_id:
+            return jsonify({'error': 'Cannot change the club leader\'s role'}), 400
+        
+        data = request.get_json()
+        new_role = data.get('role')
+        
+        if new_role not in ['member', 'co-leader']:
+            return jsonify({'error': 'Invalid role'}), 400
+        
+        old_role = membership.role
+        membership.role = new_role
+        
+        # Record the activity
+        activity = UserActivity(
+            activity_type="admin_action",
+            message=f'Admin {{username}} changed {user.username}\'s role from "{old_role}" to "{new_role}" in club "{club.name}"',
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        return jsonify({'message': f'Role updated to {new_role}'})
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error changing member role: {str(e)}')
+        return jsonify({'error': 'Failed to change member role'}), 500
+
+@app.route('/api/admin/clubs/members/<int:membership_id>', methods=['DELETE'])
+@login_required
+@admin_required
+def admin_remove_club_member(membership_id):
+    try:
+        membership = ClubMembership.query.get_or_404(membership_id)
+        user = User.query.get(membership.user_id)
+        club = Club.query.get(membership.club_id)
+        
+        # Don't allow removing the club leader
+        if user.id == club.leader_id:
+            return jsonify({'error': 'Cannot remove the club leader from their own club'}), 400
+        
+        # Delete the membership
+        db.session.delete(membership)
+        
+        # Record the activity
+        activity = UserActivity(
+            activity_type="admin_action",
+            message=f'Admin {{username}} removed {user.username} from club "{club.name}"',
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        return jsonify({'message': f'Successfully removed {user.username} from the club'})
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error removing club member: {str(e)}')
+        return jsonify({'error': 'Failed to remove club member'}), 500
 
 
 @app.route('/api/admin/stats/counts')
@@ -2821,7 +3045,7 @@ def groq_status():
 @app.route('/hackatime/heartbeat', methods=['POST'])
 @login_required
 def hackatime_heartbeat():
-    """Send a heartbeat to Hackatime API"""
+    """Send a heartbeat to Hackatime API with comprehensive metadata"""
     try:
         # Check if user has API key
         if not current_user.wakatime_api_key:
@@ -2851,29 +3075,56 @@ def hackatime_heartbeat():
         }
 
         # Add User-Agent header if available
-        user_agent = request.headers.get('User-Agent')
-        if user_agent:
-            headers['User-Agent'] = user_agent
+        user_agent = request.headers.get('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
+        headers['User-Agent'] = user_agent
 
-        # Always ensure we have an entity name - use test.txt as fallback
-        # This is recognized by the API as a test entry
-        if isinstance(data, dict) and (not data.get('entity')
-                                       or data.get('entity') == 'null'):
-            data['entity'] = 'test.txt'
-            data['type'] = 'file'
-            app.logger.info("Setting default entity to test.txt")
+        # Get current time if not provided
+        current_time = int(time.time())
 
-        # If data is a list, ensure each heartbeat has an entity
-        if isinstance(data, list):
+        # Prepare heartbeat payload with default values to ensure all fields are included
+        default_heartbeat = {
+            "entity": "main.py",
+            "type": "file",
+            "time": current_time,
+            "category": "coding",
+            "project": "Hack Club Spaces",
+            "branch": "main",
+            "language": "Python",
+            "is_write": True,
+            "lines": 150,
+            "lineno": 1,
+            "cursorpos": 0,
+            "line_additions": 0,
+            "line_deletions": 0,
+            "project_root_count": 1,
+            "dependencies": "flask,sqlalchemy,python-dotenv",
+            "machine": f"machine_{hashlib.md5(request.remote_addr.encode()).hexdigest()[:8]}",
+            "editor": "Spaces IDE",
+            "operating_system": request.user_agent.platform or "Unknown",
+            "user_agent": user_agent
+        }
+
+        # Process input data and ensure all required fields
+        if isinstance(data, dict):
+            # Single heartbeat
+            complete_heartbeat = default_heartbeat.copy()
+            complete_heartbeat.update(data)
+            heartbeat_payload = [complete_heartbeat]
+        elif isinstance(data, list):
+            # Multiple heartbeats
+            heartbeat_payload = []
             for hb in data:
-                if isinstance(hb, dict) and (not hb.get('entity')
-                                             or hb.get('entity') == 'null'):
-                    hb['entity'] = 'test.txt'
-                    hb['type'] = 'file'
-
-        # Make sure to send data in the format expected by the controller
-        # If data is not a list, wrap it in a list
-        heartbeat_payload = data if isinstance(data, list) else [data]
+                if isinstance(hb, dict):
+                    complete_hb = default_heartbeat.copy()
+                    complete_hb.update(hb)
+                    heartbeat_payload.append(complete_hb)
+                else:
+                    # Invalid item in list
+                    complete_hb = default_heartbeat.copy()
+                    heartbeat_payload.append(complete_hb)
+        else:
+            # Fallback to default if data format is unexpected
+            heartbeat_payload = [default_heartbeat]
 
         app.logger.info(
             f"Sending heartbeat to Hackatime for user {current_user.username}")

@@ -469,7 +469,10 @@
                     Space Name
                 </label>
                 <input type="text" id="spaceName" name="name" required
-                    placeholder="My Awesome Space">
+                    placeholder="my_awesome_space" maxlength="15" 
+                    pattern="^[a-zA-Z0-9_-]+$"
+                    title="Only letters, numbers, underscores and dashes allowed (max 15 characters, no spaces)">
+                <small class="form-text text-muted">Max 15 characters. Only letters, numbers, underscores and dashes allowed (no spaces).</small>
             </div>
             <div class="form-group">
                 <label for="spaceType">
@@ -570,10 +573,18 @@ async function createNewSpace(event) {
     event.preventDefault();
     const form = event.target;
     const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-
+    
     const spaceName = document.getElementById('spaceName').value;
     const spaceType = document.getElementById('spaceType').value;
+    
+    // Validate space name
+    const namePattern = /^[a-zA-Z0-9_-]{1,15}$/;
+    if (!namePattern.test(spaceName)) {
+        showToast('error', 'Space name must be 1-15 characters and contain only letters, numbers, underscores and dashes (no spaces)');
+        return;
+    }
+    
+    submitBtn.disabled = true;
 
     try {
         const endpoint = spaceType === 'python' ? '/api/sites/python' : '/api/sites';

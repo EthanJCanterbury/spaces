@@ -107,6 +107,10 @@
             </button>
 
             {% if site.site_type == 'web' %}
+            <button id="tutorialBtn" class="btn-primary" onclick="openTutorialModal()" style="background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);">
+                <i class="fas fa-graduation-cap"></i>
+                Tutorial
+            </button>
             <button id="yswsBtn" class="btn-primary" onclick="openYSWSModal()">
                 <i class="fa-solid fa-gift"></i>
                 YSWS
@@ -405,6 +409,403 @@
 
 <!-- Include GitHub CSS -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/github-buttons.css') }}">
+<div id="tutorial-widget" style="display: none; position: fixed; width: 600px; max-width: 90%; height: auto; max-height: 80vh; background: white; border-radius: 12px; box-shadow: 0 5px 30px rgba(0, 0, 0, 0.2); z-index: 9999; opacity: 0; transition: opacity 0.3s ease; overflow: hidden;">
+    <div class="orphy-header" style="background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%); cursor: grab; border-radius: 12px 12px 0 0;">
+        <div class="orphy-title">
+            <h2>Personal Website Workshop <span class="orphy-emoji">📚</span></h2>
+        </div>
+        <button class="orphy-close-btn" onclick="closeTutorialModal()">&times;</button>
+    </div>
+    <div style="overflow-y: auto; max-height: 70vh; background-color: white; padding: 20px; border-radius: 0 0 12px 12px;">
+        <div class="tutorial-navigation" style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <button id="prev-tutorial" onclick="prevTutorialStep()" class="tutorial-nav-btn tutorial-prev-btn" disabled>
+                <i class="fas fa-arrow-left"></i> Previous
+            </button>
+            <div class="tutorial-step-counter">
+                <span id="tutorial-step-indicator">1/10</span>
+            </div>
+            <button id="next-tutorial" onclick="nextTutorialStep()" class="tutorial-nav-btn tutorial-next-btn">
+                Next <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <div class="tutorial-content">
+            <div class="tutorial-step" data-step="1" style="display: block;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <img src="https://assets.hackclub.com/flag-standalone.svg" height="30" style="margin-right: 10px;">
+                    <h3 style="color: #4e54c8; margin: 0;">Personal Website Workshop</h3>
+                </div>
+                
+                <p><i>For a limited time: build your site & <a href="https://hack.club/boba" target="_blank">get a free bubble tea</a></i></p>
+                
+                <p>Prophet Orpheus, Hack Club's mascot, is here to guide you through making your own personal website!</p>
+                
+                <div style="margin: 15px 0; text-align: center;">
+                    <img src="https://cloud-4zpw37atj-hack-club-bot.vercel.app/2dino_site.png" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);" alt="Example dinosaur website">
+                </div>
+                
+                <p>This workshop will take about 45 minutes to complete. Let's get started!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="2" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Part I: The HTML File</h3>
+                <p>HTML stands for Hypertext Markup Language. Every website uses HTML to display content on the web.</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Basic HTML Structure:</h4>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;My First Website&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Hello World!&lt;/h1&gt;
+    &lt;p&gt;This is my first web page.&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+                </div>
+
+                <p>This structure is common to all HTML pages. In fact, you can take a look for yourself! Right-click on any web page and select "View page source" to see what's going on behind the scenes.</p>
+                
+                <p><strong>Try it:</strong> Type this code into your index.html file in the editor to create a basic webpage, then click "Run" to see your page in action!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="3" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Adding Content to Your HTML</h3>
+                <p>Let's add more content to make your page interesting!</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Common HTML Elements:</h4>
+                    <ul style="padding-left: 20px; line-height: 1.6;">
+                        <li><strong>&lt;h1&gt; to &lt;h6&gt;</strong> - Headings (h1 is largest, h6 is smallest)</li>
+                        <li><strong>&lt;p&gt;</strong> - Paragraph</li>
+                        <li><strong>&lt;a&gt;</strong> - Links to other pages</li>
+                        <li><strong>&lt;img&gt;</strong> - Images</li>
+                        <li><strong>&lt;ul&gt; and &lt;ol&gt;</strong> - Unordered and ordered lists</li>
+                        <li><strong>&lt;div&gt;</strong> - Container for grouping elements</li>
+                    </ul>
+                </div>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Let's add your name and description:</h4>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;My Personal Website&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Prophet Orpheus&lt;/h1&gt;
+    &lt;p&gt;Coder Dino&lt;/p&gt;
+    &lt;p&gt;Will code for food&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+                </div>
+                
+                <p><strong>Try it:</strong> Replace the text with your own name and description, then click "Save Changes" and "Run" to see your updates!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="4" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Adding Images</h3>
+                <p>Let's add an image to make your website more visual!</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">The Image Tag:</h4>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+&lt;img src="https://github.com/hackclub/dinosaurs/raw/main/smart_dinosaur_docs.png" /&gt;</pre>
+                    <p>The <code>src</code> attribute specifies the URL where the image is located.</p>
+                </div>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Adding it to your page:</h4>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;My Personal Website&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;img src="https://github.com/hackclub/dinosaurs/raw/main/smart_dinosaur_docs.png" /&gt;
+    &lt;h1&gt;Prophet Orpheus&lt;/h1&gt;
+    &lt;p&gt;Coder Dino&lt;/p&gt;
+    &lt;p&gt;Will code for food&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+                </div>
+                
+                <div style="text-align: center; margin-top: 15px;">
+                    <img src="https://cloud-1lgnmk5nw-hack-club-bot.vercel.app/2no_css.png" style="max-width: 80%; border-radius: 8px;" alt="Example of HTML without CSS">
+                </div>
+                
+                <p><strong>Try it:</strong> Update your HTML with this image or find another image URL to use!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="5" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Part II: Adding CSS</h3>
+                <p>CSS (Cascading Style Sheets) is used to style your HTML elements and make your website look attractive.</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Creating a CSS File:</h4>
+                    <p>In Hack Club Spaces, you can click on the "styles.css" tab in the editor to add your CSS. If you're starting from scratch, first you'll need to link your CSS file to your HTML.</p>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+&lt;!-- Add this inside the &lt;head&gt; section of your HTML --&gt;
+&lt;link rel="stylesheet" href="styles.css" /&gt;</pre>
+                </div>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Basic CSS:</h4>
+                    <p>Now add the following to your styles.css file:</p>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+img {
+  width: 200px;
+}
+
+body {
+  text-align: center;
+  font-family: 'Arial';
+  background: azure;
+  color: purple;
+}</pre>
+                </div>
+                
+                <p><strong>Try it:</strong> Click on the "styles.css" tab and add these styles, then save your changes and run your page to see the difference!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="6" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Styling Your Page</h3>
+                <p>Let's add more styles to make your site unique!</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Improved CSS:</h4>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+body {
+  text-align: center;
+  font-family: 'Arial', sans-serif;
+  line-height: 1.5;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f0f8ff; /* azure */
+  color: #663399; /* purple */
+}
+
+img {
+  width: 200px;
+  border-radius: 10px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+  margin: 20px 0;
+}
+
+h1 {
+  color: #ff6b6b;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+p {
+  font-size: 1.1rem;
+  margin: 5px 0;
+}</pre>
+                </div>
+                
+                <p>This CSS adds:</p>
+                <ul style="padding-left: 20px; line-height: 1.6;">
+                    <li>Better spacing with line-height and margins</li>
+                    <li>Maximum width and centered content</li>
+                    <li>Rounded corners and shadow for the image</li>
+                    <li>Different colors and font sizes</li>
+                </ul>
+                
+                <p><strong>Try it:</strong> Update your CSS with these styles or experiment with your own colors and values!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="7" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Adding More Content</h3>
+                <p>Let's expand your website with more sections and content!</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Enhanced HTML Structure:</h4>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;My Personal Website&lt;/title&gt;
+    &lt;link rel="stylesheet" href="styles.css" /&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;header&gt;
+      &lt;img src="https://github.com/hackclub/dinosaurs/raw/main/smart_dinosaur_docs.png" alt="Profile picture" /&gt;
+      &lt;h1&gt;Prophet Orpheus&lt;/h1&gt;
+      &lt;p&gt;Coder Dino&lt;/p&gt;
+    &lt;/header&gt;
+    
+    &lt;section class="about"&gt;
+      &lt;h2&gt;About Me&lt;/h2&gt;
+      &lt;p&gt;Hello! I'm a coding dinosaur who loves to build websites. When I'm not coding, I enjoy reading books and eating leaves.&lt;/p&gt;
+    &lt;/section&gt;
+    
+    &lt;section class="skills"&gt;
+      &lt;h2&gt;My Skills&lt;/h2&gt;
+      &lt;ul&gt;
+        &lt;li&gt;HTML & CSS&lt;/li&gt;
+        &lt;li&gt;JavaScript&lt;/li&gt;
+        &lt;li&gt;Python&lt;/li&gt;
+        &lt;li&gt;Roaring&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/section&gt;
+    
+    &lt;section class="contact"&gt;
+      &lt;h2&gt;Contact Me&lt;/h2&gt;
+      &lt;p&gt;Email: &lt;a href="mailto:dino@example.com"&gt;dino@example.com&lt;/a&gt;&lt;/p&gt;
+      &lt;p&gt;&lt;a href="https://github.com"&gt;GitHub&lt;/a&gt; | &lt;a href="https://twitter.com"&gt;Twitter&lt;/a&gt;&lt;/p&gt;
+    &lt;/section&gt;
+    
+    &lt;footer&gt;
+      &lt;p&gt;&copy; 2023 Prophet Orpheus. Made with Hack Club Spaces.&lt;/p&gt;
+    &lt;/footer&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+                </div>
+                
+                <p>This HTML uses semantic tags like <code>&lt;header&gt;</code>, <code>&lt;section&gt;</code>, and <code>&lt;footer&gt;</code> to organize content better.</p>
+                
+                <p><strong>Try it:</strong> Update your HTML with this structure and customize it with your own information!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="8" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Styling the New Sections</h3>
+                <p>Let's style our new sections to look more organized and attractive!</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Extended CSS:</h4>
+                    <pre style="background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto;">
+/* Add these styles to your existing CSS */
+header {
+  margin-bottom: 40px;
+}
+
+section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 30px 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+
+h2 {
+  color: #4e54c8;
+  border-bottom: 2px solid #8f94fb;
+  padding-bottom: 5px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+ul li {
+  padding: 5px 0;
+  margin-left: 20px;
+}
+
+ul li:before {
+  content: "✓ ";
+  color: #4e54c8;
+}
+
+footer {
+  margin-top: 40px;
+  padding: 20px;
+  font-size: 0.9rem;
+  color: #666;
+  border-top: 1px solid #ddd;
+}
+
+a {
+  color: #4e54c8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: #ff6b6b;
+  text-decoration: underline;
+}</pre>
+                </div>
+                
+                <p><strong>Try it:</strong> Add these styles to your CSS file to make your sections look more polished and professional!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="9" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Part III: Publishing Your Site</h3>
+                <p>Now that you've created your website, it's time to share it with the world!</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Deploying with Hack Club Spaces:</h4>
+                    <ol style="padding-left: 20px; line-height: 1.6;">
+                        <li>Make sure you've saved all your changes</li>
+                        <li>Click the "Deploy" button in the browser toolbar above the preview</li>
+                        <li>Your site will be available at the URL shown in the deploy modal</li>
+                    </ol>
+                </div>
+                
+                <div style="margin: 15px 0; text-align: center;">
+                    <img src="https://cloud-4zpw37atj-hack-club-bot.vercel.app/1celebrate_rush_hour.gif" style="max-width: 100%; border-radius: 8px;" alt="Celebration GIF">
+                </div>
+                
+                <p><strong>Remember:</strong> Every time you make changes to your site, you'll need to save and deploy again to update your live site.</p>
+                
+                <p><i>For a limited time: <a href="https://hack.club/boba" target="_blank">get a free bubble tea</a> after your site deploys!</i></p>
+            </div>
+
+            <div class="tutorial-step" data-step="10" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Next Steps & Resources</h3>
+                <p>Congratulations on creating your personal website! Here are some ways to take it further:</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Ideas for Improvement:</h4>
+                    <ul style="padding-left: 20px; line-height: 1.6;">
+                        <li>Add a dark/light mode toggle using JavaScript</li>
+                        <li>Create a photo gallery or portfolio section</li>
+                        <li>Add animations to make elements fade in as you scroll</li>
+                        <li>Make your site responsive for mobile devices</li>
+                        <li>Add a contact form or blog section</li>
+                    </ul>
+                </div>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Helpful Resources:</h4>
+                    <ul style="padding-left: 20px; line-height: 1.6;">
+                        <li><a href="https://www.w3schools.com/" target="_blank">W3Schools</a> - Comprehensive tutorials and references</li>
+                        <li><a href="https://developer.mozilla.org/en-US/" target="_blank">MDN Web Docs</a> - Detailed documentation for web technologies</li>
+                        <li><a href="https://css-tricks.com/" target="_blank">CSS-Tricks</a> - Tips and tricks for CSS</li>
+                        <li><a href="https://hackclub.com/" target="_blank">Hack Club</a> - Community and resources for young developers</li>
+                    </ul>
+                </div>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Example Websites for Inspiration:</h4>
+                    <p>Check out these websites made by other Hack Club members:</p>
+                    <ul style="padding-left: 20px; line-height: 1.6;">
+                        <li><a href="https://cytronicoder.com/" target="_blank">Zeyu (Peter) Yao</a></li>
+                        <li><a href="https://kognise.dev/" target="_blank">Kognise</a></li>
+                        <li><a href="https://sarthakmohanty.me/" target="_blank">Sarthak Mohanty</a></li>
+                        <li><a href="https://sampoder.com/" target="_blank">Sam Poder</a></li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="openYSWSModal()" class="btn-primary" style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #ff6b6b 0%, #8c52ff 100%);">
+                        <i class="fa-solid fa-gift"></i> Apply for YSWS
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="ysws-widget">
     <div class="orphy-header" style="background: linear-gradient(135deg, #ff6b6b 0%, #8c52ff 100%); cursor: grab; border-radius: 12px 12px 0 0;">
         <div class="orphy-title">
@@ -416,7 +817,7 @@
         <div class="ysws-section" style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #ff6b6b;">
             <h3 style="color: #ff6b6b; margin-top: 0;"><i class="fa-solid fa-mug-hot"></i> Boba Drops</h3>
             <p style="font-size: 16px; line-height: 1.5;">Ship a website, get $5 for Boba!</p>
-            
+
             <div style="margin: 15px 0; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                 <h4 style="margin-top: 0;">Requirements:</h4>
                 <ul style="padding-left: 20px; line-height: 1.6;">
@@ -428,16 +829,16 @@
                     <li>You are in the USA!</li>
                 </ul>
             </div>
-            
+
             <a href="https://forms.hackclub.com/t/tLf8GYVBqSus" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease;">
                 <i class="fas fa-external-link-alt"></i> Apply for Boba Drops
             </a>
         </div>
-        
+
         <div class="ysws-section" style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #8c52ff;">
             <h3 style="color: #8c52ff; margin-top: 0;"><i class="fa-solid fa-ice-cream"></i> Swirl</h3>
             <p style="font-size: 16px; line-height: 1.5;">Build a website, Get free ice cream!</p>
-            
+
             <div style="margin: 15px 0; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                 <h4 style="margin-top: 0;">Requirements:</h4>
                 <ul style="padding-left: 20px; line-height: 1.6;">
@@ -452,12 +853,12 @@
                     <li>Your website is original (NO AI or copy-pasting from ANYWHERE)</li>
                 </ul>
             </div>
-            
+
             <a href="https://forms.hackclub.com/t/t1UL6ZK4Nyus" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #8c52ff 0%, #a56fff 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease;">
                 <i class="fas fa-external-link-alt"></i> Apply for Swirl
             </a>
         </div>
-        
+
         <div style="text-align: center; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 12px;">
             <h4 style="margin-top: 0; color: #ff9d00;"><i class="fas fa-lightbulb"></i> Quick Tip</h4>
             <p>Remember to save and deploy your site before applying. Good luck!</p>
@@ -510,40 +911,107 @@
 {% endif %}
 
 <script>
-function openYSWSModal() {
+// Make these functions globally available
+window.openYSWSModal = function() {
     const widget = document.getElementById('ysws-widget');
     widget.style.display = 'block';
-    
+
     // Center the modal initially
     const windowHeight = window.innerHeight;
     const windowWidth = window.innerWidth;
     const modalWidth = 500; // Fixed width
     const modalHeight = 600; // Approximate height
-    
+
     widget.style.left = (windowWidth / 2 - modalWidth / 2) + 'px';
     widget.style.top = (windowHeight / 2 - modalHeight / 2) + 'px';
     widget.style.transform = 'none';
-    
+
     setTimeout(() => {
         widget.style.opacity = '1';
     }, 50);
-    
+
     const dragHandle = widget.querySelector('.orphy-header');
-    makeDraggable(widget, dragHandle);
+    window.makeDraggable(widget, dragHandle);
+};
+
+window.openTutorialModal = function() {
+    const widget = document.getElementById('tutorial-widget');
+    widget.style.display = 'block';
+
+    // Center the modal initially
+    const windowHeight = window.innerHeight;
+    const windowWidth = window.innerWidth;
+    const modalWidth = 600; // Fixed width
+    const modalHeight = 600; // Approximate height
+
+    widget.style.left = (windowWidth / 2 - modalWidth / 2) + 'px';
+    widget.style.top = (windowHeight / 2 - modalHeight / 2) + 'px';
+    widget.style.transform = 'none';
+
+    setTimeout(() => {
+        widget.style.opacity = '1';
+    }, 50);
+
+    const dragHandle = widget.querySelector('.orphy-header');
+    window.makeDraggable(widget, dragHandle);
+
+    // Reset to first step
+    currentTutorialStep = 1;
+    updateTutorialStep();
+};
+
+window.closeTutorialModal = function() {
+    const widget = document.getElementById('tutorial-widget');
+    widget.style.opacity = '0';
+    setTimeout(() => {
+        widget.style.display = 'none';
+    }, 300);
+};
+
+let currentTutorialStep = 1;
+const totalTutorialSteps = 10;
+
+window.nextTutorialStep = function() {
+    if (currentTutorialStep < totalTutorialSteps) {
+        currentTutorialStep++;
+        updateTutorialStep();
+    }
+};
+
+window.prevTutorialStep = function() {
+    if (currentTutorialStep > 1) {
+        currentTutorialStep--;
+        updateTutorialStep();
+    }
+};
+
+function updateTutorialStep() {
+    // Update step indicator
+    document.getElementById('tutorial-step-indicator').textContent = `${currentTutorialStep}/${totalTutorialSteps}`;
+
+    // Enable/disable navigation buttons
+    document.getElementById('prev-tutorial').disabled = (currentTutorialStep === 1);
+    document.getElementById('next-tutorial').disabled = (currentTutorialStep === totalTutorialSteps);
+
+    // Show current step, hide others
+    document.querySelectorAll('.tutorial-step').forEach(step => {
+        const stepNum = parseInt(step.getAttribute('data-step'));
+        step.style.display = (stepNum === currentTutorialStep) ? 'block' : 'none';
+    });
 }
 
-function closeYSWSModal() {
+window.closeYSWSModal = function() {
     const widget = document.getElementById('ysws-widget');
     widget.style.opacity = '0';
     setTimeout(() => {
         widget.style.display = 'none';
     }, 300);
-}
+};
 
-function makeDraggable(element, dragHandle) {
+window.makeDraggable = function(element, dragHandle) {
     let offsetX = 0, offsetY = 0;
     let isDragging = false;
-    
+
     const startDrag = function(e) {
         isDragging = true;
         const rect = element.getBoundingClientRect();
@@ -552,32 +1020,53 @@ function makeDraggable(element, dragHandle) {
         dragHandle.style.cursor = 'grabbing';
         e.preventDefault();
     };
-    
+
     const moveDrag = function(e) {
         if (!isDragging) return;
-        
+
         const x = e.clientX - offsetX;
         const y = e.clientY - offsetY;
-        
+
         // Set boundaries to keep the modal within viewport
         const maxX = window.innerWidth - element.offsetWidth;
         const maxY = window.innerHeight - element.offsetHeight;
-        
+
         element.style.left = Math.min(Math.max(0, x), maxX) + 'px';
         element.style.top = Math.min(Math.max(0, y), maxY) + 'px';
         element.style.transform = 'none';
         e.preventDefault();
     };
-    
+
     const endDrag = function() {
         isDragging = false;
         dragHandle.style.cursor = 'grab';
     };
-    
+
     dragHandle.addEventListener('mousedown', startDrag);
     document.addEventListener('mousemove', moveDrag);
     document.addEventListener('mouseup', endDrag);
-}
+};
+
+// Initialize the modals when the document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize YSWS widget
+    const yswsWidget = document.getElementById('ysws-widget');
+    if (yswsWidget) {
+        const yswsDragHandle = yswsWidget.querySelector('.orphy-header');
+        if (yswsDragHandle) {
+            window.makeDraggable(yswsWidget, yswsDragHandle);
+        }
+    }
+    
+    // Initialize tutorial widget
+    const tutorialWidget = document.getElementById('tutorial-widget');
+    if (tutorialWidget) {
+        const tutorialDragHandle = tutorialWidget.querySelector('.orphy-header');
+        if (tutorialDragHandle) {
+            window.makeDraggable(tutorialWidget, tutorialDragHandle);
+        }
+    }
+});
 </script>
 
 {% if additional_scripts %}
