@@ -953,6 +953,8 @@ if __name__ == "__main__":
             site = Site(name=name,
                         user_id=current_user.id,
                         html_content=default_ysws_content,
+                        css_content="",
+                        js_content="",
                         site_type=site_type)
         else:
             return jsonify({'message': 'Invalid site type'}), 400
@@ -3487,8 +3489,24 @@ def create_ysws_site():
         db.session.add(site)
         db.session.commit()
         
-        # Don't create any default CSS or JS files for YSWS sites
-        # This ensures the site truly starts from scratch
+        # Create empty CSS and JS files to prevent defaults from being added later
+        empty_css_page = SitePage(site_id=site.id,
+                               filename="styles.css",
+                               content="/* Put your CSS here */",
+                               file_type="css")
+                               
+        empty_js_page = SitePage(site_id=site.id,
+                              filename="script.js",
+                              content="// Put your JavaScript here",
+                              file_type="js")
+                              
+        empty_html_page = SitePage(site_id=site.id,
+                               filename="index.html",
+                               content=default_ysws_content,
+                               file_type="html")
+                               
+        db.session.add_all([empty_css_page, empty_js_page, empty_html_page])
+        db.session.commit()
 
         activity = UserActivity(
             activity_type="site_creation",
