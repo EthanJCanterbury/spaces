@@ -154,7 +154,7 @@ def forbidden_error(error):
         context['message'] = "You don't have permission to access this resource."
     else:
         context['message'] = "Please log in to access this page."
-
+    
     return render_template('errors/403.html', **context), 403
 
 
@@ -609,7 +609,7 @@ def welcome():
 def edit_site(site_id):
     try:
         site = Site.query.get(site_id)
-
+        
         if not site:
             app.logger.warning(f'Site with ID {site_id} not found')
             flash('This space does not exist.', 'error')
@@ -874,19 +874,19 @@ def create_site():
         if len(name) < 1 or len(name) > 50:
             return jsonify({'message': 
                            'Space name must be between 1 and 50 characters'}), 400
-
+            
         # Check for potentially problematic characters
         import re
         if re.search(r'[<>{}[\]()\'";]', name):
             return jsonify({'message': 
                            'Space name contains invalid characters'}), 400
-
+            
         try:
             slug = slugify(name)
         except Exception as e:
             app.logger.error(f'Error slugifying name: {str(e)}')
             return jsonify({'message': 'Invalid site name provided'}), 400
-
+            
         existing_site = Site.query.filter_by(slug=slug).first()
         if existing_site:
             app.logger.warning(f'Site with slug {slug} already exists')
@@ -896,74 +896,28 @@ def create_site():
         app.logger.info(
             f'Creating new site "{name}" for user {current_user.id}')
 
-        site_type = data.get('site_type', 'web') #default to web
-        if site_type == 'web':
-            default_html = f'''<!DOCTYPE html>
+        default_html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website</title>
     <link rel="stylesheet" href="/s/{slug}/styles.css">
-    <script src="/s/{slug}/script.js"`defer></script>
+    <script src="/s/{slug}/script.js" defer></script>
 </head>
 <body>
     <h1>Welcome to my website!</h1>
-    <p>This is a paragraph on my new site.</p></body>
+    <p>This is a paragraph on my new site.</p>
+</body>
 </html>'''
-            site = Site(name=name,
-                        user_id=current_user.id,
-                        html_content=default_html,
-                        site_type=site_type)
-        elif site_type == 'python':
-            default_python_content = '''# Welcome to your Python space!
-# This is where you can write and run Python code.
 
-def main():
-    """Main function that runs when this script is executed."""
-    print("Hello, World!")
-
-    # Try adding your own code below:
-    name = "Python Coder"
-    print(f"Welcome, {name}!")
-
-    # You can use loops:
-    for i in range(3):
-        print(f"Count: {i}")
-
-    # And conditions:
-    if name == "Python Coder":
-        print("You're a Python coder!")
-    else:
-        print("You can become a Python coder!")
-
-# Standard Python idiom to call the main function
-if __name__ == "__main__":
-    main()
-'''
-            site = Site(name=name,
-                        user_id=current_user.id,
-                        python_content=default_python_content,
-                        site_type=site_type)
-        elif site_type == 'ysws':
-            default_ysws_content = """<!-- Put your HTML content here -->
-<!-- This is a completely blank YSWS Web Space with no preset content -->
-<!-- Start creating from scratch! -->
-"""
-            # Create site with only HTML comments and no preset CSS or JS
-            site = Site(name=name,
-                        user_id=current_user.id,
-                        html_content=default_ysws_content,
-                        css_content="",
-                        js_content="",
-                        site_type=site_type)
-        else:
-            return jsonify({'message': 'Invalid site type'}), 400
-
+        site = Site(name=name,
+                    user_id=current_user.id,
+                    html_content=default_html)
         db.session.add(site)
         db.session.commit()
 
-        if site_type == 'web':
-            default_css = '''body {
+        default_css = '''body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
     margin: 0;
@@ -979,34 +933,34 @@ h1 {
     padding-bottom: 10px;
 }'''
 
-            default_js = '''document.addEventListener('DOMContentLoaded', function() {
+        default_js = '''document.addEventListener('DOMContentLoaded', function() {
     console.log('Website loaded successfully!');
 });'''
 
-            try:
-                css_page = SitePage(site_id=site.id,
-                                    filename="styles.css",
-                                    content=default_css,
-                                    file_type="css")
+        try:
+            css_page = SitePage(site_id=site.id,
+                                filename="styles.css",
+                                content=default_css,
+                                file_type="css")
 
-                js_page = SitePage(site_id=site.id,
-                                   filename="script.js",
-                                   content=default_js,
-                                   file_type="js")
+            js_page = SitePage(site_id=site.id,
+                               filename="script.js",
+                               content=default_js,
+                               file_type="js")
 
-                html_page = SitePage(site_id=site.id,
-                                     filename="index.html",
-                                     content=default_html,
-                                     file_type="html")
+            html_page = SitePage(site_id=site.id,
+                                 filename="index.html",
+                                 content=default_html,
+                                 file_type="html")
 
-                db.session.add_all([css_page, js_page, html_page])
-                db.session.commit()
+            db.session.add_all([css_page, js_page, html_page])
+            db.session.commit()
 
-                app.logger.info(
-                    f"Successfully created site pages for site {site.id}")
-            except Exception as e:
-                app.logger.error(f"Error creating site pages: {str(e)}")
-                db.session.rollback()
+            app.logger.info(
+                f"Successfully created site pages for site {site.id}")
+        except Exception as e:
+            app.logger.error(f"Error creating site pages: {str(e)}")
+            db.session.rollback()
 
         activity = UserActivity(activity_type="site_creation",
                                 message='New site "{}" created by {}'.format(
@@ -1331,6 +1285,8 @@ def admin_panel():
                                  Site.created_at, Site.updated_at,
                                  Site.user_id,
                                  User.username).join(User).limit(50).all()
+                                 
+        clubs = Club.query.all()
 
         version = '1.7.7'
         try:
@@ -1345,6 +1301,7 @@ def admin_panel():
         return render_template('admin_panel.html',
                                users=users,
                                sites=sites,
+                               clubs=clubs,
                                version=version,
                                Club=Club)
     except Exception as e:
@@ -1912,6 +1869,227 @@ def search_sites():
     except Exception as e:
         app.logger.error(f'Error searching sites: {str(e)}')
         return jsonify({'error': 'Failed to search sites'}), 500
+        
+@app.route('/api/admin/search/clubs')
+@login_required
+@admin_required
+def search_clubs():
+    try:
+        search_term = request.args.get('term', '')
+        if not search_term or len(search_term) < 2:
+            return jsonify(
+                {'error': 'Search term must be at least 2 characters'}), 400
+
+        clubs = db.session.query(
+            Club.id, Club.name, Club.description, Club.location, 
+            Club.join_code, Club.created_at, Club.leader_id, 
+            User.username.label('leader_username')
+        ).join(User, Club.leader_id == User.id).filter(
+            db.or_(
+                Club.name.ilike(f'%{search_term}%'),
+                Club.description.ilike(f'%{search_term}%'),
+                User.username.ilike(f'%{search_term}%')
+            )).limit(50).all()
+
+        result = []
+        for club in clubs:
+            # Count club members
+            member_count = ClubMembership.query.filter_by(club_id=club.id).count()
+            
+            result.append({
+                'id': club.id,
+                'name': club.name,
+                'description': club.description,
+                'location': club.location,
+                'join_code': club.join_code,
+                'created_at': club.created_at.strftime('%Y-%m-%d'),
+                'leader_id': club.leader_id,
+                'leader_username': club.leader_username,
+                'member_count': member_count
+            })
+
+        return jsonify({'clubs': result})
+    except Exception as e:
+        app.logger.error(f'Error searching clubs: {str(e)}')
+        return jsonify({'error': 'Failed to search clubs'}), 500
+
+@app.route('/api/admin/clubs/<int:club_id>')
+@login_required
+@admin_required
+def get_club_details(club_id):
+    try:
+        club = Club.query.get_or_404(club_id)
+        leader = User.query.get(club.leader_id)
+        
+        # Get all members with their details
+        memberships = db.session.query(
+            ClubMembership, User
+        ).join(
+            User, ClubMembership.user_id == User.id
+        ).filter(
+            ClubMembership.club_id == club_id
+        ).all()
+        
+        members = []
+        for membership, user in memberships:
+            members.append({
+                'membership_id': membership.id,
+                'user_id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': membership.role,
+                'joined_at': membership.joined_at.strftime('%Y-%m-%d %H:%M:%S')
+            })
+        
+        club_data = {
+            'id': club.id,
+            'name': club.name,
+            'description': club.description,
+            'location': club.location,
+            'join_code': club.join_code,
+            'created_at': club.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'leader_id': club.leader_id,
+            'leader_username': leader.username if leader else 'Unknown',
+            'members': members
+        }
+        
+        return jsonify(club_data)
+        
+    except Exception as e:
+        app.logger.error(f'Error getting club details: {str(e)}')
+        return jsonify({'error': 'Failed to get club details'}), 500
+
+@app.route('/api/admin/clubs/<int:club_id>', methods=['DELETE'])
+@login_required
+@admin_required
+def delete_club(club_id):
+    try:
+        club = Club.query.get_or_404(club_id)
+        
+        # Delete all memberships first
+        ClubMembership.query.filter_by(club_id=club_id).delete()
+        
+        # Delete the club itself
+        db.session.delete(club)
+        
+        # Record the activity
+        activity = UserActivity(
+            activity_type="admin_action",
+            message=f'Admin {{username}} deleted club "{club.name}"',
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        return jsonify({'message': 'Club deleted successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error deleting club: {str(e)}')
+        return jsonify({'error': 'Failed to delete club'}), 500
+
+@app.route('/api/admin/clubs/<int:club_id>/join-code', methods=['POST'])
+@login_required
+@admin_required
+def admin_reset_join_code(club_id):
+    try:
+        club = Club.query.get_or_404(club_id)
+        
+        # Generate new join code
+        club.generate_join_code()
+        
+        # Record the activity
+        activity = UserActivity(
+            activity_type="admin_action",
+            message=f'Admin {{username}} reset join code for club "{club.name}"',
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Join code reset successfully',
+            'join_code': club.join_code
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error resetting join code: {str(e)}')
+        return jsonify({'error': 'Failed to reset join code'}), 500
+
+@app.route('/api/admin/clubs/members/<int:membership_id>/role', methods=['PUT'])
+@login_required
+@admin_required
+def admin_change_member_role(membership_id):
+    try:
+        membership = ClubMembership.query.get_or_404(membership_id)
+        user = User.query.get(membership.user_id)
+        club = Club.query.get(membership.club_id)
+        
+        # Don't allow changing the club leader's role
+        if user.id == club.leader_id:
+            return jsonify({'error': 'Cannot change the club leader\'s role'}), 400
+        
+        data = request.get_json()
+        new_role = data.get('role')
+        
+        if new_role not in ['member', 'co-leader']:
+            return jsonify({'error': 'Invalid role'}), 400
+        
+        old_role = membership.role
+        membership.role = new_role
+        
+        # Record the activity
+        activity = UserActivity(
+            activity_type="admin_action",
+            message=f'Admin {{username}} changed {user.username}\'s role from "{old_role}" to "{new_role}" in club "{club.name}"',
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        return jsonify({'message': f'Role updated to {new_role}'})
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error changing member role: {str(e)}')
+        return jsonify({'error': 'Failed to change member role'}), 500
+
+@app.route('/api/admin/clubs/members/<int:membership_id>', methods=['DELETE'])
+@login_required
+@admin_required
+def admin_remove_club_member(membership_id):
+    try:
+        membership = ClubMembership.query.get_or_404(membership_id)
+        user = User.query.get(membership.user_id)
+        club = Club.query.get(membership.club_id)
+        
+        # Don't allow removing the club leader
+        if user.id == club.leader_id:
+            return jsonify({'error': 'Cannot remove the club leader from their own club'}), 400
+        
+        # Delete the membership
+        db.session.delete(membership)
+        
+        # Record the activity
+        activity = UserActivity(
+            activity_type="admin_action",
+            message=f'Admin {{username}} removed {user.username} from club "{club.name}"',
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        return jsonify({'message': f'Successfully removed {user.username} from the club'})
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error removing club member: {str(e)}')
+        return jsonify({'error': 'Failed to remove club member'}), 500
 
 
 @app.route('/api/admin/stats/counts')
@@ -3455,93 +3633,6 @@ def initialize_database():
 @login_required
 def integrations():
     return render_template('integrations.html')
-
-
-@app.route('/api/sites/ysws', methods=['POST'])
-@login_required
-def create_ysws_site():
-    try:
-        site_count = Site.query.filter_by(user_id=current_user.id).count()
-        max_sites = get_max_sites_per_user()
-        if site_count >= max_sites:
-            return jsonify({
-                'message':
-                f'You have reached the maximum limit of {max_sites} sites per account'
-            }), 403
-
-        data = request.get_json()
-        if not data:
-            return jsonify({'message': 'Invalid request data'}), 400
-
-        name = data.get('name')
-        if not name:
-            return jsonify({'message': 'Name is required'}), 400
-
-        # For YSWS, we want minimal boilerplate - just enough to help users get started
-        default_ysws_content = """<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My YSWS Site</title>
-    <!-- This is a completely blank YSWS Web Space -->
-    <!-- Start creating from scratch! -->
-</head>
-<body>
-    <!-- Put your content here -->
-</body>
-</html>"""
-
-        # Use empty content for css and js
-        empty_css = ""
-        empty_js = ""
-
-        site = Site(name=name,
-                    user_id=current_user.id,
-                    html_content=default_ysws_content,
-                    css_content=empty_css,
-                    js_content=empty_js,
-                    site_type='ysws')
-        db.session.add(site)
-        db.session.commit()
-        
-        # Create completely empty site pages
-        empty_css_page = SitePage(site_id=site.id,
-                               filename="styles.css",
-                               content="",
-                               file_type="css")
-                               
-        empty_js_page = SitePage(site_id=site.id,
-                              filename="script.js",
-                              content="",
-                              file_type="js")
-                              
-        empty_html_page = SitePage(site_id=site.id,
-                               filename="index.html",
-                               content=default_ysws_content,
-                               file_type="html")
-                               
-        db.session.add_all([empty_css_page, empty_js_page, empty_html_page])
-        db.session.commit()
-
-        activity = UserActivity(
-            activity_type="site_creation",
-            message='New YSWS space "{}" created by {}'.format(
-                name, current_user.username),
-            username=current_user.username,
-            user_id=current_user.id,
-            site_id=site.id)
-        db.session.add(activity)
-        db.session.commit()
-
-        return jsonify({
-            'message': 'YSWS space created successfully',
-            'site_id': site.id
-        })
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'message': 'Failed to create YSWS space'}), 500
-
 
 
 if __name__ == '__main__':
