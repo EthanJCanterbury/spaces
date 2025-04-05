@@ -3477,27 +3477,43 @@ def create_ysws_site():
         if not name:
             return jsonify({'message': 'Name is required'}), 400
 
-        default_ysws_content = """<!-- Put your HTML content here -->
-<!-- This is a blank YSWS Web Space with no preset CSS or JS -->
-<!-- Start creating from scratch! -->
-"""
+        # For YSWS, we want minimal boilerplate - just enough to help users get started
+        default_ysws_content = """<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My YSWS Site</title>
+    <!-- This is a completely blank YSWS Web Space -->
+    <!-- Start creating from scratch! -->
+</head>
+<body>
+    <!-- Put your content here -->
+</body>
+</html>"""
+
+        # Use empty content for css and js
+        empty_css = ""
+        empty_js = ""
 
         site = Site(name=name,
                     user_id=current_user.id,
                     html_content=default_ysws_content,
+                    css_content=empty_css,
+                    js_content=empty_js,
                     site_type='ysws')
         db.session.add(site)
         db.session.commit()
         
-        # Create empty CSS and JS files to prevent defaults from being added later
+        # Create completely empty site pages
         empty_css_page = SitePage(site_id=site.id,
                                filename="styles.css",
-                               content="/* Put your CSS here */",
+                               content="",
                                file_type="css")
                                
         empty_js_page = SitePage(site_id=site.id,
                               filename="script.js",
-                              content="// Put your JavaScript here",
+                              content="",
                               file_type="js")
                               
         empty_html_page = SitePage(site_id=site.id,

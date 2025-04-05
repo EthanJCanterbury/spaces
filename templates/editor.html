@@ -435,15 +435,15 @@
                     <img src="https://assets.hackclub.com/flag-standalone.svg" height="30" style="margin-right: 10px;">
                     <h3 style="color: #4e54c8; margin: 0;">Personal Website Workshop</h3>
                 </div>
-                
+
                 <p><i>For a limited time: build your site & <a href="https://hack.club/boba" target="_blank">get a free bubble tea</a></i></p>
-                
+
                 <p>Prophet Orpheus, Hack Club's mascot, is here to guide you through making your own personal website!</p>
-                
+
                 <div style="margin: 15px 0; text-align: center;">
                     <img src="https://cloud-4zpw37atj-hack-club-bot.vercel.app/2dino_site.png" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);" alt="Example dinosaur website">
                 </div>
-                
+
                 <p>This workshop will take about 45 minutes to complete. Let's get started!</p>
             </div>
 
@@ -467,7 +467,7 @@
                 </div>
 
                 <p>This structure is common to all HTML pages. In fact, you can take a look for yourself! Right-click on any web page and select "View page source" to see what's going on behind the scenes.</p>
-                
+
                 <p><strong>Try it:</strong> Type this code into your index.html file in the editor to create a basic webpage, then click "Run" to see your page in action!</p>
             </div>
 
@@ -502,7 +502,7 @@
   &lt;/body&gt;
 &lt;/html&gt;</pre>
                 </div>
-                
+
                 <p><strong>Try it:</strong> Replace the text with your own name and description, then click "Save Changes" and "Run" to see your updates!</p>
             </div>
 
@@ -533,11 +533,11 @@
   &lt;/body&gt;
 &lt;/html&gt;</pre>
                 </div>
-                
+
                 <div style="text-align: center; margin-top: 15px;">
                     <img src="https://cloud-1lgnmk5nw-hack-club-bot.vercel.app/2no_css.png" style="max-width: 80%; border-radius: 8px;" alt="Example of HTML without CSS">
                 </div>
-                
+
                 <p><strong>Try it:</strong> Update your HTML with this image or find another image URL to use!</p>
             </div>
 
@@ -568,7 +568,7 @@ body {
   color: purple;
 }</pre>
                 </div>
-                
+
                 <p><strong>Try it:</strong> Click on the "styles.css" tab and add these styles, then save your changes and run your page to see the difference!</p>
             </div>
 
@@ -608,7 +608,7 @@ p {
   margin: 5px 0;
 }</pre>
                 </div>
-                
+
                 <p>This CSS adds:</p>
                 <ul style="padding-left: 20px; line-height: 1.6;">
                     <li>Better spacing with line-height and margins</li>
@@ -616,7 +616,7 @@ p {
                     <li>Rounded corners and shadow for the image</li>
                     <li>Different colors and font sizes</li>
                 </ul>
-                
+
                 <p><strong>Try it:</strong> Update your CSS with these styles or experiment with your own colors and values!</p>
             </div>
 
@@ -639,12 +639,12 @@ p {
       &lt;h1&gt;Prophet Orpheus&lt;/h1&gt;
       &lt;p&gt;Coder Dino&lt;/p&gt;
     &lt;/header&gt;
-    
+
     &lt;section class="about"&gt;
       &lt;h2&gt;About Me&lt;/h2&gt;
       &lt;p&gt;Hello! I'm a coding dinosaur who loves to build websites. When I'm not coding, I enjoy reading books and eating leaves.&lt;/p&gt;
     &lt;/section&gt;
-    
+
     &lt;section class="skills"&gt;
       &lt;h2&gt;My Skills&lt;/h2&gt;
       &lt;ul&gt;
@@ -654,22 +654,22 @@ p {
         &lt;li&gt;Roaring&lt;/li&gt;
       &lt;/ul&gt;
     &lt;/section&gt;
-    
+
     &lt;section class="contact"&gt;
       &lt;h2&gt;Contact Me&lt;/h2&gt;
       &lt;p&gt;Email: &lt;a href="mailto:dino@example.com"&gt;dino@example.com&lt;/a&gt;&lt;/p&gt;
       &lt;p&gt;&lt;a href="https://github.com"&gt;GitHub&lt;/a&gt; | &lt;a href="https://twitter.com"&gt;Twitter&lt;/a&gt;&lt;/p&gt;
     &lt;/section&gt;
-    
+
     &lt;footer&gt;
       &lt;p&gt;&copy; 2023 Prophet Orpheus. Made with Hack Club Spaces.&lt;/p&gt;
     &lt;/footer&gt;
   &lt;/body&gt;
 &lt;/html&gt;</pre>
                 </div>
-                
+
                 <p>This HTML uses semantic tags like <code>&lt;header&gt;</code>, <code>&lt;section&gt;</code>, and <code>&lt;footer&gt;</code> to organize content better.</p>
-                
+
                 <p><strong>Try it:</strong> Update your HTML with this structure and customize it with your own information!</p>
             </div>
 
@@ -734,7 +734,7 @@ a:hover {
   text-decoration: underline;
 }</pre>
                 </div>
-                
+
                 <p><strong>Try it:</strong> Add these styles to your CSS file to make your sections look more polished and professional!</p>
             </div>
 
@@ -750,13 +750,13 @@ a:hover {
                         <li>Your site will be available at the URL shown in the deploy modal</li>
                     </ol>
                 </div>
-                
+
                 <div style="margin: 15px 0; text-align: center;">
                     <img src="https://cloud-4zpw37atj-hack-club-bot.vercel.app/1celebrate_rush_hour.gif" style="max-width: 100%; border-radius: 8px;" alt="Celebration GIF">
                 </div>
-                
+
                 <p><strong>Remember:</strong> Every time you make changes to your site, you'll need to save and deploy again to update your live site.</p>
-                
+
                 <p><i>For a limited time: <a href="https://hack.club/boba" target="_blank">get a free bubble tea</a> after your site deploys!</i></p>
             </div>
 
@@ -911,6 +911,15 @@ a:hover {
 {% endif %}
 
 <script>
+    const siteId = {{ site.id }};
+    const siteSlug = "{{ site.slug }}";
+    const initialContent = `{{ site.html_content|safe }}`;
+    const siteType = "{{ site.site_type }}";
+
+    // Make site type available in window for access in other scripts
+    window.siteType = siteType;
+</script>
+
 // Make these functions globally available
 window.openYSWSModal = function() {
     const widget = document.getElementById('ysws-widget');
@@ -1057,7 +1066,7 @@ document.addEventListener('DOMContentLoaded', function() {
             window.makeDraggable(yswsWidget, yswsDragHandle);
         }
     }
-    
+
     // Initialize tutorial widget
     const tutorialWidget = document.getElementById('tutorial-widget');
     if (tutorialWidget) {

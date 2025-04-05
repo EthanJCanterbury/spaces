@@ -46,35 +46,92 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-function createNewFile(filename, fileType) {
-  const siteId = document.getElementById('site-id').value;
+function createNewFile() {
+  const filename = document.getElementById('newFilename').value.trim();
 
-  if (typeof filename !== 'string') {
-    showToast('Invalid filename', 'error');
+  if (!filename) {
+    showToast('Please enter a filename', 'error');
     return;
   }
 
-  const extension = filename.split('.').pop().toLowerCase();
+  const fileType = filename.split('.').pop().toLowerCase();
 
-  let defaultContent = '';
-  if (extension === 'html') {
-    defaultContent = '<!DOCTYPE html>\n<html>\n<head>\n    <meta charset="UTF-8">\n    <title>New Page</title>\n    <link rel="stylesheet" href="styles.css">\n</head>\n<body>\n    <h1>New Page</h1>\n    <script src="script.js"></script>\n</body>\n</html>';
-  } else if (extension === 'css') {
-    defaultContent = '/* Styles for ' + filename + ' */\n\n';
-  } else if (extension === 'js') {
-    defaultContent = '// JavaScript for ' + filename + '\n\ndocument.addEventListener("DOMContentLoaded", function() {\n    console.log("' + filename + ' loaded");\n});';
+  if (fileContents[filename]) {
+    showToast(`File ${filename} already exists`, 'error');
+    return;
   }
+
+  const data = {
+    filename: filename,
+    file_type: fileType
+  };
+
+  // Check if this is a YSWS site type
+  const isYSWS = window.siteType === 'ysws';
+
+  if (isYSWS) {
+    // For YSWS sites, use empty content for all file types
+    if (fileType === 'html') {
+      data.content = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${filename}</title>
+</head>
+<body>
+  <!-- Put your content here -->
+</body>
+</html>`;
+    } else if (fileType === 'css') {
+      data.content = `/* CSS for ${filename} */`;
+    } else if (fileType === 'js') {
+      data.content = `// JavaScript for ${filename}`;
+    } else {
+      data.content = '';
+    }
+  } else {
+    // For regular sites, use the default templates
+    if (fileType === 'html') {
+      data.content = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${filename}</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>${filename}</h1>
+  <p>This is a new page.</p>
+</body>
+</html>`;
+    } else if (fileType === 'css') {
+      data.content = `/* Styles for ${filename} */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+}`;
+    } else if (fileType === 'js') {
+      data.content = `// JavaScript for ${filename}
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('${filename} loaded');
+});`;
+    } else {
+      data.content = '';
+    }
+  }
+
+
+  const siteId = document.getElementById('site-id').value;
 
   fetch('/api/sites/' + siteId + '/files', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      filename: filename,
-      content: defaultContent,
-      file_type: extension
-    })
+    body: JSON.stringify(data)
   })
   .then(response => {
     if (!response.ok) {
@@ -83,21 +140,9 @@ function createNewFile(filename, fileType) {
     return response.json();
   })
   .then(data => {
-    addFileTab(filename, extension);
+    addFileTab(filename, fileType);
     showToast('File created successfully', 'success');
-
     switchToFile(filename);
-
-    const tab = document.querySelector(`.file-tab[data-filename="${filename}"]`);
-    if (tab) {
-      const closeBtn = tab.querySelector('.file-close');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          deleteFile(filename);
-        });
-      }
-    }
   })
   .catch(error => {
     console.error('Error:', error);
