@@ -100,12 +100,30 @@ function initPythonEditor() {
         lineWrapping: true,
         viewportMargin: Infinity,
         foldGutter: true,
+        styleActiveLine: true,
+        showHint: true,
+        hintOptions: {
+            completeSingle: false,
+            alignWithWord: true,
+            closeOnUnfocus: false,
+            hint: function(cm) {
+                return new Promise(function(resolve) {
+                    setTimeout(function() {
+                        var cursor = cm.getCursor();
+                        var token = cm.getTokenAt(cursor);
+                        var hints = CodeMirror.pythonHint(cm) || CodeMirror.hint.anyword(cm, { word: /[\w\.$]+/ });
+                        resolve(hints);
+                    }, 100);
+                });
+            }
+        },
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
         extraKeys: {
             "Ctrl-Space": "autocomplete",
             "Ctrl-S": savePythonContent,
             "Ctrl-Enter": runPythonCode,
             "Shift-Alt-F": formatPythonCode,
+            "Ctrl-/": "toggleComment",
             "Tab": function(cm) {
                 // Smart tab behavior - indent by 4 spaces
                 if (cm.somethingSelected()) {
@@ -116,6 +134,122 @@ function initPythonEditor() {
             }
         }
     });
+
+    // Add auto-trigger for Python hints
+    pythonEditor.on('keyup', function(cm, event) {
+        var cursor = cm.getCursor();
+        var line = cm.getLine(cursor.line);
+        var prefix = line.slice(0, cursor.ch);
+        var key = event.key || String.fromCharCode(event.keyCode);
+        
+        // Don't trigger on modifier keys, arrows, etc.
+        var ignoreKeys = [16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 45, 91, 93, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 144, 145];
+        
+        // Only show hints if:
+        // 1. Autocomplete not already active
+        // 2. Not a modifier key
+        // 3. Pattern matches trigger characters or we have a minimum prefix length
+        if (!cm.state.completionActive && 
+            !ignoreKeys.includes(event.keyCode) &&
+            (/[a-zA-Z0-9_\.\(\[\{]$/.test(prefix) || 
+             (prefix.length >= 2 && /[a-zA-Z0-9_]$/.test(key)))) {
+            
+            cm.showHint({
+                hint: function(cm) {
+                    return new Promise(function(resolve) {
+                        setTimeout(function() {
+                            var cursor = cm.getCursor();
+                            var line = cm.getLine(cursor.line);
+                            var prefix = line.slice(0, cursor.ch);
+                            
+                            // Custom hint function that combines Python hints with any-word
+                            var result = CodeMirror.hint.anyword(cm, { word: /[\w\.$]+/ });
+                            
+                            // Add Python-specific suggestions
+                            var builtins = ["abs", "all", "any", "ascii", "bin", "bool", "bytearray", 
+                                "bytes", "callable", "chr", "classmethod", "compile", "complex", 
+                                "delattr", "dict", "dir", "divmod", "enumerate", "eval", "exec", 
+                                "filter", "float", "format", "frozenset", "getattr", "globals", 
+                                "hasattr", "hash", "help", "hex", "id", "input", "int", "isinstance", 
+                                "issubclass", "iter", "len", "list", "locals", "map", "max", "memoryview", 
+                                "min", "next", "object", "oct", "open", "ord", "pow", "print", "property", 
+                                "range", "repr", "reversed", "round", "set", "setattr", "slice", "sorted", 
+                                "staticmethod", "str", "sum", "super", "tuple", "type", "vars", "zip"];
+                            
+                            if (!result) {
+                                result = {
+                                    list: [],
+                                    from: CodeMirror.Pos(cursor.line, cursor.ch),
+                                    to: CodeMirror.Pos(cursor.line, cursor.ch)
+                                };
+                            }
+                            
+                            // Add Python keywords
+                            if (/^[a-z]/i.test(prefix)) {
+                                var keywords = ["and", "as", "assert", "async", "await", "break", 
+                                    "class", "continue", "def", "del", "elif", "else", "except", 
+                                    "finally", "for", "from", "global", "if", "import", "in", "is", 
+                                    "lambda", "nonlocal", "not", "or", "pass", "raise", "return", 
+                                    "try", "while", "with", "yield"];
+                                
+                                // Filter and add keywords
+                                var prefix_lower = prefix.toLowerCase();
+                                keywords.forEach(function(keyword) {
+                                    if (keyword.indexOf(prefix_lower) === 0 && 
+                                        result.list.indexOf(keyword) === -1) {
+                                        result.list.push(keyword);
+                                    }
+                                });
+                                
+                                // Add builtins
+                                builtins.forEach(function(builtin) {
+                                    if (builtin.indexOf(prefix_lower) === 0 && 
+                                        result.list.indexOf(builtin) === -1) {
+                                        result.list.push(builtin);
+                                    }
+                                });
+                            }
+                            
+                            // Sort results
+                            result.list.sort();
+                            resolve(result);
+                        }, 100);
+                    });
+                },
+                completeSingle: false,
+                alignWithWord: true,
+                closeOnUnfocus: false
+            });
+        }
+    });
+    
+    // Enhance Tab and other key behaviors
+    pythonEditor.setOption('extraKeys', Object.assign(pythonEditor.getOption('extraKeys') || {}, {
+        "Ctrl-Space": function(cm) {
+            cm.showHint({ 
+                completeSingle: false,
+                alignWithWord: true,
+                closeOnUnfocus: false
+            });
+        },
+        "Ctrl-S": savePythonContent,
+        "Ctrl-Enter": runPythonCode,
+        "Shift-Alt-F": formatPythonCode,
+        "Ctrl-/": "toggleComment",
+        "Tab": function(cm) {
+            // If autocomplete is active, select the current item
+            if (cm.state.completionActive) {
+                cm.state.completionActive.pick();
+                return;
+            }
+            // Smart tab behavior - indent by 4 spaces
+            if (cm.somethingSelected()) {
+                cm.indentSelection("add");
+            } else {
+                cm.execCommand("insertSoftTab");
+            }
+        }
+    }));
 
     pythonEditor.on('changes', function() {
         // Update cursor position in status bar

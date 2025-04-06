@@ -1,3 +1,222 @@
+
+/* VS Code-like styles for CodeMirror */
+.CodeMirror {
+  height: 100%;
+  font-family: 'Consolas', 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* VS Code light theme customization */
+.cm-s-eclipse.CodeMirror {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.cm-s-eclipse .CodeMirror-gutters {
+  background: #f5f5f5;
+  border-right: 1px solid #ddd;
+}
+
+.cm-s-eclipse .CodeMirror-linenumber {
+  color: #999;
+}
+
+.cm-s-eclipse .CodeMirror-cursor {
+  border-left: 1px solid #000;
+}
+
+.cm-s-eclipse .CodeMirror-selected {
+  background: #d9d9d9;
+}
+
+.cm-s-eclipse .CodeMirror-line::selection,
+.cm-s-eclipse .CodeMirror-line > span::selection,
+.cm-s-eclipse .CodeMirror-line > span > span::selection {
+  background: #d9d9d9;
+}
+
+/* Syntax highlighting in VS Code Light style */
+.cm-s-eclipse .cm-keyword {
+  color: #0000ff;
+  font-weight: bold;
+}
+
+.cm-s-eclipse .cm-operator {
+  color: #000000;
+}
+
+.cm-s-eclipse .cm-variable {
+  color: #001080;
+}
+
+.cm-s-eclipse .cm-variable-2 {
+  color: #0070c1;
+}
+
+.cm-s-eclipse .cm-variable-3 {
+  color: #0070c1;
+}
+
+.cm-s-eclipse .cm-property {
+  color: #001080;
+}
+
+.cm-s-eclipse .cm-string {
+  color: #a31515;
+}
+
+.cm-s-eclipse .cm-string-2 {
+  color: #a31515;
+}
+
+.cm-s-eclipse .cm-number {
+  color: #098658;
+}
+
+.cm-s-eclipse .cm-def {
+  color: #000000;
+}
+
+.cm-s-eclipse .cm-bracket {
+  color: #000000;
+}
+
+.cm-s-eclipse .cm-tag {
+  color: #800000;
+}
+
+.cm-s-vscode-dark .cm-header {
+  color: #ce9178;
+}
+
+.cm-s-vscode-dark .cm-link {
+  color: #569cd6;
+}
+
+.cm-s-vscode-dark .cm-atom {
+  color: #bd63c5;
+}
+
+.cm-s-vscode-dark .cm-comment {
+  color: #6a9955;
+}
+
+.cm-s-vscode-dark .cm-meta {
+  color: #d4d4d4;
+}
+
+/* Autocomplete dropdown styles */
+.CodeMirror-hints {
+  position: absolute;
+  z-index: 10;
+  overflow: hidden;
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  border-radius: 3px;
+  border: 1px solid #c8c8c8;
+  background: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  max-height: 20em;
+  overflow-y: auto;
+  font-family: 'Consolas', 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+.CodeMirror-hint {
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 2px;
+  white-space: pre;
+  color: #000000;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+li.CodeMirror-hint-active {
+  background-color: #d8d8d8;
+  color: #000000;
+}
+
+/* Active line highlight */
+.CodeMirror-activeline-background {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Lint error styles */
+.CodeMirror-lint-mark-error {
+  background-position: 0 100%;
+  background-repeat: repeat-x;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAYAAAC09K7GAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9sJDw4cOCW1/KIAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAAHElEQVQI12NggIL/DAz/GdA5/xkY/qPKMDAwAADLZwf5rvm+LQAAAABJRU5ErkJggg==');
+}
+
+.CodeMirror-lint-marker-error {
+  background-position: center center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+  vertical-align: middle;
+  position: relative;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJPSURBVDjLpZPLS5RhFMYfv9QJlelTQZwRb2OKlKuINuHGLlBEBEOLxAu46oL0F0QQFdWizUCrWnjBaDHgThCMoiKkhUONTqmjmDp2GZ0UnWbmfc/ztrC+GbM2dXbv4ZzfeQ7vefKMMfifyP89IbevNNCYdkN2kawkCZKfSPZTOGTf6Y/m1uflKlC3LvsNTWArr9BT2LAf+W73dn5jHclIBFZyfYWU3or7T4K7AJmbl/yG7EtX1BQXNTVCYgtgbAEAYHlqYHlrsTEVQWr63RZFuqsfDAcdQPrGRR/JF5nKGm9xUxMyr0YBAEXXHgIANq/3ADQobD2J9fAkNiMTMSFb9z8ambMAQER3JC1XttkYGGZXoyZEGyTHRuBuPgBTUu7VSnUAgAUAWutOV2MjZGkehgYUA6O5A0AlkAyRnotiX3MLlFKduYCqAtuGXpyH0XQmOj+TIURt51OzURTYZdBKV2UBSsOIcRp/TVTT4ewK6idECAihtUKOArWcjq/B8tQ6UkUR31+OYXP4sTOdisHcQbSPEgAMJnnxJPZaVFGukm8llaw4vdSLsuWNkI+A1MjfqBKjvCKP5AfSGA2PQsyXDJGsZMxZTwOA/TmCMiNXlZaR5N4Eh6qihZOFxwxJfMw92IcYAFnwLQQAc+cBeGVyVsVYaQs4Vbvxbly2vd7YEZn0CtngJrnuIAkpeZ9zLkdRBYFBOwAoRQA3J2vgxnQiuXH+cwUw6C4qRiUwFsYQwM9x7RqJXqsNBZC9PJzNzc9pZ8l+xyVwLmDxPfkDqQ7/Kvmfw7sFcgJ/Go95GQYKVOEXbE1fuXYXk3QAAAAASUVORK5CYII=');
+}
+
+/* Scrollbar styles for a VS Code like look */
+.CodeMirror-simplescroll-horizontal,
+.CodeMirror-simplescroll-vertical {
+  position: absolute;
+  z-index: 6;
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+
+.CodeMirror-simplescroll-horizontal div,
+.CodeMirror-simplescroll-vertical div {
+  position: absolute;
+  background: #5a5a5a;
+  border-radius: 4px;
+}
+
+.CodeMirror-simplescroll-horizontal {
+  bottom: 0; left: 0;
+  height: 8px;
+}
+.CodeMirror-simplescroll-horizontal div {
+  bottom: 0;
+  height: 100%;
+}
+
+.CodeMirror-simplescroll-vertical {
+  right: 0; top: 0;
+  width: 8px;
+}
+.CodeMirror-simplescroll-vertical div {
+  right: 0;
+  width: 100%;
+}
+
+/* VS Code-like status bar */
+.editor-statusbar {
+  background-color: #007acc;
+  color: white;
+  font-size: 12px;
+  padding: 4px 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Cursor animation to match VS Code */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.CodeMirror-cursor {
+  animation: blink 1s step-end infinite;
+}
+
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -95,6 +314,63 @@
   border-radius: 10px;
   animation: progress 2s ease-in-out forwards;
   box-shadow: 0 0 10px rgba(237, 102, 99, 0.7);
+}
+
+
+/* CodeMirror Autocomplete Styles */
+.CodeMirror-hints {
+    position: absolute;
+    z-index: 10;
+    overflow: hidden;
+    list-style: none;
+    margin: 0;
+    padding: 2px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    background: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    max-width: 400px;
+    max-height: 20em;
+    overflow-y: auto;
+    font-family: monospace;
+}
+
+.CodeMirror-hint {
+    margin: 0;
+    padding: 5px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    color: #333;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.CodeMirror-hint-active {
+    background-color: #4e54c8;
+    color: white;
+}
+
+.CodeMirror-hint .hint-type {
+    opacity: 0.8;
+    font-size: 0.8em;
+    margin-left: 4px;
+    color: #999;
+}
+
+.CodeMirror-hint-active .hint-type {
+    color: #eee;
+}
+
+.CodeMirror-hint .hint-doc {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.8em;
+    opacity: 0.8;
+}
+
+/* Enhance the active line highlighting */
+.CodeMirror-activeline-background {
+    background: rgba(200, 200, 255, 0.1);
 }
 
 .loading-facts {

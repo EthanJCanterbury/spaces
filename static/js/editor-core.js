@@ -5,6 +5,7 @@ let siteId = null;
 let siteType = null;
 let lastCursorPosition = { line: 0, ch: 0 };
 let isDirty = false;
+let completionActive = false;
 
 let currentFilename = 'index.html';
 
@@ -24,14 +25,56 @@ function initEditor(initialContent, type) {
         foldGutter: true,
         smartIndent: true,
         electricChars: true,
-        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        styleActiveLine: true,
+        showHint: true,
+        lint: true,
+        highlightSelectionMatches: {showToken: /\w/, annotateScrollbar: true},
+        hintOptions: {
+            completeSingle: false,
+            alignWithWord: true,
+            closeOnUnfocus: false,
+            hint: function(editor, options) {
+                var result = CodeMirror.hint.anyword(editor, options);
+                var mode = editor.getModeAt(editor.getCursor());
+                
+                // Add additional suggestions based on mode
+                if (mode.name === "javascript") {
+                    result = CodeMirror.hint.javascript(editor, options) || result;
+                } else if (mode.name === "css") {
+                    result = CodeMirror.hint.css(editor, options) || result;
+                } else if (mode.name === "htmlmixed" || mode.name === "xml") {
+                    var htmlHint = CodeMirror.hint.html(editor, options);
+                    if (htmlHint) {
+                        return htmlHint;
+                    }
+                    var xmlHint = CodeMirror.hint.xml(editor, options);
+                    if (xmlHint) {
+                        return xmlHint;
+                    }
+                }
+                
+                return result;
+            }
+        },
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter", "CodeMirror-lint-markers"],
         extraKeys: {
             "Ctrl-S": saveContent,
             "Cmd-S": saveContent,
-            "Ctrl-Space": "autocomplete",
+            "Ctrl-Space": function(cm) {
+                completionActive = true;
+                cm.showHint({ completeSingle: false });
+            },
             "Alt-F": cm => cm.foldCode(cm.getCursor()),
             "Ctrl-Enter": runCode,
+            "Ctrl-/": "toggleComment",
             "Tab": function(cm) {
+                // If autocomplete is active, select the current item
+                if (cm.state.completionActive) {
+                    cm.state.completionActive.pick();
+                    completionActive = false;
+                    return;
+                }
+                
                 if (cm.somethingSelected()) {
                     cm.indentSelection("add");
                 } else {
@@ -45,6 +88,21 @@ function initEditor(initialContent, type) {
                 var line = cursor.line;
                 var prevLine = cm.getLine(line - 1);
                 var mode = cm.getModeAt(cursor);
+                
+                // Auto-trigger hints after specific characters based on file type
+                setTimeout(function() {
+                    var currentLine = cm.getLine(cursor.line);
+                    var currentChar = currentLine.charAt(cursor.ch - 1);
+                    
+                    // Check current mode to provide appropriate hints
+                    if (cm.getModeAt(cursor).name === 'javascript' && /[a-z0-9_\$\.\(\{\[]/i.test(currentChar)) {
+                        CodeMirror.commands.autocomplete(cm);
+                    } else if (cm.getModeAt(cursor).name === 'css' && /[a-z0-9_\-\:\.]/i.test(currentChar)) {
+                        CodeMirror.commands.autocomplete(cm);
+                    } else if (cm.getModeAt(cursor).name === 'htmlmixed' && /[a-z0-9_\<\/\s]/i.test(currentChar)) {
+                        CodeMirror.commands.autocomplete(cm);
+                    }
+                }, 100);
 
                 if (mode.name === "xml" || mode.name === "htmlmixed") {
                     var openTagMatch = prevLine.match(/<([a-zA-Z]+)[^>]*>\s*$/);
@@ -353,6 +411,40 @@ function setupEventListeners() {
         updateUndoRedoStatus();
         updateFileSize();
         isDirty = true;
+    });
+    
+    // Add keyup handler for better autocomplete triggering
+    editor.on('keyup', function(cm, event) {
+        // Trigger on alphanumeric, underscore, dot, parentheses, brackets
+        var mode = cm.getModeAt(cm.getCursor());
+        var key = event.key || String.fromCharCode(event.keyCode);
+        var cursor = cm.getCursor();
+        var line = cm.getLine(cursor.line);
+        var prefix = line.slice(0, cursor.ch);
+        
+        // Don't trigger on modifier keys, arrows, etc.
+        var ignoreKeys = [16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 45, 91, 93, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 144, 145];
+        
+        if (!cm.state.completionActive && !ignoreKeys.includes(event.keyCode)) {
+            // Auto-trigger after specific characters based on language
+            if ((mode.name === 'javascript' && /[a-z0-9_\$\.\(\{\[]$/i.test(prefix)) ||
+                (mode.name === 'css' && /[a-z0-9_\-\:\.]$/i.test(prefix)) ||
+                (mode.name === 'htmlmixed' && /<[a-z0-9_]*$/i.test(prefix) || /<\/[a-z0-9_]*$/i.test(prefix) || /\s[a-z0-9_\-]*$/i.test(prefix)) ||
+                (mode.name === 'xml' && /<[a-z0-9_]*$/i.test(prefix) || /<\/[a-z0-9_]*$/i.test(prefix) || /\s[a-z0-9_\-]*$/i.test(prefix)) ||
+                (mode.name === 'python' && /[a-z0-9_\.\(\[\{]$/i.test(prefix))) {
+                
+                // Only trigger if prefix has at least 1 character or after specific triggers
+                if (prefix.length >= 1 || /[\.\(\[\{\<]$/.test(prefix)) {
+                    completionActive = true;
+                    cm.showHint({ 
+                        completeSingle: false,
+                        alignWithWord: true,
+                        closeOnUnfocus: false,
+                        closeCharacters: /[\s()\[\]{};:>,]/
+                    });
+                }
+            }
+        }
     });
 
     document.addEventListener('keydown', function(e) {
