@@ -15,7 +15,7 @@ function initEditor(initialContent, type) {
 
     editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
         lineNumbers: true,
-        theme: "vscode-dark",
+        theme: "eclipse",
         indentUnit: 4,
         autoCloseBrackets: true,
         matchBrackets: true,
@@ -42,8 +42,15 @@ function initEditor(initialContent, type) {
                     result = CodeMirror.hint.javascript(editor, options) || result;
                 } else if (mode.name === "css") {
                     result = CodeMirror.hint.css(editor, options) || result;
-                } else if (mode.name === "htmlmixed") {
-                    result = CodeMirror.hint.html(editor, options) || result;
+                } else if (mode.name === "htmlmixed" || mode.name === "xml") {
+                    var htmlHint = CodeMirror.hint.html(editor, options);
+                    if (htmlHint) {
+                        return htmlHint;
+                    }
+                    var xmlHint = CodeMirror.hint.xml(editor, options);
+                    if (xmlHint) {
+                        return xmlHint;
+                    }
                 }
                 
                 return result;
@@ -422,16 +429,18 @@ function setupEventListeners() {
             // Auto-trigger after specific characters based on language
             if ((mode.name === 'javascript' && /[a-z0-9_\$\.\(\{\[]$/i.test(prefix)) ||
                 (mode.name === 'css' && /[a-z0-9_\-\:\.]$/i.test(prefix)) ||
-                (mode.name === 'htmlmixed' && /[a-z0-9_\<\/\s]$/i.test(prefix)) ||
+                (mode.name === 'htmlmixed' && /<[a-z0-9_]*$/i.test(prefix) || /<\/[a-z0-9_]*$/i.test(prefix) || /\s[a-z0-9_\-]*$/i.test(prefix)) ||
+                (mode.name === 'xml' && /<[a-z0-9_]*$/i.test(prefix) || /<\/[a-z0-9_]*$/i.test(prefix) || /\s[a-z0-9_\-]*$/i.test(prefix)) ||
                 (mode.name === 'python' && /[a-z0-9_\.\(\[\{]$/i.test(prefix))) {
                 
-                // Only trigger if prefix has at least 2 characters or after specific triggers
-                if (prefix.length >= 2 || /[\.\(\[\{\<]$/.test(prefix)) {
+                // Only trigger if prefix has at least 1 character or after specific triggers
+                if (prefix.length >= 1 || /[\.\(\[\{\<]$/.test(prefix)) {
                     completionActive = true;
                     cm.showHint({ 
                         completeSingle: false,
                         alignWithWord: true,
-                        closeOnUnfocus: false
+                        closeOnUnfocus: false,
+                        closeCharacters: /[\s()\[\]{};:>,]/
                     });
                 }
             }
