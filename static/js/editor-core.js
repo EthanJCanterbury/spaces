@@ -18,16 +18,52 @@ function initEditor(initialContent, type) {
         indentUnit: 4,
         autoCloseBrackets: true,
         matchBrackets: true,
+        matchTags: {bothTags: true},
         autoCloseTags: true,
         lineWrapping: true,
         foldGutter: true,
+        smartIndent: true,
+        electricChars: true,
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
         extraKeys: {
             "Ctrl-S": saveContent,
             "Cmd-S": saveContent,
             "Ctrl-Space": "autocomplete",
             "Alt-F": cm => cm.foldCode(cm.getCursor()),
-            "Ctrl-Enter": runCode
+            "Ctrl-Enter": runCode,
+            "Tab": function(cm) {
+                if (cm.somethingSelected()) {
+                    cm.indentSelection("add");
+                } else {
+                    cm.execCommand("insertSoftTab");
+                }
+            },
+            "Enter": function(cm) {
+                cm.execCommand("newlineAndIndent");
+
+                var cursor = cm.getCursor();
+                var line = cursor.line;
+                var prevLine = cm.getLine(line - 1);
+                var mode = cm.getModeAt(cursor);
+
+                if (mode.name === "xml" || mode.name === "htmlmixed") {
+                    var openTagMatch = prevLine.match(/<([a-zA-Z]+)[^>]*>\s*$/);
+                    if (openTagMatch && !prevLine.match(/<\/[^>]+>\s*$/)) {
+                        var indent = cm.getLine(line).match(/^\s*/)[0];
+                        cm.replaceRange(indent + "    ", {line: line, ch: 0}, {line: line, ch: indent.length});
+                    }
+                }
+
+                if (mode.name === "css" || mode.name === "javascript") {
+                    if (/[\{\[\(]\s*$/.test(prevLine)) {
+                        var indent = cm.getLine(line).match(/^\s*/)[0];
+                        cm.replaceRange(indent + "    ", {line: line, ch: 0}, {line: line, ch: indent.length});
+                    }
+                }
+
+                return false;
+            },
+            "Ctrl-/": "toggleComment"
         }
     });
 
@@ -476,15 +512,15 @@ function updatePreview() {
 
     const previewFrame = document.getElementById('preview');
     if (!previewFrame) return;
-    
+
     const siteSlug = document.getElementById('site-slug').value;
     if (!siteSlug) return;
-    
+
     // Use current domain instead of hardcoded domain
     const currentDomain = window.location.hostname;
     const timestamp = new Date().getTime();
     const publicUrl = `https://${currentDomain}/s/${siteSlug}?preview=true&t=${timestamp}`;
-    
+
     // Always set the src attribute to force a refresh
     previewFrame.src = publicUrl;
 }
