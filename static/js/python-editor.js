@@ -88,6 +88,35 @@ function endLoading() {
 function initPythonEditor() {
     const editorElement = document.getElementById('pythonEditor');
 
+    // Define Python keywords for autocomplete
+    const pythonKeywords = [
+        'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue',
+        'def', 'del', 'elif', 'else', 'except', 'False', 'finally', 'for',
+        'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'None',
+        'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 'True', 'try',
+        'while', 'with', 'yield'
+    ];
+
+    // Define common Python built-ins for autocomplete
+    const pythonBuiltins = [
+        'abs', 'all', 'any', 'bin', 'bool', 'bytes', 'chr', 'dict', 'dir',
+        'enumerate', 'eval', 'exec', 'filter', 'float', 'format', 'frozenset',
+        'getattr', 'hasattr', 'hash', 'help', 'hex', 'id', 'input', 'int',
+        'isinstance', 'issubclass', 'iter', 'len', 'list', 'map', 'max', 'min',
+        'next', 'object', 'oct', 'open', 'ord', 'pow', 'print', 'property',
+        'range', 'repr', 'reversed', 'round', 'set', 'setattr', 'slice',
+        'sorted', 'str', 'sum', 'super', 'tuple', 'type', 'vars', 'zip'
+    ];
+
+    // Common Python modules
+    const pythonModules = [
+        'datetime', 'collections', 'json', 'os', 'sys', 'math', 'random',
+        'time', 're', 'subprocess', 'pathlib', 'functools', 'itertools'
+    ];
+
+    // Combine all suggestions
+    const pythonSuggestions = [...pythonKeywords, ...pythonBuiltins, ...pythonModules];
+
     pythonEditor = CodeMirror.fromTextArea(editorElement, {
         mode: 'python',
         theme: 'eclipse',
@@ -100,12 +129,62 @@ function initPythonEditor() {
         lineWrapping: true,
         viewportMargin: Infinity,
         foldGutter: true,
+        showTrailingSpace: true,
+        styleActiveLine: true,
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        hintOptions: {
+            completeSingle: false,
+            alignWithWord: true,
+            hint: function(editor) {
+                const cursor = editor.getCursor();
+                const line = editor.getLine(cursor.line);
+                const prefix = line.slice(0, cursor.ch).match(/[\w.]+$/);
+                
+                if (!prefix) return { list: [], from: cursor, to: cursor };
+                
+                const prefixStr = prefix[0];
+                const start = cursor.ch - prefixStr.length;
+                const end = cursor.ch;
+                
+                // Get word under cursor and filter suggestions
+                const suggestions = pythonSuggestions.filter(w => 
+                    w.startsWith(prefixStr)
+                );
+                
+                // Get any words from the current document
+                const wordRange = editor.findWordAt(cursor);
+                const currentWord = editor.getRange(wordRange.anchor, wordRange.head);
+                
+                // Collect additional words from the document
+                const doc = editor.getValue();
+                const words = new Set();
+                const wordPattern = /[\w.]+/g;
+                let match;
+                
+                while ((match = wordPattern.exec(doc)) !== null) {
+                    const word = match[0];
+                    if (word.length > 2 && word.startsWith(prefixStr) && word !== currentWord) {
+                        words.add(word);
+                    }
+                }
+                
+                // Combine all suggestions
+                const allSuggestions = [...suggestions, ...words];
+                
+                return {
+                    list: allSuggestions,
+                    from: CodeMirror.Pos(cursor.line, start),
+                    to: CodeMirror.Pos(cursor.line, end)
+                };
+            }
+        },
         extraKeys: {
             "Ctrl-Space": "autocomplete",
             "Ctrl-S": savePythonContent,
             "Ctrl-Enter": runPythonCode,
             "Shift-Alt-F": formatPythonCode,
+            "Alt-/": "autocomplete", // Additional shortcut for autocompletion
+            "Ctrl-/": "toggleComment", // Add comment toggling
             "Tab": function(cm) {
                 // Smart tab behavior - indent by 4 spaces
                 if (cm.somethingSelected()) {
@@ -114,6 +193,17 @@ function initPythonEditor() {
                     cm.execCommand("insertSoftTab");
                 }
             }
+        }
+    });
+    
+    // Enable automatic autocompletion after specific characters
+    pythonEditor.on("inputRead", function(cm, change) {
+        if (change.origin !== '+input') return;
+        const triggerChars = ['.', '_'];
+        
+        if (triggerChars.includes(change.text[0]) || 
+            (change.text[0].length === 1 && /\w/.test(change.text[0]) && cm.getLine(cm.getCursor().line).length > 2)) {
+            cm.showHint({ completeSingle: false });
         }
     });
 

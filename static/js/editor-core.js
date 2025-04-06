@@ -349,10 +349,39 @@ function removeFile(filename) {
 function setupEventListeners() {
     editor.on('cursorActivity', updateCursorPosition);
 
-    editor.on('change', function() {
-        updateUndoRedoStatus();
+    editor.on('changes', function(cm, change) {
+        // Update cursor position in status bar
+        updateCursorPosition();
+
+        // Update file size
         updateFileSize();
-        isDirty = true;
+
+        // Enable undo/redo buttons
+        updateUndoRedoStatus();
+
+        // Auto-trigger autocomplete based on input
+        if (change.origin === '+input') {
+            const mode = cm.getModeAt(cm.getCursor());
+            const modeName = mode.name;
+
+            if (modeName === 'xml' || modeName === 'htmlmixed') {
+                // Trigger after < or when typing an attribute
+                if (change.text[0] === '<' || change.text[0] === ' ') {
+                    cm.showHint({ completeSingle: false });
+                }
+            } else if (modeName === 'css') {
+                // Trigger after typing a colon or at the start of a property name
+                if (change.text[0] === ':' || change.text[0] === '{') {
+                    cm.showHint({ completeSingle: false });
+                }
+            } else if (modeName === 'javascript') {
+                // Trigger after dot, space after keywords, or at the start of variables
+                if (change.text[0] === '.' || change.text[0] === ' ' || 
+                   (change.text[0].length === 1 && /\w/.test(change.text[0]) && cm.getLine(cm.getCursor().line).length > 2)) {
+                    cm.showHint({ completeSingle: false });
+                }
+            }
+        }
     });
 
     document.addEventListener('keydown', function(e) {
