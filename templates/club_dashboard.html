@@ -1760,7 +1760,9 @@ async function fetchMemberSpaces() {
             </div>
         `;
 
+        console.log('Fetching member spaces...');
         const response = await fetch('/api/clubs/members/sites');
+        console.log('Response status:', response.status);
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -1768,6 +1770,7 @@ async function fetchMemberSpaces() {
         }
 
         const data = await response.json();
+        console.log('Received data:', data);
 
         if (data && data.sites) {
             displayMemberSpaces(data.sites);
@@ -1798,6 +1801,8 @@ function displayMemberSpaces(sites) {
         return;
     }
 
+    console.log('Displaying sites:', sites);
+
     if (!sites || sites.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
@@ -1813,10 +1818,16 @@ function displayMemberSpaces(sites) {
     // Group spaces by owner
     const spacesByOwner = {};
     sites.forEach(site => {
+        // Check if owner exists and has id property
+        if (!site.owner || !site.owner.id) {
+            console.error('Invalid site owner data:', site);
+            return;
+        }
+        
         const ownerId = site.owner.id;
         if (!spacesByOwner[ownerId]) {
             spacesByOwner[ownerId] = {
-                username: site.owner.username,
+                username: site.owner.username || 'Unknown User',
                 sites: []
             };
         }
@@ -1824,6 +1835,19 @@ function displayMemberSpaces(sites) {
     });
 
     let html = '';
+    
+    // Check if we have any valid owners
+    if (Object.keys(spacesByOwner).length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-laptop-code"></i>
+                </div>
+                <p>No spaces with valid owner information found.</p>
+            </div>
+        `;
+        return;
+    }
 
     // Generate HTML for each owner and their spaces
     Object.keys(spacesByOwner).forEach(ownerId => {
@@ -1837,12 +1861,23 @@ function displayMemberSpaces(sites) {
         owner.sites.forEach(site => {
             const siteType = site.type === 'python' ? 'Python' : 'Web';
             const siteUrl = site.type === 'python' ? `/python/${site.id}` : `/edit/${site.id}`;
-            const updatedDate = new Date(site.updated_at).toLocaleDateString();
+            // Handle case where updated_at might not be a valid date string
+            let updatedDate = 'Unknown date';
+            try {
+                if (site.updated_at) {
+                    updatedDate = new Date(site.updated_at).toLocaleDateString();
+                }
+            } catch (e) {
+                console.error('Error formatting date:', e);
+            }
+
+            // Sanitize name to prevent XSS
+            const siteName = site.name ? site.name.replace(/[<>"'&]/g, '') : 'Unnamed Site';
 
             html += `
                 <div class="space-card">
                     <div class="space-info">
-                        <h4>${site.name}</h4>
+                        <h4>${siteName}</h4>
                         <span class="space-type">${siteType}</span>
                     </div>
                     <div class="space-meta">
@@ -1852,7 +1887,7 @@ function displayMemberSpaces(sites) {
                         <a href="${siteUrl}" class="btn-primary btn-sm" title="View Space">
                             <i class="fas fa-eye"></i> View
                         </a>
-                        <button class="btn-danger btn-sm" onclick="openDeleteSpaceModal(${site.id}, '${site.name}')" title="Delete Space">
+                        <button class="btn-danger btn-sm" onclick="openDeleteSpaceModal(${site.id}, '${siteName}')" title="Delete Space">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
@@ -1867,6 +1902,7 @@ function displayMemberSpaces(sites) {
     });
 
     container.innerHTML = html;
+    console.log('Member spaces displayed successfully');
 }
 
 // Initialize when document is loaded
