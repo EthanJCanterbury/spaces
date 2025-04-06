@@ -1823,7 +1823,7 @@ function displayMemberSpaces(sites) {
             console.error('Invalid site owner data:', site);
             return;
         }
-        
+
         const ownerId = site.owner.id;
         if (!spacesByOwner[ownerId]) {
             spacesByOwner[ownerId] = {
@@ -1835,7 +1835,7 @@ function displayMemberSpaces(sites) {
     });
 
     let html = '';
-    
+
     // Check if we have any valid owners
     if (Object.keys(spacesByOwner).length === 0) {
         container.innerHTML = `
