@@ -5,6 +5,7 @@ let siteId = null;
 let siteType = null;
 let lastCursorPosition = { line: 0, ch: 0 };
 let isDirty = false;
+let completionActive = false;
 
 let currentFilename = 'index.html';
 
@@ -14,7 +15,7 @@ function initEditor(initialContent, type) {
 
     editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
         lineNumbers: true,
-        theme: "eclipse",
+        theme: "vscode-dark",
         indentUnit: 4,
         autoCloseBrackets: true,
         matchBrackets: true,
@@ -26,16 +27,36 @@ function initEditor(initialContent, type) {
         electricChars: true,
         styleActiveLine: true,
         showHint: true,
+        lint: true,
+        highlightSelectionMatches: {showToken: /\w/, annotateScrollbar: true},
         hintOptions: {
             completeSingle: false,
             alignWithWord: true,
-            closeOnUnfocus: false
+            closeOnUnfocus: false,
+            hint: function(editor, options) {
+                var result = CodeMirror.hint.anyword(editor, options);
+                var mode = editor.getModeAt(editor.getCursor());
+                
+                // Add additional suggestions based on mode
+                if (mode.name === "javascript") {
+                    result = CodeMirror.hint.javascript(editor, options) || result;
+                } else if (mode.name === "css") {
+                    result = CodeMirror.hint.css(editor, options) || result;
+                } else if (mode.name === "htmlmixed") {
+                    result = CodeMirror.hint.html(editor, options) || result;
+                }
+                
+                return result;
+            }
         },
-        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter", "CodeMirror-lint-markers"],
         extraKeys: {
             "Ctrl-S": saveContent,
             "Cmd-S": saveContent,
-            "Ctrl-Space": "autocomplete",
+            "Ctrl-Space": function(cm) {
+                completionActive = true;
+                cm.showHint({ completeSingle: false });
+            },
             "Alt-F": cm => cm.foldCode(cm.getCursor()),
             "Ctrl-Enter": runCode,
             "Ctrl-/": "toggleComment",
@@ -43,6 +64,7 @@ function initEditor(initialContent, type) {
                 // If autocomplete is active, select the current item
                 if (cm.state.completionActive) {
                     cm.state.completionActive.pick();
+                    completionActive = false;
                     return;
                 }
                 
@@ -389,20 +411,29 @@ function setupEventListeners() {
         // Trigger on alphanumeric, underscore, dot, parentheses, brackets
         var mode = cm.getModeAt(cm.getCursor());
         var key = event.key || String.fromCharCode(event.keyCode);
+        var cursor = cm.getCursor();
+        var line = cm.getLine(cursor.line);
+        var prefix = line.slice(0, cursor.ch);
         
         // Don't trigger on modifier keys, arrows, etc.
         var ignoreKeys = [16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 45, 91, 93, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 144, 145];
         
         if (!cm.state.completionActive && !ignoreKeys.includes(event.keyCode)) {
-            // Different triggers for different language modes
-            if (mode.name === 'javascript' && /[a-z0-9_\$\.\(\{\[]/i.test(key)) {
-                CodeMirror.commands.autocomplete(cm);
-            } else if (mode.name === 'css' && /[a-z0-9_\-\:\.]/i.test(key)) {
-                CodeMirror.commands.autocomplete(cm);
-            } else if (mode.name === 'htmlmixed' && /[a-z0-9_\<\/\s]/i.test(key)) {
-                CodeMirror.commands.autocomplete(cm);
-            } else if (mode.name === 'python' && /[a-z0-9_\.\(\[\{]/i.test(key)) {
-                CodeMirror.commands.autocomplete(cm);
+            // Auto-trigger after specific characters based on language
+            if ((mode.name === 'javascript' && /[a-z0-9_\$\.\(\{\[]$/i.test(prefix)) ||
+                (mode.name === 'css' && /[a-z0-9_\-\:\.]$/i.test(prefix)) ||
+                (mode.name === 'htmlmixed' && /[a-z0-9_\<\/\s]$/i.test(prefix)) ||
+                (mode.name === 'python' && /[a-z0-9_\.\(\[\{]$/i.test(prefix))) {
+                
+                // Only trigger if prefix has at least 2 characters or after specific triggers
+                if (prefix.length >= 2 || /[\.\(\[\{\<]$/.test(prefix)) {
+                    completionActive = true;
+                    cm.showHint({ 
+                        completeSingle: false,
+                        alignWithWord: true,
+                        closeOnUnfocus: false
+                    });
+                }
             }
         }
     });

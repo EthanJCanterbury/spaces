@@ -1,3 +1,222 @@
+
+/* VS Code-like styles for CodeMirror */
+.CodeMirror {
+  height: 100%;
+  font-family: 'Consolas', 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* VS Code dark theme customization */
+.cm-s-vscode-dark.CodeMirror {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+}
+
+.cm-s-vscode-dark .CodeMirror-gutters {
+  background: #1e1e1e;
+  border-right: 1px solid #333;
+}
+
+.cm-s-vscode-dark .CodeMirror-linenumber {
+  color: #858585;
+}
+
+.cm-s-vscode-dark .CodeMirror-cursor {
+  border-left: 1px solid #f8f8f0;
+}
+
+.cm-s-vscode-dark .CodeMirror-selected {
+  background: rgba(128, 203, 196, 0.2);
+}
+
+.cm-s-vscode-dark .CodeMirror-line::selection,
+.cm-s-vscode-dark .CodeMirror-line > span::selection,
+.cm-s-vscode-dark .CodeMirror-line > span > span::selection {
+  background: rgba(128, 203, 196, 0.2);
+}
+
+/* Syntax highlighting in VS Code style */
+.cm-s-vscode-dark .cm-keyword {
+  color: #569cd6;
+  font-weight: bold;
+}
+
+.cm-s-vscode-dark .cm-operator {
+  color: #d4d4d4;
+}
+
+.cm-s-vscode-dark .cm-variable {
+  color: #9cdcfe;
+}
+
+.cm-s-vscode-dark .cm-variable-2 {
+  color: #4ec9b0;
+}
+
+.cm-s-vscode-dark .cm-variable-3 {
+  color: #bd63c5;
+}
+
+.cm-s-vscode-dark .cm-property {
+  color: #9cdcfe;
+}
+
+.cm-s-vscode-dark .cm-string {
+  color: #ce9178;
+}
+
+.cm-s-vscode-dark .cm-string-2 {
+  color: #ce9178;
+}
+
+.cm-s-vscode-dark .cm-number {
+  color: #b5cea8;
+}
+
+.cm-s-vscode-dark .cm-def {
+  color: #4ec9b0;
+}
+
+.cm-s-vscode-dark .cm-bracket {
+  color: #d4d4d4;
+}
+
+.cm-s-vscode-dark .cm-tag {
+  color: #569cd6;
+}
+
+.cm-s-vscode-dark .cm-header {
+  color: #ce9178;
+}
+
+.cm-s-vscode-dark .cm-link {
+  color: #569cd6;
+}
+
+.cm-s-vscode-dark .cm-atom {
+  color: #bd63c5;
+}
+
+.cm-s-vscode-dark .cm-comment {
+  color: #6a9955;
+}
+
+.cm-s-vscode-dark .cm-meta {
+  color: #d4d4d4;
+}
+
+/* Autocomplete dropdown styles */
+.CodeMirror-hints {
+  position: absolute;
+  z-index: 10;
+  overflow: hidden;
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  border-radius: 3px;
+  border: 1px solid #303030;
+  background: #252526;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  max-height: 20em;
+  overflow-y: auto;
+  font-family: 'Consolas', 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+.CodeMirror-hint {
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 2px;
+  white-space: pre;
+  color: #d4d4d4;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+li.CodeMirror-hint-active {
+  background-color: #3d3d3d;
+  color: #ffffff;
+}
+
+/* Active line highlight */
+.CodeMirror-activeline-background {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Lint error styles */
+.CodeMirror-lint-mark-error {
+  background-position: 0 100%;
+  background-repeat: repeat-x;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAYAAAC09K7GAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9sJDw4cOCW1/KIAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAAHElEQVQI12NggIL/DAz/GdA5/xkY/qPKMDAwAADLZwf5rvm+LQAAAABJRU5ErkJggg==');
+}
+
+.CodeMirror-lint-marker-error {
+  background-position: center center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+  vertical-align: middle;
+  position: relative;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJPSURBVDjLpZPLS5RhFMYfv9QJlelTQZwRb2OKlKuINuHGLlBEBEOLxAu46oL0F0QQFdWizUCrWnjBaDHgThCMoiKkhUONTqmjmDp2GZ0UnWbmfc/ztrC+GbM2dXbv4ZzfeQ7vefKMMfifyP89IbevNNCYdkN2kawkCZKfSPZTOGTf6Y/m1uflKlC3LvsNTWArr9BT2LAf+W73dn5jHclIBFZyfYWU3or7T4K7AJmbl/yG7EtX1BQXNTVCYgtgbAEAYHlqYHlrsTEVQWr63RZFuqsfDAcdQPrGRR/JF5nKGm9xUxMyr0YBAEXXHgIANq/3ADQobD2J9fAkNiMTMSFb9z8ambMAQER3JC1XttkYGGZXoyZEGyTHRuBuPgBTUu7VSnUAgAUAWutOV2MjZGkehgYUA6O5A0AlkAyRnotiX3MLlFKduYCqAtuGXpyH0XQmOj+TIURt51OzURTYZdBKV2UBSsOIcRp/TVTT4ewK6idECAihtUKOArWcjq/B8tQ6UkUR31+OYXP4sTOdisHcQbSPEgAMJnnxJPZaVFGukm8llaw4vdSLsuWNkI+A1MjfqBKjvCKP5AfSGA2PQsyXDJGsZMxZTwOA/TmCMiNXlZaR5N4Eh6qihZOFxwxJfMw92IcYAFnwLQQAc+cBeGVyVsVYaQs4Vbvxbly2vd7YEZn0CtngJrnuIAkpeZ9zLkdRBYFBOwAoRQA3J2vgxnQiuXH+cwUw6C4qRiUwFsYQwM9x7RqJXqsNBZC9PJzNzc9pZ8l+xyVwLmDxPfkDqQ7/Kvmfw7sFcgJ/Go95GQYKVOEXbE1fuXYXk3QAAAAASUVORK5CYII=');
+}
+
+/* Scrollbar styles for a VS Code like look */
+.CodeMirror-simplescroll-horizontal,
+.CodeMirror-simplescroll-vertical {
+  position: absolute;
+  z-index: 6;
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+
+.CodeMirror-simplescroll-horizontal div,
+.CodeMirror-simplescroll-vertical div {
+  position: absolute;
+  background: #5a5a5a;
+  border-radius: 4px;
+}
+
+.CodeMirror-simplescroll-horizontal {
+  bottom: 0; left: 0;
+  height: 8px;
+}
+.CodeMirror-simplescroll-horizontal div {
+  bottom: 0;
+  height: 100%;
+}
+
+.CodeMirror-simplescroll-vertical {
+  right: 0; top: 0;
+  width: 8px;
+}
+.CodeMirror-simplescroll-vertical div {
+  right: 0;
+  width: 100%;
+}
+
+/* VS Code-like status bar */
+.editor-statusbar {
+  background-color: #007acc;
+  color: white;
+  font-size: 12px;
+  padding: 4px 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Cursor animation to match VS Code */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.CodeMirror-cursor {
+  animation: blink 1s step-end infinite;
+}
+
 .loading-overlay {
   position: fixed;
   top: 0;
