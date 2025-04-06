@@ -3598,6 +3598,10 @@ def get_member_sites():
         memberships = ClubMembership.query.filter_by(club_id=club.id).all()
         member_ids = [m.user_id for m in memberships]
         
+        # Log member details for debugging
+        for membership in memberships:
+            app.logger.info(f"Club member: {membership.user.username} (ID: {membership.user_id})")
+        
         app.logger.info(f"Found {len(member_ids)} club members")
 
         # Get all sites from these members

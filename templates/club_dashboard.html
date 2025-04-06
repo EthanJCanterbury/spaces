@@ -1836,6 +1836,9 @@ function displayMemberSpaces(sites) {
 
     let html = '';
 
+    // Debug: Log spaces by owner
+    console.log('Spaces grouped by owner:', spacesByOwner);
+    
     // Check if we have any valid owners
     if (Object.keys(spacesByOwner).length === 0) {
         container.innerHTML = `
@@ -1909,10 +1912,18 @@ function displayMemberSpaces(sites) {
 document.addEventListener('DOMContentLoaded', function() {
     // Make sure all elements exist before calling functions
     if (document.getElementById('member-spaces-container')) {
+        console.log('Member spaces container found - fetching spaces');
         fetchMemberSpaces();
-
-        // Add console debugging for troubleshooting
-        console.log('Initializing member spaces fetch');
+    } else {
+        console.error('Member spaces container not found in DOM');
+    }
+    
+    // Log any club information to help diagnose issues
+    const clubInfo = document.querySelector('.club-info-card');
+    if (clubInfo) {
+        console.log('Club information found in DOM');
+    } else {
+        console.warn('No club information found in DOM');
     }
 });
 
