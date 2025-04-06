@@ -3604,11 +3604,21 @@ def get_member_sites():
         
         app.logger.info(f"Found {len(member_ids)} club members")
 
+        # If no members, return empty list immediately
+        if not member_ids:
+            app.logger.warning("No club members found, returning empty sites list")
+            return jsonify({'sites': []})
+
         # Get all sites from these members
         sites = []
         try:
-            sites = Site.query.filter(Site.user_id.in_(member_ids)).all()
+            # Use a direct query to get sites
+            sites = db.session.query(Site).filter(Site.user_id.in_(member_ids)).all()
             app.logger.info(f"Found {len(sites)} member sites")
+            
+            # Additional debug logging - list all sites found
+            for site in sites:
+                app.logger.info(f"Site found: {site.id} - {site.name} (Owner: {site.user_id})")
         except Exception as query_error:
             app.logger.error(f"Error querying sites: {str(query_error)}")
             return jsonify({'error': f'Database error: {str(query_error)}'}), 500

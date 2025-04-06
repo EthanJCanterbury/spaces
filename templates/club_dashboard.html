@@ -1809,48 +1809,62 @@ function displayMemberSpaces(sites) {
                 <div class="empty-icon">
                     <i class="fas fa-laptop-code"></i>
                 </div>
-                <p>No spaces found for club members.</p>
+                <p>No spaces found for club members. Ask members to create spaces, or add more members to your club.</p>
+                <div class="empty-state-actions">
+                    <button class="btn-primary" onclick="location.reload()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                    <button class="btn-primary" onclick="openAddMemberModal()">
+                        <i class="fas fa-user-plus"></i> Add Member
+                    </button>
+                </div>
             </div>
         `;
         return;
     }
 
-    // Group spaces by owner
-    const spacesByOwner = {};
-    sites.forEach(site => {
-        // Check if owner exists and has id property
-        if (!site.owner || !site.owner.id) {
-            console.error('Invalid site owner data:', site);
+    try {
+        // Group spaces by owner
+        const spacesByOwner = {};
+        sites.forEach(site => {
+            // Check if owner exists and has id property
+            if (!site.owner || !site.owner.id) {
+                console.error('Invalid site owner data:', site);
+                return;
+            }
+
+            const ownerId = site.owner.id;
+            if (!spacesByOwner[ownerId]) {
+                spacesByOwner[ownerId] = {
+                    username: site.owner.username || 'Unknown User',
+                    sites: []
+                };
+            }
+            spacesByOwner[ownerId].sites.push(site);
+        });
+
+        let html = '';
+
+        // Debug: Log spaces by owner
+        console.log('Spaces grouped by owner:', spacesByOwner);
+        
+        // Check if we have any valid owners
+        if (Object.keys(spacesByOwner).length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-laptop-code"></i>
+                    </div>
+                    <p>No spaces with valid owner information found. Members may need to create spaces.</p>
+                    <div class="empty-state-actions">
+                        <button class="btn-primary" onclick="location.reload()">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            `;
             return;
         }
-
-        const ownerId = site.owner.id;
-        if (!spacesByOwner[ownerId]) {
-            spacesByOwner[ownerId] = {
-                username: site.owner.username || 'Unknown User',
-                sites: []
-            };
-        }
-        spacesByOwner[ownerId].sites.push(site);
-    });
-
-    let html = '';
-
-    // Debug: Log spaces by owner
-    console.log('Spaces grouped by owner:', spacesByOwner);
-    
-    // Check if we have any valid owners
-    if (Object.keys(spacesByOwner).length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="fas fa-laptop-code"></i>
-                </div>
-                <p>No spaces with valid owner information found.</p>
-            </div>
-        `;
-        return;
-    }
 
     // Generate HTML for each owner and their spaces
     Object.keys(spacesByOwner).forEach(ownerId => {
@@ -1906,7 +1920,40 @@ function displayMemberSpaces(sites) {
 
     container.innerHTML = html;
     console.log('Member spaces displayed successfully');
+    } catch (error) {
+        console.error('Error displaying member spaces:', error);
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <p>Error displaying member spaces: ${error.message}</p>
+                <div class="empty-state-actions">
+                    <button class="btn-primary" onclick="fetchMemberSpaces()">
+                        <i class="fas fa-sync"></i> Try Again
+                    </button>
+                </div>
+            </div>
+        `;
+    }
 }
+
+// Add styles for empty state actions
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .empty-state-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        .empty-state p {
+            margin-bottom: 0.5rem;
+        }
+    `;
+    document.head.appendChild(style);
+});
 
 // Initialize when document is loaded
 document.addEventListener('DOMContentLoaded', function() {
