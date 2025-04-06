@@ -799,26 +799,6 @@
 .member-spaces-section h3::before {
     content: '';
 
-// Debug helper for modals
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize all modals properly
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        // Reset any stray inline styles
-        modal.style.display = 'none';
-        modal.style.opacity = '0';
-        modal.style.visibility = 'hidden';
-    });
-
-    // Log all button clicks to help debug modal issues
-    const buttons = document.querySelectorAll('button');
-    buttons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            console.log('Button clicked:', this.textContent.trim(), this.onclick);
-        });
-    });
-});
-
     display: block;
     width: 8px;
     height: 8px;
@@ -1400,7 +1380,7 @@ function generateJoinCode() {
 function openCreateClubModal() {
     const modal = document.getElementById('createClubModal');
     if (!modal) return;
-    
+
     modal.style.display = 'flex';
     modal.style.opacity = '1';
     modal.style.visibility = 'visible';
@@ -1411,7 +1391,7 @@ function openCreateClubModal() {
 function closeCreateClubModal() {
     const modal = document.getElementById('createClubModal');
     if (!modal) return;
-    
+
     modal.style.opacity = '0';
     modal.style.visibility = 'hidden';
     setTimeout(() => {
@@ -1435,10 +1415,10 @@ function openEditClubModal() {
             document.getElementById('editClubName').value = data.name || '';
             document.getElementById('editClubLocation').value = data.location || '';
             document.getElementById('editClubDescription').value = data.description || '';
-            
+
             const modal = document.getElementById('editClubModal');
             if (!modal) return;
-            
+
             modal.style.display = 'flex';
             modal.style.opacity = '1';
             modal.style.visibility = 'visible';
@@ -1454,7 +1434,7 @@ function openEditClubModal() {
 function closeEditClubModal() {
     const modal = document.getElementById('editClubModal');
     if (!modal) return;
-    
+
     modal.style.opacity = '0';
     modal.style.visibility = 'hidden';
     setTimeout(() => {
@@ -1468,7 +1448,7 @@ function closeEditClubModal() {
 function openAddMemberModal() {
     const modal = document.getElementById('addMemberModal');
     if (!modal) return;
-    
+
     modal.style.display = 'flex';
     modal.style.opacity = '1';
     modal.style.visibility = 'visible';
@@ -1479,7 +1459,7 @@ function openAddMemberModal() {
 function closeAddMemberModal() {
     const modal = document.getElementById('addMemberModal');
     if (!modal) return;
-    
+
     modal.style.opacity = '0';
     modal.style.visibility = 'hidden';
     setTimeout(() => {
@@ -1502,7 +1482,7 @@ function openChangeRoleModal(membershipId, username, currentRole) {
 
     const modal = document.getElementById('changeRoleModal');
     if (!modal) return;
-    
+
     modal.style.display = 'flex';
     modal.style.opacity = '1';
     modal.style.visibility = 'visible';
@@ -1513,7 +1493,7 @@ function openChangeRoleModal(membershipId, username, currentRole) {
 function closeChangeRoleModal() {
     const modal = document.getElementById('changeRoleModal');
     if (!modal) return;
-    
+
     modal.style.opacity = '0';
     modal.style.visibility = 'hidden';
     setTimeout(() => {
@@ -1526,10 +1506,10 @@ function closeChangeRoleModal() {
 function openRemoveMemberModal(membershipId, username) {
     document.getElementById('membershipIdForRemoval').value = membershipId;
     document.getElementById('removeUsername').textContent = username;
-    
+
     const modal = document.getElementById('removeMemberModal');
     if (!modal) return;
-    
+
     modal.style.display = 'flex';
     modal.style.opacity = '1';
     modal.style.visibility = 'visible';
@@ -1540,7 +1520,7 @@ function openRemoveMemberModal(membershipId, username) {
 function closeRemoveMemberModal() {
     const modal = document.getElementById('removeMemberModal');
     if (!modal) return;
-    
+
     modal.style.opacity = '0';
     modal.style.visibility = 'hidden';
     setTimeout(() => {
@@ -1553,13 +1533,13 @@ function closeRemoveMemberModal() {
 function openDeleteClubModal() {
     const modal = document.getElementById('deleteClubModal');
     if (!modal) return;
-    
+
     modal.style.display = 'flex';
     modal.style.opacity = '1';
     modal.style.visibility = 'visible';
     modal.classList.add('visible');
     document.body.style.overflow = 'hidden';
-    
+
     document.getElementById('deleteConfirmation').value = '';
     document.getElementById('confirmDeleteBtn').disabled = true;
 }
@@ -1567,7 +1547,7 @@ function openDeleteClubModal() {
 function closeDeleteClubModal() {
     const modal = document.getElementById('deleteClubModal');
     if (!modal) return;
-    
+
     modal.style.opacity = '0';
     modal.style.visibility = 'hidden';
     setTimeout(() => {
@@ -1764,7 +1744,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Fetch member spaces
+// Fetch member spaces with better error handling
 async function fetchMemberSpaces() {
     const container = document.getElementById('member-spaces-container');
     if (!container) {
@@ -1773,21 +1753,26 @@ async function fetchMemberSpaces() {
     }
 
     try {
+        container.innerHTML = `
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading member spaces...</p>
+            </div>
+        `;
+
         const response = await fetch('/api/clubs/members/sites');
 
-        if (response.ok) {
-            const data = await response.json();
-            displayMemberSpaces(data.sites || []);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data && data.sites) {
+            displayMemberSpaces(data.sites);
         } else {
-            const error = await response.json();
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <i class="fas fa-exclamation-circle"></i>
-                    </div>
-                    <p>Failed to load member spaces: ${error.error || 'Unknown error'}</p>
-                </div>
-            `;
+            throw new Error('Invalid response format');
         }
     } catch (error) {
         console.error('Error fetching member spaces:', error);
@@ -1796,7 +1781,10 @@ async function fetchMemberSpaces() {
                 <div class="empty-icon">
                     <i class="fas fa-exclamation-circle"></i>
                 </div>
-                <p>Failed to load member spaces. Please try again later.</p>
+                <p>Failed to load member spaces: ${error.message}</p>
+                <button class="btn-primary" onclick="fetchMemberSpaces()">
+                    <i class="fas fa-sync"></i> Try Again
+                </button>
             </div>
         `;
     }
@@ -1881,7 +1869,37 @@ function displayMemberSpaces(sites) {
     container.innerHTML = html;
 }
 
-// Delete member space (modal opens a custom confirm dialog)
+// Initialize when document is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Make sure all elements exist before calling functions
+    if (document.getElementById('member-spaces-container')) {
+        fetchMemberSpaces();
+
+        // Add console debugging for troubleshooting
+        console.log('Initializing member spaces fetch');
+    }
+});
+
+// Debug helper for modals
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all modals properly
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        // Reset any stray inline styles
+        modal.style.display = 'none';
+        modal.style.opacity = '0';
+        modal.style.visibility = 'hidden';
+    });
+
+    // Log all button clicks to help debug modal issues
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            console.log('Button clicked:', this.textContent.trim(), this.onclick);
+        });
+    });
+});
+
 function openDeleteSpaceModal(siteId, siteName) {
     // Create modal dynamically
     const modalId = 'deleteSpaceModal';
@@ -1947,13 +1965,5 @@ function deleteMemberSpace(siteId) {
         console.error('Error:', error);
     });
 }
-
-// Initialize when document is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Make sure all elements exist before calling functions
-    if (document.getElementById('member-spaces-container')) {
-        fetchMemberSpaces();
-    }
-});
 </script>
 {% endblock %}
