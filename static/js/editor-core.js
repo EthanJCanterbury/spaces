@@ -415,6 +415,7 @@ function setupEventListeners() {
     
     // Add keyup handler for better autocomplete triggering
     editor.on('keyup', function(cm, event) {
+        // Only trigger autocomplete when actually typing characters
         // Trigger on alphanumeric, underscore, dot, parentheses, brackets
         var mode = cm.getModeAt(cm.getCursor());
         var key = event.key || String.fromCharCode(event.keyCode);
@@ -425,21 +426,29 @@ function setupEventListeners() {
         // Don't trigger on modifier keys, arrows, etc.
         var ignoreKeys = [16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 45, 91, 93, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 144, 145];
         
-        if (!cm.state.completionActive && !ignoreKeys.includes(event.keyCode)) {
+        // Only show hints if:
+        // 1. User is actively typing (not just moving cursor)
+        // 2. Not a modifier key
+        // 3. Autocomplete not already active
+        // 4. Key is a relevant trigger character
+        if (!cm.state.completionActive && 
+            !ignoreKeys.includes(event.keyCode) && 
+            /[a-zA-Z0-9_\.\$\(\[\{\<\-\:]/.test(key)) {
+            
             // Auto-trigger after specific characters based on language
             if ((mode.name === 'javascript' && /[a-z0-9_\$\.\(\{\[]$/i.test(prefix)) ||
                 (mode.name === 'css' && /[a-z0-9_\-\:\.]$/i.test(prefix)) ||
-                (mode.name === 'htmlmixed' && /<[a-z0-9_]*$/i.test(prefix) || /<\/[a-z0-9_]*$/i.test(prefix) || /\s[a-z0-9_\-]*$/i.test(prefix)) ||
-                (mode.name === 'xml' && /<[a-z0-9_]*$/i.test(prefix) || /<\/[a-z0-9_]*$/i.test(prefix) || /\s[a-z0-9_\-]*$/i.test(prefix)) ||
+                (mode.name === 'htmlmixed' && (/<[a-z0-9_]*$/i.test(prefix) || /<\/[a-z0-9_]*$/i.test(prefix))) ||
+                (mode.name === 'xml' && (/<[a-z0-9_]*$/i.test(prefix) || /<\/[a-z0-9_]*$/i.test(prefix))) ||
                 (mode.name === 'python' && /[a-z0-9_\.\(\[\{]$/i.test(prefix))) {
                 
-                // Only trigger if prefix has at least 1 character or after specific triggers
-                if (prefix.length >= 1 || /[\.\(\[\{\<]$/.test(prefix)) {
+                // Only trigger if prefix has at least 2 characters or after specific triggers
+                if (prefix.length >= 2 || /[\.\(\[\{\<]$/.test(prefix)) {
                     completionActive = true;
                     cm.showHint({ 
                         completeSingle: false,
                         alignWithWord: true,
-                        closeOnUnfocus: false,
+                        closeOnUnfocus: true,
                         closeCharacters: /[\s()\[\]{};:>,]/
                     });
                 }
