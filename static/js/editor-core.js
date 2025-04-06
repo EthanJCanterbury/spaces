@@ -24,6 +24,13 @@ function initEditor(initialContent, type) {
         foldGutter: true,
         smartIndent: true,
         electricChars: true,
+        styleActiveLine: true,
+        showHint: true,
+        hintOptions: {
+            completeSingle: false,
+            alignWithWord: true,
+            closeOnUnfocus: false
+        },
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
         extraKeys: {
             "Ctrl-S": saveContent,
@@ -31,6 +38,7 @@ function initEditor(initialContent, type) {
             "Ctrl-Space": "autocomplete",
             "Alt-F": cm => cm.foldCode(cm.getCursor()),
             "Ctrl-Enter": runCode,
+            "Ctrl-/": "toggleComment",
             "Tab": function(cm) {
                 if (cm.somethingSelected()) {
                     cm.indentSelection("add");
@@ -45,6 +53,21 @@ function initEditor(initialContent, type) {
                 var line = cursor.line;
                 var prevLine = cm.getLine(line - 1);
                 var mode = cm.getModeAt(cursor);
+                
+                // Auto-trigger hints after specific characters based on file type
+                setTimeout(function() {
+                    var currentLine = cm.getLine(cursor.line);
+                    var currentChar = currentLine.charAt(cursor.ch - 1);
+                    
+                    // Check current mode to provide appropriate hints
+                    if (cm.getModeAt(cursor).name === 'javascript' && /[a-z0-9_\$\.\(\{\[]/i.test(currentChar)) {
+                        CodeMirror.commands.autocomplete(cm);
+                    } else if (cm.getModeAt(cursor).name === 'css' && /[a-z0-9_\-\:\.]/i.test(currentChar)) {
+                        CodeMirror.commands.autocomplete(cm);
+                    } else if (cm.getModeAt(cursor).name === 'htmlmixed' && /[a-z0-9_\<\/\s]/i.test(currentChar)) {
+                        CodeMirror.commands.autocomplete(cm);
+                    }
+                }, 100);
 
                 if (mode.name === "xml" || mode.name === "htmlmixed") {
                     var openTagMatch = prevLine.match(/<([a-zA-Z]+)[^>]*>\s*$/);

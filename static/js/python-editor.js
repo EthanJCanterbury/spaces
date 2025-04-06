@@ -100,12 +100,30 @@ function initPythonEditor() {
         lineWrapping: true,
         viewportMargin: Infinity,
         foldGutter: true,
+        styleActiveLine: true,
+        showHint: true,
+        hintOptions: {
+            completeSingle: false,
+            alignWithWord: true,
+            closeOnUnfocus: false,
+            hint: function(cm) {
+                return new Promise(function(resolve) {
+                    setTimeout(function() {
+                        var cursor = cm.getCursor();
+                        var token = cm.getTokenAt(cursor);
+                        var hints = CodeMirror.pythonHint(cm) || CodeMirror.hint.anyword(cm, { word: /[\w\.$]+/ });
+                        resolve(hints);
+                    }, 100);
+                });
+            }
+        },
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
         extraKeys: {
             "Ctrl-Space": "autocomplete",
             "Ctrl-S": savePythonContent,
             "Ctrl-Enter": runPythonCode,
             "Shift-Alt-F": formatPythonCode,
+            "Ctrl-/": "toggleComment",
             "Tab": function(cm) {
                 // Smart tab behavior - indent by 4 spaces
                 if (cm.somethingSelected()) {
@@ -114,6 +132,16 @@ function initPythonEditor() {
                     cm.execCommand("insertSoftTab");
                 }
             }
+        }
+    });
+
+    // Add auto-trigger for Python hints
+    pythonEditor.on('keyup', function(cm, event) {
+        var autocompleteChars = /[a-zA-Z0-9_\.\(\[\{]/;
+        var key = event.key || String.fromCharCode(event.keyCode);
+        
+        if (!cm.state.completionActive && autocompleteChars.test(key)) {
+            CodeMirror.commands.autocomplete(cm);
         }
     });
 
