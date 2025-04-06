@@ -40,6 +40,12 @@ function initEditor(initialContent, type) {
             "Ctrl-Enter": runCode,
             "Ctrl-/": "toggleComment",
             "Tab": function(cm) {
+                // If autocomplete is active, select the current item
+                if (cm.state.completionActive) {
+                    cm.state.completionActive.pick();
+                    return;
+                }
+                
                 if (cm.somethingSelected()) {
                     cm.indentSelection("add");
                 } else {
@@ -376,6 +382,29 @@ function setupEventListeners() {
         updateUndoRedoStatus();
         updateFileSize();
         isDirty = true;
+    });
+    
+    // Add keyup handler for better autocomplete triggering
+    editor.on('keyup', function(cm, event) {
+        // Trigger on alphanumeric, underscore, dot, parentheses, brackets
+        var mode = cm.getModeAt(cm.getCursor());
+        var key = event.key || String.fromCharCode(event.keyCode);
+        
+        // Don't trigger on modifier keys, arrows, etc.
+        var ignoreKeys = [16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 45, 91, 93, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 144, 145];
+        
+        if (!cm.state.completionActive && !ignoreKeys.includes(event.keyCode)) {
+            // Different triggers for different language modes
+            if (mode.name === 'javascript' && /[a-z0-9_\$\.\(\{\[]/i.test(key)) {
+                CodeMirror.commands.autocomplete(cm);
+            } else if (mode.name === 'css' && /[a-z0-9_\-\:\.]/i.test(key)) {
+                CodeMirror.commands.autocomplete(cm);
+            } else if (mode.name === 'htmlmixed' && /[a-z0-9_\<\/\s]/i.test(key)) {
+                CodeMirror.commands.autocomplete(cm);
+            } else if (mode.name === 'python' && /[a-z0-9_\.\(\[\{]/i.test(key)) {
+                CodeMirror.commands.autocomplete(cm);
+            }
+        }
     });
 
     document.addEventListener('keydown', function(e) {

@@ -137,13 +137,41 @@ function initPythonEditor() {
 
     // Add auto-trigger for Python hints
     pythonEditor.on('keyup', function(cm, event) {
+        // Trigger on alphanumeric, underscore, dot, parentheses, brackets
         var autocompleteChars = /[a-zA-Z0-9_\.\(\[\{]/;
         var key = event.key || String.fromCharCode(event.keyCode);
         
-        if (!cm.state.completionActive && autocompleteChars.test(key)) {
+        // Don't trigger on modifier keys, arrows, etc.
+        var ignoreKeys = [16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 45, 91, 93, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 144, 145];
+        
+        if (!cm.state.completionActive && 
+            autocompleteChars.test(key) && 
+            !ignoreKeys.includes(event.keyCode)) {
             CodeMirror.commands.autocomplete(cm);
         }
     });
+    
+    // Ensure Tab accepts completion
+    pythonEditor.setOption('extraKeys', Object.assign(pythonEditor.getOption('extraKeys') || {}, {
+        "Ctrl-Space": "autocomplete",
+        "Ctrl-S": savePythonContent,
+        "Ctrl-Enter": runPythonCode,
+        "Shift-Alt-F": formatPythonCode,
+        "Ctrl-/": "toggleComment",
+        "Tab": function(cm) {
+            // If autocomplete is active, select the current item
+            if (cm.state.completionActive) {
+                cm.state.completionActive.pick();
+                return;
+            }
+            // Smart tab behavior - indent by 4 spaces
+            if (cm.somethingSelected()) {
+                cm.indentSelection("add");
+            } else {
+                cm.execCommand("insertSoftTab");
+            }
+        }
+    }));
 
     pythonEditor.on('changes', function() {
         // Update cursor position in status bar
