@@ -244,8 +244,8 @@ const GitHubManager = {
                         <i class="fas fa-download"></i> Pull Changes
                       </button>
                     </div>
-                    <div class="push-status" id="pushStatus" style="margin-top: 10px;"></div>
                   </div>
+                  <div class="push-status" id="pushStatus" style="margin-top: 10px;"></div>
                 </div>
               </div>
             </div>

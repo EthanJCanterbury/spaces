@@ -587,7 +587,7 @@ def push_changes():
             f'User {current_user.username} pushed {len(results["updated"])} updates and {len(results["created"])} new files to "{github_repo.repo_name}"',
             username=current_user.username,
             user_id=current_user.id,
-            site_id=site.id)
+            site_id=site_id)
         db.session.add(activity)
         db.session.commit()
 
@@ -777,7 +777,7 @@ def disconnect_account():
         print('Disconnect account error:', str(e))
         return jsonify(
             {'error': 'Failed to disconnect GitHub account: ' + str(e)}), 500
-            
+
 @github_bp.route('/api/github/pull', methods=['POST'])
 @login_required
 def pull_changes():
@@ -818,31 +818,26 @@ def pull_changes():
         try:
             # First, get the list of files from the repository
             contents = repo.get_contents("")
-            
+
             for content in contents:
                 if content.type == "file":
                     try:
                         file_content = content.decoded_content.decode('utf-8')
                         file_path = content.path
-                        
+
                         # Update site content based on file type
-                        if file_path == "index.html" and site.site_type == 'web':
-                            if site.html_content != file_content:
-                                site.html_content = file_content
-                                files_updated.append(file_path)
-                        elif file_path == "main.py" and site.site_type == 'python':
-                            if site.python_content != file_content:
-                                site.python_content = file_content
-                                files_updated.append(file_path)
+                        if site.site_type == 'python':
+                            # Always update the content and mark it as updated
+                            site.python_content = file_content
+                            files_updated.append(file_path)
                         elif site.site_type == 'web':
                             # For other files, check if they exist
                             page = SitePage.query.filter_by(site_id=site.id, filename=file_path).first()
                             if page:
-                                # Update existing page content if different
-                                if page.content != file_content:
-                                    page.content = file_content
-                                    page.updated_at = datetime.utcnow()
-                                    files_updated.append(file_path)
+                                # Always update the content and mark it as updated
+                                page.content = file_content
+                                page.updated_at = datetime.utcnow()
+                                files_updated.append(file_path)
                             else:
                                 # Determine file_type based on extension
                                 file_ext = file_path.split('.')[-1].lower() if '.' in file_path else ''
@@ -864,15 +859,14 @@ def pull_changes():
                                 try:
                                     file_content = dir_content.decoded_content.decode('utf-8')
                                     file_path = dir_content.path
-                                    
+
                                     # Check if file exists
                                     page = SitePage.query.filter_by(site_id=site.id, filename=file_path).first()
                                     if page:
-                                        # Update existing page content if different
-                                        if page.content != file_content:
-                                            page.content = file_content
-                                            page.updated_at = datetime.utcnow()
-                                            files_updated.append(file_path)
+                                        # Always update the content and mark it as updated
+                                        page.content = file_content
+                                        page.updated_at = datetime.utcnow()
+                                        files_updated.append(file_path)
                                     else:
                                         # Determine file_type based on extension
                                         file_ext = file_path.split('.')[-1].lower() if '.' in file_path else ''
@@ -893,7 +887,7 @@ def pull_changes():
 
         # Commit all changes
         db.session.commit()
-        
+
         # Record activity
         total_files = len(files_pulled) + len(files_updated)
         activity = UserActivity(
