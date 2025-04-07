@@ -783,6 +783,8 @@ def disconnect_account():
 def pull_changes():
     """Pull latest changes from GitHub repository"""
     try:
+        from datetime import datetime
+
         access_token = session.get('github_token')
         if not access_token:
             if current_user.github_token:
@@ -825,19 +827,22 @@ def pull_changes():
                         
                         # Update site content based on file type
                         if file_path == "index.html" and site.site_type == 'web':
-                            site.html_content = file_content
-                            files_updated.append(file_path)
+                            if site.html_content != file_content:
+                                site.html_content = file_content
+                                files_updated.append(file_path)
                         elif file_path == "main.py" and site.site_type == 'python':
-                            site.python_content = file_content
-                            files_updated.append(file_path)
+                            if site.python_content != file_content:
+                                site.python_content = file_content
+                                files_updated.append(file_path)
                         elif site.site_type == 'web':
                             # For other files, check if they exist
                             page = SitePage.query.filter_by(site_id=site.id, filename=file_path).first()
                             if page:
-                                # Update existing page content
-                                page.content = file_content
-                                page.updated_at = datetime.utcnow()
-                                files_updated.append(file_path)
+                                # Update existing page content if different
+                                if page.content != file_content:
+                                    page.content = file_content
+                                    page.updated_at = datetime.utcnow()
+                                    files_updated.append(file_path)
                             else:
                                 # Determine file_type based on extension
                                 file_ext = file_path.split('.')[-1].lower() if '.' in file_path else ''
@@ -863,10 +868,11 @@ def pull_changes():
                                     # Check if file exists
                                     page = SitePage.query.filter_by(site_id=site.id, filename=file_path).first()
                                     if page:
-                                        # Update existing page content
-                                        page.content = file_content
-                                        page.updated_at = datetime.utcnow()
-                                        files_updated.append(file_path)
+                                        # Update existing page content if different
+                                        if page.content != file_content:
+                                            page.content = file_content
+                                            page.updated_at = datetime.utcnow()
+                                            files_updated.append(file_path)
                                     else:
                                         # Determine file_type based on extension
                                         file_ext = file_path.split('.')[-1].lower() if '.' in file_path else ''
