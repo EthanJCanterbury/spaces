@@ -237,10 +237,10 @@ const GitHubManager = {
                   <input type="text" id="commitMessage" placeholder="Update from Hack Club Spaces" class="form-control" style="width: 100%; margin-bottom: 15px; max-width: 400px;">
                   <div class="commit-message-form" style="width: 100%;">
                     <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; width: 100%;">
-                      <button onclick="GitHubManager.pushChanges()" class="btn btn-primary" style="flex: 1; max-width: 200px;">
+                      <button onclick="GitHubManager.pushChanges()" class="btn btn-primary" style="flex: 1; max-width: 200px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <i class="fas fa-upload"></i> Push Changes
                       </button>
-                      <button onclick="GitHubManager.pullChanges()" class="btn btn-primary" style="flex: 1; max-width: 200px;">
+                      <button onclick="GitHubManager.pullChanges()" class="btn btn-primary" style="flex: 1; max-width: 200px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <i class="fas fa-download"></i> Pull Changes
                       </button>
                     </div>
