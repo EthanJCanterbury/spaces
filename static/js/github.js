@@ -243,8 +243,8 @@ const GitHubManager = {
                         <i class="fas fa-download"></i> Pull Changes
                       </button>
                     </div>
-                    <input type="text" id="commitMessage" placeholder="Update from Hack Club Spaces" class="form-control" style="width: 100%;">
                   </div>
+                  <input type="text" id="commitMessage" placeholder="Update from Hack Club Spaces" class="form-control" style="width: 100%; margin-bottom: 10px;">
                   <div class="push-status" id="pushStatus" style="margin-top: 10px;"></div>
                 </div>
               </div>
@@ -562,6 +562,8 @@ const GitHubManager = {
       return;
     }
 
+    let pushData = null;
+
     // First push local changes to GitHub
     fetch('/api/github/push?site_id=' + siteId, {
       method: 'POST',
@@ -570,11 +572,16 @@ const GitHubManager = {
       },
       body: JSON.stringify({ message: commitMsg })
     })
-    .then(response => response.json())
-    .then(pushData => {
-      if (pushData.error) {
-        this.showError('Push failed: ' + pushData.error);
-        return;
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Push request failed with status ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      pushData = data;
+      if (data.error) {
+        throw new Error('Push failed: ' + data.error);
       }
 
       // Then pull any remote changes
@@ -586,15 +593,14 @@ const GitHubManager = {
       });
     })
     .then(response => {
-      if (!response) return null;
+      if (!response.ok) {
+        throw new Error(`Pull request failed with status ${response.status}`);
+      }
       return response.json();
     })
     .then(pullData => {
-      if (!pullData) return;
-      
       if (pullData.error) {
-        this.showError('Pull failed: ' + pullData.error);
-        return;
+        throw new Error('Pull failed: ' + pullData.error);
       }
       
       const pushStatus = document.getElementById('pushStatus');
@@ -634,6 +640,16 @@ const GitHubManager = {
     })
     .catch(error => {
       this.showError('Failed to sync changes: ' + error);
+      // Clear the loading status
+      const pushStatus = document.getElementById('pushStatus');
+      if (pushStatus) {
+        pushStatus.innerHTML = `
+          <div class="error-banner">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Error: ${error.message}</span>
+          </div>
+        `;
+      }
     });
   },
 
