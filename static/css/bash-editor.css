@@ -172,3 +172,199 @@
 .xterm {
     height: 100%;
 }
+/* Bash editor styles */
+.bash-editor-page .editor-main {
+    display: flex;
+    height: calc(100vh - 60px);
+}
+
+.terminal-pane {
+    flex: 1;
+    height: 100%;
+    background-color: #1e1e1e;
+    color: #f0f0f0;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    position: relative;
+}
+
+#terminal-container {
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    overflow: hidden;
+}
+
+.file-explorer-panel {
+    width: 0;
+    height: 100%;
+    background-color: #252526;
+    transition: width 0.3s ease;
+    overflow: hidden;
+    border-right: 1px solid #333;
+}
+
+.file-explorer-panel.show {
+    width: 250px;
+}
+
+.file-explorer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #333;
+    color: #fff;
+    border-bottom: 1px solid #444;
+}
+
+.file-explorer-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.file-tree {
+    padding: 10px;
+    overflow-y: auto;
+    height: calc(100% - 100px);
+}
+
+.file-tree-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.file-tree-list li {
+    margin: 5px 0;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-tree-list li:hover {
+    background-color: #2a2d2e;
+}
+
+.file-tree-list li i {
+    width: 16px;
+    text-align: center;
+}
+
+.folder-item i {
+    color: #dcb67a;
+}
+
+.file-item i {
+    color: #79b8ff;
+}
+
+.btn-icon {
+    background: transparent;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 8px;
+}
+
+.btn-icon:hover {
+    color: #fff;
+}
+
+/* Modal styles for file editing */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #252526;
+    color: #f0f0f0;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 800px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #444;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.modal-body {
+    padding: 15px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    padding: 10px 15px;
+    border-top: 1px solid #444;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #fff;
+}
+
+#fileEditContent {
+    width: 100%;
+    height: 100%;
+    background-color: #1e1e1e;
+    color: #f0f0f0;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    padding: 10px;
+    border: 1px solid #444;
+    resize: none;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    background-color: #1e1e1e;
+    color: #f0f0f0;
+    border: 1px solid #444;
+    border-radius: 4px;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+}

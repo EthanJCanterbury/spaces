@@ -574,28 +574,28 @@ async function createNewSpace(event) {
     event.preventDefault();
     const form = event.target;
     const submitBtn = form.querySelector('button[type="submit"]');
-    
+
     const spaceName = document.getElementById('spaceName').value;
     const spaceType = document.getElementById('spaceType').value;
-    
+
     // Validate space name
     const namePattern = /^[a-zA-Z0-9_-]{1,15}$/;
     if (!namePattern.test(spaceName)) {
         showToast('error', 'Space name must be 1-15 characters and contain only letters, numbers, underscores and dashes (no spaces)');
         return;
     }
-    
+
     submitBtn.disabled = true;
 
     try {
         let endpoint = '/api/sites';
-        
+
         if (spaceType === 'python') {
             endpoint = '/api/sites/python';
         } else if (spaceType === 'bash') {
             endpoint = '/api/sites/bash';
         }
-        
+
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {

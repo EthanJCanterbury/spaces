@@ -206,3 +206,20 @@ class BashFile(db.Model):
 
     def __repr__(self):
         return f'<BashFile {self.path} for Site {self.site_id}>'
+
+
+class BashFile(db.Model):
+    __tablename__ = 'bash_file'
+    id = db.Column(db.Integer, primary_key=True)
+    site_id = db.Column(db.Integer, db.ForeignKey('site.id', ondelete='CASCADE'), nullable=False)
+    path = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=True)
+    is_directory = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    site = db.relationship('Site', backref=db.backref('bash_files', lazy=True, cascade='all, delete-orphan'))
+
+    __table_args__ = (db.UniqueConstraint('site_id', 'path', name='uix_site_bash_file'),)
+
+    def __repr__(self):
+        return f'<BashFile {self.path} for Site {self.site_id}>'
