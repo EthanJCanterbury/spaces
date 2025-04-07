@@ -228,20 +228,23 @@ const GitHubManager = {
             <div class="github-push-section">
               <div class="sync-buttons-container" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
                 <div style="flex: 1;">
-                  <h4>Push Latest Changes</h4>
-                  <div class="commit-message-form">
-                    <input type="text" id="commitMessage" placeholder="Update from Hack Club Spaces" class="form-control">
-                    <button onclick="GitHubManager.pushChanges()" class="btn btn-primary">
-                      <i class="fas fa-upload"></i> Push Changes
+                  <h4>Sync with GitHub</h4>
+                  <div class="sync-options" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button onclick="GitHubManager.syncChanges()" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #4e54c8, #8f94fb);">
+                      <i class="fas fa-sync-alt"></i> Sync Changes
                     </button>
                   </div>
-                </div>
-                <div style="margin-left: 15px; flex: 1;">
-                  <h4>Pull Latest Changes</h4>
-                  <button onclick="GitHubManager.pullChanges()" class="btn btn-primary" style="width: 100%;">
-                    <i class="fas fa-download"></i> Pull from GitHub
-                  </button>
-                  <p style="font-size: 12px; color: #666; margin-top: 5px;">This will overwrite your current code with the latest changes from GitHub.</p>
+                  <div class="commit-message-form">
+                    <input type="text" id="commitMessage" placeholder="Update from Hack Club Spaces" class="form-control">
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                      <button onclick="GitHubManager.pushChanges()" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-upload"></i> Push Changes
+                      </button>
+                      <button onclick="GitHubManager.pullChanges()" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-download"></i> Pull Changes
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="push-status" id="pushStatus"></div>
@@ -492,10 +495,6 @@ const GitHubManager = {
   },
   
   pullChanges: function() {
-    if (!confirm("This will overwrite your current code with the latest changes from GitHub. Are you sure you want to continue?")) {
-      return;
-    }
-    
     this.showPushStatus('Pulling changes from GitHub...', 'info');
     
     const siteId = sessionStorage.getItem('current_site_id');
@@ -536,6 +535,80 @@ const GitHubManager = {
     })
     .catch(error => {
       this.showError('Failed to pull changes: ' + error);
+    });
+  },
+  
+  syncChanges: function() {
+    this.showPushStatus('Syncing changes with GitHub...', 'info');
+    
+    const commitMsgElement = document.getElementById('commitMessage');
+    if (!commitMsgElement) {
+      this.showError('Commit message field not found');
+      return;
+    }
+
+    const commitMsg = commitMsgElement.value.trim() || 'Sync changes with Hack Club Spaces';
+    const siteId = sessionStorage.getItem('current_site_id');
+    
+    if (!siteId) {
+      this.showError('No site ID found. Please refresh the page and try again.');
+      return;
+    }
+
+    // First push local changes to GitHub
+    fetch('/api/github/push?site_id=' + siteId, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: commitMsg })
+    })
+    .then(response => response.json())
+    .then(pushData => {
+      if (pushData.error) {
+        this.showError('Push failed: ' + pushData.error);
+        return;
+      }
+
+      // Then pull any remote changes
+      return fetch('/api/github/pull?site_id=' + siteId, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    })
+    .then(response => {
+      if (!response) return null;
+      return response.json();
+    })
+    .then(pullData => {
+      if (!pullData) return;
+      
+      if (pullData.error) {
+        this.showError('Pull failed: ' + pullData.error);
+        return;
+      }
+      
+      const pushStatus = document.getElementById('pushStatus');
+      if (pushStatus) {
+        pushStatus.innerHTML = `
+          <div class="success-banner">
+            <i class="fas fa-check-circle"></i>
+            <span>Successfully synced changes with GitHub</span>
+          </div>
+        `;
+      }
+      
+      this.showSuccess('Successfully synced changes with GitHub');
+      
+      // Reload the editor content after 1 second
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    })
+    .catch(error => {
+      this.showError('Failed to sync changes: ' + error);
     });
   },
 

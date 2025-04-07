@@ -835,7 +835,13 @@ def pull_changes():
                             if page:
                                 page.content = file_content
                             else:
-                                new_page = SitePage(site_id=site.id, filename=file_path, content=file_content)
+                                # Determine file_type based on extension
+                                file_ext = file_path.split('.')[-1].lower() if '.' in file_path else ''
+                                file_type = 'html' if file_ext == 'html' else \
+                                           'css' if file_ext == 'css' else \
+                                           'js' if file_ext in ['js', 'jsx'] else \
+                                           'txt'
+                                new_page = SitePage(site_id=site.id, filename=file_path, content=file_content, file_type=file_type)
                                 db.session.add(new_page)
                             files_pulled.append(file_path)
                     except Exception as e:
