@@ -587,7 +587,7 @@ def push_changes():
             f'User {current_user.username} pushed {len(results["updated"])} updates and {len(results["created"])} new files to "{github_repo.repo_name}"',
             username=current_user.username,
             user_id=current_user.id,
-            site_id=site.id)
+            site_id=site_id)
         db.session.add(activity)
         db.session.commit()
 
@@ -777,3 +777,136 @@ def disconnect_account():
         print('Disconnect account error:', str(e))
         return jsonify(
             {'error': 'Failed to disconnect GitHub account: ' + str(e)}), 500
+
+@github_bp.route('/api/github/pull', methods=['POST'])
+@login_required
+def pull_changes():
+    """Pull latest changes from GitHub repository"""
+    try:
+        from datetime import datetime
+
+        access_token = session.get('github_token')
+        if not access_token:
+            if current_user.github_token:
+                session['github_token'] = current_user.github_token
+                access_token = current_user.github_token
+            else:
+                return jsonify({'error': 'No GitHub account connected'}), 401
+
+        site_id = request.args.get('site_id') or session.get('current_site_id')
+        if not site_id:
+            return jsonify({'error': 'No site ID provided'}), 400
+
+        site = Site.query.get_or_404(site_id)
+        if site.user_id != current_user.id:
+            return jsonify(
+                {'error':
+                 'You do not have permission to access this site'}), 403
+
+        github_repo = GitHubRepo.query.filter_by(site_id=site.id).first()
+        if not github_repo:
+            return jsonify({'error': 'No repository connected to this site'}), 404
+
+        g = Github(access_token)
+        repo = g.get_repo(github_repo.repo_name)
+
+        # Get all site files from GitHub
+        files_pulled = []
+        files_updated = []
+        errors = []
+
+        try:
+            # First, get the list of files from the repository
+            contents = repo.get_contents("")
+
+            for content in contents:
+                if content.type == "file":
+                    try:
+                        file_content = content.decoded_content.decode('utf-8')
+                        file_path = content.path
+
+                        # Update site content based on file type
+                        if site.site_type == 'python':
+                            # Always update the content and mark it as updated
+                            site.python_content = file_content
+                            files_updated.append(file_path)
+                        elif site.site_type == 'web':
+                            # For other files, check if they exist
+                            page = SitePage.query.filter_by(site_id=site.id, filename=file_path).first()
+                            if page:
+                                # Always update the content and mark it as updated
+                                page.content = file_content
+                                page.updated_at = datetime.utcnow()
+                                files_updated.append(file_path)
+                            else:
+                                # Determine file_type based on extension
+                                file_ext = file_path.split('.')[-1].lower() if '.' in file_path else ''
+                                file_type = 'html' if file_ext == 'html' else \
+                                           'css' if file_ext == 'css' else \
+                                           'js' if file_ext in ['js', 'jsx'] else \
+                                           'txt'
+                                new_page = SitePage(site_id=site.id, filename=file_path, content=file_content, file_type=file_type)
+                                db.session.add(new_page)
+                                files_pulled.append(file_path)
+                    except Exception as e:
+                        errors.append({"file": content.path, "error": str(e)})
+                elif content.type == "dir":
+                    try:
+                        # Handle nested directories
+                        dir_contents = repo.get_contents(content.path)
+                        for dir_content in dir_contents:
+                            if dir_content.type == "file":
+                                try:
+                                    file_content = dir_content.decoded_content.decode('utf-8')
+                                    file_path = dir_content.path
+
+                                    # Check if file exists
+                                    page = SitePage.query.filter_by(site_id=site.id, filename=file_path).first()
+                                    if page:
+                                        # Always update the content and mark it as updated
+                                        page.content = file_content
+                                        page.updated_at = datetime.utcnow()
+                                        files_updated.append(file_path)
+                                    else:
+                                        # Determine file_type based on extension
+                                        file_ext = file_path.split('.')[-1].lower() if '.' in file_path else ''
+                                        file_type = 'html' if file_ext == 'html' else \
+                                                'css' if file_ext == 'css' else \
+                                                'js' if file_ext in ['js', 'jsx'] else \
+                                                'txt'
+                                        new_page = SitePage(site_id=site.id, filename=file_path, content=file_content, file_type=file_type)
+                                        db.session.add(new_page)
+                                        files_pulled.append(file_path)
+                                except Exception as e:
+                                    errors.append({"file": dir_content.path, "error": str(e)})
+                    except Exception as e:
+                        errors.append({"dir": content.path, "error": str(e)})
+
+        except Exception as e:
+            return jsonify({'error': 'Failed to fetch repository contents: ' + str(e)}), 500
+
+        # Commit all changes
+        db.session.commit()
+
+        # Record activity
+        total_files = len(files_pulled) + len(files_updated)
+        activity = UserActivity(
+            activity_type="github_pull",
+            message=f'User {current_user.username} pulled {len(files_pulled)} new files and updated {len(files_updated)} existing files from "{github_repo.repo_name}"',
+            username=current_user.username,
+            user_id=current_user.id,
+            site_id=site.id)
+        db.session.add(activity)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Changes pulled successfully',
+            'files_pulled': files_pulled,
+            'files_updated': files_updated,
+            'errors': errors,
+            'files_count': total_files
+        })
+
+    except Exception as e:
+        print(f'Error pulling changes: {str(e)}')
+        return jsonify({'error': 'Failed to pull changes: ' + str(e)}), 500

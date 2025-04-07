@@ -3592,31 +3592,67 @@ def get_member_sites():
                      'Only club leaders can access member sites'}), 403
             club = membership.club
 
+        app.logger.info(f"Getting sites for club {club.id} ({club.name})")
+
         # Get all members of the club
         memberships = ClubMembership.query.filter_by(club_id=club.id).all()
         member_ids = [m.user_id for m in memberships]
+        
+        # Log member details for debugging
+        for membership in memberships:
+            app.logger.info(f"Club member: {membership.user.username} (ID: {membership.user_id})")
+        
+        app.logger.info(f"Found {len(member_ids)} club members")
+
+        # If no members, return empty list immediately
+        if not member_ids:
+            app.logger.warning("No club members found, returning empty sites list")
+            return jsonify({'sites': []})
 
         # Get all sites from these members
-        sites = Site.query.filter(Site.user_id.in_(member_ids)).all()
+        sites = []
+        try:
+            # Use a direct query to get sites
+            sites = db.session.query(Site).filter(Site.user_id.in_(member_ids)).all()
+            app.logger.info(f"Found {len(sites)} member sites")
+            
+            # Additional debug logging - list all sites found
+            for site in sites:
+                app.logger.info(f"Site found: {site.id} - {site.name} (Owner: {site.user_id})")
+        except Exception as query_error:
+            app.logger.error(f"Error querying sites: {str(query_error)}")
+            return jsonify({'error': f'Database error: {str(query_error)}'}), 500
 
-        # Format the result
+        # Format the result with error handling
         result = []
         for site in sites:
-            result.append({
-                'id': site.id,
-                'name': site.name,
-                'type': site.site_type,
-                'updated_at': site.updated_at.isoformat(),
-                'owner': {
-                    'id': site.user.id,
-                    'username': site.user.username
+            try:
+                # Make sure user reference exists
+                user = User.query.get(site.user_id)
+                if not user:
+                    app.logger.warning(f"Site {site.id} has invalid user_id {site.user_id}")
+                    continue
+                    
+                site_data = {
+                    'id': site.id,
+                    'name': site.name,
+                    'type': site.site_type,
+                    'updated_at': site.updated_at.isoformat() if site.updated_at else None,
+                    'owner': {
+                        'id': user.id,
+                        'username': user.username
+                    }
                 }
-            })
+                result.append(site_data)
+            except Exception as site_error:
+                app.logger.error(f"Error processing site {site.id}: {str(site_error)}")
+                # Continue with other sites instead of failing completely
 
+        app.logger.info(f"Returning {len(result)} formatted sites")
         return jsonify({'sites': result})
     except Exception as e:
         app.logger.error(f'Error getting member sites: {str(e)}')
-        return jsonify({'error': 'Failed to get member sites'}), 500
+        return jsonify({'error': f'Failed to get member sites: {str(e)}'}), 500
 
 
 def initialize_database():

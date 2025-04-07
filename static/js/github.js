@@ -226,14 +226,28 @@ const GitHubManager = {
             </div>
 
             <div class="github-push-section">
-              <h4>Push Latest Changes</h4>
-              <div class="commit-message-form">
-                <input type="text" id="commitMessage" placeholder="Update from Hack Club Spaces" class="form-control">
-                <button onclick="GitHubManager.pushChanges()" class="btn btn-primary">
-                  <i class="fas fa-upload"></i> Push Changes
-                </button>
+              <div class="sync-buttons-container" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; width: 100%;">
+                <div style="width: 100%; text-align: center;">
+                  <h4>Sync with GitHub</h4>
+                  <div class="sync-options" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; width: 100%;">
+                    <button onclick="GitHubManager.syncChanges()" class="btn btn-primary" style="background: linear-gradient(135deg, #4e54c8, #8f94fb); width: 100%; max-width: 400px;">
+                      <i class="fas fa-sync-alt"></i> Sync Changes
+                    </button>
+                  </div>
+                  <input type="text" id="commitMessage" placeholder="Update from Hack Club Spaces" class="form-control" style="width: 100%; margin-bottom: 15px; max-width: 400px;">
+                  <div class="commit-message-form" style="width: 100%;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; width: 100%;">
+                      <button onclick="GitHubManager.pushChanges()" class="btn btn-primary" style="flex: 1; max-width: 200px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-upload"></i> Push Changes
+                      </button>
+                      <button onclick="GitHubManager.pullChanges()" class="btn btn-primary" style="flex: 1; max-width: 200px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-download"></i> Pull Changes
+                      </button>
+                    </div>
+                  </div>
+                  <div class="push-status" id="pushStatus" style="margin-top: 10px;"></div>
+                </div>
               </div>
-              <div class="push-status" id="pushStatus"></div>
             </div>
 
             <div class="github-repo-actions">
@@ -323,11 +337,7 @@ const GitHubManager = {
       return;
     }
 
-    const commitMsg = commitMsgElement.value;
-    if (!commitMsg.trim()) {
-      this.showError('Please enter a commit message');
-      return;
-    }
+    const commitMsg = commitMsgElement.value.trim() || 'Commit from Hack Club Spaces';
 
     this.showPushStatus('Pushing changes to GitHub...', 'info');
 
@@ -478,6 +488,165 @@ const GitHubManager = {
       .catch(error => {
         this.showError(error.message);
       });
+  },
+  
+  pullChanges: function() {
+    this.showPushStatus('Pulling changes from GitHub...', 'info');
+    
+    const siteId = sessionStorage.getItem('current_site_id');
+    if (!siteId) {
+      this.showError('No site ID found. Please refresh the page and try again.');
+      return;
+    }
+    
+    fetch('/api/github/pull?site_id=' + siteId, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        this.showError(data.error);
+        return;
+      }
+      
+      const pushStatus = document.getElementById('pushStatus');
+      if (pushStatus) {
+        let newFilesText = data.files_pulled && data.files_pulled.length > 0 ? 
+          `<p>New files: ${data.files_pulled.length}</p>` : '';
+        let updatedFilesText = data.files_updated && data.files_updated.length > 0 ? 
+          `<p>Updated files: ${data.files_updated.length}</p>` : '';
+        
+        pushStatus.innerHTML = `
+          <div class="success-banner">
+            <i class="fas fa-check-circle"></i>
+            <span>Successfully synced with GitHub</span>
+            ${newFilesText}
+            ${updatedFilesText}
+          </div>
+        `;
+      }
+      
+      this.showSuccess(`Successfully synced changes with GitHub`);
+      
+      // Reload the editor content after 2 seconds
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    })
+    .catch(error => {
+      this.showError('Failed to pull changes: ' + error);
+    });
+  },
+  
+  syncChanges: function() {
+    this.showPushStatus('Syncing changes with GitHub...', 'info');
+    
+    const commitMsgElement = document.getElementById('commitMessage');
+    if (!commitMsgElement) {
+      this.showError('Commit message field not found');
+      return;
+    }
+
+    const commitMsg = commitMsgElement.value.trim() || 'Commit from Hack Club Spaces';
+    const siteId = sessionStorage.getItem('current_site_id');
+    
+    if (!siteId) {
+      this.showError('No site ID found. Please refresh the page and try again.');
+      return;
+    }
+
+    let pushData = null;
+
+    // First push local changes to GitHub
+    fetch('/api/github/push?site_id=' + siteId, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: commitMsg })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Push request failed with status ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      pushData = data;
+      if (data.error) {
+        throw new Error('Push failed: ' + data.error);
+      }
+
+      // Then pull any remote changes
+      return fetch('/api/github/pull?site_id=' + siteId, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Pull request failed with status ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(pullData => {
+      if (pullData.error) {
+        throw new Error('Pull failed: ' + pullData.error);
+      }
+      
+      const pushStatus = document.getElementById('pushStatus');
+      if (pushStatus) {
+        let newFilesText = pullData.files_pulled && pullData.files_pulled.length > 0 ? 
+          `<p>New files: ${pullData.files_pulled.length}</p>` : '';
+        let updatedFilesText = pullData.files_updated && pullData.files_updated.length > 0 ? 
+          `<p>Updated files: ${pullData.files_updated.length}</p>` : '';
+        let pushedText = '';
+        
+        if (pushData && pushData.results) {
+          let updatedCount = pushData.results.updated ? pushData.results.updated.length : 0;
+          let createdCount = pushData.results.created ? pushData.results.created.length : 0;
+          
+          if (updatedCount > 0 || createdCount > 0) {
+            pushedText = `<p>Pushed: ${updatedCount} updated, ${createdCount} created</p>`;
+          }
+        }
+        
+        pushStatus.innerHTML = `
+          <div class="success-banner">
+            <i class="fas fa-check-circle"></i>
+            <span>Successfully synced changes with GitHub</span>
+            ${pushedText}
+            ${newFilesText}
+            ${updatedFilesText}
+          </div>
+        `;
+      }
+      
+      this.showSuccess('Successfully synced changes with GitHub');
+      
+      // Reload the editor content after 2 seconds
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    })
+    .catch(error => {
+      this.showError('Failed to sync changes: ' + error);
+      // Clear the loading status
+      const pushStatus = document.getElementById('pushStatus');
+      if (pushStatus) {
+        pushStatus.innerHTML = `
+          <div class="error-banner">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Error: ${error.message}</span>
+          </div>
+        `;
+      }
+    });
   },
 
 
