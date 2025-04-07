@@ -245,9 +245,9 @@ const GitHubManager = {
                       </button>
                     </div>
                   </div>
+                  <div class="push-status" id="pushStatus" style="margin-top: 10px;"></div>
                 </div>
               </div>
-              <div class="push-status" id="pushStatus"></div>
             </div>
 
             <div class="github-repo-actions">
@@ -518,17 +518,24 @@ const GitHubManager = {
       
       const pushStatus = document.getElementById('pushStatus');
       if (pushStatus) {
+        let newFilesText = data.files_pulled && data.files_pulled.length > 0 ? 
+          `<p>New files: ${data.files_pulled.length}</p>` : '';
+        let updatedFilesText = data.files_updated && data.files_updated.length > 0 ? 
+          `<p>Updated files: ${data.files_updated.length}</p>` : '';
+        
         pushStatus.innerHTML = `
           <div class="success-banner">
             <i class="fas fa-check-circle"></i>
-            <span>Successfully pulled ${data.files_count} files from GitHub</span>
+            <span>Successfully synced with GitHub</span>
+            ${newFilesText}
+            ${updatedFilesText}
           </div>
         `;
       }
       
-      this.showSuccess(`Successfully pulled ${data.files_count} files from GitHub`);
+      this.showSuccess(`Successfully synced changes with GitHub`);
       
-      // Reload the editor content after 1 second
+      // Reload the editor content after 2 seconds
       setTimeout(() => {
         window.location.reload();
       }, 2000);
@@ -592,17 +599,35 @@ const GitHubManager = {
       
       const pushStatus = document.getElementById('pushStatus');
       if (pushStatus) {
+        let newFilesText = pullData.files_pulled && pullData.files_pulled.length > 0 ? 
+          `<p>New files: ${pullData.files_pulled.length}</p>` : '';
+        let updatedFilesText = pullData.files_updated && pullData.files_updated.length > 0 ? 
+          `<p>Updated files: ${pullData.files_updated.length}</p>` : '';
+        let pushedText = '';
+        
+        if (pushData && pushData.results) {
+          let updatedCount = pushData.results.updated ? pushData.results.updated.length : 0;
+          let createdCount = pushData.results.created ? pushData.results.created.length : 0;
+          
+          if (updatedCount > 0 || createdCount > 0) {
+            pushedText = `<p>Pushed: ${updatedCount} updated, ${createdCount} created</p>`;
+          }
+        }
+        
         pushStatus.innerHTML = `
           <div class="success-banner">
             <i class="fas fa-check-circle"></i>
             <span>Successfully synced changes with GitHub</span>
+            ${pushedText}
+            ${newFilesText}
+            ${updatedFilesText}
           </div>
         `;
       }
       
       this.showSuccess('Successfully synced changes with GitHub');
       
-      // Reload the editor content after 1 second
+      // Reload the editor content after 2 seconds
       setTimeout(() => {
         window.location.reload();
       }, 2000);
