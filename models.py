@@ -35,11 +35,11 @@ class Club(db.Model):
     join_code = db.Column(db.String(16), unique=True, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+    
     # The club leader (owner) is the user who created the club
     leader_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     leader = db.relationship('User', backref=db.backref('club', uselist=False), foreign_keys=[leader_id])
-
+    
     def generate_join_code(self):
         alphabet = string.ascii_letters + string.digits
         while True:
@@ -48,7 +48,7 @@ class Club(db.Model):
             if not Club.query.filter_by(join_code=code).first():
                 self.join_code = code
                 return code
-
+    
     def __repr__(self):
         return f'<Club {self.name}>'
 
@@ -60,12 +60,12 @@ class ClubMembership(db.Model):
     club_id = db.Column(db.Integer, db.ForeignKey('club.id'), nullable=False)
     role = db.Column(db.String(50), default='member', nullable=False)  # member, co-leader
     joined_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    
     user = db.relationship('User', backref=db.backref('club_memberships', lazy=True))
     club = db.relationship('Club', backref=db.backref('members', lazy=True))
-
+    
     __table_args__ = (db.UniqueConstraint('user_id', 'club_id', name='uix_user_club'),)
-
+    
     def __repr__(self):
         return f'<ClubMembership {self.user.username} in {self.club.name} as {self.role}>'
 
@@ -87,7 +87,7 @@ class User(UserMixin, db.Model):
     groq_api_key = db.Column(db.String(100), nullable=True)
     is_suspended = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
-
+    
     @property
     def is_club_leader(self):
         """Return True if the user is a club leader or co-leader."""
@@ -121,7 +121,7 @@ class GitHubRepo(db.Model):
 
     def __repr__(self):
         return f'<GitHubRepo {self.repo_name}>'
-
+        
 
 
 
@@ -137,9 +137,6 @@ class Site(db.Model):
     python_content = db.Column(db.Text,
                                nullable=False,
                                default='print("Hello, World!")')
-    bash_content = db.Column(db.Text,
-                             nullable=False,
-                             default='echo "Welcome to Bash Space!"')
     is_public = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime,
@@ -149,7 +146,7 @@ class Site(db.Model):
     user = db.relationship('User', backref=db.backref('sites', lazy=True))
     view_count = db.Column(db.Integer, default=0)
     analytics_enabled = db.Column(db.Boolean, default=False)
-
+    
     def __init__(self, *args, **kwargs):
         if 'slug' not in kwargs and 'name' in kwargs:
             # Create our own slug without relying on the external slugify function
@@ -167,7 +164,7 @@ class Site(db.Model):
 
     def __repr__(self):
         return f'<Site {self.name}>'
-
+        
     def get_page_content(self, filename):
         """Get the content of a specific page."""
         page = SitePage.query.filter_by(site_id=self.id, filename=filename).first()
@@ -189,20 +186,3 @@ class SitePage(db.Model):
 
     def __repr__(self):
         return f'<SitePage {self.filename} for Site {self.site_id}>'
-
-
-class BashFile(db.Model):
-    __tablename__ = 'bash_file'
-    id = db.Column(db.Integer, primary_key=True)
-    site_id = db.Column(db.Integer, db.ForeignKey('site.id', ondelete='CASCADE'), nullable=False)
-    path = db.Column(db.String(255), nullable=False)
-    content = db.Column(db.Text, nullable=True)
-    is_directory = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    site = db.relationship('Site', backref=db.backref('bash_files', lazy=True, cascade='all, delete-orphan'))
-
-    __table_args__ = (db.UniqueConstraint('site_id', 'path', name='uix_site_bash_file'),)
-
-    def __repr__(self):
-        return f'<BashFile {self.path} for Site {self.site_id}>'

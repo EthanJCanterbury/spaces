@@ -482,7 +482,6 @@
                 <select id="spaceType" name="type" required class="space-type-select">
                     <option value="web">Web Space</option>
                     <option value="python">Python Space</option>
-                    <option value="bash">Bash Space</option>
                 </select>
             </div>
             <div class="modal-actions">
@@ -574,28 +573,21 @@ async function createNewSpace(event) {
     event.preventDefault();
     const form = event.target;
     const submitBtn = form.querySelector('button[type="submit"]');
-
+    
     const spaceName = document.getElementById('spaceName').value;
     const spaceType = document.getElementById('spaceType').value;
-
+    
     // Validate space name
     const namePattern = /^[a-zA-Z0-9_-]{1,15}$/;
     if (!namePattern.test(spaceName)) {
         showToast('error', 'Space name must be 1-15 characters and contain only letters, numbers, underscores and dashes (no spaces)');
         return;
     }
-
+    
     submitBtn.disabled = true;
 
     try {
-        let endpoint = '/api/sites';
-
-        if (spaceType === 'python') {
-            endpoint = '/api/sites/python';
-        } else if (spaceType === 'bash') {
-            endpoint = '/api/sites/bash';
-        }
-
+        const endpoint = spaceType === 'python' ? '/api/sites/python' : '/api/sites';
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -610,13 +602,9 @@ async function createNewSpace(event) {
         const data = await response.json();
         if (response.ok) {
             showToast('success', `${spaceType === 'python' ? 'Python' : 'Web'} space created successfully!`);
-            if (spaceType === 'python') {
-                window.location.href = `/python/${data.site_id}`;
-            } else if (spaceType === 'bash') {
-                window.location.href = `/bash/${data.site_id}`;
-            } else {
-                window.location.href = `/edit/${data.site_id}`;
-            }
+            window.location.href = spaceType === 'python' 
+                ? `/python/${data.site_id}`
+                : `/edit/${data.site_id}`;
         } else {
             showToast('error', data.message || 'Failed to create space');
         }
