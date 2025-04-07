@@ -482,6 +482,7 @@
                 <select id="spaceType" name="type" required class="space-type-select">
                     <option value="web">Web Space</option>
                     <option value="python">Python Space</option>
+                    <option value="bash">Bash Space</option>
                 </select>
             </div>
             <div class="modal-actions">
@@ -587,7 +588,14 @@ async function createNewSpace(event) {
     submitBtn.disabled = true;
 
     try {
-        const endpoint = spaceType === 'python' ? '/api/sites/python' : '/api/sites';
+        let endpoint = '/api/sites';
+        
+        if (spaceType === 'python') {
+            endpoint = '/api/sites/python';
+        } else if (spaceType === 'bash') {
+            endpoint = '/api/sites/bash';
+        }
+        
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -602,9 +610,13 @@ async function createNewSpace(event) {
         const data = await response.json();
         if (response.ok) {
             showToast('success', `${spaceType === 'python' ? 'Python' : 'Web'} space created successfully!`);
-            window.location.href = spaceType === 'python' 
-                ? `/python/${data.site_id}`
-                : `/edit/${data.site_id}`;
+            if (spaceType === 'python') {
+                window.location.href = `/python/${data.site_id}`;
+            } else if (spaceType === 'bash') {
+                window.location.href = `/bash/${data.site_id}`;
+            } else {
+                window.location.href = `/edit/${data.site_id}`;
+            }
         } else {
             showToast('error', data.message || 'Failed to create space');
         }
