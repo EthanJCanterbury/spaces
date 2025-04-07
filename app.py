@@ -257,7 +257,7 @@ def log_response_info(response):
 def add_security_headers(response):
     is_preview = request.args.get('preview') == 'true'
 
-    csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://webring.hackclub.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' wss: ws:;"
+    csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://webring.hackclub.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' wss: ws:; media-src 'self' https://hc-cdn.hel1.your-objectstorage.com;"
 
     if is_preview:
         csp += " frame-ancestors *;"
