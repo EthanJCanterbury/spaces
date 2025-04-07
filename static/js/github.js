@@ -226,25 +226,25 @@ const GitHubManager = {
             </div>
 
             <div class="github-push-section">
-              <div class="sync-buttons-container" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                <div style="flex: 1;">
+              <div class="sync-buttons-container" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; width: 100%;">
+                <div style="width: 100%; text-align: center;">
                   <h4>Sync with GitHub</h4>
-                  <div class="sync-options" style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <button onclick="GitHubManager.syncChanges()" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #4e54c8, #8f94fb);">
+                  <div class="sync-options" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; width: 100%;">
+                    <button onclick="GitHubManager.syncChanges()" class="btn btn-primary" style="background: linear-gradient(135deg, #4e54c8, #8f94fb); width: 100%; max-width: 400px;">
                       <i class="fas fa-sync-alt"></i> Sync Changes
                     </button>
                   </div>
-                  <div class="commit-message-form">
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center;">
-                      <button onclick="GitHubManager.pushChanges()" class="btn btn-primary" style="flex: 1; max-width: 150px;">
+                  <input type="text" id="commitMessage" placeholder="Update from Hack Club Spaces" class="form-control" style="width: 100%; margin-bottom: 15px; max-width: 400px;">
+                  <div class="commit-message-form" style="width: 100%;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; width: 100%;">
+                      <button onclick="GitHubManager.pushChanges()" class="btn btn-primary" style="flex: 1; max-width: 200px;">
                         <i class="fas fa-upload"></i> Push Changes
                       </button>
-                      <button onclick="GitHubManager.pullChanges()" class="btn btn-primary" style="flex: 1; max-width: 150px;">
+                      <button onclick="GitHubManager.pullChanges()" class="btn btn-primary" style="flex: 1; max-width: 200px;">
                         <i class="fas fa-download"></i> Pull Changes
                       </button>
                     </div>
                   </div>
-                  <input type="text" id="commitMessage" placeholder="Update from Hack Club Spaces" class="form-control" style="width: 100%; margin-bottom: 10px;">
                   <div class="push-status" id="pushStatus" style="margin-top: 10px;"></div>
                 </div>
               </div>
