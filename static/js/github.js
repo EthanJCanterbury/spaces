@@ -235,8 +235,7 @@ const GitHubManager = {
                     </button>
                   </div>
                   <div class="commit-message-form">
-                    <input type="text" id="commitMessage" placeholder="Update from Hack Club Spaces" class="form-control">
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                       <button onclick="GitHubManager.pushChanges()" class="btn btn-primary" style="flex: 1;">
                         <i class="fas fa-upload"></i> Push Changes
                       </button>
@@ -244,6 +243,7 @@ const GitHubManager = {
                         <i class="fas fa-download"></i> Pull Changes
                       </button>
                     </div>
+                    <input type="text" id="commitMessage" placeholder="Update from Hack Club Spaces" class="form-control" style="width: 100%;">
                   </div>
                   <div class="push-status" id="pushStatus" style="margin-top: 10px;"></div>
                 </div>
