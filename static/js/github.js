@@ -235,11 +235,11 @@ const GitHubManager = {
                     </button>
                   </div>
                   <div class="commit-message-form">
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                      <button onclick="GitHubManager.pushChanges()" class="btn btn-primary" style="flex: 1;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center;">
+                      <button onclick="GitHubManager.pushChanges()" class="btn btn-primary" style="flex: 1; max-width: 150px;">
                         <i class="fas fa-upload"></i> Push Changes
                       </button>
-                      <button onclick="GitHubManager.pullChanges()" class="btn btn-primary" style="flex: 1;">
+                      <button onclick="GitHubManager.pullChanges()" class="btn btn-primary" style="flex: 1; max-width: 150px;">
                         <i class="fas fa-download"></i> Pull Changes
                       </button>
                     </div>
@@ -337,11 +337,7 @@ const GitHubManager = {
       return;
     }
 
-    const commitMsg = commitMsgElement.value;
-    if (!commitMsg.trim()) {
-      this.showError('Please enter a commit message');
-      return;
-    }
+    const commitMsg = commitMsgElement.value.trim() || 'Commit from Hack Club Spaces';
 
     this.showPushStatus('Pushing changes to GitHub...', 'info');
 
@@ -554,7 +550,7 @@ const GitHubManager = {
       return;
     }
 
-    const commitMsg = commitMsgElement.value.trim() || 'Sync changes with Hack Club Spaces';
+    const commitMsg = commitMsgElement.value.trim() || 'Commit from Hack Club Spaces';
     const siteId = sessionStorage.getItem('current_site_id');
     
     if (!siteId) {
