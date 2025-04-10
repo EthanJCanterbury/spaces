@@ -79,7 +79,6 @@
                 </button>
             </form>
         </div>
-
         <div class="settings-card club-card">
             <div class="card-icon"><i class="fas fa-users"></i></div>
             <h2>Club Membership</h2>
@@ -144,14 +143,14 @@
 
 <script>
     // ... (existing JavaScript functions remain unchanged) ...
-    
+
     function showClubWarningModal() {
         const joinCode = document.getElementById('joinClubCode').value.trim();
         if (!joinCode) {
             showToast('error', 'Please enter a join code');
             return;
         }
-        
+
         document.getElementById('confirmClubPermissions').checked = false;
         document.getElementById('confirmJoinBtn').disabled = true;
         const modal = document.getElementById('clubWarningModal');
@@ -160,7 +159,7 @@
         modal.style.visibility = 'visible';
         document.body.style.overflow = 'hidden'; // Prevent scrolling
     }
-    
+
     function closeClubWarningModal() {
         const modal = document.getElementById('clubWarningModal');
         modal.style.opacity = '0';
@@ -170,20 +169,20 @@
             document.body.style.overflow = '';
         }, 300);
     }
-    
+
     // Add event listener to checkbox
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('confirmClubPermissions').addEventListener('change', function() {
             document.getElementById('confirmJoinBtn').disabled = !this.checked;
         });
     });
-    
+
     function confirmJoinClub() {
         if (!document.getElementById('confirmClubPermissions').checked) {
             showToast('error', 'Please confirm you understand the permissions');
             return;
         }
-        
+
         joinClub();
         closeClubWarningModal();
     }
@@ -344,7 +343,7 @@
             showToast('error', 'Failed to disconnect from Slack');
         }
     }
-    
+
     async function disconnectGithub() {
         try {
             const response = await fetch('/api/github/disconnect-account', {
@@ -360,7 +359,7 @@
             showToast('error', 'Failed to disconnect from GitHub');
         }
     }
-    
+
     async function disconnectHackatime() {
         try {
             const response = await fetch('/hackatime/disconnect', {
@@ -376,7 +375,7 @@
             showToast('error', 'Failed to disconnect from Hackatime');
         }
     }
-    
+
     async function disconnectGroq() {
         try {
             const response = await fetch('/groq/disconnect', {
@@ -677,6 +676,11 @@
 
 #confirmClubPermissions {
     margin-right: 10px;
+}
+
+.settings-container {
+    padding: 20px; /* Added padding to the container */
+    margin-top: 70px; /* Add top margin to account for fixed navbar */
 }
 </style>
 {% endblock %}
