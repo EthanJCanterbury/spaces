@@ -283,20 +283,20 @@ class RateLimiter:
         self.requests = {}
         self.limits = {
             'default': {
-                'requests': 1000,
-                'window': 60
-            },
-            'api_run': {
                 'requests': 100,
                 'window': 60
             },
+            'api_run': {
+                'requests': 10,
+                'window': 60
+            },
             'login': {
-                'requests': 50,
+                'requests': 5,
                 'window': 60
             },
             'orphy': {
-                'requests': 20,
-                'window': 1
+                'requests': 1,
+                'window': 0.5
             }
         }
 
