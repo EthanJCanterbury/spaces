@@ -16,33 +16,52 @@
 {% endblock %}
 
 {% block content %}
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script>
+function showToast(type, message) {
+    const toastContainer = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    const icon = type === 'success' ? 'check-circle' : 
+                 type === 'error' ? 'exclamation-circle' :
+                 type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    toast.offsetHeight;
+
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+</script>
 <div id="loading-overlay" class="loading-overlay">
-    <div class="particles-container" id="particles-js"></div>
     <div class="loading-content">
-        <div class="loading-spinner-container">
-            <div class="loading-spinner"></div>
-            <div class="loading-spinner-shadow"></div>
+        <div class="loading-image-container">
+            <img src="{{ url_for('static', filename='images/typingdino.gif') }}" alt="Loading..." class="loading-dino">
         </div>
         <div class="loading-text-container">
-            <p class="loading-text">Building Your Space :D</p>
+            <h2 class="loading-title">Building Your Python Space</h2>
+            <p class="loading-text">Setting up your Python environment...</p>
         </div>
         <div class="loading-progress-container">
             <div class="loading-progress-bar">
                 <div class="loading-progress-fill"></div>
             </div>
         </div>
-        <div class="loading-facts">
-            <div class="fact-container">
-                <p class="loading-fact">Building your digital canvas...</p>
-            </div>
-        </div>
-    </div>
-    <div class="loading-glow"></div>
-    <div class="loading-corners">
-        <div class="corner top-left"></div>
-        <div class="corner top-right"></div>
-        <div class="corner bottom-left"></div>
-        <div class="corner bottom-right"></div>
     </div>
 </div>
 <div class="editor-container split-layout">
@@ -164,7 +183,8 @@
     </div>
 </div>
 
-<!-- Toast functionality is completely handled by Python editor JS -->
+<!-- Toast container for notifications -->
+<div id="toast-container"></div>
 
 <!-- GitHub integration removed from Python editor -->
 

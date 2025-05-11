@@ -90,18 +90,34 @@ function sendOrphyMessage() {
 
     const editorContent = editor.getValue();
     const filename = document.querySelector('.topbar-left h1').textContent;
-
-    fetch('/api/orphy/chat', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            message: message,
-            code: editorContent,
-            filename: filename
+    
+    // Fetch documentation content via an AJAX request
+    const fetchDocContent = fetch('/documentation')
+        .then(response => response.text())
+        .then(html => {
+            // Extract content from HTML using a simple regex approach
+            const docContentMatch = html.match(/<main class="docs-content">([\s\S]*?)<\/main>/);
+            return docContentMatch ? docContentMatch[1] : '';
         })
-    })
+        .catch(error => {
+            console.error('Error fetching documentation:', error);
+            return '';
+        });
+    
+    // Wait for the documentation content to be fetched
+    fetchDocContent.then(docContent => {
+        fetch('/api/orphy/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: message,
+                code: editorContent,
+                filename: filename,
+                documentation: docContent
+            })
+        })
     .then(response => {
         if (!response.ok) {
             throw new Error(`Server error: ${response.status}`);
@@ -128,6 +144,7 @@ function sendOrphyMessage() {
     })
     .finally(() => {
         scrollOrphyToBottom();
+    });
     });
 }
 

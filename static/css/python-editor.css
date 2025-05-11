@@ -1,4 +1,3 @@
-
 /* GitHub modal fix */
 #github-modal {
   display: none;
@@ -89,7 +88,52 @@
 .split-layout {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+.split-layout .editor-main {
+  position: absolute;
+  top: 58px; /* Adjust based on your header height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.split-layout .file-tabs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: white;
+  padding: 8px 15px 0;
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.split-layout .console-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.split-layout .console-output {
+  position: absolute;
+  top: 40px; /* Height of console header */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
 }
 
 .editor-main {
@@ -129,7 +173,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(25, 25, 25, 0.9);
+  background-color: #ffffff;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -150,57 +194,50 @@
   padding: 20px;
 }
 
-.loading-spinner-container {
-  position: relative;
-  margin-bottom: 30px;
+.loading-image-container {
+  margin-bottom: 20px;
 }
 
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  border-top-color: var(--primary);
-  animation: spin 1s ease-in-out infinite;
-}
-
-.loading-spinner-shadow {
-  position: absolute;
-  top: 20px;
-  left: 0;
-  width: 60px;
-  height: 4px;
-  background: rgba(236, 55, 80, 0.2);
-  border-radius: 50%;
-  filter: blur(8px);
-  animation: shadow-pulse 1s ease-in-out infinite;
+.loading-dino {
+  width: 250px;
+  height: auto;
+  border-radius: 8px;
 }
 
 .loading-text-container {
   margin-bottom: 20px;
 }
 
-.loading-text {
-  font-size: 24px;
+.loading-title {
+  font-size: 28px;
   font-weight: 700;
-  color: white;
-  margin: 0;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.loading-text {
+  font-size: 18px;
+  font-weight: 400;
+  color: #666;
+  margin-top: 0;
 }
 
 .loading-progress-container {
-  width: 100%;
+  width: 300px;
   height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
+  background: #f0f0f0;
+  border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .loading-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), #ff89a4);
+  background: var(--primary);
   width: 0%;
   transition: width 0.3s ease;
+  border-radius: 8px;
 }
 
 .loading-facts {
@@ -244,7 +281,7 @@
   }
 }
 
-/* Toast styles removed - using unified styles from style.css */
+/* Toast styles moved to toast.css */
 
 /* Keyboard shortcuts modal */
 .shortcuts-modal {

@@ -1,0 +1,791 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Club Leader | Hack Club Spaces</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ec3750;
+            --secondary: #ff8c37;
+            --text: #1f2d3d;
+            --text-light: #8492a6;
+            --light-bg: #f9fafb;
+            --border: #e5e7eb;
+            --success: #33d6a6;
+            --warning: #ff8c37;
+            --font-heading: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-body);
+            line-height: 1.6;
+            color: var(--text);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        
+        .header-bg {
+            position: absolute;
+            top: -100px;
+            left: 0;
+            right: 0;
+            height: 400px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            transform: skewY(-5deg);
+            z-index: -1;
+        }
+        
+        
+        
+        h1 {
+            font-size: 3rem;
+            color: white;
+            margin-bottom: 1rem;
+            font-family: var(--font-heading);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        
+        .subtitle {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+        }
+        
+        
+        
+        .welcome-card {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, rgba(236, 55, 80, 0.1), rgba(255, 140, 55, 0.1));
+            border-radius: 0 0 0 100%;
+            z-index: 0;
+        }
+        
+        .welcome-card h2 {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-family: var(--font-heading);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .welcome-card p {
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            font-size: 1.1rem;
+            line-height: 1.7;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            background: rgba(236, 55, 80, 0.1);
+            color: var(--primary);
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+            font-family: var(--font-heading);
+        }
+        
+        .feature-card p {
+            color: var(--text-light);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .steps-container {
+            margin-bottom: 3rem;
+        }
+        
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .step-number {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+            margin-right: 1.5rem;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+            font-family: var(--font-heading);
+        }
+        
+        .step-content p {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+        
+        .step-content ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin: 4rem 0;
+        }
+        
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            font-family: var(--font-heading);
+        }
+        
+        .cta-section p {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.15s ease;
+            margin: 0 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            font-family: var(--font-heading);
+            font-weight: bold;
+            letter-spacing: 0.02em;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(236, 55, 80, 0.3);
+        }
+        
+        .btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .copy-code {
+            background: var(--light-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            position: relative;
+            margin: 1.5rem 0;
+            font-family: monospace;
+            font-size: 1.1rem;
+            overflow: hidden;
+        }
+        
+        .code-header {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 0 8px 0 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .code-header:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .resources-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .resource-card {
+            background: var(--light-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .resource-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .resource-card h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+        
+        .resource-card p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .resource-card a {
+            color: var(--primary);
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .resource-card a i {
+            margin-left: 0.25rem;
+            font-size: 0.8rem;
+        }
+        
+        .resource-card a:hover {
+            text-decoration: underline;
+        }
+        
+        .tip-box {
+            background: rgba(51, 214, 166, 0.1);
+            border-left: 4px solid var(--success);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .tip-box h4 {
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--success);
+        }
+        
+        .tip-box h4 i {
+            margin-right: 0.5rem;
+        }
+        
+        .tip-box p {
+            color: var(--text);
+        }
+        
+        .warning-box {
+            background: rgba(255, 140, 55, 0.1);
+            border-left: 4px solid var(--warning);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .warning-box h4 {
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--warning);
+        }
+        
+        .warning-box h4 i {
+            margin-right: 0.5rem;
+        }
+        
+        .warning-box p {
+            color: var(--text);
+        }
+        
+        .join-code-display {
+            background: var(--light-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            margin: 1.5rem 0;
+            position: relative;
+            font-family: monospace;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .join-code-label {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 0 1rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            border-radius: 4px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .welcome-card {
+                padding: 2rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .step {
+                flex-direction: column;
+            }
+            
+            .step-number {
+                margin-bottom: 1rem;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-bg"></div>
+        <br>
+        <br>
+        <br>
+        <h1>Congratulations, Leader!</h1>
+        <p class="subtitle">Let's make something amazing together!</p>
+    </div>
+    
+    <div class="container">
+        <div class="welcome-card">
+            <h2><i class="fas fa-trophy"></i> You're now a Hack Club Leader!</h2>
+            <p>Congratulations on becoming a club leader! You now have access to a suite of powerful tools to manage your club, engage your members, and create amazing coding experiences together.</p>
+            <p>Your leadership journey starts here, and we're excited to see the incredible things you and your club will build.</p>
+            
+            {% if club %}
+            <div class="join-code-display">
+                <span class="join-code-label">Your Club Join Code</span>
+                {{ club.join_code }}
+            </div>
+            <p>Share this code with your club members so they can join your club. Members will use this code on their Spaces dashboard to join your club.</p>
+            {% endif %}
+            
+            <div class="cta-section" style="text-align: center; margin: 2rem 0;">
+                {% if current_user.is_authenticated %}
+                <button id="goDashboardBtn" class="btn btn-primary">
+                    <i class="fas fa-tachometer-alt"></i> Go to Club Dashboard
+                </button>
+                {% else %}
+                <a href="{{ url_for('signup', from_leader_onboarding='true') }}" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Sign Up as Club Leader
+                </a>
+                {% endif %}
+            </div>
+            
+            {% if current_user.is_authenticated %}
+            <script>
+                document.getElementById('goDashboardBtn').addEventListener('click', function() {
+                    // If no club exists yet, create one
+                    {% if not club %}
+                    fetch('/api/clubs', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name: "My Hack Club",
+                            description: "A club for learning and building cool things together!",
+                            location: "School"
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            window.location.href = "{{ url_for('club_dashboard') }}";
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        window.location.href = "{{ url_for('club_dashboard') }}";
+                    });
+                    {% else %}
+                    window.location.href = "{{ url_for('club_dashboard') }}";
+                    {% endif %}
+                });
+            </script>
+            {% endif %}
+        </div>
+        
+        <h2 style="text-align: center; margin-bottom: 2rem; color: var(--text);">What You Can Do With Your Club Dashboard</h2>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Manage Members</h3>
+                <p>Invite students to join your club, assign roles, and build your coding community.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3>Schedule Meetings</h3>
+                <p>Plan and organize club meetings, set agendas, and keep your members informed.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h3>Create Assignments</h3>
+                <p>Assign coding challenges and projects to your members to enhance their skills.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-stream"></i>
+                </div>
+                <h3>Activity Stream</h3>
+                <p>Share announcements, updates, and keep everyone in the loop with what's happening.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <h3>Showcase Projects</h3>
+                <p>Feature and highlight outstanding projects created by your club members.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-pizza-slice"></i>
+                </div>
+                <h3>Pizza Grants</h3>
+                <p>Apply for pizza grants to fuel your club meetings with delicious food.</p>
+            </div>
+        </div>
+        
+        <div class="steps-container">
+            <h2 style="text-align: center; margin-bottom: 2rem; color: var(--text);">Getting Started: Step by Step</h2>
+            
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Explore Your Club Dashboard</h3>
+                    <p>Familiarize yourself with all the features available to you as a club leader:</p>
+                    <ul>
+                        <li>Dashboard overview with key metrics</li>
+                        <li>Member management section</li>
+                        <li>Meeting scheduler</li>
+                        <li>Assignment creator</li>
+                        <li>Project showcase</li>
+                        <li>Resources section</li>
+                    </ul>
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('club_dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('signup', from_leader_onboarding='true') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Sign Up as Club Leader
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Invite Members to Your Club</h3>
+                    <p>Share your unique club join code with your members to grow your community:</p>
+                    
+                    {% if club %}
+                    <div class="copy-code">
+                        {{ club.join_code }}
+                        <div class="code-header" onclick="copyJoinCode()">
+                            <i class="fas fa-copy"></i> Copy
+                        </div>
+                    </div>
+                    {% else %}
+                    <p>Your join code will be available once you create your club.</p>
+                    {% endif %}
+                    
+                    <p>When members receive your code, they should:</p>
+                    <ol>
+                        <li>Log in to their Hack Club Spaces account (or create one)</li>
+                        <li>Navigate to the Club section in their dashboard</li>
+                        <li>Click "Join a Club" and enter your join code</li>
+                    </ol>
+                    
+                    <div class="tip-box">
+                        <h4><i class="fas fa-lightbulb"></i> Pro Tip</h4>
+                        <p>You can also add Co-Leaders to help you manage your club. Co-Leaders have similar privileges to Club Leaders, allowing them to manage members, create assignments, and more.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Plan Your First Meeting</h3>
+                    <p>Use the Schedule feature to plan and announce your first club meeting:</p>
+                    <ol>
+                        <li>Navigate to the Schedule tab in your club dashboard</li>
+                        <li>Click "Create New Meeting" and fill in the details</li>
+                        <li>Set a date, time, location, and meeting agenda</li>
+                        <li>Publish the meeting to notify all club members</li>
+                    </ol>
+                    <p>Your members will receive notifications about the upcoming meeting, ensuring good attendance.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Create Your First Coding Challenge</h3>
+                    <p>Engage your members with a fun coding assignment:</p>
+                    <ol>
+                        <li>Go to the Assignments tab in your dashboard</li>
+                        <li>Click "New Assignment" to create a challenge</li>
+                        <li>Set a title, description, due date, and difficulty level</li>
+                        <li>Choose whether it's for all members or specific individuals</li>
+                        <li>Publish the assignment</li>
+                    </ol>
+                    <p>Members can submit their solutions through Spaces, and you can review and provide feedback on their work.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="welcome-card">
+            <h2><i class="fas fa-user-plus"></i> Helping New Members Get Started</h2>
+            <p>For club members who don't have a Spaces account yet, here's a simple guide to help them join:</p>
+            
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Create a Spaces Account</h3>
+                        <p>Members should visit <a href="https://spaces.hackclub.com">spaces.hackclub.com</a> and click "Sign Up" to create a new account. They'll need to provide:</p>
+                        <ul>
+                            <li>A username</li>
+                            <li>Email address</li>
+                            <li>Password</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Join Your Club</h3>
+                        <p>After logging in, members should:</p>
+                        <ol>
+                            <li>Click on "Clubs" in the navigation</li>
+                            <li>Select "Join a Club"</li>
+                            <li>Enter your club's join code</li>
+                            <li>Click "Join Club"</li>
+                        </ol>
+                        <div class="warning-box">
+                            <h4><i class="fas fa-exclamation-triangle"></i> Important Note</h4>
+                            <p>Make sure to share your club's join code with your members securely. The code provides direct access to your club.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Create Their First Project</h3>
+                        <p>Encourage members to create their first project on Spaces:</p>
+                        <ol>
+                            <li>After joining the club, go to Dashboard</li>
+                            <li>Click "New Space" to create a project</li>
+                            <li>Choose between a web project or a Python project</li>
+                            <li>Start coding!</li>
+                        </ol>
+                        <p>All member projects will be visible in your Club Dashboard under the Projects tab, where you can feature outstanding work.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cta-section">
+            <h2>Ready to Start Your Coding Adventure?</h2>
+            <p>Your club dashboard is ready with all the tools you need to lead an amazing Hack Club. Dive in and start exploring!</p>
+            <a href="{{ url_for('club_dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-tachometer-alt"></i> Go to My Club Dashboard
+            </a>
+        </div>
+        
+        <div class="welcome-card">
+            <h2><i class="fas fa-book"></i> Additional Resources</h2>
+            <p>Here are some helpful resources to support you in leading your Hack Club:</p>
+            
+            <div class="resources-list">
+                <div class="resource-card">
+                    <h4>Hack Club Workshops</h4>
+                    <p>Ready-to-use coding workshops for your club meetings.</p>
+                    <a href="https://workshops.hackclub.com" target="_blank">Explore Workshops <i class="fas fa-external-link-alt"></i></a>
+                </div>
+                
+                <div class="resource-card">
+                    <h4>Hack Club Slack</h4>
+                    <p>Connect with other club leaders and get support.</p>
+                    <a href="https://hackclub.com/slack" target="_blank">Join Slack <i class="fas fa-external-link-alt"></i></a>
+                </div>
+                
+                <div class="resource-card">
+                    <h4>Leader's Handbook</h4>
+                    <p>Tips and guidance for running successful club meetings.</p>
+                    <a href="https://hackclub.com/leadership" target="_blank">Read Handbook <i class="fas fa-external-link-alt"></i></a>
+                </div>
+                
+                <div class="resource-card">
+                    <h4>Spaces Documentation</h4>
+                    <p>Learn how to make the most of Hack Club Spaces.</p>
+                    <a href="{{ url_for('documentation') }}">View Docs <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 Hack Club. Made with <i class="fas fa-heart" style="color: var(--primary);"></i> by the Hack Club community.</p>
+    </footer>
+    
+    <script>
+        // Copy join code to clipboard
+        function copyJoinCode() {
+            {% if club %}
+            const joinCode = "{{ club.join_code }}";
+            navigator.clipboard.writeText(joinCode).then(() => {
+                const codeHeader = document.querySelector('.code-header');
+                codeHeader.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                
+                setTimeout(() => {
+                    codeHeader.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                }, 2000);
+            });
+            {% endif %}
+        }
+    </script>
+</body>
+</html>

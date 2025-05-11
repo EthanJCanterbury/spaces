@@ -8,6 +8,20 @@
     </div>
 
     <div class="settings-grid">
+        <div class="settings-card public-profile-card">
+            <div class="card-icon"><i class="fas fa-id-badge"></i></div>
+            <div class="card-header-section">
+                <h2>Public Profile</h2>
+            </div>
+            <p class="card-description">Create and customize your public profile to showcase your projects and information to the community.</p>
+            <div class="card-cta">
+                <a href="{{ url_for('profile_settings') }}" class="btn-manage-profile">
+                    <i class="fas fa-user-edit"></i>
+                    Manage
+                </a>
+            </div>
+        </div>
+        
         <div class="settings-card integrations-card">
             <div class="card-icon"><i class="fas fa-plug"></i></div>
             <div class="integrations-header-section">
@@ -17,7 +31,7 @@
             <div class="integrations-cta">
                 <a href="{{ url_for('integrations') }}" class="btn-manage-integrations">
                     <i class="fas fa-cog"></i>
-                    Manage Integrations
+                    Manage
                 </a>
             </div>
         </div>
@@ -403,19 +417,21 @@
 
 </script>
 <style>
-/* Add styling for the integrations card */
-.integrations-card {
+/* Card styles */
+.settings-card {
     display: flex;
     flex-direction: column;
 }
 
-.integrations-card > h2,
-.integrations-card > .card-icon,
-.integrations-card > .integrations-header-section {
+.settings-card > h2,
+.settings-card > .card-icon,
+.settings-card > .card-header-section,
+.settings-card > .integrations-header-section {
     flex-shrink: 0;
 }
 
-/* Integrations section styles */
+/* Header section styles */
+.card-header-section,
 .integrations-header-section {
     display: flex;
     justify-content: space-between;
@@ -423,6 +439,8 @@
     margin-bottom: 1rem;
 }
 
+/* Description styles */
+.card-description,
 .integrations-description {
     color: var(--text-light);
     line-height: 1.6;
@@ -430,13 +448,16 @@
     font-size: 1.05rem;
 }
 
+/* CTA section styles */
+.card-cta,
 .integrations-cta {
     display: flex;
     justify-content: center;
     margin: 1rem 0;
 }
 
-/* Enhanced manage integrations button */
+/* Button styles */
+.btn-manage-profile,
 .btn-manage-integrations {
     display: inline-flex;
     align-items: center;
@@ -455,6 +476,7 @@
     max-width: 300px;
 }
 
+.btn-manage-profile:hover,
 .btn-manage-integrations:hover {
     background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
     transform: translateY(-2px);
@@ -463,9 +485,21 @@
     text-decoration: none;
 }
 
+.btn-manage-profile:active,
 .btn-manage-integrations:active {
     transform: translateY(1px);
     box-shadow: 0 2px 8px rgba(0, 118, 255, 0.2);
+}
+
+/* Public profile card specific styles */
+.public-profile-card {
+    background: white;
+    border: 1px solid rgba(236, 55, 80, 0.1);
+}
+
+/* Integrations card specific styles - keep existing style */
+.integrations-card {
+    /* Existing styles maintained */
 }
 
 .club-card {
@@ -680,7 +714,7 @@
 
 .settings-container {
     padding: 20px; /* Added padding to the container */
-    margin-top: 70px; /* Add top margin to account for fixed navbar */
+    margin-top: 100px; /* Increased top margin to account for fixed navbar */
 }
 </style>
 {% endblock %}

@@ -101,7 +101,7 @@ function createNewFile(filename, fileType) {
   })
   .catch(error => {
     console.error('Error:', error);
-    showToast('Failed to create file: ' + error.message, 'error');
+    showToast('error', 'Failed to create file: ' + error.message);
   });
 }
 

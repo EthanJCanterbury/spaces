@@ -39,9 +39,33 @@ function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
   
+  // Prevent body scrolling when modal is open
+  document.body.style.overflow = 'hidden';
+  
+  // Reset modal scroll position
+  const modalContent = modal.querySelector('.modal-content');
+  if (modalContent) {
+    modalContent.scrollTop = 0;
+  }
+  
   modal.style.display = 'flex';
-  modal.offsetHeight; 
+  modal.offsetHeight; // Trigger reflow
   modal.classList.add('show');
+  
+  // Ensure modal is centered in viewport
+  if (modalContent) {
+    const viewportHeight = window.innerHeight;
+    const contentHeight = modalContent.offsetHeight;
+    
+    // If content is taller than viewport, adjust styles for scrolling
+    if (contentHeight > viewportHeight * 0.9) {
+      modalContent.style.height = '90vh';
+      modalContent.style.overflowY = 'auto';
+    } else {
+      modalContent.style.height = 'auto';
+      modalContent.style.overflowY = 'visible';
+    }
+  }
 }
 
 function closeModal(modalId) {
@@ -51,6 +75,8 @@ function closeModal(modalId) {
   modal.classList.remove('show');
   setTimeout(() => {
     modal.style.display = 'none';
+    // Restore body scrolling
+    document.body.style.overflow = '';
   }, 300);
 }
 

@@ -5,7 +5,7 @@
     <div class="auth-container">
         <div class="auth-box">
             <h2>Login</h2>
-            
+
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
@@ -13,7 +13,7 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
-            
+
             <div class="social-login">
                 <a href="{{ url_for('github.github_login') }}" class="btn-github">
                     <i class="fab fa-github"></i> Sign in with GitHub
@@ -21,6 +21,7 @@
             </div>
             <div class="divider">or</div>
             <form method="POST" class="auth-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" required>
@@ -31,7 +32,15 @@
                 </div>
                 <button type="submit" class="btn primary">Login</button>
             </form>
-            
+
+            <div class="divider">or</div>
+
+            <div class="social-login">
+                <a href="{{ url_for('slack_auth.slack_login') }}" class="slack-button">
+                  <i class="fab fa-slack"></i> Sign in with Slack
+                </a>
+            </div>
+
             <div class="auth-links">
                 <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign up</a></p>
             </div>

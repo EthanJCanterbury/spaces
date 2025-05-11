@@ -1,4 +1,3 @@
-
 /* VS Code-like styles for CodeMirror */
 .CodeMirror {
   height: 100%;
@@ -248,27 +247,37 @@ li.CodeMirror-hint-active {
   perspective: 800px;
 }
 
-.loading-spinner {
-  width: 100px;
-  height: 100px;
-  border: 5px solid rgba(237, 102, 99, 0.1);
-  border-radius: 50%;
-  border-top-color: var(--primary);
-  border-left-color: var(--primary);
-  animation: spin 1s linear infinite;
-  transform-style: preserve-3d;
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease;
 }
 
-.loading-spinner-shadow {
-  position: absolute;
-  top: 110px;
-  left: 25px;
-  width: 50px;
-  height: 10px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 50%;
-  filter: blur(5px);
-  animation: spinner-shadow 3s ease-in-out infinite;
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 500px;
+  padding: 20px;
+}
+
+.loading-image-container {
+  margin-bottom: 20px;
+}
+
+.loading-dino {
+  width: 250px;
+  height: auto;
+  border-radius: 8px;
 }
 
 .loading-text-container {
@@ -276,32 +285,32 @@ li.CodeMirror-hint-active {
   text-align: center;
 }
 
-.loading-text {
-  font-size: 22px;
-  font-weight: 600;
+.loading-title {
+  font-size: 28px;
+  font-weight: 700;
   color: #333;
-  text-shadow: 0 0 10px rgba(237, 102, 99, 0.3);
-  letter-spacing: 0.5px;
-  animation: text-glow 2s ease-in-out infinite alternate;
+  margin-bottom: 8px;
 }
 
-.dot-pulse {
-  display: inline-block;
-  position: relative;
-  animation: dot-pulse 1.5s infinite ease-in-out;
+.loading-text {
+  font-size: 18px;
+  font-weight: 400;
+  color: #666;
+  margin-top: 0;
 }
 
 .loading-progress-container {
-  width: 80%;
+  width: 300px;
   margin: 20px 0;
 }
 
 .loading-progress-bar {
-  height: 8px;
-  background: rgba(200, 200, 200, 0.3);
-  border-radius: 10px;
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 8px;
   overflow: hidden;
   position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .loading-progress-fill {
@@ -310,10 +319,9 @@ li.CodeMirror-hint-active {
   left: 0;
   height: 100%;
   width: 0;
-  background: linear-gradient(90deg, var(--primary), #ff9a8b);
-  border-radius: 10px;
+  background: var(--primary);
+  border-radius: 8px;
   animation: progress 2s ease-in-out forwards;
-  box-shadow: 0 0 10px rgba(237, 102, 99, 0.7);
 }
 
 
@@ -728,6 +736,13 @@ li.CodeMirror-hint-active {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.15);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+/* Hide dropdown menus in the editor topbar */
+.editor-topbar .dropdown {
+  display: none;
 }
 
 .dropdown:hover .dropdown-menu {
@@ -892,64 +907,7 @@ li.CodeMirror-hint-active {
   display: flex;
 }
 
-/* Toast notifications */
-#toast-container {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: flex-end;
-  gap: 10px;
-  max-width: 320px;
-  pointer-events: none;
-}
-
-.toast {
-  margin-top: 10px;
-  padding: 12px 16px;
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  width: 300px;
-  transform: translateX(120%);
-  transition: transform 0.3s ease;
-  color: white;
-  background-color: #333;
-  pointer-events: auto;
-}
-
-.toast.show {
-    transform: translateX(0);
-}
-
-.toast-content {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  color: black;
-}
-
-.toast-content i {
-    font-size: 1.1rem;
-  color: black;
-}
-
-.toast-success {
-    background-color: #48bb78;
-}
-
-.toast-error {
-    background-color: #f56565;
-}
-
-.toast-info {
-    background-color: #4299e1;
-}
-
-.toast-warning {
-    background-color: #ed8936;
-}
+/* Toast styles moved to toast.css */
 
 .modal-content {
   background-color: #ffffff;
@@ -1216,20 +1174,23 @@ input:checked + .slider:before {
 }
 
 .editor-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 60px);  /* Subtract navbar height */
+    background-color: #f8f9fa;
+    margin-top: 60px; /* Add margin for navbar */
+    border-top: none;
 }
 
 .editor-topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1.5rem;
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    z-index: 10;
+    position: relative; /* Ensure proper stacking */
 }
 
 .topbar-left {
@@ -1274,6 +1235,9 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 5px;
+  white-space: nowrap;
 }
 
 .btn-primary {
@@ -1303,24 +1267,30 @@ input:checked + .slider:before {
 }
 
 .editor-main {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
 }
 
-.editor-pane {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background-color: white;
-  border-right: 1px solid #e2e8f0;
-  overflow: hidden;
+.editor-pane, .preview-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
 }
 
-.preview-pane {
-  flex: 1;
-  background-color: white;
-  overflow: hidden;
+.file-tabs {
+    position: relative;
+    z-index: 10;
+    background: white;
+    padding: 8px 15px 0;
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid #e2e8f0;
+    height: 48px; /* Slightly smaller height */
+    box-sizing: border-box;
 }
 
 .CodeMirror {
@@ -1684,7 +1654,7 @@ iframe {
   flex: 1;
   padding: 12px 16px;
   border: 1px solid #e2e8f0;
-  border-radius: 24px; /* Keeping the rounded corners for chat input */
+  border-radius: 24px; 
   resize: none;
   min-height: 48px;
   max-height: 150px;
@@ -1794,68 +1764,7 @@ iframe {
   50% { content: '...'; }
   75% { content: '..'; }
 }
-.toast {
-  position: relative;
-  background-color: #333333;
-  color: #ffffff;
-  padding: 14px 20px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  opacity: 0;
-  transform: translateY(20px);
-  animation: toast-in-out 2.5s ease forwards;
-  border-left: 4px solid #4f46e5;
-  margin-bottom: 10px;
-  width: 100%;
-  max-width: 320px;
-}
-
-.toast.success {
-  background-color: #16a34a;
-  border-color: #16a34a;
-}
-
-.toast.success i {
-  color: #ffffff;
-}
-
-.toast.error {
-  background-color: #dc2626;
-  border-color: #dc2626;
-}
-
-.toast.error i {
-  color: #ffffff;
-}
-
-.toast.warning {
-  background-color: #ca8a04;
-  border-color: #ca8a04;
-}
-
-.toast.warning i {
-  color: #ffffff;
-}
-
-.toast.info {
-  background-color: #0891b2;
-  border-color: #0891b2;
-}
-
-.toast.info i {
-  color: #ffffff;
-}
-
-.toast i {
-  margin-right: 12px;
-  font-size: 18px;
-  color: #ffffff;
-}
+/* Toast styles moved to toast.css */
 
 #toast-container {
   position: fixed;
@@ -1943,7 +1852,21 @@ iframe {
 /* File tabs styling supplement - specialized variations */
 .file-tabs {
   padding: 0.5rem 1rem 0;
-  flex-wrap: wrap;
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: thin;
+  -ms-overflow-style: none;
+}
+
+.file-tabs::-webkit-scrollbar {
+  height: 5px;
+}
+
+.file-tabs::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.2);
+  border-radius: 4px;
 }
 
 .file-tab {
@@ -1957,6 +1880,8 @@ iframe {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .file-tab.active {
@@ -2106,7 +2031,7 @@ iframe {
 }
 
 .tutorial-prev-btn {
-  margin-right: 10px;
+  margin-right:10px;
   background-color: #f1f5f9;
   color: #334155;
   border: 1px solid #e2e8f0;
@@ -2135,4 +2060,117 @@ iframe {
   font-size: 14px;
   color: #4a5568;
   font-weight: 500;
+}
+
+html, body.editor-page {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body.editor-page {
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar + .editor-container {
+    margin-top: 0;
+    top: 60px; /* Set to exact navbar height */
+}
+
+.editor-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.editor-topbar {
+    flex-shrink: 0;
+}
+
+.editor-main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: absolute;
+    top: 60px; /* Adjust based on your header height */
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.file-tabs {
+    position: relative;
+    z-index: 10;
+    background: white;
+    padding: 8px 15px 0;
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid #e2e8f0;
+    height: 48px; /* Slightly smaller height */
+    box-sizing: border-box;
+}
+
+.editor-pane, .preview-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.file-tab {
+    padding: 8px 16px;
+    background-color: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    margin-right: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #4a5568;
+    transition: all 0.2s ease;
+}
+
+.file-tab.active {
+    background-color: white;
+    color: var(--primary);
+    border-bottom: 2px solid white;
+    margin-bottom: -1px;
+    font-weight: 500;
+}
+
+.CodeMirror {
+    position: absolute;
+    top: 40px; /* Position below tabs */
+    left: 0;
+    right: 0;
+    bottom: 26px; /* Account for statusbar */
+    height: auto !important;
+}
+
+.editor-statusbar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 25px;
+}
+
+.preview-pane iframe, 
+.browser-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100% !important;
+    width: 100% !important;
 }

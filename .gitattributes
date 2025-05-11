@@ -1,0 +1,6 @@
+
+# Set up Git LFS for larger files
+*.md filter=lfs diff=lfs merge=lfs -text
+
+# Prevent secrets detection on documentation
+**/content-*.md filter=git-crypt diff=git-crypt

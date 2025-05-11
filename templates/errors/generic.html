@@ -14,12 +14,12 @@
 .status-code {
     font-family: monospace;
     font-size: 1.2rem;
-    background: rgba(33, 150, 243, 0.1);
+    background: rgba(0, 0, 0, 0.05);
     padding: 0.5rem 1rem;
-    border-radius: 0.3rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
     color: var(--info-color);
     display: inline-block;
-    margin: 1rem 0;
 }
 
 .error-suggestions {
@@ -28,6 +28,8 @@
     padding: 1.5rem;
     border-radius: 0.5rem;
     margin: 1.5rem 0;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .suggestion-item {
@@ -74,6 +76,7 @@
     border-radius: 0.3rem;
     background: rgba(33, 150, 243, 0.1);
     transition: all 0.3s ease;
+    border: 1px solid rgba(33, 150, 243, 0.2);
 }
 
 .link-item:hover {
@@ -110,6 +113,41 @@
     0%, 100% { opacity: 0.6; }
     50% { opacity: 1; }
 }
+
+.troubleshooting-tips {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+}
+
+.troubleshooting-tips h3 {
+    margin-top: 0;
+}
+
+.links-grid {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+.helpful-link {
+    text-decoration: none;
+    color: var(--light-color);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.helpful-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
 </style>
 {% endblock %}
 
@@ -123,117 +161,58 @@
 
 {% block error_message %}
 <div class="error-content">
-    <div class="status-code">
-        Status Code: {{ status_code|default('500', true) }}
-    </div>
-    
-    <p>{{ error_message|default('We encountered an unexpected error while processing your request.', true) }}</p>
-    
-    <div class="error-suggestions">
-        <div class="suggestion-item">
-            <div class="suggestion-icon">
-                <i class="fas fa-sync"></i>
-            </div>
-            <div class="suggestion-text">
-                Try refreshing the page - sometimes that's all it takes!
-            </div>
-        </div>
-        
-        <div class="suggestion-item">
-            <div class="suggestion-icon">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="suggestion-text">
-                Wait a few minutes and try again - the issue might resolve itself.
-            </div>
-        </div>
-        
-        <div class="suggestion-item">
-            <div class="suggestion-icon">
-                <i class="fas fa-trash-alt"></i>
-            </div>
-            <div class="suggestion-text">
-                Clear your browser cache and cookies, then try again.
-            </div>
-        </div>
-    </div>
+  <p>{{ error_message|default('We encountered an unexpected error while processing your request.', true) }}</p>
+
+  <div class="status-code">
+    Status Code: {{ status_code|default('500', true) }}
+  </div>
+
+  <div class="troubleshooting-tips">
+    <h3>Try these troubleshooting steps:</h3>
+    <ul style="text-align: left; display: inline-block;">
+      <li>Refresh the page - sometimes that's all it takes</li>
+      <li>Clear your browser cache and cookies, then try again</li>
+      <li>Try accessing the site from a different browser or device</li>
+      <li>If the problem persists, please report it</li>
+    </ul>
+  </div>
 </div>
 {% endblock %}
 
 {% block error_actions %}
-<button onclick="checkServerStatus()" class="error-btn error-btn-primary" id="checkStatusBtn">
-    <i class="fas fa-sync"></i> Check Server Status
-    <span class="loading-dots" style="display: none;">
-        <span class="loading-dot"></span>
-        <span class="loading-dot"></span>
-        <span class="loading-dot"></span>
-    </span>
+<button onclick="window.location.reload()" class="error-btn error-btn-primary">
+  <i class="fas fa-redo"></i> Refresh Page
 </button>
 <button onclick="window.history.back()" class="error-btn error-btn-secondary">
-    <i class="fas fa-arrow-left"></i> Go Back
+  <i class="fas fa-arrow-left"></i> Go Back
+</button>
+<button onclick="createGitHubIssue()" class="error-btn error-btn-github js-github-issue">
+  <i class="fab fa-github"></i> Report Issue
 </button>
 {% endblock %}
 
 {% block error_details %}
 <div class="error-details">
-    <div class="helpful-links">
-        <h3>Helpful Links</h3>
-        <div class="link-list">
-            <a href="{{ url_for('welcome') }}" class="link-item">
-                <i class="fas fa-home"></i> Homepage
-            </a>
-            <a href="https://docs.hackclub.com" class="link-item">
-                <i class="fas fa-book"></i> Documentation
-            </a>
-            <a href="https://hackclub.com/support" class="link-item">
-                <i class="fas fa-question-circle"></i> Support
-            </a>
-        </div>
+  <p id="error-code">Error ID: {{ error_id|default(range(1000, 9999)|random, true) }}</p>
+  <p>Time: <span id="errorTime"></span></p>
+
+  <div class="helpful-links">
+    <h4>Helpful Links</h4>
+    <div class="links-grid">
+      <a href="{{ url_for('welcome') }}" class="helpful-link">
+        <i class="fas fa-home"></i> Home
+      </a>
+      <a href="{{ url_for('documentation') }}" class="helpful-link">
+        <i class="fas fa-book"></i> Docs
+      </a>
+      <a href="{{ url_for('support') }}" class="helpful-link">
+        <i class="fas fa-question-circle"></i> Support
+      </a>
     </div>
-    
-    <p>Error ID: {{ error_id|default(range(1000, 9999)|random, true) }}</p>
-    <p>Time: <span id="errorTime"></span></p>
+  </div>
 </div>
 
 <script>
 document.getElementById('errorTime').textContent = new Date().toLocaleString();
-
-async function checkServerStatus() {
-    const btn = document.getElementById('checkStatusBtn');
-    const loadingDots = btn.querySelector('.loading-dots');
-    
-    btn.disabled = true;
-    loadingDots.style.display = 'inline-flex';
-    
-    try {
-        const response = await fetch('/api/health');
-        const data = await response.json();
-        
-        if (data.status === 'ok') {
-            showToast('success', 'Server is operational! Try refreshing the page.');
-        } else {
-            showToast('warning', 'Server is experiencing issues. Please try again later.');
-        }
-    } catch (error) {
-        showToast('error', 'Could not check server status. Please try again later.');
-    } finally {
-        btn.disabled = false;
-        loadingDots.style.display = 'none';
-    }
-}
-
-function showToast(type, message) {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <div class="toast-content">
-            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-            <span>${message}</span>
-        </div>
-    `;
-    
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 5000);
-}
 </script>
 {% endblock %}

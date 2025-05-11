@@ -322,7 +322,44 @@ const GitHubManager = {
     })
     .then(data => {
       this.showSuccess(`Repository "${data.repo_name}" created successfully`);
-      this.checkGitHubStatus();
+      
+      // Auto push changes after repo creation
+      this.showPushStatus('Automatically pushing initial changes...', 'info');
+      
+      const commitMsg = 'Initial commit from Hack Club Spaces';
+      
+      fetch('/api/github/push?site_id=' + this.currentSiteId, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: commitMsg })
+      })
+      .then(response => response.json())
+      .then(pushData => {
+        if (pushData.error) {
+          this.showError(pushData.error);
+          return;
+        }
+        
+        const pushStatus = document.getElementById('pushStatus');
+        if (pushStatus) {
+          pushStatus.innerHTML = `
+            <div class="success-banner">
+              <i class="fas fa-check-circle"></i>
+              <span>Initial files pushed successfully</span>
+            </div>
+          `;
+        }
+        
+        this.showSuccess(`Initial files pushed to GitHub successfully`);
+      })
+      .catch(error => {
+        this.showError('Failed to push initial changes: ' + error);
+      })
+      .finally(() => {
+        this.checkGitHubStatus();
+      });
     })
     .catch(error => {
       this.showError(error.message);

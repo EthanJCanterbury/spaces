@@ -1,4 +1,3 @@
-
 import os
 import time
 import logging
@@ -24,13 +23,13 @@ def send_heartbeat(api_key, heartbeat_data):
         if not api_key:
             logger.warning("No API key provided. Cannot send heartbeat.")
             return False
-            
+
         api_url = "https://hackatime.hackclub.com/api/hackatime/v1/users/current/heartbeats"
-        
+
         # Prepare heartbeat payload
         current_time = int(time.time())
         user_agent = "Hack Club Spaces/1.0 Python/3.10"
-        
+
         # Format any array data correctly for PostgreSQL
         # If 'dependencies' is a comma-separated string, properly format it as a PostgreSQL array string
         if isinstance(heartbeat_data, dict) and 'dependencies' in heartbeat_data and isinstance(heartbeat_data['dependencies'], str):
@@ -38,7 +37,7 @@ def send_heartbeat(api_key, heartbeat_data):
             deps = heartbeat_data['dependencies']
             if deps and not deps.startswith('{') and not deps.endswith('}'):
                 heartbeat_data['dependencies'] = "{" + deps + "}"
-        
+
         # Use default values if not provided
         default_heartbeat = {
             "entity": "main.py",
@@ -55,7 +54,7 @@ def send_heartbeat(api_key, heartbeat_data):
             "line_additions": 0,
             "line_deletions": 0
         }
-        
+
         # Process input data and ensure all required fields
         if isinstance(heartbeat_data, dict):
             # Single heartbeat
@@ -77,14 +76,14 @@ def send_heartbeat(api_key, heartbeat_data):
         else:
             # Fallback to default if data format is unexpected
             heartbeat_payload = [default_heartbeat]
-            
+
         # Set up headers
         headers = {
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json',
             'User-Agent': user_agent
         }
-        
+
         # Log detailed request information
         logger.info(f"Sending heartbeat to Hackatime API: {api_url}")
         # Format headers for better readability in logs
@@ -95,19 +94,19 @@ def send_heartbeat(api_key, heartbeat_data):
         }
         logger.info(f"Request Headers: {formatted_headers}")
         logger.info(f"Payload: {heartbeat_payload}")
-        
+
         response = requests.post(
             api_url,
             headers=headers,
             json=heartbeat_payload,
             timeout=10
         )
-        
+
         if response.status_code >= 400:
             logger.error(f"Failed to send heartbeat: {response.status_code}")
             logger.error(f"Response: {response.text}")
             return False
-            
+
         logger.info("Heartbeat sent successfully")
         logger.debug(f"Response: {response.text}")
         return True
@@ -148,8 +147,8 @@ class RateLimiter:
     def __init__(self):
         self.requests = {}
         self.limits = {
-            'default': {'requests': 30, 'window': 60},  # 30 requests per minute
-            'heartbeat': {'requests': 20, 'window': 60}  # 20 heartbeats per minute
+            'default': {'requests': 300, 'window': 60},  # 300 requests per minute
+            'heartbeat': {'requests': 200, 'window': 60}  # 200 heartbeats per minute
         }
 
     def is_rate_limited(self, key, limit_type='default'):
@@ -178,14 +177,14 @@ def rate_limit(limit_type='default'):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             ip_address = request.remote_addr
-            
+
             if rate_limiter.is_rate_limited(ip_address, limit_type):
                 logger.warning(f"Rate limit exceeded for IP: {ip_address}")
                 return jsonify({
                     'success': False, 
                     'message': 'Rate limit exceeded. Please try again later.'
                 }), 429
-                
+
             return f(*args, **kwargs)
         return decorated_function
     return decorator
@@ -202,7 +201,7 @@ def hackatime_status():
         # This would normally check the database
         # For this simplified version, we'll check if the API key exists in the request
         api_key = request.headers.get('X-Hackatime-Key')
-        
+
         if api_key:
             # Validate by making a simple request to Hackatime API
             return jsonify({'success': True, 'connected': True})
@@ -253,7 +252,7 @@ def hackatime_heartbeat():
         current_time = int(time.time())
         machine_id = f"machine_{hashlib.md5(request.remote_addr.encode()).hexdigest()[:8]}"
         user_agent = request.headers.get('User-Agent', 'Spaces IDE')
-        
+
         # Default values for heartbeat
         default_heartbeat = {
             "entity": "main.py",
@@ -276,22 +275,22 @@ def hackatime_heartbeat():
             "operating_system": "Web",
             "user_agent": user_agent
         }
-        
+
         # Apply default values to each heartbeat
         for i, hb in enumerate(heartbeat_payload):
             complete_hb = default_heartbeat.copy()
             complete_hb.update(hb)
             heartbeat_payload[i] = complete_hb
-        
+
         # Send heartbeat to Hackatime API
         api_url = "https://hackatime.hackclub.com/api/hackatime/v1/users/current/heartbeat.bulk"
-        
+
         headers = {
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json',
             'User-Agent': user_agent
         }
-        
+
         # Log detailed request information
         logger.info(f"Sending heartbeat to Hackatime API: {api_url}")
         # Format headers for better readability in logs
@@ -302,18 +301,18 @@ def hackatime_heartbeat():
         }
         logger.info(f"Request Headers: {formatted_headers}")
         logger.info(f"Payload: {heartbeat_payload}")
-        
+
         response = requests.post(
             api_url,
             headers=headers,
             json=heartbeat_payload,
             timeout=10
         )
-        
+
         logger.info(f"Hackatime API response status: {response.status_code}")
         logger.info(f"Response headers: {dict(response.headers)}")
         logger.info(f"Response content: {response.text[:500]}")
-        
+
         if response.status_code >= 400:
             error_text = response.text
             logger.error(f"Hackatime heartbeat failed: {response.status_code} - {error_text}")
@@ -322,7 +321,7 @@ def hackatime_heartbeat():
                 'message': f'Heartbeat failed with status code {response.status_code}',
                 'details': error_text
             }), response.status_code
-        
+
         # Try to parse the response
         try:
             response_data = response.json()
@@ -337,7 +336,7 @@ def hackatime_heartbeat():
                 'success': True,
                 'message': 'Heartbeat sent successfully'
             })
-            
+
     except Exception as e:
         logger.error(f'Error sending Hackatime heartbeat: {str(e)}')
         return jsonify({
@@ -360,12 +359,12 @@ def hackatime_connect():
 
         # Validate the API key by making a request to the Hackatime API
         api_url = "https://hackatime.hackclub.com/api/hackatime/v1/users/current/heartbeats"
-        
+
         headers = {
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json'
         }
-        
+
         # Simple test heartbeat
         current_time = int(time.time())
         test_data = [{
@@ -374,18 +373,18 @@ def hackatime_connect():
             "entity": "test.txt",
             "language": "Text"
         }]
-        
+
         logger.info(f"Testing Hackatime API key")
-        
+
         response = requests.post(
             api_url,
             headers=headers,
             json=test_data,
             timeout=5
         )
-        
+
         logger.info(f"API validation response: {response.status_code}")
-        
+
         if response.status_code >= 400:
             # Try an alternative endpoint as backup validation
             alternative_endpoint = "https://hackatime.hackclub.com/api/hackatime/v1/users/current"
@@ -394,22 +393,22 @@ def hackatime_connect():
                 headers=headers,
                 timeout=5
             )
-            
+
             if alternative_response.status_code >= 400:
                 logger.error(f"API key validation failed")
                 return jsonify({
                     'success': False,
                     'message': 'Invalid API key. Please check your API key and try again.'
                 })
-        
+
         # If we get here, the API key is valid
         logger.info(f"API key validation successful")
-        
+
         return jsonify({
             'success': True,
             'message': 'Hackatime account connected successfully'
         })
-        
+
     except Exception as e:
         logger.error(f'Error connecting Hackatime: {str(e)}')
         return jsonify({

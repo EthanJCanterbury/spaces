@@ -1,0 +1,248 @@
+
+/* Public Profile Styles */
+.profile-container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 60px;
+}
+
+.profile-banner {
+    position: relative;
+    height: 300px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 0 0 16px 16px;
+    margin-bottom: 80px;
+}
+
+.default-banner {
+    background: linear-gradient(135deg, #ec3750, #ff8c37);
+}
+
+.profile-banner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 0 0 16px 16px;
+}
+
+.profile-content {
+    position: relative;
+    padding: 0 24px;
+    max-width: 850px;
+    margin: 0 auto;
+}
+
+.profile-header {
+    display: flex;
+    margin-bottom: 48px;
+}
+
+.profile-avatar-container {
+    margin-right: 24px;
+    position: relative;
+    z-index: 1;
+}
+
+.profile-avatar {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    border: 6px solid var(--surface-primary);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.default-avatar {
+    background-color: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.default-avatar i {
+    font-size: 64px;
+}
+
+.profile-info {
+    padding-top: 32px;
+}
+
+.profile-username {
+    font-size: 2.5rem;
+    margin: 0 0 16px;
+    color: var(--text-primary);
+}
+
+.profile-social-links {
+    display: flex;
+    gap: 16px;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--surface-secondary);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.social-link:hover {
+    background-color: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.profile-bio, .profile-projects {
+    margin-bottom: 48px;
+}
+
+.profile-bio h2, .profile-projects h2 {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    margin: 0 0 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.bio-content {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.project-card {
+    background-color: var(--surface-secondary);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.project-title {
+    margin: 0;
+    font-size: 1.3rem;
+    color: var(--text-primary);
+}
+
+.project-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.python-badge {
+    background-color: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+.web-badge {
+    background-color: rgba(240, 130, 50, 0.1);
+    color: #f08232;
+}
+
+.project-date {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.project-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #d23048;
+    color: white;
+}
+
+.no-projects {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 0;
+    color: var(--text-secondary);
+}
+
+.no-projects i {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .profile-avatar-container {
+        margin-right: 0;
+        margin-bottom: 24px;
+    }
+    
+    .profile-info {
+        padding-top: 0;
+    }
+    
+    .profile-social-links {
+        justify-content: center;
+    }
+    
+    .projects-grid {
+        grid-template-columns: 1fr;
+    }
+}

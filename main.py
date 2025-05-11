@@ -1,27 +1,27 @@
-
 import os
 import logging
 import subprocess
 import signal
 import atexit
+from flask import render_template
 from app import app, db
 
-# Configure logging
+# Configure logging - reduced verbosity
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.WARNING,
     format='[%(asctime)s] [%(levelname)s] %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
 # Create console handler with a higher log level
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(logging.WARNING)
 formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s')
 console_handler.setFormatter(formatter)
 
 # Add the handlers to the logger
 app.logger.addHandler(console_handler)
-app.logger.setLevel(logging.INFO)
+app.logger.setLevel(logging.WARNING)
 
 # Global variable to store the Hackatime service process
 hackatime_process = None
@@ -68,22 +68,28 @@ def stop_hackatime_service():
             app.logger.error(f"Error stopping service: {str(e)}")
             hackatime_process.kill()
 
+@app.route('/support')
+def support():
+    return render_template('support.html')
+
 if __name__ == '__main__':
     app.logger.info("Starting Hack Club Spaces application")
-    
+
     # Initialize database
     try:
         initialize_database()
     except Exception as e:
         app.logger.warning(f"Database initialization error: {e}")
-    
+
     # Start Hackatime service
     start_hackatime_service()
-    
+
     # Register the cleanup function to stop Hackatime service on exit
     atexit.register(stop_hackatime_service)
-    
+
     # Start the main Flask application
     port = int(os.environ.get('PORT', 3000))
     app.logger.info(f"Server running on http://0.0.0.0:{port}")
     app.run(host='0.0.0.0', port=port, debug=True)
+
+

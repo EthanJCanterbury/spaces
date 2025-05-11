@@ -169,7 +169,7 @@
         <section id="users" class="admin-section">
             <div class="section-header">
                 <h2><i class="fas fa-users"></i> Users Management</h2>
-                <p>View and manage user accounts (showing first 50 users)</p>
+                <p>View and manage user accounts (showing first 10 users)</p>
                 <p class="text-muted">Use the search box below to find specific users</p>
             </div>
 
@@ -192,6 +192,39 @@
                     <button class="btn-danger bulk-action" onclick="handleBulkAction('deleteUsers')" disabled>
                         <i class="fas fa-user-times"></i> Delete Users
                     </button>
+                    <button class="btn-primary bulk-action" onclick="exportUserData()" title="Export selected users data to CSV">
+                        <i class="fas fa-file-export"></i> Export Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="dashboard-stats user-management-stats">
+                <div class="stat-card">
+                    <div class="stat-icon user-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="newUsersCount">0</h3>
+                        <p>New users (last 7 days)</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon site-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="activeUsers">0</h3>
+                        <p>Active users</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon admin-icon">
+                        <i class="fas fa-user-times"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="suspendedUsers">0</h3>
+                        <p>Suspended users</p>
+                    </div>
                 </div>
             </div>
 
@@ -206,6 +239,7 @@
                             <th>Username</th>
                             <th>Email</th>
                             <th>Created At</th>
+                            <th>Last Login</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -219,9 +253,21 @@
                                 {% endif %}
                             </td>
                             <td>{{ user.id }}</td>
-                            <td>{{ user.username }}</td>
+                            <td>
+                                <div class="user-table-info">
+                                    <div class="user-avatar-small">
+                                        {% if user.avatar %}
+                                        <img src="{{ user.avatar }}" alt="{{ user.username }}">
+                                        {% else %}
+                                        <i class="fas fa-user"></i>
+                                        {% endif %}
+                                    </div>
+                                    {{ user.username }}
+                                </div>
+                            </td>
                             <td>{{ user.email }}</td>
                             <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M:%S') if user.last_login else 'Never' }}</td>
                             <td>
                                 <span class="status-badge {{ 'suspended' if user.is_suspended else 'active' }}">
                                     {{ 'Suspended' if user.is_suspended else 'Active' }}
@@ -229,10 +275,25 @@
                                 <span class="status-badge club-leader" id="club-leader-badge-{{ user.id }}" style="display: {% if Club.query.filter_by(leader_id=user.id).first() %}inline-block{% else %}none{% endif %}">
                                     Club Leader
                                 </span>
+                                {% if user.is_admin %}
+                                <span class="status-badge admin">
+                                    Admin
+                                </span>
+                                {% endif %}
+                                {% if user.is_staff %}
+                                <span class="status-badge staff-badge">
+                                    HQ Staff
+                                </span>
+                                {% endif %}
+                                {% if user.is_profile_public %}
+                                <span class="status-badge public-profile">
+                                    Public Profile
+                                </span>
+                                {% endif %}
                             </td>
                             <td class="actions-cell">
                                 <div class="action-dropdown">
-                                    <button class="action-dropdown-btn">
+                                    <button class="action-dropdown-btn" onclick="toggleActionDropdown(this)">
                                         <i class="fas fa-ellipsis-v"></i>
                                     </button>
                                     <div class="action-dropdown-content">
@@ -240,14 +301,40 @@
                                             <i class="fas fa-eye"></i>
                                             <span>View Details</span>
                                         </button>
+                                        <button onclick="editUserProfile({{ user.id }})" class="dropdown-item">
+                                            <i class="fas fa-user-edit"></i>
+                                            <span>Edit Profile</span>
+                                        </button>
+                                        {% if user.is_profile_public %}
+                                        <a href="/p/{{ user.username }}" target="_blank" class="dropdown-item">
+                                            <i class="fas fa-external-link-alt"></i>
+                                            <span>View Public Profile</span>
+                                        </a>
+                                        {% endif %}
                                         {% if user.id != current_user.id %}
+                                        <button onclick="impersonateUser({{ user.id }}, '{{ user.username }}')" class="dropdown-item">
+                                            <i class="fas fa-user-secret"></i>
+                                            <span>Impersonate User</span>
+                                        </button>
                                         <button onclick="toggleSuspension({{ user.id }}, '{{ user.username }}', {{ 'false' if user.is_suspended else 'true' }})" class="dropdown-item">
                                             <i class="fas fa-{{ 'user-check' if user.is_suspended else 'user-lock' }}"></i>
                                             <span>{{ 'Unsuspend' if user.is_suspended else 'Suspend' }}</span>
                                         </button>
-                                        <button onclick="toggleClubLeader({{ user.id }}, '{{ user.username }}', {{ 'false' if user.is_club_leader else 'true' }})" class="dropdown-item">
-                                            <i class="fas fa-{{ 'user-minus' if user.is_club_leader else 'user-plus' }}"></i>
-                                            <span>{{ 'Remove Club Leader' if user.is_club_leader else 'Make Club Leader' }}</span>
+                                        <button class="dropdown-item" onclick="toggleClubLeader({{ user.id }}, '{{ user.username }}', {{ 'true' if Club.query.filter_by(leader_id=user.id).first() else 'false' }})">
+                                            <i class="fas fa-user-tag"></i>
+                                            <span>{{ 'Remove Club Leader Role' if Club.query.filter_by(leader_id=user.id).first() else 'Grant Club Leader Role' }}</span>
+                                        </button>
+                                        <button onclick="toggleAdminStatus({{ user.id }}, '{{ user.username }}', {{ 'false' if user.is_admin else 'true' }})" class="dropdown-item">
+                                            <i class="fas fa-{{ 'user-minus' if user.is_admin else 'user-shield' }}"></i>
+                                            <span>{{ 'Remove Admin' if user.is_admin else 'Make Admin' }}</span>
+                                        </button>
+                                        <button onclick="toggleStaffStatus({{ user.id }}, '{{ user.username }}', {{ 'false' if user.is_staff else 'true' }})" class="dropdown-item">
+                                            <i class="fas fa-{{ 'user-minus' if user.is_staff else 'briefcase' }}"></i>
+                                            <span>{{ 'Remove Staff' if user.is_staff else 'Make Staff' }}</span>
+                                        </button>
+                                        <button onclick="resetUserPassword({{ user.id }}, '{{ user.username }}')" class="dropdown-item">
+                                            <i class="fas fa-key"></i>
+                                            <span>Reset Password</span>
                                         </button>
                                         <button onclick="deleteAllSites({{ user.id }}, '{{ user.username }}')" class="dropdown-item">
                                             <i class="fas fa-trash-alt"></i>
@@ -281,7 +368,7 @@
         <section id="sites" class="admin-section">
             <div class="section-header">
                 <h2><i class="fas fa-globe"></i> Sites Management</h2>
-                <p>Monitor sites created by users (showing first 50 sites)</p>
+                <p>Monitor sites created by users (showing first 10 sites)</p>
                 <p class="text-muted">Use the search box below to find specific sites</p>
             </div>
 
@@ -348,7 +435,7 @@
                             <td>{{ site.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
                             <td class="actions-cell">
                                 <div class="action-dropdown">
-                                    <button class="action-dropdown-btn">
+                                    <button class="action-dropdown-btn" onclick="toggleActionDropdown(this)">
                                         <i class="fas fa-ellipsis-v"></i>
                                     </button>
                                     <div class="action-dropdown-content">
@@ -465,7 +552,7 @@
                             <td>{{ club.join_code }}</td>
                             <td class="actions-cell">
                                 <div class="action-dropdown">
-                                    <button class="action-dropdown-btn">
+                                    <button class="action-dropdown-btn" onclick="toggleActionDropdown(this)">
                                         <i class="fas fa-ellipsis-v"></i>
                                     </button>
                                     <div class="action-dropdown-content">
@@ -604,6 +691,19 @@
                         </div>
 
                         <button class="btn-primary" onclick="saveMaxSitesPerUser()">Save Site Limit</button>
+                        
+                        <hr style="margin: 1.5rem 0;">
+                        
+                        <div class="form-group">
+                            <label>Leader Onboarding</label>
+                            <p class="text-muted">Access code required for club leader onboarding</p>
+                            <div class="input-group">
+                                <span class="input-label">Access Code</span>
+                                <input type="text" id="leaderAccessCode" placeholder="Access code" class="settings-input">
+                            </div>
+                        </div>
+                        
+                        <button class="btn-primary" onclick="saveLeaderAccessCode()">Update Access Code</button>
                     </div>
                 </div>
             </div>
@@ -625,7 +725,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="club-members-container">
                     <h3><i class="fas fa-user-friends"></i> Club Members</h3>
                     <div class="table-container">
@@ -667,7 +767,7 @@
             <div class="modal-body">
                 <div class="user-info-container">
                     <div class="user-avatar">
-                        <i class="fas fa-user-circle"></i>
+                        <img id="userAvatarPreview" src="" alt="User Avatar" onerror="this.src=''; this.onerror=null; this.parentNode.innerHTML = '<i class=\'fas fa-user-circle\'></i>'">
                     </div>
                     <div id="userDetailContent" class="user-details">
                     </div>
@@ -693,6 +793,10 @@
                                 </button>
                             </div>
                         </div>
+                        <div class="form-switch">
+                            <input type="checkbox" id="editIsPublicProfile" class="toggle-switch">
+                            <label for="editIsPublicProfile">Public Profile</label>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -705,7 +809,174 @@
         </div>
     </div>
 
-    <div id="toast-container"></div>
+    <div id="userProfileModal" class="modal">
+        <div class="modal-content wide-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-edit"></i> Edit User Profile</h2>
+                <button class="close-btn" onclick="closeUserProfileModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-edit-grid">
+                    <div class="profile-edit-col">
+                        <form id="profileEditForm">
+                            <input type="hidden" id="profileUserId">
+                            <div class="form-group">
+                                <label for="profileUsername"><i class="fas fa-user"></i> Username</label>
+                                <input type="text" id="profileUsername" class="settings-input" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileEmail"><i class="fas fa-envelope"></i> Email</label>
+                                <input type="email" id="profileEmail" class="settings-input" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileBio"><i class="fas fa-comment-alt"></i> Bio</label>
+                                <textarea id="profileBio" class="settings-input" rows="4"></textarea>
+                                <small>Tell others about this user</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileAvatar"><i class="fas fa-image"></i> Avatar URL</label>
+                                <input type="url" id="profileAvatar" class="settings-input" placeholder="https://example.com/avatar.jpg">
+                                <small>Provide a URL to an image file (JPG, PNG, GIF)</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileBanner"><i class="fas fa-image"></i> Profile Banner URL</label>
+                                <input type="url" id="profileBanner" class="settings-input" placeholder="https://example.com/banner.jpg">
+                                <small>Provide a URL to an image file for the profile banner</small>
+                            </div>
+                            <div class="form-switch">
+                                <input type="checkbox" id="profileIsPublic" class="toggle-switch">
+                                <label for="profileIsPublic">Public Profile</label>
+                                <small>If enabled, user's profile will be publicly visible</small>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="profile-edit-col">
+                        <div class="profile-preview">
+                            <h3><i class="fas fa-eye"></i> Profile Preview</h3>
+                            <div class="profile-preview-card">
+                                <div class="preview-banner" id="previewBanner">
+                                    <div class="preview-avatar" id="previewAvatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                </div>
+                                <div class="preview-content">
+                                    <h3 id="previewUsername">Username</h3>
+                                    <p id="previewBio">User bio will appear here...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="social-links-section">
+                            <h3><i class="fas fa-link"></i> Social Links</h3>
+                            <div class="social-links-container" id="socialLinksContainer">
+                                <div class="social-link-item">
+                                    <select class="social-platform settings-input">
+                                        <option value="github">GitHub</option>
+                                        <option value="twitter">Twitter</option>
+                                        <option value="linkedin">LinkedIn</option>
+                                        <option value="website">Website</option>
+                                        <option value="instagram">Instagram</option>
+                                        <option value="youtube">YouTube</option>
+                                    </select>
+                                    <input type="url" class="social-url settings-input" placeholder="https://...">
+                                    <button type="button" class="btn-icon remove-social" onclick="removeSocialLink(this)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-secondary" onclick="addSocialLink()">
+                                <i class="fas fa-plus"></i> Add Social Link
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeUserProfileModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveUserProfile()">
+                    <i class="fas fa-save"></i> Save Profile
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-key"></i> Reset User Password</h2>
+                <button class="close-btn" onclick="closeResetPasswordModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>You are about to reset the password for: <strong id="resetPasswordUsername"></strong></p>
+                <div class="form-group">
+                    <label for="newPasswordInput">New Password</label>
+                    <div class="password-input-group">
+                        <input type="password" id="newPasswordInput" class="settings-input">
+                        <button type="button" class="btn-icon toggle-password" onclick="togglePasswordVisibility('newPasswordInput')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPasswordInput">Confirm Password</label>
+                    <div class="password-input-group">
+                        <input type="password" id="confirmPasswordInput" class="settings-input">
+                        <button type="button" class="btn-icon toggle-password" onclick="togglePasswordVisibility('confirmPasswordInput')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="password-strength-meter">
+                    <div class="strength-bar">
+                        <div class="strength-indicator" id="passwordStrength"></div>
+                    </div>
+                    <span id="strengthText">Password strength</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeResetPasswordModal()">Cancel</button>
+                <button class="btn-primary" id="confirmResetBtn" onclick="confirmPasswordReset()">
+                    <i class="fas fa-save"></i> Reset Password
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+<div id="toast-container"></div>
+
+<script>
+function showToast(type, message) {
+    const toastContainer = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    const icon = type === 'success' ? 'check-circle' : 
+                 type === 'error' ? 'exclamation-circle' :
+                 type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    // Force reflow
+    toast.offsetHeight;
+
+    // Show the toast
+    toast.classList.add('show');
+
+    // Automatically remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+</script>
 </div>
 
 <script>
@@ -750,7 +1021,25 @@ document.addEventListener('DOMContentLoaded', function() {
     sidebarCollapseBtn.addEventListener('click', () => {
         adminContainer.classList.toggle('sidebar-collapsed');
     });
+    
+    // Initialize all modal close buttons
+    document.querySelectorAll('.close-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const modal = this.closest('.modal');
+            if (modal) {
+                modal.style.opacity = '0';
+                modal.style.visibility = 'hidden';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = '';
+                }, 300);
+            }
+        });
+    });
 
+    // Initialize action dropdowns
+    initializeActionDropdowns();
+    
     loadAdminList();
 });
 
@@ -764,7 +1053,7 @@ function filterUsers() {
     // Show loading indicator
     document.getElementById('userTableBody').innerHTML = `
         <tr>
-            <td colspan="7" class="text-center">
+            <td colspan="8" class="text-center">
                 <div class="loading-spinner"></div>
                 <p>Searching users...</p>
             </td>
@@ -786,7 +1075,7 @@ function filterUsers() {
             if (data.users.length === 0) {
                 userTableBody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="text-center">
+                        <td colspan="8" class="text-center">
                             <p>No users found matching "${searchTerm}"</p>
                         </td>
                     </tr>
@@ -796,17 +1085,26 @@ function filterUsers() {
 
             data.users.forEach(user => {
                 const row = document.createElement('tr');
-
+                const currentUserId = {{ current_user.id }};
+                
                 row.innerHTML = `
                     <td>
-                        ${user.id !== {{ current_user.id }} ? 
+                        ${user.id !== currentUserId ? 
                         `<input type="checkbox" class="user-select" data-userid="${user.id}" data-username="${user.username}" onchange="updateBulkActions()">` : 
                         ''}
                     </td>
                     <td>${user.id}</td>
-                    <td>${user.username}</td>
+                    <td>
+                        <div class="user-table-info">
+                            <div class="user-avatar-small">
+                                ${user.avatar ? `<img src="${user.avatar}" alt="${user.username}">` : `<i class="fas fa-user"></i>`}
+                            </div>
+                            ${user.username}
+                        </div>
+                    </td>
                     <td>${user.email}</td>
                     <td>${user.created_at}</td>
+                    <td>${user.last_login || 'Never'}</td>
                     <td>
                         <span class="status-badge ${user.is_suspended ? 'suspended' : 'active'}">
                             ${user.is_suspended ? 'Suspended' : 'Active'}
@@ -814,6 +1112,14 @@ function filterUsers() {
                         ${user.is_club_leader ? 
                         `<span class="status-badge club-leader">
                             Club Leader
+                        </span>` : ''}
+                        ${user.is_admin ? 
+                        `<span class="status-badge admin">
+                            Admin
+                        </span>` : ''}
+                        ${user.is_profile_public ? 
+                        `<span class="status-badge public-profile">
+                            Public Profile
                         </span>` : ''}
                     </td>
                     <td class="actions-cell">
@@ -826,14 +1132,39 @@ function filterUsers() {
                                     <i class="fas fa-eye"></i>
                                     <span>View Details</span>
                                 </button>
-                                ${user.id !== {{ current_user.id }} ? `
+                                <button onclick="editUserProfile(${user.id})" class="dropdown-item">
+                                    <i class="fas fa-user-edit"></i>
+                                    <span>Edit Profile</span>
+                                </button>
+                                ${user.is_profile_public ? 
+                                `<a href="/p/${user.username}" target="_blank" class="dropdown-item">
+                                    <i class="fas fa-external-link-alt"></i>
+                                    <span>View Public Profile</span>
+                                </a>` : ''}
+                                ${user.id !== currentUserId ? `
+                                <button onclick="impersonateUser(${user.id}, '${user.username}')" class="dropdown-item">
+                                    <i class="fas fa-user-secret"></i>
+                                    <span>Impersonate User</span>
+                                </button>
                                 <button onclick="toggleSuspension(${user.id}, '${user.username}', ${!user.is_suspended})" class="dropdown-item">
                                     <i class="fas fa-${user.is_suspended ? 'user-check' : 'user-lock'}"></i>
                                     <span>${user.is_suspended ? 'Unsuspend' : 'Suspend'}</span>
                                 </button>
-                                <button onclick="toggleClubLeader(${user.id}, '${user.username}', ${!user.is_club_leader})" class="dropdown-item">
-                                    <i class="fas fa-${user.is_club_leader ? 'user-minus' : 'user-plus'}"></i>
-                                    <span>${user.is_club_leader ? 'Remove Club Leader' : 'Make Club Leader'}</span>
+                                <button onclick="toggleClubLeader(${user.id}, '${user.username}', ${user.is_club_leader})" class="dropdown-item">
+                                    <i class="fas fa-user-tag"></i>
+                                    <span>${user.is_club_leader ? 'Remove Club Leader Role' : 'Grant Club Leader Role'}</span>
+                                </button>
+                                <button onclick="toggleAdminStatus(${user.id}, '${user.username}', ${!user.is_admin})" class="dropdown-item">
+                                    <i class="fas fa-${user.is_admin ? 'user-minus' : 'user-shield'}"></i>
+                                    <span>${user.is_admin ? 'Remove Admin' : 'Make Admin'}</span>
+                                </button>
+                                <button onclick="toggleStaffStatus(${user.id}, '${user.username}', ${!user.is_staff})" class="dropdown-item">
+                                    <i class="fas fa-${user.is_staff ? 'user-minus' : 'briefcase'}"></i>
+                                    <span>${user.is_staff ? 'Remove Staff' : 'Make Staff'}</span>
+                                </button>
+                                <button onclick="resetUserPassword(${user.id}, '${user.username}')" class="dropdown-item">
+                                    <i class="fas fa-key"></i>
+                                    <span>Reset Password</span>
                                 </button>
                                 <button onclick="deleteAllSites(${user.id}, '${user.username}')" class="dropdown-item">
                                     <i class="fas fa-trash-alt"></i>
@@ -855,6 +1186,9 @@ function filterUsers() {
                     row.classList.remove('fade-in');
                 }, 300);
             });
+            
+            // Initialize action dropdowns for the new search results properly
+            initializeActionDropdowns();
         })
         .catch(error => {
             console.error('Error searching users:', error);
@@ -924,7 +1258,7 @@ function filterSites() {
                     <td>${site.updated_at}</td>
                     <td class="actions-cell">
                         <div class="action-dropdown">
-                            <button class="action-dropdown-btn">
+                            <button class="action-dropdown-btn" onclick="toggleActionDropdown(this)">
                                 <i class="fas fa-ellipsis-v"></i>
                             </button>
                             <div class="action-dropdown-content">
@@ -951,9 +1285,12 @@ function filterSites() {
                     row.classList.remove('fade-in');
                 }, 300);
             });
+            
+            // Initialize action dropdowns for the new search results
+            initializeActionDropdowns();
         })
         .catch(error => {
-            console.error('Errorsearching sites:', error);
+            console.error('Error searching sites:', error);
             showToast('error', 'Failed to search sites');
         });
 }
@@ -1046,7 +1383,9 @@ async function toggleSuspension(userId, username, suspend) {
     }
 }
 
-async function toggleClubLeader(userId, username, makeLeader) {
+async function toggleClubLeader(userId, username, isClubLeader) {
+    // Toggle based on current status - if currently a leader, remove; if not a leader, make one
+    const makeLeader = !isClubLeader;
     if (!confirm(`Are you sure you want to ${makeLeader ? 'make' : 'remove'} "${username}" ${makeLeader ? 'as a' : 'from being a'} club leader?`)) return;
 
     try {
@@ -1099,7 +1438,7 @@ async function deleteAllSites(userId, username) {
 }
 
 async function deleteUser(userId, username) {
-    if (!confirm(`Are you sure you wantto delete user "${username}"? This action cannot be undone.`)) return;
+    if (!confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) return;
 
     try {
         showToast('info', 'Deleting user...');
@@ -1114,7 +1453,7 @@ async function deleteUser(userId, username) {
                 location.reload();
             }, 1000);
         } else {
-            const data= await response.json();
+            const data = await response.json();
             showToast('error', data.message || 'Failed to delete user');
         }
     } catch (error) {
@@ -1123,7 +1462,7 @@ async function deleteUser(userId, username) {
 }
 
 async function deleteSite(siteId, siteName) {
-    if (!confirm(`Are you sure you want to delete site "${siteName}"? Thisaction cannot be undone.`)) return;
+    if (!confirm(`Are you sure you want to delete site "${siteName}"? This action cannot be undone.`)) return;
 
     try {
         showToast('info', 'Deleting site...');
@@ -1135,7 +1474,7 @@ async function deleteSite(siteId, siteName) {
         if (response.ok) {
             showToast('success', `Site "${siteName}" deleted successfully`);
             setTimeout(() => {
-                                location.reload();
+                location.reload();
             }, 1000);
         } else {
             const data = await response.json();
@@ -1228,10 +1567,10 @@ async function loadAdminList() {
                 adminName.className = 'admin-name';
 
                 const adminEmail = document.createElement('span');
-                adminEmail.textContent = 'admin@example.com';
+                adminEmail.textContent = '';
                 adminEmail.className = 'admin-email';
 
-                                const adminInfo = document.createElement('div');
+                const adminInfo = document.createElement('div');
                 adminInfo.className = 'admin-info';
                 adminInfo.appendChild(adminName);
                 adminInfo.appendChild(adminEmail);
@@ -1328,6 +1667,11 @@ function viewUserDetails(userId) {
     const userDetailContent = document.getElementById('userDetailContent');
     const editUserForm = document.getElementById('editUserForm');
 
+    if (!modal || !userDetailContent) {
+        showToast('error', 'Could not find modal elements');
+        return;
+    }
+
     userDetailContent.innerHTML = `
         <div class="user-detail-loading">
             <div class="loading-spinner"></div>
@@ -1335,37 +1679,76 @@ function viewUserDetails(userId) {
         </div>
     `;
 
+    // Explicitly set display style to make modal visible
     modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    document.body.style.overflow = 'hidden';
 
-    setTimeout(async () => {
+    fetchUserDetails(userId, userDetailContent, editUserForm);
+}
+
+async function fetchUserDetails(userId, userDetailContent, editUserForm) {
+    try {
         const response = await fetch(`/api/users/${userId}`);
-        if (response.ok) {
-            const userData = await response.json();
+        if (!response.ok) {
+            throw new Error('Failed to fetch user data');
+        }
+        
+        const userData = await response.json();
+        
+        if (userData) {
+            // Load and display user avatar
+            const avatarPreview = document.getElementById('userAvatarPreview');
+            if (avatarPreview) {
+                if (userData.avatar_url) {
+                    avatarPreview.src = userData.avatar_url;
+                } else {
+                    avatarPreview.innerHTML = '<i class="fas fa-user-circle"></i>';
+                }
+            }
+            
             userDetailContent.innerHTML = `
                 <h3>${userData.username}</h3>
                 <div class="user-meta">
                     <p><i class="fas fa-envelope"></i> ${userData.email}</p>
-                    <p><i class="fas fa-calendar-alt"></i> Joined: ${userData.created_at}</p>
-                    <p><i class="fas fa-circle"></i> Status: ${userData.is_suspended ? 'Suspended' : 'Active'}</p>
+                    <p><i class="fas fa-calendar-alt"></i> Joined: ${new Date(userData.created_at).toLocaleDateString()}</p>
+                    <p><i class="fas fa-clock"></i> Last active: ${userData.last_login ? new Date(userData.last_login).toLocaleDateString() : 'Never'}</p>
+                    <p><i class="fas fa-globe"></i> Status: ${userData.is_suspended ? '<span class="badge badge-danger">Suspended</span>' : '<span class="badge badge-success">Active</span>'}</p>
                 </div>
+                
                 <div class="user-stats">
                     <div class="stat-item">
-                        <span class="stat-value">${userData.sites_count}</span>
+                        <span class="stat-value">${userData.site_count || 0}</span>
                         <span class="stat-label">Sites</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value">${userData.logins_count}</span>
-                        <span class="stat-label">Logins</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-value">${userData.last_active}</span>
-                        <span class="stat-label">Last Active</span>
+                        <span class="stat-value">${userData.deploy_count || 0}</span>
+                        <span class="stat-label">Deploys</span>
                     </div>
                 </div>
+                
+                <div class="user-actions">
+                    <button onclick="editUserProfile(${userData.id})" class="btn-primary">
+                        <i class="fas fa-user-edit"></i> Edit Profile
+                    </button>
+                    ${userData.is_profile_public ? 
+                    `<a href="/p/${userData.username}" target="_blank" class="btn-secondary">
+                        <i class="fas fa-external-link-alt"></i> View Public Profile
+                    </a>` : ''}
+                </div>
             `;
-            editUserForm.querySelector('#editUserId').value = userId;
-            editUserForm.querySelector('#editUsername').value = userData.username;
-            editUserForm.querySelector('#editEmail').value = userData.email;
+            
+            // Prepopulate edit form for convenience
+            if (editUserForm) {
+                const editUserIdField = editUserForm.querySelector('#editUserId');
+                const editUsernameField = editUserForm.querySelector('#editUsername');
+                const editEmailField = editUserForm.querySelector('#editEmail');
+                
+                if (editUserIdField) editUserIdField.value = userData.id;
+                if (editUsernameField) editUsernameField.value = userData.username;
+                if (editEmailField) editEmailField.value = userData.email;
+            }
         } else {
             userDetailContent.innerHTML = `
                 <div class="error-message">
@@ -1374,25 +1757,861 @@ function viewUserDetails(userId) {
                 </div>
             `;
         }
-    }, 1000);
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        userDetailContent.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Error loading user details: ${error.message}</p>
+            </div>
+        `;
+    }
 }
 
-
 function closeUserDetailModal() {
-    document.getElementById('userDetailModal').style.display = 'none';
+    const modal = document.getElementById('userDetailModal');
+    modal.style.opacity = '0';
+    modal.style.visibility = 'hidden';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }, 300);
+}
+
+function closeUserProfileModal() {
+    const modal = document.getElementById('userProfileModal');
+    modal.style.opacity = '0';
+    modal.style.visibility = 'hidden';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }, 300);
+}
+
+function saveUserChanges() {
+    const userId = document.getElementById('editUserId').value;
+    const username = document.getElementById('editUsername').value;
+    const email = document.getElementById('editEmail').value;
+    const password = document.getElementById('resetPassword').value;
+    const isPublicProfile = document.getElementById('editIsPublicProfile').checked;
+
+    if (!userId) {
+        showToast('error', 'User ID is missing');
+        return;
+    }
+
+    const userData = {
+        username: username,
+        email: email,
+        is_profile_public: isPublicProfile
+    };
+
+    if (password) {
+        userData.password = password;
+    }
+
+    fetch(`/api/admin/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', 'User information updated successfully');
+            closeUserDetailModal();
+            
+            // Refresh the page after a short delay
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showToast('error', data.message || 'Failed to update user information');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating user:', error);
+        showToast('error', 'An error occurred while updating user information');
+    });
+}
+
+// Function to toggle action dropdown visibility
+function toggleActionDropdown(button) {
+    // Safety check for the button
+    if (!button) {
+        console.error("Toggle action dropdown called with null button");
+        return;
+    }
+
+    // Close all other open dropdowns first
+    const allDropdowns = document.querySelectorAll('.action-dropdown-content');
+    allDropdowns.forEach(dropdown => {
+        if (dropdown !== button.nextElementSibling) {
+            dropdown.classList.remove('show');
+        }
+    });
+    
+    // Toggle the clicked dropdown
+    const dropdownContent = button.nextElementSibling;
+    
+    // Safety check for dropdown content
+    if (!dropdownContent) {
+        console.error("Dropdown content not found for button", button);
+        return;
+    }
+    
+    // Toggle show class
+    if (dropdownContent.classList.contains('show')) {
+        dropdownContent.classList.remove('show');
+        
+        // If the dropdown is currently a child of the body, move it back
+        if (dropdownContent.parentElement === document.body) {
+            const parentButton = document.getElementById(dropdownContent.dataset.parentButton);
+            if (parentButton) {
+                parentButton.after(dropdownContent);
+            }
+        }
+    } else {
+        dropdownContent.classList.add('show');
+        
+        // Save original position before moving
+        if (dropdownContent.parentElement !== document.body) {
+            // Make the dropdown position fixed and visible outside of container
+            dropdownContent.style.position = 'fixed';
+            
+            // Store reference to the button for later restoration
+            dropdownContent.dataset.parentButton = button.id || Math.random().toString(36).substring(2);
+            if (!button.id) button.id = dropdownContent.dataset.parentButton;
+            
+            // Temporarily store the dropdown in the body to break out of any overflow constraints
+            document.body.appendChild(dropdownContent);
+            
+            // Position the dropdown
+            const buttonRect = button.getBoundingClientRect();
+            
+            // Calculate the available space
+            const spaceBelow = window.innerHeight - buttonRect.bottom;
+            const spaceAbove = buttonRect.top;
+            
+            // Position the dropdown
+            if (spaceBelow >= 200 || spaceBelow > spaceAbove) {
+                // Position below
+                dropdownContent.style.top = `${buttonRect.bottom}px`;
+                dropdownContent.style.bottom = 'auto';
+            } else {
+                // Position above
+                dropdownContent.style.bottom = `${window.innerHeight - buttonRect.top}px`;
+                dropdownContent.style.top = 'auto';
+            }
+            
+            dropdownContent.style.left = `${buttonRect.left}px`;
+            
+            // Make sure it's not positioned outside the viewport on the right
+            setTimeout(() => {
+                const dropdownRect = dropdownContent.getBoundingClientRect();
+                if (dropdownRect.right > window.innerWidth) {
+                    dropdownContent.style.left = `${buttonRect.right - dropdownRect.width}px`;
+                }
+            }, 0);
+            
+            // Stop event propagation to prevent immediate closing
+            dropdownContent.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            // Add click outside to close
+            setTimeout(() => {
+                function closeDropdown(e) {
+                    // Don't close if clicking the button or inside the dropdown
+                    if (button.contains(e.target) || dropdownContent.contains(e.target)) {
+                        return;
+                    }
+                    
+                    dropdownContent.classList.remove('show');
+                    
+                    // Return the dropdown to its original position in the DOM
+                    const parentButton = document.getElementById(dropdownContent.dataset.parentButton);
+                    if (parentButton) {
+                        parentButton.after(dropdownContent);
+                    }
+                    
+                    document.removeEventListener('click', closeDropdown);
+                }
+                
+                document.addEventListener('click', closeDropdown);
+            }, 50);
+        }
+    }
+}
+
+function initializeActionDropdowns() {
+    // Add event listeners to all dropdown buttons
+    document.querySelectorAll('.action-dropdown-btn').forEach(button => {
+        // Remove existing event listeners by cloning and replacing
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+        
+        // Add the event listener
+        newButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleActionDropdown(this);
+        });
+        
+        // Ensure the dropdown can appear outside the table container
+        const dropdownContent = newButton.nextElementSibling;
+        if (dropdownContent && dropdownContent.classList.contains('action-dropdown-content')) {
+            dropdownContent.style.position = 'absolute';
+            dropdownContent.style.zIndex = '1000';
+            
+            // Prevent dropdown item clicks from closing immediately
+            dropdownContent.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            });
+        }
+    });
+    
+    // Ensure dropdowns are properly positioned
+    window.addEventListener('resize', function() {
+        const visibleDropdown = document.querySelector('.action-dropdown-content.show');
+        if (visibleDropdown) {
+            const parentButton = document.getElementById(visibleDropdown.dataset.parentButton);
+            if (parentButton) {
+                toggleActionDropdown(parentButton); // Close
+                toggleActionDropdown(parentButton); // Reopen with proper positioning
+            } else {
+                visibleDropdown.classList.remove('show'); // Just close if we can't find the button
+            }
+        }
+    });
+}
+
+// Call this function when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeActionDropdowns();
+});
+
+// Create a custom modal for context menu actions
+function openActionModal(userId, username) {
+    // Close any open dropdowns
+    const allDropdowns = document.querySelectorAll('.action-dropdown-content');
+    allDropdowns.forEach(dropdown => {
+        dropdown.classList.remove('show');
+    });
+    
+    // Get user data
+    fetch(`/api/users/${userId}`)
+        .then(response => response.json())
+        .then(userData => {
+            // Create modal HTML
+            const modalHTML = `
+                <div id="actionModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-user-cog"></i> ${username} - Actions</h2>
+                            <button class="close-btn" onclick="document.getElementById('actionModal').remove()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="action-grid">
+                                <button onclick="viewUserDetails(${userId}); document.getElementById('actionModal').remove();" class="action-btn">
+                                    <i class="fas fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button onclick="editUserProfile(${userId}); document.getElementById('actionModal').remove();" class="action-btn">
+                                    <i class="fas fa-user-edit"></i>
+                                    <span>Edit Profile</span>
+                                </button>
+                                ${userData.is_profile_public ? 
+                                `<a href="/p/${username}" target="_blank" class="action-btn">
+                                    <i class="fas fa-external-link-alt"></i>
+                                    <span>View Public Profile</span>
+                                </a>` : 
+                                `<button class="action-btn disabled">
+                                    <i class="fas fa-external-link-alt"></i>
+                                    <span>Profile Not Public</span>
+                                </button>`}
+                                ${userId !== parseInt(currentUserId) ? 
+                                `<button onclick="impersonateUser(${userId}, '${username}'); document.getElementById('actionModal').remove();" class="action-btn">
+                                    <i class="fas fa-user-secret"></i>
+                                    <span>Impersonate User</span>
+                                </button>
+                                <button onclick="toggleSuspension(${userId}, '${username}', ${!userData.is_suspended}); document.getElementById('actionModal').remove();" class="action-btn ${userData.is_suspended ? 'success-action' : 'danger-action'}">
+                                    <i class="fas fa-${userData.is_suspended ? 'user-check' : 'user-lock'}"></i>
+                                    <span>${userData.is_suspended ? 'Unsuspend' : 'Suspend'}</span>
+                                </button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to body
+            const modalContainer = document.createElement('div');
+            modalContainer.innerHTML = modalHTML;
+            document.body.appendChild(modalContainer.firstElementChild);
+            
+            // Show modal
+            document.getElementById('actionModal').style.display = 'flex';
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+            showToast('error', 'Failed to load user data');
+        });
+}
+
+function closeResetPasswordModal() {
+    document.getElementById('resetPasswordModal').style.display = 'none';
 }
 
 function refreshData() {
     showToast('info', 'Refreshing data...');
+    fetchUsersStats();
     setTimeout(() => {
         location.reload();
     }, 1000);
+}
+
+async function fetchUsersStats() {
+    try {
+        const response = await fetch('/api/admin/users-stats');
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById('newUsersCount').textContent = data.newUsers;
+            document.getElementById('activeUsers').textContent = data.activeUsers;
+            document.getElementById('suspendedUsers').textContent = data.suspendedUsers;
+        }
+    } catch (error) {
+        console.error('Error fetching user stats:', error);
+    }
+}
+
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = input.nextElementSibling.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+function editUserProfile(userId) {
+    // Find necessary elements
+    const profileForm = document.getElementById('profileEditForm');
+    const socialLinksContainer = document.getElementById('socialLinksContainer');
+    const userProfileModal = document.getElementById('userProfileModal');
+    
+    if (!profileForm || !socialLinksContainer || !userProfileModal) {
+        showToast('error', 'Could not find necessary elements for profile editing');
+        return;
+    }
+    
+    // Reset form
+    profileForm.reset();
+    socialLinksContainer.innerHTML = '';
+    
+    const profileUserIdField = document.getElementById('profileUserId');
+    if (profileUserIdField) {
+        profileUserIdField.value = userId;
+    }
+    
+    // Show modal with explicit visibility settings
+    userProfileModal.style.display = 'flex';
+    userProfileModal.style.opacity = '1';
+    userProfileModal.style.visibility = 'visible';
+    document.body.style.overflow = 'hidden';
+    
+    // Fetch user details
+    fetch(`/api/users/${userId}/profile`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch user profile');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Loaded profile data:", data);
+            // Fill form with user data
+            const fields = {
+                'profileUsername': data.username,
+                'profileEmail': data.email,
+                'profileBio': data.bio || '',
+                'profileAvatar': data.avatar_url || '',
+                'profileBanner': data.banner_url || ''
+            };
+            
+            // Safely update each field
+            Object.keys(fields).forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = fields[fieldId];
+                }
+            });
+            
+            // Handle checkbox separately
+            const isPublicCheckbox = document.getElementById('profileIsPublic');
+            if (isPublicCheckbox) {
+                isPublicCheckbox.checked = data.is_profile_public;
+            }
+            
+            // Update preview - safely
+            updateProfilePreview();
+            
+            // Add social links
+            if (data.social_links && Array.isArray(data.social_links) && data.social_links.length > 0) {
+                socialLinksContainer.innerHTML = '';
+                data.social_links.forEach(link => {
+                    if (typeof addSocialLinkWithData === 'function') {
+                        addSocialLinkWithData(link.platform, link.url);
+                    } else if (typeof addSocialLink === 'function') {
+                        addSocialLink();
+                        // Try to populate the last added link
+                        const lastLink = socialLinksContainer.lastElementChild;
+                        if (lastLink) {
+                            const platformSelect = lastLink.querySelector('.social-platform');
+                            const urlInput = lastLink.querySelector('.social-url');
+                            if (platformSelect) platformSelect.value = link.platform;
+                            if (urlInput) urlInput.value = link.url;
+                        }
+                    }
+                });
+            }
+            
+            // If no social links were added, add an empty one
+            if (socialLinksContainer.children.length === 0 && typeof addSocialLink === 'function') {
+                addSocialLink();
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user profile:', error);
+            showToast('error', 'Failed to load user profile: ' + error.message);
+        });
+}
+
+function updateProfilePreview() {
+    const username = document.getElementById('profileUsername').value;
+    const bio = document.getElementById('profileBio').value;
+    const avatar = document.getElementById('profileAvatar').value;
+    const banner = document.getElementById('profileBanner').value;
+    
+    document.getElementById('previewUsername').textContent = username;
+    document.getElementById('previewBio').textContent = bio || 'No bio provided';
+    
+    const previewAvatar = document.getElementById('previewAvatar');
+    if (avatar) {
+        previewAvatar.innerHTML = `<img src="${avatar}" alt="${username}" onerror="this.onerror=null; this.parentNode.innerHTML = '<i class=\\'fas fa-user\\'></i>'">`;
+    } else {
+        previewAvatar.innerHTML = '<i class="fas fa-user"></i>';
+    }
+    
+    const previewBanner = document.getElementById('previewBanner');
+    if (banner) {
+        previewBanner.style.backgroundImage = `url(${banner})`;
+    } else {
+        previewBanner.style.backgroundImage = '';
+    }
+}
+
+function addSocialLink() {
+    const container = document.getElementById('socialLinksContainer');
+    const socialLinkItem = document.createElement('div');
+    socialLinkItem.className = 'social-link-item';
+    socialLinkItem.innerHTML = `
+        <select class="social-platform settings-input">
+            <option value="github">GitHub</option>
+            <option value="twitter">Twitter</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="website">Website</option>
+            <option value="instagram">Instagram</option>
+            <option value="youtube">YouTube</option>
+        </select>
+        <input type="url" class="social-url settings-input" placeholder="https://...">
+        <button type="button" class="btn-icon remove-social" onclick="removeSocialLink(this)">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    container.appendChild(socialLinkItem);
+}
+
+function addSocialLinkWithValues(platform, url) {
+    const container = document.getElementById('socialLinksContainer');
+    const socialLinkItem = document.createElement('div');
+    socialLinkItem.className = 'social-link-item';
+    socialLinkItem.innerHTML = `
+        <select class="social-platform settings-input">
+            <option value="github">GitHub</option>
+            <option value="twitter">Twitter</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="website">Website</option>
+            <option value="instagram">Instagram</option>
+            <option value="youtube">YouTube</option>
+        </select>
+        <input type="url" class="social-url settings-input" placeholder="https://..." value="${url}">
+        <button type="button" class="btn-icon remove-social" onclick="removeSocialLink(this)">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    container.appendChild(socialLinkItem);
+    
+    // Set the selected platform
+    const select = socialLinkItem.querySelector('.social-platform');
+    select.value = platform;
+}
+
+// Add the missing function
+function addSocialLinkWithData(platform, url) {
+    addSocialLinkWithValues(platform, url);
+}
+
+function removeSocialLink(button) {
+    const container = document.getElementById('socialLinksContainer');
+    const item = button.closest('.social-link-item');
+    container.removeChild(item);
+}
+
+function saveUserProfile() {
+    const userId = document.getElementById('profileUserId').value;
+    const bio = document.getElementById('profileBio').value;
+    const avatar = document.getElementById('profileAvatar').value;
+    const banner = document.getElementById('profileBanner').value;
+    const isPublic = document.getElementById('profileIsPublic').checked;
+    
+    // Gather social links
+    const socialLinks = {};
+    const socialItems = document.querySelectorAll('.social-link-item');
+    socialItems.forEach(item => {
+        const platform = item.querySelector('.social-platform').value;
+        const url = item.querySelector('.social-url').value;
+        if (url.trim()) {
+            socialLinks[platform] = url;
+        }
+    });
+    
+    // Prepare data
+    const formData = {
+        bio: bio,
+        avatar: avatar,
+        profile_banner: banner,
+        is_profile_public: isPublic,
+        social_links: socialLinks
+    };
+    
+    // Send to server
+    fetch(`/api/admin/users/${userId}/profile`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', 'Profile updated successfully');
+            closeUserProfileModal();
+            
+            // Update user list if possible
+            const userRows = document.querySelectorAll(`#userTableBody tr`);
+            for (const row of userRows) {
+                const rowUserId = row.querySelector('.user-select')?.dataset?.userid;
+                if (rowUserId === userId) {
+                    // Update avatar in table
+                    const avatarContainer = row.querySelector('.user-avatar-small');
+                    if (avatarContainer) {
+                        if (avatar) {
+                            avatarContainer.innerHTML = `<img src="${avatar}" alt="User avatar" onerror="this.onerror=null; this.parentNode.innerHTML = '<i class=\\'fas fa-user\\'></i>'">`;
+                        } else {
+                            avatarContainer.innerHTML = '<i class="fas fa-user"></i>';
+                        }
+                    }
+                    
+                    // Update public profile badge
+                    const badges = row.querySelector('td:nth-child(7)');
+                    if (badges) {
+                        const publicBadge = Array.from(badges.querySelectorAll('.status-badge')).find(b => b.classList.contains('public-profile'));
+                        if (isPublic && !publicBadge) {
+                            badges.innerHTML += `<span class="status-badge public-profile">Public Profile</span>`;
+                        } else if (!isPublic && publicBadge) {
+                            publicBadge.remove();
+                        }
+                    }
+                    break;
+                }
+            }
+        } else {
+            showToast('error', data.message || 'Failed to update profile');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating profile:', error);
+        showToast('error', 'An error occurred while updating the profile');
+    });
+}
+
+// Listen for changes to preview fields
+document.addEventListener('DOMContentLoaded', function() {
+    const previewFields = ['profileUsername', 'profileBio', 'profileAvatar', 'profileBanner'];
+    previewFields.forEach(field => {
+        const element = document.getElementById(field);
+        if (element) {
+            element.addEventListener('input', updateProfilePreview);
+        }
+    });
+    
+    // Setup password strength meter
+    if (document.getElementById('newPasswordInput')) {
+        document.getElementById('newPasswordInput').addEventListener('input', checkPasswordStrength);
+    }
+    
+    // Fetch initial user stats
+    fetchUsersStats();
+});
+
+function checkPasswordStrength() {
+    const password = document.getElementById('newPasswordInput').value;
+    const indicator = document.getElementById('passwordStrength');
+    const text = document.getElementById('strengthText');
+    
+    if (!password) {
+        indicator.style.width = '0';
+        indicator.style.backgroundColor = '#e0e0e0';
+        text.textContent = 'Password strength';
+        text.style.color = 'var(--text-secondary)';
+        return;
+    }
+    
+    // Check strength
+    let strength = 0;
+    if (password.length >= 8) strength += 25;
+    if (password.match(/[a-z]+/)) strength += 25;
+    if (password.match(/[A-Z]+/)) strength += 25;
+    if (password.match(/[0-9]+/)) strength += 25;
+    if (password.match(/[^a-zA-Z0-9]+/)) strength += 25;
+    
+    // Cap at 100
+    strength = Math.min(strength, 100);
+    
+    // Update UI
+    indicator.style.width = strength + '%';
+    
+    if (strength < 30) {
+        indicator.style.backgroundColor = '#f44336';
+        text.textContent = 'Weak';
+        text.style.color = '#f44336';
+    } else if (strength < 60) {
+        indicator.style.backgroundColor = '#ff9800';
+        text.textContent = 'Moderate';
+        text.style.color = '#ff9800';
+    } else if (strength < 80) {
+        indicator.style.backgroundColor = '#4caf50';
+        text.textContent = 'Strong';
+        text.style.color = '#4caf50';
+    } else {
+        indicator.style.backgroundColor = '#2e7d32';
+        text.textContent = 'Very Strong';
+        text.style.color = '#2e7d32';
+    }
+    
+    // Check if passwords match
+    const confirmPassword = document.getElementById('confirmPasswordInput').value;
+    if (confirmPassword && password !== confirmPassword) {
+        text.textContent += ' - Passwords do not match';
+        text.style.color = '#f44336';
+        document.getElementById('confirmResetBtn').disabled = true;
+    } else if (confirmPassword) {
+        text.textContent += ' - Passwords match';
+        document.getElementById('confirmResetBtn').disabled = false;
+    }
+}
+
+function resetUserPassword(userId, username) {
+    document.getElementById('resetPasswordUsername').textContent = username;
+    document.getElementById('newPasswordInput').value = '';
+    document.getElementById('confirmPasswordInput').value = '';
+    document.getElementById('passwordStrength').style.width = '0';
+    document.getElementById('strengthText').textContent = 'Password strength';
+    document.getElementById('confirmResetBtn').setAttribute('data-userid', userId);
+    
+    document.getElementById('resetPasswordModal').style.display = 'flex';
+}
+
+function confirmPasswordReset() {
+    const userId = document.getElementById('confirmResetBtn').getAttribute('data-userid');
+    const newPassword = document.getElementById('newPasswordInput').value;
+    const confirmPassword = document.getElementById('confirmPasswordInput').value;
+    
+    if (!newPassword) {
+        showToast('error', 'Password cannot be empty');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showToast('error', 'Passwords do not match');
+        return;
+    }
+    
+    fetch(`/api/admin/users/${userId}/reset-password`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password: newPassword })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', 'Password reset successfully');
+            closeResetPasswordModal();
+        } else {
+            showToast('error', data.message || 'Failed to reset password');
+        }
+    })
+    .catch(error => {
+        console.error('Error resetting password:', error);
+        showToast('error', 'An error occurred while resetting the password');
+    });
+}
+
+function toggleAdminStatus(userId, username, makeAdmin) {
+    if (!confirm(`Are you sure you want to ${makeAdmin ? 'make' : 'remove'} ${username} ${makeAdmin ? 'an admin' : 'from admin role'}?`)) {
+        return;
+    }
+    
+    fetch(`/api/admin/users/${userId}/admin-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ is_admin: makeAdmin })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', `User ${makeAdmin ? 'is now an admin' : 'is no longer an admin'}`);
+            
+            // Update UI
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showToast('error', data.message || 'Failed to update admin status');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating admin status:', error);
+        showToast('error', 'An error occurred while updating admin status');
+    });
+}
+
+function toggleStaffStatus(userId, username, makeStaff) {
+    if (!confirm(`Are you sure you want to ${makeStaff ? 'make' : 'remove'} ${username} ${makeStaff ? 'a staff member' : 'from staff role'}?`)) {
+        return;
+    }
+    
+    fetch(`/api/admin/users/${userId}/staff-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ is_staff: makeStaff })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', `User ${makeStaff ? 'is now a staff member' : 'is no longer a staff member'}`);
+            
+            // Update UI
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showToast('error', data.message || 'Failed to update staff status');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating staff status:', error);
+        showToast('error', 'An error occurred while updating staff status');
+    });
+}
+
+function impersonateUser(userId, username) {
+    if (!confirm(`Are you sure you want to impersonate ${username}? You will be logged in as this user.`)) {
+        return;
+    }
+    
+    fetch(`/api/admin/impersonate/${userId}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', `Now impersonating ${username}. Redirecting...`);
+            setTimeout(() => {
+                window.location.href = data.redirect || '/welcome';
+            }, 1500);
+        } else {
+            showToast('error', data.message || 'Failed to impersonate user');
+        }
+    })
+    .catch(error => {
+        console.error('Error impersonating user:', error);
+        showToast('error', 'An error occurred while impersonating the user');
+    });
+}
+
+function exportUserData() {
+    const selectedUsers = Array.from(document.querySelectorAll('.user-select:checked'));
+    if (selectedUsers.length === 0) {
+        showToast('warning', 'Please select at least one user to export');
+        return;
+    }
+    
+    const userIds = selectedUsers.map(checkbox => checkbox.dataset.userid);
+    
+    fetch('/api/admin/export-users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_ids: userIds })
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.blob();
+        }
+        throw new Error('Export failed');
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `user_export_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        showToast('success', 'Export successful');
+    })
+    .catch(error => {
+        console.error('Export error:', error);
+        showToast('error', 'Failed to export user data');
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     loadSystemStatus();
     loadRecentActivities();
     updateAnalytics('day');
+    loadLeaderAccessCode();
 });
 
 async function loadSystemStatus() {
@@ -1773,414 +2992,57 @@ function saveMaxSitesPerUser() {
     });
 }
 
-// Club management functions
-function filterClubs() {
-    const searchTerm = document.getElementById('clubSearch').value.trim();
-
-    if (searchTerm.length < 2) {
-        return; // Require at least 2 characters
-    }
-
-    // Show loading indicator
-    document.getElementById('clubTableBody').innerHTML = `
-        <tr>
-            <td colspan="7" class="text-center">
-                <div class="loading-spinner"></div>
-                <p>Searching clubs...</p>
-            </td>
-        </tr>
-    `;
-
-    // Make API call to search clubs
-    fetch(`/api/admin/search/clubs?term=${encodeURIComponent(searchTerm)}`)
+// Load and save leader access code
+function loadLeaderAccessCode() {
+    fetch('/api/admin/settings/leader-access-code')
         .then(response => response.json())
         .then(data => {
-            if (data.error) {
-                showToast('error', data.error);
-                return;
-            }
-
-            const clubTableBody = document.getElementById('clubTableBody');
-            clubTableBody.innerHTML = '';
-
-            if (data.clubs.length === 0) {
-                clubTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="text-center">
-                            <p>No clubs found matching "${searchTerm}"</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            data.clubs.forEach(club => {
-                const row = document.createElement('tr');
-
-                row.innerHTML = `
-                    <td>${club.id}</td>
-                    <td>${club.name}</td>
-                    <td>${club.leader_username}</td>
-                    <td>${club.member_count}</td>
-                    <td>${club.created_at}</td>
-                    <td>${club.join_code}</td>
-                    <td class="actions-cell">
-                        <div class="action-dropdown">
-                            <button class="action-dropdown-btn">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div class="action-dropdown-content">
-                                <button onclick="viewClubDetails(${club.id})" class="dropdown-item">
-                                    <i class="fas fa-eye"></i>
-                                    <span>View Details</span>
-                                </button>
-                                <button onclick="resetJoinCode(${club.id})" class="dropdown-item">
-                                    <i class="fas fa-key"></i>
-                                    <span>Reset Join Code</span>
-                                </button>
-                                <button onclick="deleteClub(${club.id}, '${club.name}')" class="dropdown-item text-danger">
-                                    <i class="fas fa-trash-alt"></i>
-                                    <span>Delete Club</span>
-                                </button>
-                            </div>
-                        </div>
-                    </td>
-                `;
-
-                clubTableBody.appendChild(row);
-                row.classList.add('fade-in');
-                setTimeout(() => {
-                    row.classList.remove('fade-in');
-                }, 300);
-            });
-        })
-        .catch(error => {
-            console.error('Error searching clubs:', error);
-            showToast('error', 'Failed to search clubs');
-        });
-}
-
-function viewClubDetails(clubId) {
-    const modal = document.getElementById('clubDetailModal');
-    const clubDetailContent = document.getElementById('clubDetailContent');
-    const clubMembersTableBody = document.getElementById('clubMembersTableBody');
-
-    clubDetailContent.innerHTML = `
-        <div class="club-detail-loading">
-            <div class="loading-spinner"></div>
-            <p>Loading club details...</p>
-        </div>
-    `;
-
-    clubMembersTableBody.innerHTML = `
-        <tr>
-            <td colspan="6" class="text-center">
-                <div class="loading-spinner"></div>
-                <p>Loading members...</p>
-            </td>
-        </tr>
-    `;
-
-    modal.style.display = 'flex';
-
-    // Fetch club details
-    fetch(`/api/admin/clubs/${clubId}`)
-        .then(response => response.json())
-        .then(clubData => {
-            if (clubData.error) {
-                showToast('error', clubData.error);
-                return;
-            }
-
-            // Update club details section with club ID data attribute
-            clubDetailContent.innerHTML = `
-                <h3 data-club-id="${clubId}">${clubData.name}</h3>
-                <div class="club-meta">
-                    <p><i class="fas fa-user-tie"></i> Leader: ${clubData.leader_username}</p>
-                    <p><i class="fas fa-calendar-alt"></i> Created: ${clubData.created_at}</p>
-                    <p><i class="fas fa-map-marker-alt"></i> Location: ${clubData.location || 'Not specified'}</p>
-                    <p><i class="fas fa-key"></i> Join Code: ${clubData.join_code}</p>
-                </div>
-                <div class="club-description">
-                    <h4>Description</h4>
-                    <p>${clubData.description || 'No description provided.'}</p>
-                </div>
-            `;
-
-            // Update members table
-            if (clubData.members && clubData.members.length > 0) {
-                clubMembersTableBody.innerHTML = '';
-                
-                clubData.members.forEach(member => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${member.user_id}</td>
-                        <td>${member.username}</td>
-                        <td>${member.email}</td>
-                        <td>
-                            <span class="status-badge ${member.role === 'co-leader' ? 'club-leader' : 'active'}">
-                                ${member.role}
-                            </span>
-                        </td>
-                        <td>${member.joined_at}</td>
-                        <td class="actions-cell">
-                            <div class="action-dropdown">
-                                <button class="action-dropdown-btn">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <div class="action-dropdown-content">
-                                    <button onclick="viewUserDetails(${member.user_id})" class="dropdown-item">
-                                        <i class="fas fa-user"></i>
-                                        <span>View User</span>
-                                    </button>
-                                    <button onclick="changeClubMemberRole(${member.membership_id}, '${member.username}', '${member.role}')" class="dropdown-item">
-                                        <i class="fas fa-user-tag"></i>
-                                        <span>Change Role</span>
-                                    </button>
-                                    <button onclick="removeClubMember(${member.membership_id}, '${member.username}', ${clubId})" class="dropdown-item text-danger">
-                                        <i class="fas fa-user-minus"></i>
-                                        <span>Remove</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </td>
-                    `;
-                    clubMembersTableBody.appendChild(row);
-                });
-            } else {
-                clubMembersTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="text-center">
-                            <p>No members found for this club</p>
-                        </td>
-                    </tr>
-                `;
+            if (data.success && data.access_code) {
+                document.getElementById('leaderAccessCode').value = data.access_code;
             }
         })
         .catch(error => {
-            console.error('Error fetching club details:', error);
-            clubDetailContent.innerHTML = `
-                <div class="error-message">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <p>Failed to load club details</p>
-                </div>
-            `;
+            console.error('Error loading leader access code:', error);
+            showToast('error', 'Failed to load leader access code');
         });
 }
 
-function closeClubDetailModal() {
-    document.getElementById('clubDetailModal').style.display = 'none';
-}
-
-function resetJoinCode(clubId) {
-    if (!confirm('Are you sure you want to reset the join code for this club? The old code will no longer work.')) return;
-
-    fetch(`/api/admin/clubs/${clubId}/join-code`, {
+function saveLeaderAccessCode() {
+    const accessCode = document.getElementById('leaderAccessCode').value.trim();
+    
+    if (!accessCode) {
+        showToast('error', 'Access code cannot be empty');
+        return;
+    }
+    
+    fetch('/api/admin/settings/leader-access-code', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            showToast('error', data.error);
-            return;
-        }
-        showToast('success', 'Join code reset successfully');
-        setTimeout(() => {
-            location.reload();
-        }, 1000);
-    })
-    .catch(error => {
-        console.error('Error resetting join code:', error);
-        showToast('error', 'Failed to reset join code');
-    });
-}
-
-function deleteClub(clubId, clubName) {
-    if (!confirm(`Are you sure you want to delete club "${clubName}"? This will remove all memberships.`)) return;
-
-    fetch(`/api/admin/clubs/${clubId}`, {
-        method: 'DELETE'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            showToast('error', data.error);
-            return;
-        }
-        showToast('success', `Club "${clubName}" deleted successfully`);
-        setTimeout(() => {
-            location.reload();
-        }, 1000);
-    })
-    .catch(error => {
-        console.error('Error deleting club:', error);
-        showToast('error', 'Failed to delete club');
-    });
-}
-
-function changeClubMemberRole(membershipId, username, currentRole) {
-    const newRole = currentRole === 'member' ? 'co-leader' : 'member';
-    
-    if (!confirm(`Are you sure you want to change ${username}'s role from "${currentRole}" to "${newRole}"?`)) return;
-
-    fetch(`/api/admin/clubs/members/${membershipId}/role`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ role: newRole })
+        body: JSON.stringify({ access_code: accessCode })
     })
     .then(response => response.json())
     .then(data => {
-        if (data.error) {
-            showToast('error', data.error);
-            return;
-        }
-        showToast('success', `Changed ${username}'s role to ${newRole}`);
-        
-        // Refresh club details - get the club ID properly from the h3 element
-        const clubHeader = document.querySelector('#clubDetailContent h3');
-        if (clubHeader && clubHeader.dataset.clubId) {
-            viewClubDetails(clubHeader.dataset.clubId);
-        }
-    })
-    .catch(error => {
-        console.error('Error changing member role:', error);
-        showToast('error', 'Failed to change member role');
-    });
-}
-
-function removeClubMember(membershipId, username, clubId) {
-    if (!confirm(`Are you sure you want to remove ${username} from this club?`)) return;
-
-    fetch(`/api/admin/clubs/members/${membershipId}`, {
-        method: 'DELETE'
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.error) {
-            showToast('error', data.error);
-            return;
-        }
-        showToast('success', `Removed ${username} from the club`);
-        // Refresh club details
-        viewClubDetails(clubId);
-    })
-    .catch(error => {
-        console.error('Error removing club member:', error);
-        showToast('error', 'Failed to remove club member: ' + error.message);
-    });
-}
-
-function showToast(type, message) {
-    // Clear any existing toast timeout
-    if (window.toastTimeout) {
-        clearTimeout(window.toastTimeout);
-    }
-    
-    let toastContainer = document.getElementById('toast-container');
-    
-    // Create toast container if it doesn't exist
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toast-container';
-        document.body.appendChild(toastContainer);
-    }
-    
-    // Remove any existing toasts
-    while (toastContainer.firstChild) {
-        toastContainer.removeChild(toastContainer.firstChild);
-    }
-    
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-
-    const icon = type === 'success' ? 'check-circle' : 
-                type === 'error' ? 'exclamation-circle' :
-                type === 'warning' ? 'exclamation-triangle' :
-                'info-circle';
-
-    toast.innerHTML = `
-        <div class="toast-content">
-            <i class="fas fa-${icon}"></i>
-            <span>${message}</span>
-        </div>
-    `;
-
-    toastContainer.appendChild(toast);
-    toast.offsetHeight;
-    toast.classList.add('show');
-
-    window.toastTimeout = setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            toast.remove();
-            window.toastTimeout = null;
-        }, 300);
-    }, 3000);
-}
-
-async function saveUserChanges() {
-    const form = document.getElementById('editUserForm');
-    const userId = form.querySelector('#editUserId').value;
-    const username = form.querySelector('#editUsername').value;
-    const email = form.querySelector('#editEmail').value;
-    const password = form.querySelector('#resetPassword').value;
-
-    try {
-        const response = await fetch(`/api/admin/users/${userId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password })
-        });
-
-        if (response.ok) {
-            showToast('success', 'User updated successfully!');
-            closeUserDetailModal();
-            location.reload();
+        if (data.success) {
+            showToast('success', data.message || 'Access code updated successfully');
         } else {
-            const errorData = await response.json();
-            showToast('error', errorData.message || 'Failed to update user.');
+            showToast('error', data.message || 'Failed to update access code');
         }
-    } catch (error) {
-        showToast('error', 'An error occurred while saving changes.');
-    }
-}
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    const togglePasswordButtons = document.querySelectorAll('.toggle-password');
-    togglePasswordButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const passwordInput = this.previousElementSibling;
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                this.querySelector('i').classList.remove('fa-eye');
-                this.querySelector('i').classList.add('fa-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                this.querySelector('i').classList.remove('fa-eye-slash');
-                this.querySelector('i').classList.add('fa-eye');
-            }
-        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Failed to update leader access code');
     });
-});
+}
 
 function toggleClubLeader(userId, username, isClubLeader) {
     if (!confirm(`Are you sure you want to ${isClubLeader ? 'make' : 'remove'} ${username} ${isClubLeader ? 'a Club Leader' : 'as Club Leader'}?`)) {
         return;
     }
-    
+
     showToast('info', `${isClubLeader ? 'Making' : 'Removing'} ${username} as club leader...`);
-    
+
     fetch(`/api/admin/users/${userId}/club-leader`, {
         method: 'POST',
         headers: {
@@ -3283,8 +4145,7 @@ tbody tr:hover {
 .date-picker {
     display: flex;
     align-items: center;
-    padding: 0.5rem 1rem;
-    background-color: transparent;
+    padding: 0.5rem 1rem;background-color: transparent;
     border-radius: 6px;
     cursor: pointer;
     margin-left: 10px;
@@ -3597,7 +4458,18 @@ input:checked + .slider:before {
     z-index: 1000;
     align-items: center;
     justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
     animation: fadeIn 0.3s ease;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.modal.show,
+.modal[style*="display: flex"] {
+    opacity: 1;
+    visibility: visible;
 }
 
 .modal-content {
@@ -3695,6 +4567,12 @@ input:checked + .slider:before {
 
 .user-details {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 0 auto;
 }
 
 .user-details h3 {
@@ -3847,6 +4725,222 @@ input:checked + .slider:before {
     color: var(--danger);
 }
 
+.user-management-stats {
+    margin-bottom: 24px;
+    justify-content: flex-start;
+}
+
+.user-table-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--surface-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.user-avatar-small img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-avatar-small i {
+    font-size: 16px;
+    color: var(--text-secondary);
+}
+
+.status-badge.admin {
+    background-color: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+.status-badge.public-profile {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.status-badge.staff-badge {
+    background-color: rgba(255, 140, 55, 0.15);
+    color: #ff8c37;
+    border: 1px solid rgba(255, 140, 55, 0.3);
+}
+
+.toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 24px;
+    -webkit-appearance: none;
+    background-color: #ccc;
+    outline: none;
+    border-radius: 20px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.toggle-switch:checked {
+    background-color: var(--primary);
+}
+
+.toggle-switch:before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 20px;
+    top: 2px;
+    left: 2px;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: 0.3s;
+}
+
+.toggle-switch:checked:before {
+    left: 28px;
+}
+
+.form-switch {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.wide-modal .modal-content {
+    max-width: 900px;
+    width: 90%;
+}
+
+.profile-edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.profile-preview {
+    background-color: var(--surface-secondary);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.profile-preview-card {
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.preview-banner {
+    height: 100px;
+    background-color: var(--primary-light);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.preview-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    bottom: -32px;
+    left: 24px;
+    border: 3px solid white;
+    overflow: hidden;
+}
+
+.preview-avatar i {
+    font-size: 32px;
+    color: var(--text-secondary);
+}
+
+.preview-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview-content {
+    padding: 40px 24px 24px;
+}
+
+.preview-content h3 {
+    margin-bottom: 12px;
+}
+
+.social-links-section {
+    background-color: var(--surface-secondary);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.social-links-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.social-link-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.social-platform {
+    flex: 1;
+}
+
+.social-url {
+    flex: 2;
+}
+
+.password-strength-meter {
+    margin-top: 10px;
+}
+
+.strength-bar {
+    height: 8px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.strength-indicator {
+    height: 100%;
+    width: 0;
+    transition: width 0.3s, background-color 0.3s;
+    border-radius: 4px;
+}
+
+#strengthText {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .profile-edit-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .sidebar-collapsed .admin-sidebar {
     width: 80px;
 }
@@ -3946,13 +5040,12 @@ input:checked + .slider:before {
 }
 
 .action-dropdown-content {
-    position: absolute;
-    right: 0;
+    position: fixed;
     background-color: var(--surface-primary);
     min-width: 180px;
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
-    z-index: 100;
+    z-index: 1000;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -3963,20 +5056,8 @@ input:checked + .slider:before {
     position: relative;
 }
 
-/* Position dropdown above for items near bottom of page */
-tr:nth-last-child(-n+3) .action-dropdown .action-dropdown-content {
-    bottom: calc(100% + 5px);
-    top: auto;
-}
-
-/* Position dropdown below for other items */
-tr:not(:nth-last-child(-n+3)) .action-dropdown .action-dropdown-content {
-    top: calc(100% + 5px);
-    bottom: auto;
-}
-
-.action-dropdown:hover .action-dropdown-content,
-.action-dropdown:focus-within .action-dropdown-content {
+/* Action dropdown now works on click instead of hover */
+.action-dropdown-content.show {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
@@ -4466,6 +5547,156 @@ tbody tr:hover {
         min-width: auto;
         max-width: 300px;
     }
+}
+/* User detail card improvements */
+.user-info-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: 0 auto;
+    max-width: 500px;
+    padding: 1.5rem;
+    background-color: var(--surface-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.user-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--surface-primary);
+    border: 5px solid var(--primary);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-avatar i {
+    font-size: 60px !important;
+    color: var(--primary);
+}
+
+.user-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.user-meta p {
+    margin: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+}
+
+.user-stats {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.stat-item {
+    flex: 1;
+    min-width: 120px;
+    background-color: var(--surface-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
+}
+
+.user-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
+/* Action modal styles */
+.action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    width: 100%;
+}
+
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background-color: var(--surface-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.action-btn i {
+    font-size: 1.5rem;
+    color: var(--primary);
+}
+
+.action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    background-color: var(--surface-tertiary);
+    border-color: var(--primary);
+}
+
+.action-btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.action-btn.disabled:hover {
+    transform: none;
+    box-shadow: none;
+    background-color: var(--surface-secondary);
+    border-color: var(--border-primary);
+}
+
+.success-action i {
+    color: var(--success);
+}
+
+.danger-action i {
+    color: var(--danger);
+}
+
+.success-action:hover {
+    border-color: var(--success);
+}
+
+.danger-action:hover {
+    border-color: var(--danger);
 }
 </style>
 {% endblock %}

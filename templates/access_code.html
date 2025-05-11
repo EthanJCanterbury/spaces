@@ -1,75 +1,191 @@
-{% extends "base.html" %}
 
-{% block content %}
-<div class="access-code-container">
-    <div class="access-code-card">
-        <div class="card-header">
-            <i class="fas fa-check-circle"></i>
-            <h1>Welcome!</h1>
-        </div>
-        <div class="card-body">
-            <p>Welcome to HackClub Spaces! You now have full access to all features.</p>
-            <a href="{{ url_for('index') }}" class="btn-primary">Get Started</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Code Required | Hack Club Spaces</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ec3750;
+            --secondary: #ff8c37;
+            --text: #1f2d3d;
+            --text-light: #8492a6;
+            --light-bg: #f9fafb;
+            --border: #e5e7eb;
+            --success: #33d6a6;
+            --warning: #ff8c37;
+            --font-heading: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-body);
+            line-height: 1.6;
+            color: var(--text);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .access-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .logo img {
+            height: 80px;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .access-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+        
+        .access-card h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-family: var(--font-heading);
+        }
+        
+        .access-card p {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+        
+        .access-form {
+            margin-top: 1.5rem;
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .code-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            transition: border-color 0.3s;
+            text-align: center;
+            letter-spacing: 0.1em;
+        }
+        
+        .code-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(236, 55, 80, 0.3);
+        }
+        
+        .help-text {
+            margin-top: 1.5rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .help-text a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .messages {
+            margin-bottom: 1.5rem;
+        }
+        
+        .message {
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .message.error {
+            background-color: rgba(236, 55, 80, 0.1);
+            color: var(--primary);
+        }
+        
+        .message.success {
+            background-color: rgba(51, 214, 166, 0.1);
+            color: var(--success);
+        }
+        
+        .message i {
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="access-container">
+        
+        <div class="access-card">
+            <h1>Access Code Required</h1>
+            <p>Please enter the leader onboarding access code to continue</p>
+            <p>This page is for Hack Club Leaders ONLY!</p>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="messages">
+                        {% for category, message in messages %}
+                            <div class="message {{ category }}">
+                                <i class="fas {% if category == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            <form class="access-form" method="POST" action="{{ url_for(target) }}">
+                <div class="input-group">
+                    <input type="text" name="access_code" class="code-input" placeholder="Enter access code" required autofocus>
+                </div>
+                <button type="submit" class="btn">Verify & Continue</button>
+            </form>
+            
+            <div class="help-text">
+                <p>Need an access code? Contact <a href="https://hackclub.slack.com/team/U07HEH4N8UV">@jps</a> on Slack for assistance.</p>
+            </div>
         </div>
     </div>
-</div>
-
-<style>
-.access-code-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 80vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-}
-
-.access-code-card {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    padding: 2rem;
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-}
-
-.card-header {
-    margin-bottom: 2rem;
-}
-
-.card-header i {
-    font-size: 3rem;
-    color: var(--primary);
-    margin-bottom: 1rem;
-}
-
-.card-header h1 {
-    font-size: 1.8rem;
-    color: #333;
-    margin: 0;
-}
-
-.card-body p {
-    color: #666;
-    margin-bottom: 2rem;
-}
-
-.btn-primary {
-    display: inline-block;
-    width: 100%;
-    padding: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    transition: transform 0.2s;
-    text-decoration: none;
-    color: white;
-    background-color: var(--primary);
-    border-radius: 8px;
-    text-align: center;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-}
-</style>
-{% endblock %}
+</body>
+</html>

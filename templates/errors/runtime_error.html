@@ -6,27 +6,87 @@
 {% endblock %}
 
 {% block error_title %}
-Runtime Error
+JavaScript Runtime Error
 {% endblock %}
 
 {% block error_message %}
-We encountered a JavaScript error. This has been logged and our team will look into it.
-{% endblock %}
-
-{% block error_details %}
-<div class="error-details">
-    <p id="error-type"></p>
-    <p id="error-message"></p>
-    <p id="error-location"></p>
-    <pre id="error-stack" class="error-stack"></pre>
+<div class="error-content">
+  <p>We encountered an unexpected JavaScript error. Our team has been automatically notified and is working to fix it.</p>
+  
+  <div class="error-visualization">
+    <div class="code-block">
+      <pre><code><span class="highlight">// The error occurred in your browser's JavaScript runtime</span>
+function exampleCode() {
+  try {
+    // Normal execution
+    return processData();
+  } catch(error) {
+    // Error handling
+    console.error('An error occurred:', error);
+    reportError(error);
+  }
+}</code></pre>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block error_actions %}
-<a href="{{ url_for('welcome') }}" class="error-btn error-btn-primary">
-    <i class="fas fa-home"></i> Back to Home
-</a>
-<button onclick="window.location.reload()" class="error-btn error-btn-secondary">
-    <i class="fas fa-sync"></i> Reload Page
+<button onclick="window.location.reload()" class="error-btn error-btn-primary">
+  <i class="fas fa-redo"></i> Refresh Page
 </button>
+<a href="{{ url_for('welcome') }}" class="error-btn error-btn-secondary">
+  <i class="fas fa-home"></i> Back to Home
+</a>
+<button onclick="createGitHubIssue()" class="error-btn error-btn-github js-github-issue">
+  <i class="fab fa-github"></i> Report Issue
+</button>
+{% endblock %}
+
+{% block error_details %}
+<div class="error-details">
+  <p id="error-code">Error Type: <span id="error-type">Unknown Error</span></p>
+  <p>Error Message: <span id="error-message">An unknown error occurred</span></p>
+  <p>Location: <span id="error-location">Unknown</span></p>
+  
+  <div class="stack-trace-container">
+    <h4>Stack Trace:</h4>
+    <pre id="error-stack" class="stack-trace">No stack trace available</pre>
+  </div>
+  
+  <style>
+    .stack-trace-container {
+      margin-top: 1rem;
+    }
+    
+    .stack-trace {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      max-height: 200px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.9);
+      text-align: left;
+    }
+  </style>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Get error details from URL parameters if available
+  const urlParams = new URLSearchParams(window.location.search);
+  const errorType = urlParams.get('type');
+  const errorMessage = urlParams.get('message');
+  const errorLocation = urlParams.get('location');
+  const errorStack = urlParams.get('stack');
+  
+  // Update the error details if available
+  if (errorType) document.getElementById('error-type').textContent = errorType;
+  if (errorMessage) document.getElementById('error-message').textContent = errorMessage;
+  if (errorLocation) document.getElementById('error-location').textContent = errorLocation;
+  if (errorStack) document.getElementById('error-stack').textContent = errorStack;
+});
+</script>
 {% endblock %}

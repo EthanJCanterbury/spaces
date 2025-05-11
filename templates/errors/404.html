@@ -1,7 +1,7 @@
 {% extends "errors/base_error.html" %}
 
 {% block error_icon %}
-<i class="fas fa-map-signs"></i>
+<i class="fas fa-map-marker-alt" style="color: #ec3750;"></i>
 {% endblock %}
 
 {% block error_title %}
@@ -9,21 +9,32 @@ Page Not Found
 {% endblock %}
 
 {% block error_message %}
-Oops! The page you're looking for seems to have wandered off. Don't worry though, we can help you find your way back.
+<div class="error-content">
+  <p>Oops! It seems you've wandered into uncharted territory.</p>
+  <p>We couldn't find the page you were looking for. It might have been moved, deleted, or perhaps it never existed in the first place.</p>
+</div>
 {% endblock %}
 
 {% block error_actions %}
 <a href="{{ url_for('welcome') }}" class="error-btn error-btn-primary">
-    <i class="fas fa-home"></i> Back to Home
+  <i class="fas fa-home"></i> Back to Home
 </a>
 <button onclick="window.history.back()" class="error-btn error-btn-secondary">
-    <i class="fas fa-arrow-left"></i> Go Back
+  <i class="fas fa-arrow-left"></i> Go Back
+</button>
+<button onclick="createGitHubIssue()" class="error-btn error-btn-github js-github-issue">
+  <i class="fab fa-github"></i> Report Issue
 </button>
 {% endblock %}
 
 {% block error_details %}
 <div class="error-details">
-    <p>Error Code: 404</p>
-    <p>If you believe this is a mistake, please contact our support team.</p>
+  <p id="error-code">Error Code: 404</p>
+  <p>Time: <span id="errorTime">{{ now }}</span></p>
+  <p>If you were expecting to find something here, please report this issue so we can fix it.</p>
 </div>
+
+<script>
+document.getElementById('errorTime').textContent = new Date().toLocaleString();
+</script>
 {% endblock %}

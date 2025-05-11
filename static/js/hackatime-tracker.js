@@ -441,15 +441,15 @@ class HackatimeTracker {
                     if (popup) popup.remove();
 
                     this.isActive = false;
-                    alert('Hackatime has been disconnected successfully.');
+                    showToast('success', 'Hackatime has been disconnected successfully.');
                 } else {
                     console.error('[Hackatime] Failed to disconnect:', data.message);
-                    alert('Failed to disconnect Hackatime: ' + data.message);
+                    showToast('error', 'Failed to disconnect Hackatime: ' + data.message);
                 }
             })
             .catch(error => {
                 console.error('[Hackatime] Error disconnecting:', error);
-                alert('Error disconnecting Hackatime. Please try again.');
+                showToast('error', 'Error disconnecting Hackatime. Please try again.');
             });
         }
     }

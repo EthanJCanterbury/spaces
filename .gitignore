@@ -1,3 +1,4 @@
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -142,6 +143,10 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Content with potential secrets
+attached_assets/content-*.md
+attached_assets/
 
 # Pyre type checker
 .pyre/
