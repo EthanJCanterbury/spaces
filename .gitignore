@@ -234,6 +234,10 @@ __pycache__/
 *.backup
 *~
 
+# Replit specific files
+.replit
+replit.nix
+
 # Security and keys
 *.pem
 *.key
