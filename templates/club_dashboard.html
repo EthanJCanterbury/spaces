@@ -3354,9 +3354,13 @@
                                     <div class="screenshot-preview" id="screenshot-preview">
                                         <p>No image selected</p>
                                     </div>
+                                    <div id="upload-status" style="margin-top: 10px; display: none;">
+                                        <div class="loading-spinner" style="display: inline-block; margin-right: 8px;"></div>
+                                        <span>Uploading to CDN...</span>
+                                    </div>
                                 </div>
                                 <input type="hidden" id="screenshot" class="form-input">
-                                <div class="hint">Upload a screenshot of your project. The image will be converted to a data URL without being stored on our servers.</div>
+                                <div class="hint">Upload a screenshot of your project. The image will be uploaded to a free CDN and the URL will be used for submission.</div>
                             </div>
 </old_str>
 <new_str>
@@ -4020,6 +4024,7 @@
                     const screenshotUpload = document.getElementById('screenshot-upload');
                     const screenshotPreview = document.getElementById('screenshot-preview');
                     const screenshotDataField = document.getElementById('screenshot');
+                    const uploadStatus = document.getElementById('upload-status');
                     
                     if (screenshotUpload) {
                         screenshotUpload.addEventListener('change', function(e) {
@@ -4038,26 +4043,68 @@
                                 return;
                             }
                             
-                            // Check file size (max 3MB)
-                            if (file.size > 3 * 1024 * 1024) {
-                                showToast('error', 'Image is too large. Maximum size is 3MB');
+                            // Check file size (max 2MB for free ImgBB)
+                            if (file.size > 2 * 1024 * 1024) {
+                                showToast('error', 'Image is too large. Maximum size is 2MB');
                                 screenshotPreview.innerHTML = '<p>No image selected</p>';
                                 screenshotDataField.value = '';
                                 return;
                             }
                             
-                            // Convert to data URL
+                            // Show preview first
                             const reader = new FileReader();
                             reader.onload = function(event) {
-                                // Save data URL to hidden field
-                                screenshotDataField.value = event.target.result;
-                                
                                 // Display preview
                                 screenshotPreview.innerHTML = '';
                                 const img = document.createElement('img');
                                 img.src = event.target.result;
                                 img.classList.add('preview-image');
                                 screenshotPreview.appendChild(img);
+                                
+                                // Show uploading status
+                                uploadStatus.style.display = 'block';
+                                
+                                // Upload to ImgBB
+                                uploadToImgBB(file);
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    }
+                    
+                    function uploadToImgBB(file) {
+                        const formData = new FormData();
+                        formData.append('image', file);
+                        
+                        fetch('https://api.imgbb.com/1/upload?key=c88d4ad065d80909c550ca18d2e86bbd', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                // Save the direct image URL to the hidden field
+                                screenshotDataField.value = data.data.url;
+                                showToast('success', 'Screenshot uploaded successfully');
+                            } else {
+                                throw new Error('Image upload failed');
+                            }
+                            uploadStatus.style.display = 'none';
+                        })
+                        .catch(error => {
+                            console.error('Error uploading image:', error);
+                            showToast('error', 'Failed to upload screenshot. Please try again.');
+                            uploadStatus.style.display = 'none';
+                            
+                            // Fallback to data URL if upload fails
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                screenshotDataField.value = event.target.result;
+                                showToast('info', 'Using local image data as fallback');
                             };
                             reader.readAsDataURL(file);
                         });
