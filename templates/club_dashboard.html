@@ -3863,16 +3863,10 @@
                         return;
                     }
                     
-                    // Validate screenshot URL
-                    if (screenshotUrl.value) {
-                        const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-                        const isValidImageUrl = validExtensions.some(ext => screenshotUrl.value.toLowerCase().endsWith(ext));
-                        
-                        if (!isValidImageUrl) {
-                            showToast('error', 'Screenshot URL must end with a valid image extension (.jpg, .jpeg, .png, .gif, .webp)');
-                            screenshotUrl.focus();
-                            return;
-                        }
+                    // Check if we have screenshot data
+                    if (!screenshotUrl.value) {
+                        showToast('error', 'Please upload a screenshot of your project');
+                        return;
                     }
                     
                     // Get selected project details

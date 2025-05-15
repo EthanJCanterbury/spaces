@@ -82,21 +82,15 @@ def submit_pizza_grant():
             if field not in shipping_address or not shipping_address[field]:
                 return jsonify({'success': False, 'message': f'Missing required address field: {field}'}), 400
 
-        # Validate screenshot URL
-        screenshot_url = data.get('screenshot', '')
-        if not screenshot_url:
-            return jsonify({'success': False, 'message': 'Screenshot URL is required'}), 400
+        # Get screenshot data (could be URL or data URL)
+        screenshot_data = data.get('screenshot', '')
+        if not screenshot_data:
+            return jsonify({'success': False, 'message': 'Screenshot is required'}), 400
             
-        # Check if the URL ends with an image extension
-        valid_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
-        is_valid_image_url = any(screenshot_url.lower().endswith(ext) for ext in valid_extensions)
-        if not is_valid_image_url:
-            return jsonify({'success': False, 'message': 'Screenshot URL must point to an image file (with .jpg, .png, .gif, or similar extension)'}), 400
-            
-        # Format screenshot URL as an array of objects for Airtable if it's a valid URL
-        if is_valid_image_url:
-            # Airtable requires this format: [{"url": "https://..."}]
-            data['screenshot'] = [{"url": screenshot_url}]
+        # Format screenshot for Airtable
+        # If it starts with data:, it's a data URL that Airtable can handle directly
+        # Airtable requires this format: [{"url": "https://..."} or {"url": "data:image/..."}]
+        data['screenshot'] = [{"url": screenshot_data}]
             
         # Validate submitter is authorized (either submitting for self or as club leader/co-leader)
         is_authorized = False
