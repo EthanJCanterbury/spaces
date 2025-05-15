@@ -104,6 +104,7 @@ class AirtableService:
             'Last Name': submission_data.get('last_name', ''),
             'GitHub Username': submission_data.get('username'),
             'Email': submission_data.get('email', ''),
+            'Leader Email': submission_data.get('leader_email', ''),
             'Description': submission_data.get('project_description'),
             'Code URL': submission_data.get('github_url'),
             'Playable URL': submission_data.get('live_url'),

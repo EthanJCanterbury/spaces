@@ -157,11 +157,16 @@ def submit_pizza_grant():
         if 'status' not in data:
             data['status'] = 'pending'
             
-        # Look up club name from database
-        from models import Club
+        # Look up club name and leader email from database
+        from models import Club, User
         club = Club.query.filter_by(id=data['club_id']).first()
         if club:
             data['club_name'] = club.name
+            
+            # Get club leader's email
+            leader = User.query.filter_by(id=club.leader_id).first()
+            if leader:
+                data['leader_email'] = leader.email
         else:
             data['club_name'] = "Unknown Club"
 
