@@ -579,6 +579,34 @@ function loadFiles() {
     
     if (savedFiles) {
         files = JSON.parse(savedFiles);
+        
+        // Create tabs for all loaded files
+        const fileTabsContainer = document.querySelector('.file-tabs');
+        if (fileTabsContainer) {
+            // Clear existing tabs except the add button
+            const addFileBtn = document.querySelector('.file-tab-add');
+            fileTabsContainer.innerHTML = '';
+            if (addFileBtn) {
+                fileTabsContainer.appendChild(addFileBtn);
+            }
+            
+            // Create tabs for each file
+            let firstFile = Object.keys(files)[0];
+            Object.keys(files).forEach(fileName => {
+                createFileTab(fileName, fileName === currentFile);
+                
+                // If no current file is set, use the first file
+                if (!currentFile) {
+                    currentFile = firstFile;
+                }
+            });
+            
+            // Make sure the current file's tab is active
+            const activeTab = document.querySelector(`.file-tab[data-filename="${currentFile}"]`);
+            if (activeTab) {
+                activateTab(activeTab);
+            }
+        }
     } else {
         // Initialize with the current content
         const fileExtension = getFileExtension(currentLanguage);
@@ -590,6 +618,8 @@ function loadFiles() {
                 language: currentLanguage
             }
         };
+        
+        currentFile = initialFileName;
     }
 }
 
