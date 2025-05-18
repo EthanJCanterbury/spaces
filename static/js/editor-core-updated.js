@@ -354,10 +354,10 @@ function addFileTab(filename, fileType) {
     const icon = document.createElement('span');
     icon.className = `file-extension-icon ${fileType}-icon`;
     tab.appendChild(icon);
-
+    
     // Add filename as text node
     tab.appendChild(document.createTextNode(filename));
-
+    
     // Add close button
     const closeBtn = document.createElement('span');
     closeBtn.className = 'file-close';
@@ -500,12 +500,12 @@ function updateCursorPosition() {
     while (cursorPositionElement.firstChild) {
         cursorPositionElement.removeChild(cursorPositionElement.firstChild);
     }
-
+    
     // Create icon element safely
     const icon = document.createElement('i');
     icon.className = 'fas fa-map-marker-alt';
     cursorPositionElement.appendChild(icon);
-
+    
     // Add text node safely
     cursorPositionElement.appendChild(
         document.createTextNode(` Line ${cursor.line + 1}, Column ${cursor.ch + 1}`)
@@ -570,22 +570,22 @@ function saveContent(silent = false) {
         while (saveBtn.firstChild) {
             saveBtn.removeChild(saveBtn.firstChild);
         }
-
+        
         // Clear existing content
         while (saveBtn.firstChild) {
             saveBtn.removeChild(saveBtn.firstChild);
         }
-
+        
         // Create spinner icon
         const saveSpinnerIcon = document.createElement("i");
         saveSpinnerIcon.className = "fas fa-spinner fa-spin";
-
+        
         // Add text node
-        const savingTextNode = document.createTextNode(" Saving...");
-
+        const saveTextNode = document.createTextNode(" Saving...");
+        
         // Assemble button content
         saveBtn.appendChild(saveSpinnerIcon);
-        saveBtn.appendChild(savingTextNode);
+        saveBtn.appendChild(saveTextNode);
         saveBtn.disabled = true;
 
         fetch(`/api/site/${siteId}/save_pages`, {
@@ -602,28 +602,28 @@ function saveContent(silent = false) {
             while (saveBtn.firstChild) {
                 saveBtn.removeChild(saveBtn.firstChild);
             }
-
+            
         // Clear existing content
         while (saveBtn.firstChild) {
             saveBtn.removeChild(saveBtn.firstChild);
         }
-
+        
         // Create spinner icon
         const spinnerIcon = document.createElement("i");
         spinnerIcon.className = "fas fa-spinner fa-spin";
-
+        
         // Add text node
         const textNode = document.createTextNode(" Saving...");
-
+        
         // Assemble button content
         saveBtn.appendChild(spinnerIcon);
         saveBtn.appendChild(textNode);
             const saveIcon = document.createElement("i");
             saveIcon.className = "fas fa-save";
-
+            
             // Add text node
             const textNode = document.createTextNode(" Save Changes");
-
+            
             // Assemble button content
             saveBtn.appendChild(saveIcon);
             saveBtn.appendChild(textNode);
@@ -633,34 +633,34 @@ function saveContent(silent = false) {
             while (saveBtn.firstChild) {
                 saveBtn.removeChild(saveBtn.firstChild);
             }
-
+            
             // Create save icon
             const saveIcon = document.createElement("i");
             saveIcon.className = "fas fa-save";
-
+            
             // Add text node
             const saveChangesTextNode = document.createTextNode(" Save Changes");
             // Clear existing content
             while (saveBtn.firstChild) {
                 saveBtn.removeChild(saveBtn.firstChild);
             }
-
+            
         // Create spinner icon
         const savingSpinnerIcon = document.createElement("i");
         savingSpinnerIcon.className = "fas fa-spinner fa-spin";
-
+        
         // Add text node
         const savingTextNode = document.createTextNode(" Saving...");
-
+        
         // Assemble button content
         saveBtn.appendChild(spinnerIcon);
         saveBtn.appendChild(textNode);
             const saveIcon = document.createElement("i");
             saveIcon.className = "fas fa-save";
-
+            
             // Add text node
             const textNode = document.createTextNode(" Save Changes");
-
+            
             // Assemble button content
             saveBtn.appendChild(saveIcon);
             saveBtn.appendChild(textNode);
@@ -670,14 +670,14 @@ function saveContent(silent = false) {
             while (saveBtn.firstChild) {
                 saveBtn.removeChild(saveBtn.firstChild);
             }
-
+            
             // Create save icon
             const saveIcon = document.createElement("i");
             saveIcon.className = "fas fa-save";
-
+            
             // Add text node
             const textNode = document.createTextNode(" Save Changes");
-
+            
             // Assemble button content
             saveBtn.appendChild(saveIcon);
             saveBtn.appendChild(textNode);
@@ -700,14 +700,14 @@ function saveContent(silent = false) {
         while (runBtn.firstChild) {
             runBtn.removeChild(runBtn.firstChild);
         }
-
+        
         // Create spinner icon
         const spinnerIcon = document.createElement("i");
         spinnerIcon.className = "fas fa-spinner fa-spin";
-
+        
         // Add text node
         const textNode = document.createTextNode(" Running...");
-
+        
         // Assemble button content
         runBtn.appendChild(spinnerIcon);
         runBtn.appendChild(textNode);
@@ -717,14 +717,14 @@ function saveContent(silent = false) {
         while (runBtn.firstChild) {
             runBtn.removeChild(runBtn.firstChild);
         }
-
+        
         // Create play icon
         const playIcon = document.createElement("i");
         playIcon.className = "fas fa-play";
-
+        
         // Add text node
         const runTextNode = document.createTextNode(" Run");
-
+        
         // Assemble button content
         runBtn.appendChild(playIcon);
         runBtn.appendChild(runTextNode);
@@ -764,14 +764,14 @@ function updatePreview() {
         while (deployBtn.firstChild) {
             deployBtn.removeChild(deployBtn.firstChild);
         }
-
+        
         // Create spinner icon
         const spinnerIcon = document.createElement("i");
         spinnerIcon.className = "fas fa-spinner fa-spin";
-
+        
         // Add text node
         const textNode = document.createTextNode(" Deploying...");
-
+        
         // Assemble button content
         deployBtn.appendChild(spinnerIcon);
         deployBtn.appendChild(textNode);
@@ -785,15 +785,15 @@ function updatePreview() {
             while (deployBtn.firstChild) {
                 deployBtn.removeChild(deployBtn.firstChild);
             }
-
+            
             // Create rocket icon
             const rocketIcon = document.createElement("i");
             rocketIcon.className = "fas fa-rocket";
             rocketIcon.style.color = "white";
-
+            
             // Add text node
             const textNode = document.createTextNode(" Deploy");
-
+            
             // Assemble button content
             deployBtn.appendChild(rocketIcon);
             deployBtn.appendChild(textNode);
