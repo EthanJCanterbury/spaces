@@ -107,12 +107,13 @@ class PistonService:
                 }
         
         # Prepare the request payload
+        extension = cls._get_file_extension(language)
         payload = {
             "language": language,
             "version": version,
             "files": [
                 {
-                    "name": f"main.{cls._get_file_extension(language)}",
+                    "name": f"main.{extension}",
                     "content": code
                 }
             ],
@@ -545,7 +546,7 @@ class PistonService:
             "llvm_ir": "ll",
             "yeethon": "py"
         }
-        # Get appropriate extension or default to txt if not found
+        # Get appropriate extension without adding a period
         return extension_map.get(language.lower(), "txt")
     
     @classmethod
