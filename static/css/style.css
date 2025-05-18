@@ -3806,6 +3806,89 @@ select:focus {
     pointer-events: none;
 }
 
+/* Console styling */
+.console-panel {
+    background-color: #1e1e1e;
+    color: #f8f8f8;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    padding: 15px;
+    height: 100%;
+    overflow: auto;
+    white-space: pre-wrap;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #333;
+}
+
+.console-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f5f5f5;
+    padding: 10px 15px;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid #ddd;
+    border-bottom: none;
+}
+
+.console-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.console-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.console-controls button {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px 10px;
+    color: #333;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.console-controls button:hover {
+    background-color: #e0e0e0;
+}
+
+.console-output {
+    background-color: #1e1e1e;
+    color: #f8f8f8;
+    font-family: 'Fira Code', 'Menlo', 'Monaco', 'Courier New', monospace;
+    padding: 15px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    border-radius: 0 0 8px 8px;
+    height: calc(100% - 45px);
+    border: 1px solid #333;
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+.console-output .success {
+    color: #4caf50;
+}
+
+.console-output .error {
+    color: #f44336;
+}
+
+.console-output .warning {
+    color: #ff9800;
+}
+
+.console-output .info {
+    color: #2196f3;
+}
+
 /* Toast styling */
 #toast-container {
     position: fixed;
