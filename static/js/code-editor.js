@@ -594,6 +594,236 @@ function loadFiles() {
 }
 
 /**
+ * Get the appropriate file extension for a language
+ * @param {string} language - The programming language
+ * @returns {string} The file extension (without the dot)
+ */
+function getFileExtension(language) {
+    if (!language) return 'txt';
+    
+    language = language.toLowerCase();
+    
+    const extensionMap = {
+        // Mainstream languages
+        "python": "py",
+        "python2": "py",
+        "python3": "py",
+        "javascript": "js",
+        "typescript": "ts",
+        "java": "java",
+        "c": "c",
+        "cpp": "cpp",
+        "c++": "cpp",
+        "csharp": "cs",
+        "c#": "cs",
+        "go": "go",
+        "ruby": "rb",
+        "rust": "rs",
+        "php": "php",
+        "swift": "swift",
+        "kotlin": "kt",
+        "dart": "dart",
+        "scala": "scala",
+        "groovy": "groovy",
+        
+        // Scripting languages
+        "lua": "lua",
+        "perl": "pl",
+        "r": "r",
+        "rscript": "r",
+        "bash": "sh",
+        "shell": "sh",
+        "powershell": "ps1",
+        
+        // Functional languages
+        "haskell": "hs",
+        "elixir": "ex",
+        "erlang": "erl",
+        "clojure": "clj",
+        "lisp": "lisp",
+        "scheme": "scm",
+        "racket": "rkt",
+        "fsharp": "fs",
+        "ocaml": "ml",
+        
+        // Systems languages
+        "zig": "zig",
+        "vlang": "v",
+        "nim": "nim",
+        "crystal": "cr",
+        "d": "d",
+        "fortran": "f90",
+        "cobol": "cbl",
+        "pascal": "pas",
+        "ada": "adb",
+        "assembly": "asm",
+        "nasm": "asm",
+        "nasm64": "asm",
+        
+        // Database languages
+        "sql": "sql",
+        "sqlite3": "sql",
+        
+        // Other languages
+        "matlab": "m",
+        "octave": "m",
+        "prolog": "pl",
+        "lolcode": "lol",
+        "brainfuck": "bf",
+        "befunge93": "b93",
+        "emojicode": "emojic",
+        "rockstar": "rock",
+        "vyxal": "vy",
+        "jelly": "jelly",
+        "osabie": "osabie",
+        "paradoc": "pdc",
+        "ponylang": "pony",
+        "samarium": "sm",
+        "smalltalk": "st",
+        "tcl": "tcl",
+        "verilog": "v",
+        "vhdl": "vhd",
+        "coffeescript": "coffee",
+        "html": "html",
+        "css": "css",
+        "elm": "elm",
+        "solidity": "sol",
+        "llvm_ir": "ll",
+        "yeethon": "py",
+        "basic": "bas",
+        "basic.net": "vb"
+    };
+    
+    return extensionMap[language] || 'txt';
+}
+
+/**
+ * Get the appropriate CodeMirror mode for a language or file
+ * @param {string} language - The programming language or filename
+ * @returns {string} The CodeMirror mode
+ */
+function getCodeMirrorMode(language) {
+    // If we have a filename, extract the extension
+    if (language.includes('.')) {
+        const extension = language.split('.').pop().toLowerCase();
+        return getCodeMirrorModeFromExtension(extension);
+    }
+    
+    // Handle direct language names
+    language = language.toLowerCase();
+    
+    const modeMap = {
+        // Mainstream languages with specific modes
+        "python": "python",
+        "python2": "python",
+        "python3": "python",
+        "javascript": "javascript",
+        "typescript": "javascript",
+        "java": "clike",
+        "c": "clike",
+        "c++": "clike",
+        "cpp": "clike",
+        "csharp": "clike",
+        "c#": "clike",
+        "go": "go",
+        "ruby": "ruby",
+        "rust": "rust",
+        "php": "php",
+        "swift": "swift",
+        "kotlin": "clike",
+        "dart": "dart",
+        "scala": "clike",
+        "rscript": "r",
+        "matlab": "octave",
+        "octave": "octave",
+        "bash": "shell",
+        "powershell": "powershell",
+        "lua": "lua",
+        "perl": "perl",
+        "haskell": "haskell",
+        "elixir": "ruby",
+        "erlang": "erlang",
+        "clojure": "clojure",
+        "lisp": "commonlisp",
+        "racket": "scheme",
+        "fsharp": "mllike",
+        "ocaml": "mllike",
+        "nim": "python",
+        "crystal": "ruby",
+        "groovy": "groovy",
+        "basic": "vb",
+        "fortran": "fortran",
+        "cobol": "cobol",
+        "pascal": "pascal",
+        "prolog": "prolog",
+        "smalltalk": "smalltalk",
+        "sqlite3": "sql",
+        "coffeescript": "coffeescript",
+        "julia": "julia",
+        "html": "htmlmixed",
+        "css": "css",
+        "xml": "xml",
+        "sql": "sql"
+    };
+    
+    return modeMap[language] || "text/plain";
+}
+
+/**
+ * Get the CodeMirror mode from a file extension
+ * @param {string} extension - The file extension (without the dot)
+ * @returns {string} The CodeMirror mode
+ */
+function getCodeMirrorModeFromExtension(extension) {
+    const extensionModeMap = {
+        // Common file extensions
+        "js": "javascript",
+        "ts": "javascript", 
+        "jsx": "javascript",
+        "tsx": "javascript",
+        "py": "python",
+        "java": "clike",
+        "c": "clike",
+        "cpp": "clike",
+        "h": "clike",
+        "hpp": "clike",
+        "cs": "clike",
+        "go": "go",
+        "rb": "ruby",
+        "rs": "rust",
+        "php": "php",
+        "swift": "swift",
+        "kt": "clike",
+        "dart": "dart",
+        "scala": "clike",
+        "r": "r",
+        "m": "octave",
+        "sh": "shell",
+        "ps1": "powershell",
+        "lua": "lua",
+        "pl": "perl",
+        "hs": "haskell",
+        "ex": "ruby",
+        "erl": "erlang",
+        "clj": "clojure",
+        "lisp": "commonlisp",
+        "rkt": "scheme",
+        "fs": "mllike",
+        "ml": "mllike",
+        "html": "htmlmixed",
+        "htm": "htmlmixed",
+        "xml": "xml",
+        "css": "css",
+        "sql": "sql",
+        "json": "javascript",
+        "md": "markdown",
+        "txt": "text/plain"
+    };
+    
+    return extensionModeMap[extension] || "text/plain";
+}
+
+/**
  * Set up undo/redo functionality
  */
 function setupUndoRedo() {

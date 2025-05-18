@@ -21,7 +21,7 @@
         border-radius: 6px;
         overflow: hidden;
     }
-    
+
     .console-header {
         display: flex;
         justify-content: space-between;
@@ -30,7 +30,7 @@
         background-color: #f6f8fa;
         border-bottom: 1px solid #e1e4e8;
     }
-    
+
     .console-title {
         display: flex;
         align-items: center;
@@ -38,7 +38,7 @@
         font-weight: 600;
         color: #24292e;
     }
-    
+
     .console-output {
         flex: 1;
         margin: 0;
@@ -53,19 +53,19 @@
         word-break: break-all;
         height: calc(100% - 40px);
     }
-    
+
     .console-output .error {
         color: #ff6b6b;
     }
-    
+
     .console-output .success {
         color: #69db7c;
     }
-    
+
     .console-output .info {
         color: #4dabf7;
     }
-    
+
     .file-tabs {
         display: flex;
         overflow-x: auto;
@@ -75,20 +75,20 @@
         padding-top: 8px;
         scrollbar-width: thin;
     }
-    
+
     .file-tabs::-webkit-scrollbar {
         height: 5px;
     }
-    
+
     .file-tabs::-webkit-scrollbar-track {
         background: #f1f1f1;
     }
-    
+
     .file-tabs::-webkit-scrollbar-thumb {
         background: #888;
         border-radius: 5px;
     }
-    
+
     .file-tab {
         padding: 8px 16px;
         background-color: #f6f8fa;
@@ -106,14 +106,14 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    
+
     .file-tab.active {
         background-color: #fff;
         border-bottom: 1px solid #fff;
         margin-bottom: -1px;
         z-index: 1;
     }
-    
+
     .file-tab-close {
         background: none;
         border: none;
@@ -127,12 +127,12 @@
         align-items: center;
         justify-content: center;
     }
-    
+
     .file-tab-close:hover {
         background-color: rgba(0, 0, 0, 0.1);
         color: #24292e;
     }
-    
+
     .file-tab-add {
         padding: 8px 12px;
         background: none;
@@ -141,18 +141,18 @@
         color: #6e7781;
         border-radius: 6px 6px 0 0;
     }
-    
+
     .file-tab-add:hover {
         background-color: rgba(0, 0, 0, 0.05);
         color: #24292e;
     }
-    
+
     .language-selector {
         display: flex;
         align-items: center;
         margin-right: 16px;
     }
-    
+
     .language-selector select {
         padding: 6px 10px;
         border: 1px solid #e1e4e8;
@@ -160,12 +160,12 @@
         background-color: #f6f8fa;
         font-size: 14px;
     }
-    
+
     /* Adjust the editor container to accommodate the language selector */
     .editor-container.with-language-selector .editor-pane {
         height: calc(100% - 50px);
     }
-    
+
     /* Modal Styles */
     .modal {
         position: fixed;
@@ -180,7 +180,7 @@
         align-items: center;
         overflow: auto;
     }
-    
+
     .modal-content {
         position: relative;
         background-color: #fff;
@@ -192,12 +192,12 @@
         margin: 0;
         animation: modalAppear 0.3s ease-out;
     }
-    
+
     @keyframes modalAppear {
         from { opacity: 0; transform: translateY(-30px); }
         to { opacity: 1; transform: translateY(0); }
     }
-    
+
     .modal-header {
         padding: 16px 20px;
         border-bottom: 1px solid #e1e4e8;
@@ -205,12 +205,12 @@
         justify-content: space-between;
         align-items: center;
     }
-    
+
     .modal-header h2 {
         margin: 0;
         font-size: 18px;
     }
-    
+
     .close-modal {
         background: none;
         border: none;
@@ -218,11 +218,11 @@
         cursor: pointer;
         color: #6e7781;
     }
-    
+
     .modal-body {
         padding: 20px;
     }
-    
+
     .modal-footer {
         padding: 16px 20px;
         border-top: 1px solid #e1e4e8;
@@ -230,17 +230,17 @@
         justify-content: flex-end;
         gap: 12px;
     }
-    
+
     .form-group {
         margin-bottom: 16px;
     }
-    
+
     .form-group label {
         display: block;
         margin-bottom: 8px;
         font-weight: 500;
     }
-    
+
     .form-group input {
         width: 100%;
         padding: 8px 12px;
@@ -472,7 +472,7 @@ function closeModal(modalId) {
 // Setup everything when the document is ready
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Setting up file modal handlers for code editor');
-    
+
     // Add file button should open the modal
     const addFileBtn = document.getElementById('addFileBtn');
     if (addFileBtn) {
@@ -488,7 +488,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 100);
         });
     }
-    
+
     // Close modal button
     const closeBtn = document.getElementById('closeNewFileModal');
     if (closeBtn) {
@@ -496,7 +496,7 @@ document.addEventListener('DOMContentLoaded', function() {
             closeModal('new-file-modal');
         });
     }
-    
+
     // Cancel button
     const cancelBtn = document.getElementById('cancelNewFile');
     if (cancelBtn) {
@@ -504,7 +504,7 @@ document.addEventListener('DOMContentLoaded', function() {
             closeModal('new-file-modal');
         });
     }
-    
+
     // Create button
     const createBtn = document.getElementById('createNewFileBtn');
     if (createBtn) {
@@ -518,7 +518,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Close modal when clicking outside
     const newFileModal = document.getElementById('new-file-modal');
     if (newFileModal) {
@@ -656,3 +656,144 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {# Removed Socket.io and collaboration features #}
 {% endblock %}
+
+<script>
+        // Initialize editor with the current language
+        const currentLanguage = "{{ site.language }}";
+        const fileExtension = getFileExtension(currentLanguage);
+        let currentFileName = `main.${fileExtension}`;
+
+        // Function to get proper file extension for a language
+        function getFileExtension(language) {
+            if (!language) return 'txt';
+
+            language = language.toLowerCase();
+
+            const extensionMap = {
+                // Mainstream languages
+                "python": "py",
+                "python2": "py",
+                "python3": "py",
+                "javascript": "js",
+                "typescript": "ts",
+                "java": "java",
+                "c": "c",
+                "cpp": "cpp",
+                "c++": "cpp",
+                "csharp": "cs",
+                "c#": "cs",
+                "go": "go",
+                "ruby": "rb",
+                "rust": "rs",
+                "php": "php",
+                "swift": "swift",
+                "kotlin": "kt",
+                "dart": "dart",
+                "scala": "scala",
+                "groovy": "groovy",
+                "lua": "lua",
+                "perl": "pl",
+                "r": "r",
+                "rscript": "r",
+                "bash": "sh",
+                "shell": "sh",
+                "powershell": "ps1",
+                "haskell": "hs",
+                "elixir": "ex",
+                "erlang": "erl",
+                "clojure": "clj",
+                "lisp": "lisp",
+                "racket": "rkt",
+                "fsharp": "fs",
+                "ocaml": "ml",
+                "zig": "zig",
+                "nim": "nim",
+                "crystal": "cr",
+                "d": "d",
+                "fortran": "f90",
+                "cobol": "cbl",
+                "pascal": "pas",
+                "prolog": "pl",
+                "smalltalk": "st",
+                "sql": "sql",
+                "sqlite3": "sql",
+                "coffeescript": "coffee",
+                "julia": "jl",
+                "html": "html",
+                "css": "css",
+                "basic": "bas"
+            };
+
+            return extensionMap[language] || 'txt';
+        }
+
+        // Function to get the appropriate CodeMirror mode
+        function getCodeMirrorMode(language) {
+            language = language.toLowerCase();
+
+            const modeMap = {
+                // Common languages
+                "python": "python",
+                "javascript": "javascript",
+                "typescript": "javascript",
+                "c++": "text/x-c++src",
+                "cpp": "text/x-c++src",
+                "c": "text/x-csrc",
+                "java": "text/x-java",
+                "php": "php",
+                "html": "htmlmixed",
+                "css": "css",
+                "xml": "xml",
+                "json": "javascript",
+                "go": "go",
+                "ruby": "ruby",
+                "rust": "rust",
+                "sql": "sql",
+                "csharp": "text/x-csharp",
+                "c#": "text/x-csharp",
+                "bash": "shell",
+                "sh": "shell",
+                "lua": "lua",
+                "perl": "perl",
+                "r": "r",
+                "swift": "swift",
+                "kotlin": "text/x-java",
+                "scala": "text/x-scala",
+                "haskell": "haskell",
+                "lisp": "commonlisp",
+                ""markdown": "markdown",
+                "fortran": "fortran",
+                "pascal": "pascal",
+                "yaml": "yaml",
+                "basic": "vb"
+            };
+
+            return modeMap[language] || "text/plain";
+        }
+
+        // Select the appropriate mode based on language
+        let editorMode = getCodeMirrorMode(currentLanguage);
+
+        // Set up the CodeMirror editor
+        const editor = CodeMirror.fromTextArea(document.getElementById("codeEditor"), {
+            lineNumbers: true,
+            indentUnit: 4,
+            mode: editorMode,
+            theme: "eclipse",
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            styleActiveLine: true,
+            foldGutter: true,
+            gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+            extraKeys: {
+                "Ctrl-Space": "autocomplete",
+                "Tab": function(cm) {
+                    if (cm.somethingSelected()) {
+                        cm.indentSelection("add");
+                    } else {
+                        cm.replaceSelection("    ", "end", "+input");
+                    }
+                }
+            }
+        });
+</script>
