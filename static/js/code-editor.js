@@ -402,6 +402,7 @@ function getFileExtension(language) {
         'java': 'java',
         'c': 'c',
         'cpp': 'cpp',
+        'c++': 'cpp',
         'csharp': 'cs',
         'go': 'go',
         'ruby': 'rb',
@@ -412,7 +413,12 @@ function getFileExtension(language) {
         'bash': 'sh'
     };
     
-    return extensionMap[language] || 'txt';
+    // Special case handling for C++ variants
+    if (language === 'c++' || language === 'cpp') {
+        return 'cpp';
+    }
+    
+    return extensionMap[language.toLowerCase()] || 'txt';
 }
 
 /**

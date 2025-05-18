@@ -27,4 +27,7 @@ def get_file_extension(language):
         "html": ".html",
         "css": ".css",
     }
+    # Special case handling for C++ variants
+    if language in ["c++", "cpp"]:
+        return ".cpp"
     return extension_map.get(language, ".txt")
