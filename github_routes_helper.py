@@ -58,7 +58,15 @@ def get_file_extension(language):
         "matlab": ".m",
         "octave": ".m",
         "sql": ".sql",
-        "sqlite3": ".sql"
+        "sqlite3": ".sql",
+        "brainfuck": ".bf",
+        "befunge93": ".bf93",
+        "emojicode": ".emojic",
+        "golfscript": ".gs",
+        "vyxal": ".vy",
+        "yeethon": ".py",
+        "basic": ".bas",
+        "vb": ".vb"
     }
     
     # Special case handling for common language variants

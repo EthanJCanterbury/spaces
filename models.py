@@ -325,6 +325,17 @@ class Site(db.Model):
             slug = re.sub(r'\s+', '-', slug)
             # Remove leading/trailing hyphens
             slug = slug.strip('-')
+            
+            # Add proper file extension based on language if it's a code site
+            language = kwargs.get('language', '').lower()
+            if language:
+                from piston_service import PistonService
+                ext = PistonService.get_language_extension(language)
+                if ext:
+                    # Ensure slug doesn't already have an extension
+                    if not slug.endswith('.' + ext):
+                        slug = f"{slug}.{ext}"
+            
             kwargs['slug'] = slug
         super(Site, self).__init__(*args, **kwargs)
 
