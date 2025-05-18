@@ -213,14 +213,25 @@ class HackatimeTracker {
             const badge = document.createElement('div');
             badge.id = 'hackatime-badge';
             badge.className = 'hackatime-badge';
-            badge.innerHTML = `
-                <div class="hackatime-badge-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="hackatime-badge-status">
-                    <span id="hackatime-status">Connected</span>
-                </div>
-            `;
+            
+            // Create badge icon
+            const badgeIcon = document.createElement('div');
+            badgeIcon.className = 'hackatime-badge-icon';
+            const clockIcon = document.createElement('i');
+            clockIcon.className = 'fas fa-clock';
+            badgeIcon.appendChild(clockIcon);
+            
+            // Create badge status
+            const badgeStatus = document.createElement('div');
+            badgeStatus.className = 'hackatime-badge-status';
+            const statusSpan = document.createElement('span');
+            statusSpan.id = 'hackatime-status';
+            statusSpan.textContent = 'Connected';
+            badgeStatus.appendChild(statusSpan);
+            
+            // Assemble badge
+            badge.appendChild(badgeIcon);
+            badge.appendChild(badgeStatus);
 
             // Add tooltip
             badge.title = 'Hackatime is tracking your coding activity';
@@ -229,46 +240,92 @@ class HackatimeTracker {
             // Set initial status
             this.updateBadgeStatus('connecting');
 
-            // Add popup for detailed info
+            // Create popup container
             const popup = document.createElement('div');
             popup.id = 'hackatime-popup';
             popup.className = 'hackatime-popup';
             popup.style.display = 'none';
-            popup.innerHTML = `
-                <div class="hackatime-popup-header">
-                    <h3>Hackatime Integration</h3>
-                    <button id="hackatime-close-popup" class="hackatime-close-btn">×</button>
-                </div>
-                <div class="hackatime-popup-content">
-                    <div class="hackatime-popup-info">
-                        <div class="hackatime-info-row">
-                            <span>Project:</span>
-                            <span id="hackatime-project">${this.siteName}</span>
-                        </div>
-                        <div class="hackatime-info-row">
-                            <span>Current file:</span>
-                            <span id="hackatime-file">${this.entityName}</span>
-                        </div>
-                        <div class="hackatime-info-row">
-                            <span>Status:</span>
-                            <span id="hackatime-popup-status">Connecting...</span>
-                        </div>
-                        <div class="hackatime-info-row">
-                            <span>Last heartbeat:</span>
-                            <span id="hackatime-last-heartbeat">Never</span>
-                        </div>
-                        <div class="hackatime-info-row">
-                            <span>Heartbeats sent:</span>
-                            <span id="hackatime-heartbeat-count">0</span>
-                        </div>
-                    </div>
-                    <div class="hackatime-popup-actions">
-                        <button id="hackatime-toggle-pause" class="hackatime-btn">Pause Tracking</button>
-                        <a href="https://hackatime.hackclub.com/" target="_blank" class="hackatime-btn hackatime-btn-dashboard">Dashboard</a>
-                        <button id="hackatime-disconnect" class="hackatime-btn hackatime-btn-danger">Disconnect</button>
-                    </div>
-                </div>
-            `;
+            
+            // Create popup header
+            const popupHeader = document.createElement('div');
+            popupHeader.className = 'hackatime-popup-header';
+            
+            const popupTitle = document.createElement('h3');
+            popupTitle.textContent = 'Hackatime Integration';
+            
+            const closeButton = document.createElement('button');
+            closeButton.id = 'hackatime-close-popup';
+            closeButton.className = 'hackatime-close-btn';
+            closeButton.textContent = '×';
+            
+            popupHeader.appendChild(popupTitle);
+            popupHeader.appendChild(closeButton);
+            
+            // Create popup content
+            const popupContent = document.createElement('div');
+            popupContent.className = 'hackatime-popup-content';
+            
+            // Create info section
+            const popupInfo = document.createElement('div');
+            popupInfo.className = 'hackatime-popup-info';
+            
+            // Helper function to create info row
+            const createInfoRow = (label, id, value) => {
+                const row = document.createElement('div');
+                row.className = 'hackatime-info-row';
+                
+                const labelSpan = document.createElement('span');
+                labelSpan.textContent = label;
+                
+                const valueSpan = document.createElement('span');
+                valueSpan.id = id;
+                valueSpan.textContent = value;
+                
+                row.appendChild(labelSpan);
+                row.appendChild(valueSpan);
+                return row;
+            };
+            
+            // Add info rows
+            popupInfo.appendChild(createInfoRow('Project:', 'hackatime-project', this.siteName));
+            popupInfo.appendChild(createInfoRow('Current file:', 'hackatime-file', this.entityName));
+            popupInfo.appendChild(createInfoRow('Status:', 'hackatime-popup-status', 'Connecting...'));
+            popupInfo.appendChild(createInfoRow('Last heartbeat:', 'hackatime-last-heartbeat', 'Never'));
+            popupInfo.appendChild(createInfoRow('Heartbeats sent:', 'hackatime-heartbeat-count', '0'));
+            
+            // Create actions section
+            const popupActions = document.createElement('div');
+            popupActions.className = 'hackatime-popup-actions';
+            
+            // Create buttons
+            const togglePauseBtn = document.createElement('button');
+            togglePauseBtn.id = 'hackatime-toggle-pause';
+            togglePauseBtn.className = 'hackatime-btn';
+            togglePauseBtn.textContent = 'Pause Tracking';
+            
+            const dashboardLink = document.createElement('a');
+            dashboardLink.href = 'https://hackatime.hackclub.com/';
+            dashboardLink.target = '_blank';
+            dashboardLink.className = 'hackatime-btn hackatime-btn-dashboard';
+            dashboardLink.textContent = 'Dashboard';
+            
+            const disconnectBtn = document.createElement('button');
+            disconnectBtn.id = 'hackatime-disconnect';
+            disconnectBtn.className = 'hackatime-btn hackatime-btn-danger';
+            disconnectBtn.textContent = 'Disconnect';
+            
+            // Assemble actions
+            popupActions.appendChild(togglePauseBtn);
+            popupActions.appendChild(dashboardLink);
+            popupActions.appendChild(disconnectBtn);
+            
+            // Assemble popup content
+            popupContent.appendChild(popupInfo);
+            popupContent.appendChild(popupActions);
+            
+            // Assemble popup
+            popup.appendChild(popupHeader);
+            popup.appendChild(popupContent);
 
             document.body.appendChild(popup);
 

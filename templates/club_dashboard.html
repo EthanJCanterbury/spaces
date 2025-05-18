@@ -3360,14 +3360,14 @@
                                     </div>
                                 </div>
                                 <input type="hidden" id="screenshot" class="form-input">
-                                <div class="hint">Upload a screenshot of your project. The image will be uploaded to a free CDN and the URL will be used for submission.</div>
+                                <div class="hint">Upload a screenshot of your project. The image will be uploaded to our database and the URL will be used for submission.</div>
                             </div>
 </old_str>
 <new_str>
 
                             <div class="form-group">
                                 <label for="who-are-you">What did you learn about while making this project? <span class="required">*</span></label>
-                                <textarea id="who-are-you" class="form-textarea" rows="2" placeholder="Share what you learned while using Repl" required></textarea>
+                                <textarea id="who-are-you" class="form-textarea" rows="2" placeholder="Share what you learned while making your project!" required></textarea>
                             </div>
                             
                             <div class="form-group">
@@ -3889,7 +3889,7 @@
                     }
 
                     if (!whoAreYou.value.trim()) {
-                        showToast('error', 'Please enter what you learned about Repl');
+                        showToast('error', 'Please enter what you learned with your project!');
                         return;
                     }
 
@@ -4075,7 +4075,8 @@
                         const formData = new FormData();
                         formData.append('image', file);
                         
-                        fetch('https://api.imgbb.com/1/upload?key=c88d4ad065d80909c550ca18d2e86bbd', {
+                        // Use the ImgBB API key from the template variable
+                    fetch(`https://api.imgbb.com/1/upload?key={{ imgbb_api_key }}`, {
                             method: 'POST',
                             body: formData
                         })

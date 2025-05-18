@@ -496,8 +496,7 @@ function updateCursorPosition() {
     const cursor = editor.getCursor();
     lastCursorPosition = cursor;
     const cursorPositionElement = document.getElementById('cursorPosition');
-    
-    // Clear existing content safely
+    // Clear existing content
     while (cursorPositionElement.firstChild) {
         cursorPositionElement.removeChild(cursorPositionElement.firstChild);
     }
@@ -567,8 +566,36 @@ function saveContent(silent = false) {
             };
         });
 
-        const saveBtn = document.getElementById('saveBtn');
-        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        // Clear existing content
+        while (saveBtn.firstChild) {
+            saveBtn.removeChild(saveBtn.firstChild);
+        }
+        
+        // Create spinner icon
+        const spinnerIcon = document.createElement("i");
+        spinnerIcon.className = "fas fa-spinner fa-spin";
+        
+        // Add text node
+        const textNode = document.createTextNode(" Saving...");
+        
+        // Assemble button content
+        saveBtn.appendChild(spinnerIcon);
+        saveBtn.appendChild(textNode);
+        // Clear existing content
+        while (saveBtn.firstChild) {
+            saveBtn.removeChild(saveBtn.firstChild);
+        }
+        
+        // Create spinner icon
+        const spinnerIcon = document.createElement("i");
+        spinnerIcon.className = "fas fa-spinner fa-spin";
+        
+        // Add text node
+        const textNode = document.createTextNode(" Saving...");
+        
+        // Assemble button content
+        saveBtn.appendChild(spinnerIcon);
+        saveBtn.appendChild(textNode);
         saveBtn.disabled = true;
 
         fetch(`/api/site/${siteId}/save_pages`, {
@@ -581,10 +608,94 @@ function saveContent(silent = false) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                isDirty = false;
+            // Clear existing content
+            while (saveBtn.firstChild) {
+                saveBtn.removeChild(saveBtn.firstChild);
+            }
+            
+        // Clear existing content
+        while (saveBtn.firstChild) {
+            saveBtn.removeChild(saveBtn.firstChild);
+        }
+        
+        // Create spinner icon
+        const spinnerIcon = document.createElement("i");
+        spinnerIcon.className = "fas fa-spinner fa-spin";
+        
+        // Add text node
+        const textNode = document.createTextNode(" Saving...");
+        
+        // Assemble button content
+        saveBtn.appendChild(spinnerIcon);
+        saveBtn.appendChild(textNode);
+            const saveIcon = document.createElement("i");
+            saveIcon.className = "fas fa-save";
+            
+            // Add text node
+            const textNode = document.createTextNode(" Save Changes");
+            
+            // Assemble button content
+            saveBtn.appendChild(saveIcon);
+            saveBtn.appendChild(textNode);
                 if (!silent) {
                     showToast("success", "Changes saved successfully!");
-                }
+            // Clear existing content
+            while (saveBtn.firstChild) {
+                saveBtn.removeChild(saveBtn.firstChild);
+            }
+            
+            // Create save icon
+            const saveIcon = document.createElement("i");
+            saveIcon.className = "fas fa-save";
+            
+            // Add text node
+            const textNode = document.createTextNode(" Save Changes");
+            // Clear existing content
+            while (saveBtn.firstChild) {
+                saveBtn.removeChild(saveBtn.firstChild);
+            }
+            
+        // Clear existing content
+        while (saveBtn.firstChild) {
+            saveBtn.removeChild(saveBtn.firstChild);
+        }
+        
+        // Create spinner icon
+        const spinnerIcon = document.createElement("i");
+        spinnerIcon.className = "fas fa-spinner fa-spin";
+        
+        // Add text node
+        const textNode = document.createTextNode(" Saving...");
+        
+        // Assemble button content
+        saveBtn.appendChild(spinnerIcon);
+        saveBtn.appendChild(textNode);
+            const saveIcon = document.createElement("i");
+            saveIcon.className = "fas fa-save";
+            
+            // Add text node
+            const textNode = document.createTextNode(" Save Changes");
+            
+            // Assemble button content
+            saveBtn.appendChild(saveIcon);
+            saveBtn.appendChild(textNode);
+            // Assemble button content
+            saveBtn.appendChild(saveIcon);
+            // Clear existing content
+            while (saveBtn.firstChild) {
+                saveBtn.removeChild(saveBtn.firstChild);
+            }
+            
+            // Create save icon
+            const saveIcon = document.createElement("i");
+            saveIcon.className = "fas fa-save";
+            
+            // Add text node
+            const textNode = document.createTextNode(" Save Changes");
+            
+            // Assemble button content
+            saveBtn.appendChild(saveIcon);
+            saveBtn.appendChild(textNode);
                 updatePreview();
             } else {
                 showToast("Error saving files", "error");
@@ -600,12 +711,40 @@ function saveContent(silent = false) {
         });
     } else {
         const saveBtn = document.getElementById('saveBtn');
-        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        // Clear existing content
+        while (runBtn.firstChild) {
+            runBtn.removeChild(runBtn.firstChild);
+        }
+        
+        // Create spinner icon
+        const spinnerIcon = document.createElement("i");
+        spinnerIcon.className = "fas fa-spinner fa-spin";
+        
+        // Add text node
+        const textNode = document.createTextNode(" Running...");
+        
+        // Assemble button content
+        runBtn.appendChild(spinnerIcon);
+        runBtn.appendChild(textNode);
         saveBtn.disabled = true;
 
         fetch(`/api/site/${siteId}/save`, {
             method: 'POST',
-            headers: {
+            // Clear existing content
+            while (runBtn.firstChild) {
+                runBtn.removeChild(runBtn.firstChild);
+            }
+            
+            // Create play icon
+            const playIcon = document.createElement("i");
+            playIcon.className = "fas fa-play";
+            
+            // Add text node
+            const textNode = document.createTextNode(" Run");
+            
+            // Assemble button content
+            runBtn.appendChild(playIcon);
+            runBtn.appendChild(textNode);
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ content: editor.getValue() })
@@ -634,14 +773,43 @@ function saveContent(silent = false) {
 
 function updatePreview() {
     if (siteType !== 'web') return;
-
+        // Clear existing content
+        while (deployBtn.firstChild) {
+            deployBtn.removeChild(deployBtn.firstChild);
+        }
+        
+        // Create spinner icon
+        const spinnerIcon = document.createElement("i");
+        spinnerIcon.className = "fas fa-spinner fa-spin";
+        
+        // Add text node
+        const textNode = document.createTextNode(" Deploying...");
+        
+        // Assemble button content
+        deployBtn.appendChild(spinnerIcon);
+        deployBtn.appendChild(textNode);
     const previewFrame = document.getElementById('preview');
     if (!previewFrame) return;
 
     const siteSlug = document.getElementById('site-slug').value;
     if (!siteSlug) return;
 
-    // Use current domain instead of hardcoded domain
+            // Clear existing content
+            while (deployBtn.firstChild) {
+                deployBtn.removeChild(deployBtn.firstChild);
+            }
+            
+            // Create rocket icon
+            const rocketIcon = document.createElement("i");
+            rocketIcon.className = "fas fa-rocket";
+            rocketIcon.style.color = "white";
+            
+            // Add text node
+            const textNode = document.createTextNode(" Deploy");
+            
+            // Assemble button content
+            deployBtn.appendChild(rocketIcon);
+            deployBtn.appendChild(textNode);
     const currentDomain = window.location.hostname;
     const timestamp = new Date().getTime();
     const publicUrl = `https://${currentDomain}/s/${siteSlug}?preview=true&t=${timestamp}`;

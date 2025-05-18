@@ -248,8 +248,22 @@ function initPythonEditor() {
 
 function updateCursorPosition() {
     const cursor = pythonEditor.getCursor();
-    const positionDisplay = document.getElementById('cursorPosition');
-    positionDisplay.innerHTML = `<i class="fas fa-map-marker-alt"></i> Line ${cursor.line + 1}, Column ${cursor.ch + 1}`;
+    const positionDisplay = document.getElementById('cursor-position');
+    if (positionDisplay) {
+        // Clear existing content
+        positionDisplay.textContent = '';
+        
+        // Create icon element
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-map-marker-alt';
+        
+        // Create text node for position
+        const text = document.createTextNode(` Line ${cursor.line + 1}, Column ${cursor.ch + 1}`);
+        
+        // Append elements
+        positionDisplay.appendChild(icon);
+        positionDisplay.appendChild(text);
+    }
 }
 
 function updateFileSize() {
@@ -333,8 +347,8 @@ function runPythonCode() {
     const code = pythonEditor.getValue();
     const outputConsole = document.getElementById('pythonOutput');
 
-    // Show loading indicator in console
-    outputConsole.innerHTML = 'Running code...\n';
+    // Show loading indicator    // Set loading state
+    outputConsole.textContent = 'Running code...\n';
 
     fetch(`/api/sites/${siteId}/run`, {
         method: 'POST',
@@ -346,14 +360,24 @@ function runPythonCode() {
     .then(response => response.json())
     .then(data => {
         if (data.error) {
-            outputConsole.innerHTML = `<span class="console-error">${data.output}</span>`;
+            // Create error span safely
+            outputConsole.textContent = ''; // Clear existing content
+            const errorSpan = document.createElement('span');
+            errorSpan.className = 'console-error';
+            errorSpan.textContent = data.output || 'Unknown error';
+            outputConsole.appendChild(errorSpan);
         } else {
-            outputConsole.innerHTML = data.output;
+            outputConsole.textContent = data.output; // Use textContent for plain text output
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        outputConsole.innerHTML = `<span class="console-error">Error running code: ${error}</span>`;
+            // Create error message safely
+            outputConsole.textContent = ''; // Clear existing content
+            const errorSpan = document.createElement('span');
+            errorSpan.className = 'console-error';
+            errorSpan.textContent = `Error running code: ${error}`;
+            outputConsole.appendChild(errorSpan);
     });
 }
 
@@ -490,12 +514,22 @@ function showToast(type, message) {
     const icon = type === 'success' ? 'check-circle' : 
                 type === 'error' ? 'exclamation-circle' : 'info-circle';
 
-    toast.innerHTML = `
-        <div class="toast-content">
-            <i class="fas fa-${icon}"></i>
-            <span>${message}</span>
-        </div>
-    `;
+    const toastContent = document.createElement('div');
+    toastContent.className = 'toast-content';
+    
+    // Create icon element
+    const iconElement = document.createElement('i');
+    iconElement.className = `fas fa-${icon}`;
+    
+    // Create message element safely
+    const messageElement = document.createElement('span');
+    messageElement.textContent = message;
+    
+    // Assemble the toast
+    toastContent.appendChild(iconElement);
+    toastContent.appendChild(document.createTextNode(' '));
+    toastContent.appendChild(messageElement);
+    toast.appendChild(toastContent);
 
     toastContainer.appendChild(toast);
 

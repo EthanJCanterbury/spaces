@@ -12,13 +12,45 @@ function showToast(type, message) {
   
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.innerHTML = `
-    <div class="toast-content">
-      <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-      <span>${message}</span>
-    </div>
-    <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
-  `;
+  
+  // Create toast content
+  const toastContent = document.createElement('div');
+  toastContent.className = 'toast-content';
+  
+  // Create icon element
+  const icon = document.createElement('i');
+  let iconClass = 'fas fa-';
+  
+  // Determine icon based on type
+  if (type === 'success') {
+    iconClass += 'check-circle';
+  } else if (type === 'error') {
+    iconClass += 'exclamation-circle';
+  } else if (type === 'warning') {
+    iconClass += 'exclamation-triangle';
+  } else {
+    iconClass += 'info-circle';
+  }
+  
+  icon.className = iconClass;
+  
+  // Create message element
+  const messageSpan = document.createElement('span');
+  messageSpan.textContent = message;
+  
+  // Create close button
+  const closeButton = document.createElement('button');
+  closeButton.className = 'toast-close';
+  closeButton.innerHTML = '&times;';
+  closeButton.addEventListener('click', function() {
+    this.parentElement.remove();
+  });
+  
+  // Assemble the toast
+  toastContent.appendChild(icon);
+  toastContent.appendChild(messageSpan);
+  toast.appendChild(toastContent);
+  toast.appendChild(closeButton);
   
   toastContainer.appendChild(toast);
   

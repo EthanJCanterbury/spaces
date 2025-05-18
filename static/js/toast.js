@@ -24,13 +24,23 @@ function showToast(type, message, duration = 3000) {
                  type === 'error' ? 'exclamation-circle' :
                  type === 'warning' ? 'exclamation-triangle' : 'info-circle';
 
-    // Set the toast content
-    toast.innerHTML = `
-        <div class="toast-content">
-            <i class="fas fa-${icon}"></i>
-            <span>${message}</span>
-        </div>
-    `;
+    // Create toast content using safe DOM methods
+    const toastContent = document.createElement('div');
+    toastContent.className = 'toast-content';
+    
+    // Create icon element
+    const iconElement = document.createElement('i');
+    iconElement.className = `fas fa-${icon}`;
+    
+    // Create message element safely
+    const messageElement = document.createElement('span');
+    messageElement.textContent = message;
+    
+    // Assemble the toast
+    toastContent.appendChild(iconElement);
+    toastContent.appendChild(document.createTextNode(' '));
+    toastContent.appendChild(messageElement);
+    toast.appendChild(toastContent);
 
     // Add the toast to the container
     toastContainer.appendChild(toast);

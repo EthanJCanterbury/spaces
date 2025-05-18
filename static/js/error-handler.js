@@ -61,27 +61,86 @@ function createErrorModal() {
     const modal = document.createElement('div');
     modal.id = 'errorModal';
     modal.className = 'error-modal';
-    modal.innerHTML = `
-        <div class="error-modal-content">
-            <div class="error-modal-header">
-                <h2><i class="fas fa-exclamation-circle"></i> <span id="errorType">Error</span></h2>
-                <button class="close-button" onclick="closeErrorModal()">&times;</button>
-            </div>
-            <div class="error-modal-body">
-                <div id="errorMessage" class="error-message"></div>
-                <div id="errorDetails" class="error-details">
-                    <div id="errorLocation" class="error-location"></div>
-                    <pre id="errorStack" class="error-stack"></pre>
-                </div>
-            </div>
-            <div class="error-modal-footer">
-                <button onclick="closeErrorModal()" class="error-btn">Close</button>
-                <button onclick="reportError()" class="error-btn error-btn-primary">
-                    <i class="fas fa-bug"></i> Report Issue
-                </button>
-            </div>
-        </div>
-    `;
+    
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.className = 'error-modal-content';
+    
+    // Create modal header
+    const header = document.createElement('div');
+    header.className = 'error-modal-header';
+    
+    const headerTitle = document.createElement('h2');
+    
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-exclamation-circle';
+    
+    const errorType = document.createElement('span');
+    errorType.id = 'errorType';
+    errorType.textContent = 'Error';
+    
+    const closeButton = document.createElement('button');
+    closeButton.className = 'close-button';
+    closeButton.innerHTML = '&times;';
+    closeButton.addEventListener('click', closeErrorModal);
+    
+    headerTitle.appendChild(icon);
+    headerTitle.appendChild(document.createTextNode(' '));
+    headerTitle.appendChild(errorType);
+    header.appendChild(headerTitle);
+    header.appendChild(closeButton);
+    
+    // Create modal body
+    const body = document.createElement('div');
+    body.className = 'error-modal-body';
+    
+    const errorMessage = document.createElement('div');
+    errorMessage.id = 'errorMessage';
+    errorMessage.className = 'error-message';
+    
+    const errorDetails = document.createElement('div');
+    errorDetails.id = 'errorDetails';
+    errorDetails.className = 'error-details';
+    
+    const errorLocation = document.createElement('div');
+    errorLocation.id = 'errorLocation';
+    errorLocation.className = 'error-location';
+    
+    const errorStack = document.createElement('pre');
+    errorStack.id = 'errorStack';
+    errorStack.className = 'error-stack';
+    
+    errorDetails.appendChild(errorLocation);
+    errorDetails.appendChild(errorStack);
+    body.appendChild(errorMessage);
+    body.appendChild(errorDetails);
+    
+    // Create modal footer
+    const footer = document.createElement('div');
+    footer.className = 'error-modal-footer';
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'error-btn';
+    closeBtn.textContent = 'Close';
+    closeBtn.addEventListener('click', closeErrorModal);
+    
+    const reportBtn = document.createElement('button');
+    reportBtn.className = 'error-btn error-btn-primary';
+    reportBtn.addEventListener('click', reportError);
+    
+    const bugIcon = document.createElement('i');
+    bugIcon.className = 'fas fa-bug';
+    reportBtn.appendChild(bugIcon);
+    reportBtn.appendChild(document.createTextNode(' Report Issue'));
+    
+    footer.appendChild(closeBtn);
+    footer.appendChild(reportBtn);
+    
+    // Assemble modal
+    modalContent.appendChild(header);
+    modalContent.appendChild(body);
+    modalContent.appendChild(footer);
+    modal.appendChild(modalContent);
 
     const style = document.createElement('style');
     style.textContent = `
@@ -222,18 +281,33 @@ function updateErrorModal(modal, errorInfo) {
     modal.querySelector('#errorType').textContent = errorInfo.type;
     modal.querySelector('#errorMessage').textContent = errorInfo.message;
 
-    const locationEl = modal.querySelector('#errorLocation');
-    if (errorInfo.file) {
-        locationEl.innerHTML = `
-            <strong>File:</strong> ${errorInfo.file}
-            ${errorInfo.line ? `<br><strong>Line:</strong> ${errorInfo.line}` : ''}
-            ${errorInfo.column ? `<strong>Column:</strong> ${errorInfo.column}` : ''}
-        `;
-        locationEl.style.display = 'block';
-    } else {
-        locationEl.style.display = 'none';
+    const locationEl = document.createElement('div');
+    locationEl.className = 'error-location';
+    
+    const fileLabel = SafeHTML.createElement('strong', {}, 'File:');
+    const fileValue = document.createTextNode(` ${errorInfo.file || 'Unknown'}`);
+    locationEl.appendChild(fileLabel);
+    locationEl.appendChild(fileValue);
+    
+    if (errorInfo.line) {
+        const lineBreak = document.createElement('br');
+        const lineLabel = SafeHTML.createElement('strong', {}, 'Line:');
+        const lineValue = document.createTextNode(` ${errorInfo.line}`);
+        locationEl.appendChild(lineBreak);
+        locationEl.appendChild(lineLabel);
+        locationEl.appendChild(lineValue);
     }
-
+    
+    if (errorInfo.column) {
+        const columnLabel = SafeHTML.createElement('strong', {}, 'Column:');
+        const columnValue = document.createTextNode(` ${errorInfo.column}`);
+        locationEl.appendChild(document.createTextNode(' '));
+        locationEl.appendChild(columnLabel);
+        locationEl.appendChild(columnValue);
+    }
+    
+    modal.querySelector('#errorLocation').replaceWith(locationEl);
+    
     const stackEl = modal.querySelector('#errorStack');
     if (errorInfo.stack) {
         stackEl.textContent = errorInfo.stack;

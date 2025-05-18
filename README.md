@@ -21,9 +21,27 @@ A simple web platform that allows users to create, test and host static websites
    cp .env.example .env
    ```
 
-2. Update the `.env` file with your database credentials and secret key.
+2. Create a `.env` file with the following configuration:
+   ```bash
+   # Database configuration
+   DATABASE_URL=postgresql://username:password@localhost:5432/your_database
+   
+   # Application secret key (generate a secure random string)
+   SECRET_KEY=your-secret-key-here
+   
+   # ImgBB API key for image uploads (get from https://api.imgbb.com/)
+   IMGBB_API_KEY=your-imgbb-api-key-here
+   
+   # WakaTime API key for Hackatime integration (optional)
+   WAKATIME_API_KEY=your-wakatime-api-key-here
+   
+   # Groq API key for AI chat functionality (required for Orphy chat)
+   GROQ_API_KEY=your-groq-api-key-here
+   ```
+   
+   **Important**: Never commit your `.env` file to version control. It's already included in `.gitignore`.
 
-3. Install dependencies:
+3. Install Python dependencies:
    ```bash
    pip install -r requirements.txt
    ```

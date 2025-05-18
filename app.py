@@ -260,7 +260,15 @@ def log_response_info(response):
 def add_security_headers(response):
     is_preview = request.args.get('preview') == 'true'
 
-    csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://webring.hackclub.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https: http:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' wss: ws:; media-src 'self' https://hc-cdn.hel1.your-objectstorage.com;"
+    csp = """
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://webring.hackclub.com;
+        style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+        img-src 'self' data: https: http:;
+        font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com;
+        connect-src 'self' wss: ws: https://api.imgbb.com;
+        media-src 'self' https://hc-cdn.hel1.your-objectstorage.com;
+    """.replace('\n', ' ').replace('  ', ' ').strip()
 
     if is_preview:
         csp += " frame-ancestors *;"
@@ -378,7 +386,15 @@ def orphy_chat_proxy():
 
         try:
             app.logger.info("Attempting to use Groq API")
-            groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+            groq_api_key = os.environ.get("GROQ_API_KEY")
+            if not groq_api_key:
+                app.logger.error("GROQ_API_KEY environment variable is not set")
+                return jsonify({
+                    'error': 'Server configuration error: GROQ_API_KEY is not set',
+                    'type': 'server_error'
+                }), 500
+                
+            groq_client = Groq(api_key=groq_api_key)
 
             chat_completion = groq_client.chat.completions.create(
                 messages=[{
@@ -1072,7 +1088,8 @@ def view_site(slug, filename):
         with db.engine.connect() as connection:
             connection.execute(
                 db.text(
-                    f"UPDATE site SET view_count = view_count + 1 WHERE id = {site.id}"
+                    "UPDATE site SET view_count = view_count + 1 WHERE id = :site_id",
+                    {"site_id": site.id}
                 ))
             connection.commit()
 
@@ -2922,7 +2939,9 @@ def clear_site_analytics(site_id):
         with db.engine.connect() as connection:
             connection.execute(
                 db.text(
-                    f"UPDATE site SET view_count = 0 WHERE id = {site.id}"))
+                    "UPDATE site SET view_count = 0 WHERE id = :site_id",
+                    {"site_id": site.id}
+                ))
             connection.commit()
 
         return jsonify({'message': 'Analytics data cleared successfully'})
@@ -4642,11 +4661,15 @@ def club_dashboard(club_id=None):
         
         is_co_leader = (membership is not None)
     
+    # Get ImgBB API key from environment variables
+    imgbb_api_key = os.environ.get('IMGBB_API_KEY', '')
+    
     return render_template('club_dashboard.html',
                            club=club,
                            memberships=memberships,
                            is_leader=is_leader,
-                           is_co_leader=is_co_leader)
+                           is_co_leader=is_co_leader,
+                           imgbb_api_key=imgbb_api_key)
 
 
 # Club API routes
