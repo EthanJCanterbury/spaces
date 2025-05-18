@@ -571,31 +571,21 @@ function saveContent(silent = false) {
             saveBtn.removeChild(saveBtn.firstChild);
         }
         
-        // Create spinner icon
-        const spinnerIcon = document.createElement("i");
-        spinnerIcon.className = "fas fa-spinner fa-spin";
-        
-        // Add text node
-        const textNode = document.createTextNode(" Saving...");
-        
-        // Assemble button content
-        saveBtn.appendChild(spinnerIcon);
-        saveBtn.appendChild(textNode);
         // Clear existing content
         while (saveBtn.firstChild) {
             saveBtn.removeChild(saveBtn.firstChild);
         }
         
         // Create spinner icon
-        const spinnerIcon = document.createElement("i");
-        spinnerIcon.className = "fas fa-spinner fa-spin";
+        const saveSpinnerIcon = document.createElement("i");
+        saveSpinnerIcon.className = "fas fa-spinner fa-spin";
         
         // Add text node
-        const textNode = document.createTextNode(" Saving...");
+        const saveTextNode = document.createTextNode(" Saving...");
         
         // Assemble button content
-        saveBtn.appendChild(spinnerIcon);
-        saveBtn.appendChild(textNode);
+        saveBtn.appendChild(saveSpinnerIcon);
+        saveBtn.appendChild(saveTextNode);
         saveBtn.disabled = true;
 
         fetch(`/api/site/${siteId}/save_pages`, {
@@ -649,23 +639,18 @@ function saveContent(silent = false) {
             saveIcon.className = "fas fa-save";
             
             // Add text node
-            const textNode = document.createTextNode(" Save Changes");
+            const saveChangesTextNode = document.createTextNode(" Save Changes");
             // Clear existing content
             while (saveBtn.firstChild) {
                 saveBtn.removeChild(saveBtn.firstChild);
             }
             
-        // Clear existing content
-        while (saveBtn.firstChild) {
-            saveBtn.removeChild(saveBtn.firstChild);
-        }
-        
         // Create spinner icon
-        const spinnerIcon = document.createElement("i");
-        spinnerIcon.className = "fas fa-spinner fa-spin";
+        const savingSpinnerIcon = document.createElement("i");
+        savingSpinnerIcon.className = "fas fa-spinner fa-spin";
         
         // Add text node
-        const textNode = document.createTextNode(" Saving...");
+        const savingTextNode = document.createTextNode(" Saving...");
         
         // Assemble button content
         saveBtn.appendChild(spinnerIcon);
@@ -728,23 +713,25 @@ function saveContent(silent = false) {
         runBtn.appendChild(textNode);
         saveBtn.disabled = true;
 
+        // Clear existing content in run button
+        while (runBtn.firstChild) {
+            runBtn.removeChild(runBtn.firstChild);
+        }
+        
+        // Create play icon
+        const playIcon = document.createElement("i");
+        playIcon.className = "fas fa-play";
+        
+        // Add text node
+        const runTextNode = document.createTextNode(" Run");
+        
+        // Assemble button content
+        runBtn.appendChild(playIcon);
+        runBtn.appendChild(runTextNode);
+
         fetch(`/api/site/${siteId}/save`, {
             method: 'POST',
-            // Clear existing content
-            while (runBtn.firstChild) {
-                runBtn.removeChild(runBtn.firstChild);
-            }
-            
-            // Create play icon
-            const playIcon = document.createElement("i");
-            playIcon.className = "fas fa-play";
-            
-            // Add text node
-            const textNode = document.createTextNode(" Run");
-            
-            // Assemble button content
-            runBtn.appendChild(playIcon);
-            runBtn.appendChild(textNode);
+            headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ content: editor.getValue() })

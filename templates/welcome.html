@@ -367,25 +367,117 @@
         color: #b91c1c;
     }
 
-    .site-type-badge {
-        position: absolute;
-        top: 0.75rem;
-        right: 0.75rem;
-        padding: 0.3rem 0.6rem;
+    .site-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
         border-radius: 6px;
         font-size: 0.75rem;
         font-weight: 600;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+    }
+    
+    .site-badge i {
+        margin-right: 6px;
+        font-size: 14px;
     }
 
     .python-badge {
-        background-color: rgba(55, 118, 171, 0.15);
-        color: #3776AB;
+        background-color: rgba(53, 114, 165, 0.2);
+        color: #3572A5;
+        border-left: 3px solid #3572A5;
+    }
+    .python-badge:hover {
+        background-color: rgba(53, 114, 165, 0.3);
+        transform: translateY(-1px);
     }
 
     .web-badge {
-        background-color: rgba(255, 87, 34, 0.15);
+        background-color: rgba(255, 87, 34, 0.2);
         color: #FF5722;
+        border-left: 3px solid #FF5722;
+    }
+    .web-badge:hover {
+        background-color: rgba(255, 87, 34, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    .code-badge {
+        background-color: rgba(0, 120, 215, 0.2);
+        color: #0078D7;
+        border-left: 3px solid #0078D7;
+    }
+    .code-badge:hover {
+        background-color: rgba(0, 120, 215, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    /* Language-specific badge colors */
+    .code-badge.javascript {
+        background-color: rgba(240, 219, 79, 0.2);
+        color: #B3A039;
+        border-left: 3px solid #F0DB4F;
+    }
+    .code-badge.javascript:hover {
+        background-color: rgba(240, 219, 79, 0.3);
+    }
+    
+    .code-badge.java {
+        background-color: rgba(176, 114, 25, 0.2);
+        color: #B07219;
+        border-left: 3px solid #B07219;
+    }
+    .code-badge.java:hover {
+        background-color: rgba(176, 114, 25, 0.3);
+    }
+    
+    .code-badge.cpp {
+        background-color: rgba(243, 75, 125, 0.2);
+        color: #F34B7D;
+        border-left: 3px solid #F34B7D;
+    }
+    .code-badge.cpp:hover {
+        background-color: rgba(243, 75, 125, 0.3);
+    }
+    
+    .code-badge.ruby {
+        background-color: rgba(204, 52, 45, 0.2);
+        color: #CC342D;
+        border-left: 3px solid #CC342D;
+    }
+    .code-badge.ruby:hover {
+        background-color: rgba(204, 52, 45, 0.3);
+    }
+    
+    .code-badge.go {
+        background-color: rgba(0, 173, 216, 0.2);
+        color: #00ADD8;
+        border-left: 3px solid #00ADD8;
+    }
+    .code-badge.go:hover {
+        background-color: rgba(0, 173, 216, 0.3);
+    }
+    
+    .code-badge.rust {
+        background-color: rgba(222, 165, 132, 0.2);
+        color: #DEA584;
+        border-left: 3px solid #DEA584;
+    }
+    .code-badge.rust:hover {
+        background-color: rgba(222, 165, 132, 0.3);
+    }
+    
+    .code-badge.php {
+        background-color: rgba(79, 93, 149, 0.2);
+        color: #4F5D95;
+        border-left: 3px solid #4F5D95;
+    }
+    .code-badge.php:hover {
+        background-color: rgba(79, 93, 149, 0.3);
     }
 
     .shared-site-card {
@@ -689,15 +781,17 @@
                     </div>
                     <div class="site-preview">
                         {% if site.site_type == 'python' %}
-                        <div class="site-icon python">
-                            <i class="fab fa-python"></i>
-                        </div>
-                        <span class="site-type-badge python-badge">Python</span>
+                        <span class="site-badge python-badge">
+                            <i class="fab fa-python"></i> Python
+                        </span>
+                        {% elif site.site_type == 'code' %}
+                        <span class="site-badge code-badge {{ site.language }}-badge">
+                            <i class="{{ language_icons.get(site.language, 'fas fa-code') }}"></i> {{ site.language|capitalize }}
+                        </span>
                         {% else %}
-                        <div class="site-icon web">
-                            <i class="fas fa-globe"></i>
-                        </div>
-                        <span class="site-type-badge web-badge">Web</span>
+                        <span class="site-badge web-badge">
+                            <i class="fas fa-globe"></i> Web
+                        </span>
                         {% endif %}
                     </div>
                     <div class="site-info">
@@ -833,10 +927,35 @@
                     <i class="fas fa-code"></i>
                     Space Type
                 </label>
-                <select id="spaceType" name="type" required class="space-type-select">
+                <select id="spaceType" name="type" required class="space-type-select" onchange="handleSpaceTypeChange()">
                     <option value="web">Web Space</option>
-                    <option value="python">Python Space</option>
+                    <option value="code">Code Space</option>
                 </select>
+            </div>
+            
+            <!-- Language selection (only visible for code spaces) -->
+            <div class="form-group" id="languageSelectGroup" style="display: none;">
+                <label for="language">
+                    <i class="fas fa-code"></i>
+                    Programming Language
+                </label>
+                <select id="language" name="language" class="language-select">
+                    <option value="python" data-icon="fab fa-python">Python</option>
+                    <option value="javascript" data-icon="fab fa-js">JavaScript</option>
+                    <option value="java" data-icon="fab fa-java">Java</option>
+                    <option value="cpp" data-icon="fas fa-code">C++</option>
+                    <option value="c" data-icon="fas fa-code">C</option>
+                    <option value="csharp" data-icon="fab fa-microsoft">C#</option>
+                    <option value="go" data-icon="fas fa-code">Go</option>
+                    <option value="ruby" data-icon="fas fa-gem">Ruby</option>
+                    <option value="rust" data-icon="fas fa-cogs">Rust</option>
+                    <option value="php" data-icon="fab fa-php">PHP</option>
+                    <option value="typescript" data-icon="fab fa-js">TypeScript</option>
+                    <option value="swift" data-icon="fab fa-swift">Swift</option>
+                    <option value="kotlin" data-icon="fab fa-android">Kotlin</option>
+                    <option value="bash" data-icon="fas fa-terminal">Bash</option>
+                </select>
+                <div class="form-text">Choose the programming language for your code space.</div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="closeNewSpaceModal()">
@@ -969,6 +1088,41 @@ function closeNewSpaceModal() {
     }, 300);
 }
 
+function handleSpaceTypeChange() {
+    const spaceType = document.getElementById('spaceType').value;
+    const languageGroup = document.getElementById('languageSelectGroup');
+    
+    if (spaceType === 'code') {
+        languageGroup.style.display = 'block';
+    } else {
+        languageGroup.style.display = 'none';
+    }
+}
+
+async function loadLanguages() {
+    try {
+        const response = await fetch('/api/languages');
+        if (response.ok) {
+            const data = await response.json();
+            const languageSelect = document.getElementById('language');
+            
+            // Clear existing options
+            languageSelect.innerHTML = '';
+            
+            // Add options for each language
+            data.languages.forEach(lang => {
+                const option = document.createElement('option');
+                option.value = lang.name;
+                option.textContent = lang.display_name;
+                option.setAttribute('data-icon', lang.icon);
+                languageSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading languages:', error);
+    }
+}
+
 async function createNewSpace(event) {
     event.preventDefault();
     const form = event.target;
@@ -985,26 +1139,38 @@ async function createNewSpace(event) {
     }
     
     submitBtn.disabled = true;
-
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+    
     try {
-        const endpoint = spaceType === 'python' ? '/api/sites/python' : '/api/sites';
+        let endpoint = '/api/sites';
+        let requestData = { name: spaceName };
+        
+        if (spaceType === 'code') {
+            endpoint = '/api/sites/code';
+            const language = document.getElementById('language').value;
+            requestData.language = language;
+        }
+        
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                name: spaceName,
-                type: spaceType
-            })
+            body: JSON.stringify(requestData)
         });
-
+        
         const data = await response.json();
+        
         if (response.ok) {
-            showToast('success', `${spaceType === 'python' ? 'Python' : 'Web'} space created successfully!`);
-            window.location.href = spaceType === 'python' 
-                ? `/python/${data.site_id}`
-                : `/edit/${data.site_id}`;
+            showToast('success', data.message || 'Space created successfully!');
+            closeNewSpaceModal();
+            
+            // Redirect to the editor
+            if (spaceType === 'code') {
+                window.location.href = `/code/${data.site_id}`;
+            } else {
+                window.location.href = `/edit/${data.site_id}`;
+            }
         } else {
             showToast('error', data.message || 'Failed to create space');
         }
@@ -1013,6 +1179,7 @@ async function createNewSpace(event) {
         showToast('error', 'Failed to create space');
     } finally {
         submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Space';
     }
 }
 
@@ -1336,6 +1503,18 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.space-select').forEach(checkbox => {
         checkbox.addEventListener('change', updateSelectedCount);
     });
+    
+    // Initialize language selection
+    handleSpaceTypeChange();
+    loadLanguages();
+    
+    // Initialize new space modal
+    const newSpaceModal = document.getElementById('newSpaceModal');
+    if (newSpaceModal) {
+        newSpaceModal.addEventListener('show', function() {
+            handleSpaceTypeChange();
+        });
+    }
 });
 
 function showOwnerInactiveMessage() {

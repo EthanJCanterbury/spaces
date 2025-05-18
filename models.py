@@ -299,9 +299,10 @@ class Site(db.Model):
     html_content = db.Column(db.Text,
                              nullable=False,
                              default='<h1>Welcome to my site!</h1>')
-    python_content = db.Column(db.Text,
-                               nullable=False,
-                               default='print("Hello, World!")')
+    # For code spaces (replacing python_content)
+    language = db.Column(db.String(50), nullable=True)
+    language_version = db.Column(db.String(20), nullable=True)
+    language_content = db.Column(db.Text, nullable=True)
     is_public = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime,
