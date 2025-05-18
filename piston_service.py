@@ -1808,7 +1808,12 @@ textarea {
             return f"-- Welcome to your {language_capitalized} space!\n\nfunction main()\n    print(\"Hello, World!\")\n    \n    -- Write your code here\nend\n\nmain()\n"
         
         elif language in ["c", "cpp", "c++", "java", "csharp", "d", "rust", "go", "swift", "kotlin"]:
-            return f"// Welcome to your {language_capitalized} space!\n\n// Main function\n{language == 'go' and 'func' or language in ['c', 'cpp', 'c++'] and 'int' or 'void'} main() {{\n    // Write your code here\n    printf(\"Hello, World!\\n\");\n{language in ['c', 'cpp', 'c++'] and '    return 0;\n' or ''}}}\n"
+            main_func = f"func" if language == 'go' else ("int" if language in ['c', 'cpp', 'c++'] else "void")
+            return_str = f"// Welcome to your {language_capitalized} space!\n\n// Main function\n{main_func} main() {{\n    // Write your code here\n    printf(\"Hello, World!\\\\n\");\n"
+            if language in ['c', 'cpp', 'c++']:
+                return_str += "    return 0;\n"
+            return_str += "}}\n"
+            return return_str
         
         elif language in ["bash", "powershell", "shell"]:
             prefix = "#!" + ("/bin/bash" if language == "bash" else "")

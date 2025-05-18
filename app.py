@@ -1395,6 +1395,12 @@ def delete_site(site_id):
 def documentation():
     return render_template('documentation.html')
 
+
+@app.route('/support')
+def support():
+    """Render the support page with help resources."""
+    return render_template('support.html')
+
 @app.route('/api/admin/gallery/feature/<int:entry_id>', methods=['POST'])
 @login_required
 def toggle_gallery_feature(entry_id):
