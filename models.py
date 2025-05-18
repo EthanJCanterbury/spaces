@@ -326,15 +326,35 @@ class Site(db.Model):
             # Remove leading/trailing hyphens
             slug = slug.strip('-')
             
-            # Add proper file extension based on language if it's a code site
+            # Add proper file extension based on language or site type
             language = kwargs.get('language', '').lower()
-            if language:
+            site_type = kwargs.get('site_type', 'web')
+            
+            # Handle extension based on site type and language
+            if site_type == 'code' and language:
                 from piston_service import PistonService
                 ext = PistonService.get_language_extension(language)
-                if ext:
+                # Special handling for common languages to ensure correct extensions
+                if language == 'python' or language == 'python3':
+                    ext = 'py'
+                elif language == 'javascript':
+                    ext = 'js'
+                elif language == 'typescript':
+                    ext = 'ts'
+                elif language == 'c++' or language == 'cpp':
+                    ext = 'cpp'
+                elif language == 'csharp' or language == 'c#':
+                    ext = 'cs'
+                
+                # Use the extension if valid, otherwise default to a reasonable one
+                if ext and ext != 'txt':
                     # Ensure slug doesn't already have an extension
                     if not slug.endswith('.' + ext):
                         slug = f"{slug}.{ext}"
+            # For Python spaces (legacy)
+            elif site_type == 'python':
+                if not slug.endswith('.py'):
+                    slug = f"{slug}.py"
             
             kwargs['slug'] = slug
         super(Site, self).__init__(*args, **kwargs)

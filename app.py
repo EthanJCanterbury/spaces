@@ -1252,13 +1252,20 @@ def create_code_site():
             
         # Get the template for the language
         language_content = PistonService.get_language_template(language)
-
+        
+        # Create the site with necessary info to ensure proper extension
         site = Site(name=name,
                     user_id=current_user.id,
                     site_type='code',
                     language=language,
                     language_version=language_version,
                     language_content=language_content)
+        
+        # Ensure proper extension after creating the site object
+        ext = PistonService.get_language_extension(language)
+        if ext and not site.slug.endswith(f".{ext}") and ext != 'txt':
+            site.slug = site.slug.split('.')[0] + f".{ext}"
+        
         db.session.add(site)
         db.session.commit()
 
