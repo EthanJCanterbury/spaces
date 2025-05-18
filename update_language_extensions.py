@@ -58,8 +58,35 @@ def update_language_extensions():
                     {"lang": language, "ext": extension}
                 )
             
-            # Update existing sites with correct file extensions
-            print("Updating site slugs with correct file extensions...")
+            # First, run explicit updates for languages that might have incorrect extensions
+            print("Updating specific language extensions...")
+            
+            # List of languages to ensure they have proper extensions
+            language_updates = [
+                ('python', 'py'), ('javascript', 'js'), ('typescript', 'ts'),
+                ('java', 'java'), ('c', 'c'), ('c++', 'cpp'), ('cpp', 'cpp'),
+                ('csharp', 'cs'), ('go', 'go'), ('ruby', 'rb'), ('rust', 'rs'),
+                ('php', 'php'), ('swift', 'swift'), ('kotlin', 'kt'), ('dart', 'dart'),
+                ('scala', 'scala'), ('haskell', 'hs'), ('elixir', 'ex'), ('erlang', 'erl'),
+                ('clojure', 'clj'), ('lisp', 'lisp'), ('racket', 'rkt'), ('fsharp.net', 'fs'),
+                ('ocaml', 'ml'), ('zig', 'zig'), ('nim', 'nim'), ('crystal', 'cr'),
+                ('groovy', 'groovy'), ('basic', 'bas'), ('fortran', 'f90'), ('cobol', 'cbl'),
+                ('pascal', 'pas'), ('lua', 'lua'), ('perl', 'pl'), ('r', 'r'), ('rscript', 'r'),
+                ('bash', 'sh'), ('powershell', 'ps1'), ('julia', 'jl'), ('coffeescript', 'coffee'),
+                ('d', 'd'), ('prolog', 'pl'), ('smalltalk', 'st'), ('sqlite3', 'sql')
+            ]
+            
+            # Run individual updates for each language to ensure proper extension
+            for lang, ext in language_updates:
+                conn.execute(text("""
+                    UPDATE site
+                    SET slug = regexp_replace(slug, '\\.txt$', '', 'i') || '.' || :ext
+                    WHERE language = :lang
+                    AND (slug ~ '\\.txt$' OR NOT slug ~ '\\.[a-zA-Z0-9]+$')
+                """), {"lang": lang, "ext": ext})
+                
+            # Now, update any remaining sites with extensions from the temp table
+            print("Updating remaining site slugs with correct file extensions...")
             conn.execute(text("""
                 UPDATE site AS s
                 SET slug = CASE
@@ -70,6 +97,16 @@ def update_language_extensions():
                 FROM temp_language_extensions AS te
                 WHERE s.language = te.language
                 AND NOT s.slug ~ '\\.[a-zA-Z0-9]+$'
+            """))
+            
+            # Also update any sites that still have .txt extensions to use proper ones
+            conn.execute(text("""
+                UPDATE site AS s
+                SET slug = regexp_replace(slug, '\\.txt$', '', 'i') || '.' || te.extension
+                FROM temp_language_extensions AS te
+                WHERE s.language = te.language
+                AND s.slug ~ '\\.txt$' 
+                AND te.extension != 'txt'
             """))
             
             # Count updated rows
