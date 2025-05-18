@@ -1,3 +1,4 @@
+
 """
 Piston Service - Handles code execution for multiple languages using the Piston API
 """
@@ -194,42 +195,61 @@ class PistonService:
             # Main languages with specific icons
             "python": "fab fa-python",
             "javascript": "fab fa-js",
+            "typescript": "fab fa-js-square",
             "java": "fab fa-java",
-            "c": "fas fa-c",
+            "c": "fas fa-code",
+            "cpp": "fas fa-code",
             "c++": "fas fa-code",
             "csharp": "fab fa-microsoft",
             "go": "fab fa-golang",
             "ruby": "fas fa-gem",
-            "rust": "fas fa-cog",
+            "rust": "fas fa-cogs",
             "php": "fab fa-php",
             "swift": "fab fa-swift",
             "kotlin": "fab fa-android",
             "dart": "fab fa-dart",
             "scala": "fas fa-s",
             "r": "fab fa-r-project",
+            "rscript": "fab fa-r-project",
             "matlab": "fas fa-sigma",
             "octave": "fas fa-sigma",
+            
+            # Web technologies
             "html": "fab fa-html5",
             "css": "fab fa-css3-alt",
+            
+            # Scripting languages
             "bash": "fas fa-terminal",
             "powershell": "fas fa-terminal",
             "lua": "fas fa-moon",
             "perl": "fab fa-perl",
+            
+            # Functional languages
             "haskell": "fas fa-lambda",
             "elixir": "fas fa-bolt",
             "erlang": "fab fa-erlang",
             "clojure": "fas fa-code",
             "lisp": "fas fa-code",
             "racket": "fas fa-code",
-            "fsharp.net": "fas fa-code",
+            "fsharp": "fas fa-code",
             "ocaml": "fas fa-code",
+            
+            # Systems languages
             "zig": "fas fa-arrow-up",
             "vlang": "fas fa-v",
             "nim": "fas fa-code",
             "crystal": "fas fa-gem",
+            
+            # JVM languages
             "groovy": "fas fa-code",
+            
+            # .NET languages
+            "fsharp.net": "fas fa-code",
+            "vb": "fab fa-microsoft",
             "basic": "fab fa-microsoft",
             "basic.net": "fab fa-microsoft",
+            
+            # Other languages
             "d": "fas fa-code",
             "fortran": "fas fa-code",
             "cobol": "fas fa-code",
@@ -256,7 +276,6 @@ class PistonService:
             "osabie": "fas fa-chess",
             "paradoc": "fas fa-paragraph",
             "pyth": "fas fa-snake",
-            "raku": "fab fa-perl",
             "file": "far fa-file-code",
             "forte": "fas fa-music",
             "freebasic": "fas fa-bolt",
@@ -346,6 +365,7 @@ class PistonService:
             "java": "java",
             "c": "c",
             "c++": "cpp",
+            "cpp": "cpp",
             "csharp": "cs",
             "csharp.net": "cs",
             "go": "go",
@@ -357,6 +377,7 @@ class PistonService:
             "dart": "dart",
             "scala": "scala",
             "rscript": "r",
+            "r": "r",
             "matlab": "m",
             "octave": "m",
             "bash": "sh",
@@ -370,6 +391,7 @@ class PistonService:
             "lisp": "lisp",
             "racket": "rkt",
             "fsharp.net": "fs",
+            "fsharp": "fs",
             "ocaml": "ml",
             "zig": "zig",
             "vlang": "v",
@@ -407,124 +429,19 @@ class PistonService:
             "osabie": "osabie",
             "paradoc": "pdc",
             "retina": "retina",
-            "file": "txt"
+            "file": "txt",
+            "html": "html",
+            "css": "css",
+            "elm": "elm",
+            "solidity": "sol",
+            "nasm": "asm",
+            "nasm64": "asm",
+            "assembly": "asm",
+            "verilog": "v",
+            "vhdl": "vhd",
+            "tcl": "tcl"
         }
         return extension_map.get(language.lower(), "txt")
-            "cpp": "fas fa-code",
-            "c++": "fas fa-code",
-            "csharp": "fab fa-microsoft",
-            "go": "fab fa-golang",
-            "ruby": "fas fa-gem",
-            "rust": "fas fa-cogs",
-            "php": "fab fa-php",
-            "swift": "fab fa-swift",
-            "kotlin": "fab fa-android",
-            "dart": "fab fa-dart",
-            "scala": "fas fa-s",
-            "r": "fab fa-r-project",
-            "rscript": "fab fa-r-project",
-            "matlab": "fas fa-sigma",
-            "octave": "fas fa-sigma",
-            
-            # Web technologies
-            "html": "fab fa-html5",
-            "css": "fab fa-css3-alt",
-            "typescript": "fab fa-js-square",
-            "javascript": "fab fa-js-square",
-            
-            # Scripting languages
-            "bash": "fas fa-terminal",
-            "powershell": "fas fa-terminal",
-            "lua": "fas fa-moon",
-            "perl": "fab fa-perl",
-            "ruby": "fas fa-gem",
-            "python": "fab fa-python",
-            "php": "fab fa-php",
-            "dart": "fab fa-dart",
-            
-            # Functional languages
-            "haskell": "fas fa-lambda",
-            "elixir": "fas fa-bolt",
-            "erlang": "fab fa-erlang",
-            "clojure": "fas fa-code",
-            "lisp": "fas fa-code",
-            "racket": "fas fa-code",
-            "fsharp": "fas fa-code",
-            "ocaml": "fas fa-code",
-            
-            # Systems languages
-            "c": "fas fa-c",
-            "cpp": "fas fa-code",
-            "rust": "fas fa-cog",
-            "go": "fab fa-golang",
-            "zig": "fas fa-arrow-up",
-            "vlang": "fas fa-v",
-            "nim": "fas fa-code",
-            "crystal": "fas fa-gem",
-            
-            # JVM languages
-            "java": "fab fa-java",
-            "kotlin": "fab fa-android",
-            "scala": "fas fa-s",
-            "groovy": "fas fa-code",
-            "clojure": "fas fa-code",
-            
-            # .NET languages
-            "csharp": "fab fa-microsoft",
-            "fsharp": "fas fa-code",
-            "vb": "fab fa-microsoft",
-            
-            # Other languages
-            "swift": "fab fa-swift",
-            "dart": "fab fa-dart",
-            "r": "fab fa-r-project",
-            "rscript": "fab fa-r-project",
-            "matlab": "fas fa-sigma",
-            "octave": "fas fa-sigma",
-            "sql": "fas fa-database",
-            "sqlite3": "fas fa-database",
-            "bash": "fas fa-terminal",
-            "powershell": "fas fa-terminal",
-            "lua": "fas fa-moon",
-            "perl": "fab fa-perl",
-            "ruby": "fas fa-gem",
-            "python": "fab fa-python",
-            "php": "fab fa-php",
-            "dart": "fab fa-dart",
-            "haskell": "fas fa-lambda",
-            "elixir": "fas fa-bolt",
-            "erlang": "fab fa-erlang",
-            "clojure": "fas fa-code",
-            "lisp": "fas fa-code",
-            "racket": "fas fa-code",
-            "fsharp": "fas fa-code",
-            "ocaml": "fas fa-code",
-            "c": "fas fa-c",
-            "cpp": "fas fa-code",
-            "rust": "fas fa-cog",
-            "go": "fab fa-golang",
-            "zig": "fas fa-arrow-up",
-            "vlang": "fas fa-v",
-            "nim": "fas fa-code",
-            "crystal": "fas fa-gem",
-            "java": "fab fa-java",
-            "kotlin": "fab fa-android",
-            "scala": "fas fa-s",
-            "groovy": "fas fa-code",
-            "clojure": "fas fa-code",
-            "csharp": "fab fa-microsoft",
-            "fsharp": "fas fa-code",
-            "vb": "fab fa-microsoft",
-            "swift": "fab fa-swift",
-            "dart": "fab fa-dart",
-            "r": "fab fa-r-project",
-            "rscript": "fab fa-r-project",
-            "matlab": "fas fa-sigma",
-            "octave": "fas fa-sigma",
-            "sql": "fas fa-database",
-            "sqlite3": "fas fa-database"
-        }
-        return icon_map.get(language.lower(), "fas fa-code")
     
     @staticmethod
     def _get_file_extension(language: str) -> str:
@@ -560,11 +477,6 @@ class PistonService:
             "bash": "sh",
             "shell": "sh",
             "powershell": "ps1",
-            "ruby": "rb",
-            "php": "php",
-            "python": "py",
-            "python2": "py",
-            "python3": "py",
             
             # Functional languages
             "haskell": "hs",
@@ -576,13 +488,10 @@ class PistonService:
             "racket": "rkt",
             "f#": "fs",
             "fsharp": "fs",
+            "fsharp.net": "fs",
             "ocaml": "ml",
             
             # Systems languages
-            "c": "c",
-            "cpp": "cpp",
-            "rust": "rs",
-            "go": "go",
             "zig": "zig",
             "vlang": "v",
             "nim": "nim",
@@ -597,24 +506,17 @@ class PistonService:
             "nasm64": "asm",
             
             # JVM languages
-            "java": "java",
-            "kotlin": "kt",
             "scala": "scala",
             "groovy": "groovy",
             "clojure": "clj",
             
             # .NET languages
-            "csharp": "cs",
             "fsharp": "fs",
             "basic": "vb",
             "vb": "vb",
             "vb.net": "vb",
             
             # Other languages
-            "swift": "swift",
-            "dart": "dart",
-            "r": "r",
-            "rscript": "r",
             "matlab": "m",
             "octave": "m",
             "sql": "sql",
@@ -636,8 +538,6 @@ class PistonService:
             "verilog": "v",
             "vhdl": "vhd",
             "coffeescript": "coffee",
-            "typescript": "ts",
-            "javascript": "js",
             "html": "html",
             "css": "css",
             "elm": "elm",
@@ -752,6 +652,32 @@ int main() {
 }
 ''',
             "cpp": '''// Welcome to your C++ space!
+#include <iostream>
+#include <string>
+
+int main() {
+    std::cout << "Hello, World!" << std::endl;
+    
+    // Try adding your own code below:
+    std::string name = "C++ Coder";
+    std::cout << "Welcome, " << name << "!" << std::endl;
+    
+    // You can use loops:
+    for (int i = 0; i < 3; i++) {
+        std::cout << "Count: " << i << std::endl;
+    }
+    
+    // And conditions:
+    if (name == "C++ Coder") {
+        std::cout << "You're a C++ coder!" << std::endl;
+    } else {
+        std::cout << "You can become a C++ coder!" << std::endl;
+    }
+    
+    return 0;
+}
+''',
+            "c++": '''// Welcome to your C++ space!
 #include <iostream>
 #include <string>
 
@@ -1094,68 +1020,863 @@ main() {
 
 # Call the main function
 main
+''',
+            "lua": '''-- Welcome to your Lua space!
+
+function main()
+    print("Hello, World!")
+    
+    -- Try adding your own code below:
+    local name = "Lua Coder"
+    print("Welcome, " .. name .. "!")
+    
+    -- You can use loops:
+    for i = 0, 2 do
+        print("Count: " .. i)
+    end
+    
+    -- And conditions:
+    if name == "Lua Coder" then
+        print("You're a Lua coder!")
+    else
+        print("You can become a Lua coder!")
+    end
+end
+
+-- Call the main function
+main()
+''',
+            "perl": '''# Welcome to your Perl space!
+
+sub main {
+    print "Hello, World!\n";
+    
+    # Try adding your own code below:
+    my $name = "Perl Coder";
+    print "Welcome, $name!\n";
+    
+    # You can use loops:
+    for (my $i = 0; $i < 3; $i++) {
+        print "Count: $i\n";
+    }
+    
+    # And conditions:
+    if ($name eq "Perl Coder") {
+        print "You're a Perl coder!\n";
+    } else {
+        print "You can become a Perl coder!\n";
+    }
+}
+
+# Call the main function
+main();
+''',
+            "r": '''# Welcome to your R space!
+
+main <- function() {
+  print("Hello, World!")
+  
+  # Try adding your own code below:
+  name <- "R Coder"
+  print(paste("Welcome,", name, "!"))
+  
+  # You can use loops:
+  for (i in 0:2) {
+    print(paste("Count:", i))
+  }
+  
+  # And conditions:
+  if (name == "R Coder") {
+    print("You're an R coder!")
+  } else {
+    print("You can become an R coder!")
+  }
+}
+
+# Call the main function
+main()
+''',
+            "rscript": '''# Welcome to your R space!
+
+main <- function() {
+  print("Hello, World!")
+  
+  # Try adding your own code below:
+  name <- "R Coder"
+  print(paste("Welcome,", name, "!"))
+  
+  # You can use loops:
+  for (i in 0:2) {
+    print(paste("Count:", i))
+  }
+  
+  # And conditions:
+  if (name == "R Coder") {
+    print("You're an R coder!")
+  } else {
+    print("You can become an R coder!")
+  }
+}
+
+# Call the main function
+main()
+''',
+            "groovy": '''// Welcome to your Groovy space!
+
+def main() {
+    println "Hello, World!"
+    
+    // Try adding your own code below:
+    def name = "Groovy Coder"
+    println "Welcome, ${name}!"
+    
+    // You can use loops:
+    3.times { i ->
+        println "Count: ${i}"
+    }
+    
+    // And conditions:
+    if (name == "Groovy Coder") {
+        println "You're a Groovy coder!"
+    } else {
+        println "You can become a Groovy coder!"
+    }
+}
+
+// Call the main function
+main()
+''',
+            "nim": '''# Welcome to your Nim space!
+
+proc main() =
+  echo "Hello, World!"
+  
+  # Try adding your own code below:
+  let name = "Nim Coder"
+  echo "Welcome, ", name, "!"
+  
+  # You can use loops:
+  for i in 0..<3:
+    echo "Count: ", i
+  
+  # And conditions:
+  if name == "Nim Coder":
+    echo "You're a Nim coder!"
+  else:
+    echo "You can become a Nim coder!"
+
+# Call the main function
+main()
+''',
+            "zig": '''// Welcome to your Zig space!
+const std = @import("std");
+
+pub fn main() !void {
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("Hello, World!\n", .{});
+    
+    // Try adding your own code below:
+    const name = "Zig Coder";
+    try stdout.print("Welcome, {s}!\n", .{name});
+    
+    // You can use loops:
+    var i: u8 = 0;
+    while (i < 3) : (i += 1) {
+        try stdout.print("Count: {}\n", .{i});
+    }
+    
+    // And conditions:
+    if (std.mem.eql(u8, name, "Zig Coder")) {
+        try stdout.print("You're a Zig coder!\n", .{});
+    } else {
+        try stdout.print("You can become a Zig coder!\n", .{});
+    }
+}
+''',
+            "crystal": '''# Welcome to your Crystal space!
+
+def main
+  puts "Hello, World!"
+  
+  # Try adding your own code below:
+  name = "Crystal Coder"
+  puts "Welcome, #{name}!"
+  
+  # You can use loops:
+  3.times do |i|
+    puts "Count: #{i}"
+  end
+  
+  # And conditions:
+  if name == "Crystal Coder"
+    puts "You're a Crystal coder!"
+  else
+    puts "You can become a Crystal coder!"
+  end
+end
+
+# Call the main function
+main
+''',
+            "julia": '''# Welcome to your Julia space!
+
+function main()
+    println("Hello, World!")
+    
+    # Try adding your own code below:
+    name = "Julia Coder"
+    println("Welcome, $name!")
+    
+    # You can use loops:
+    for i in 0:2
+        println("Count: $i")
+    end
+    
+    # And conditions:
+    if name == "Julia Coder"
+        println("You're a Julia coder!")
+    else
+        println("You can become a Julia coder!")
+    end
+end
+
+# Call the main function
+main()
+''',
+            "d": '''// Welcome to your D space!
+import std.stdio;
+
+void main() {
+    writeln("Hello, World!");
+    
+    // Try adding your own code below:
+    string name = "D Coder";
+    writeln("Welcome, ", name, "!");
+    
+    // You can use loops:
+    foreach (i; 0..3) {
+        writeln("Count: ", i);
+    }
+    
+    // And conditions:
+    if (name == "D Coder") {
+        writeln("You're a D coder!");
+    } else {
+        writeln("You can become a D coder!");
+    }
+}
+''',
+            "cobol": '''      * Welcome to your COBOL space!
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. HELLO.
+       
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01 NAME PIC X(20) VALUE "COBOL Coder".
+       01 I PIC 9(1) VALUE 0.
+       
+       PROCEDURE DIVISION.
+       MAIN-PARA.
+           DISPLAY "Hello, World!".
+           
+           DISPLAY "Welcome, ", NAME, "!".
+           
+           PERFORM VARYING I FROM 0 BY 1 UNTIL I > 2
+               DISPLAY "Count: ", I
+           END-PERFORM.
+           
+           IF NAME = "COBOL Coder" THEN
+               DISPLAY "You're a COBOL coder!"
+           ELSE
+               DISPLAY "You can become a COBOL coder!"
+           END-IF.
+           
+           STOP RUN.
+''',
+            "basic": '''REM Welcome to your BASIC space!
+
+SUB Main()
+    PRINT "Hello, World!"
+    
+    REM Try adding your own code below:
+    name$ = "BASIC Coder"
+    PRINT "Welcome, "; name$; "!"
+    
+    REM You can use loops:
+    FOR i = 0 TO 2
+        PRINT "Count: "; i
+    NEXT i
+    
+    REM And conditions:
+    IF name$ = "BASIC Coder" THEN
+        PRINT "You're a BASIC coder!"
+    ELSE
+        PRINT "You can become a BASIC coder!"
+    END IF
+END SUB
+
+Main
+''',
+            "fortran": '''! Welcome to your Fortran space!
+program main
+    implicit none
+    
+    ! Try adding your own code below:
+    character(len=20) :: name = "Fortran Coder"
+    integer :: i
+    
+    print *, "Hello, World!"
+    print *, "Welcome, ", trim(name), "!"
+    
+    ! You can use loops:
+    do i = 0, 2
+        print *, "Count: ", i
+    end do
+    
+    ! And conditions:
+    if (name == "Fortran Coder") then
+        print *, "You're a Fortran coder!"
+    else
+        print *, "You can become a Fortran coder!"
+    end if
+    
+end program main
+''',
+            "pascal": '''(* Welcome to your Pascal space! *)
+program HelloWorld;
+
+var
+  name: string;
+  i: integer;
+
+begin
+  writeln('Hello, World!');
+  
+  (* Try adding your own code below: *)
+  name := 'Pascal Coder';
+  writeln('Welcome, ', name, '!');
+  
+  (* You can use loops: *)
+  for i := 0 to 2 do
+    writeln('Count: ', i);
+  
+  (* And conditions: *)
+  if name = 'Pascal Coder' then
+    writeln('You''re a Pascal coder!')
+  else
+    writeln('You can become a Pascal coder!');
+end.
+''',
+            "prolog": '''% Welcome to your Prolog space!
+
+main :-
+    write('Hello, World!'), nl,
+    
+    % Try adding your own code below:
+    Name = 'Prolog Coder',
+    format('Welcome, ~w!~n', [Name]),
+    
+    % You can use loops:
+    forall(between(0, 2, I),
+           format('Count: ~w~n', [I])),
+    
+    % And conditions:
+    (Name = 'Prolog Coder' ->
+        write('You\'re a Prolog coder!')
+    ;
+        write('You can become a Prolog coder!')),
+    
+    nl.
+
+:- main.
+''',
+            "erlang": '''%% Welcome to your Erlang space!
+
+-module(main).
+-export([start/0]).
+
+start() ->
+    io:format("Hello, World!~n"),
+    
+    %% Try adding your own code below:
+    Name = "Erlang Coder",
+    io:format("Welcome, ~s!~n", [Name]),
+    
+    %% You can use loops:
+    lists:foreach(fun(I) -> 
+        io:format("Count: ~p~n", [I]) 
+    end, lists:seq(0, 2)),
+    
+    %% And conditions:
+    case Name of
+        "Erlang Coder" ->
+            io:format("You're an Erlang coder!~n");
+        _ ->
+            io:format("You can become an Erlang coder!~n")
+    end.
+''',
+            "ocaml": '''(* Welcome to your OCaml space! *)
+
+let main () =
+  print_endline "Hello, World!";
+  
+  (* Try adding your own code below: *)
+  let name = "OCaml Coder" in
+  Printf.printf "Welcome, %s!\n" name;
+  
+  (* You can use loops: *)
+  for i = 0 to 2 do
+    Printf.printf "Count: %d\n" i
+  done;
+  
+  (* And conditions: *)
+  if name = "OCaml Coder" then
+    print_endline "You're an OCaml coder!"
+  else
+    print_endline "You can become an OCaml coder!"
+
+let () = main ()
+''',
+            "clojure": ''';;; Welcome to your Clojure space!
+
+(defn main []
+  (println "Hello, World!")
+  
+  ; Try adding your own code below:
+  (let [name "Clojure Coder"]
+    (println "Welcome," name "!")
+    
+    ; You can use loops:
+    (doseq [i (range 3)]
+      (println "Count:" i))
+    
+    ; And conditions:
+    (if (= name "Clojure Coder")
+      (println "You're a Clojure coder!")
+      (println "You can become a Clojure coder!"))))
+
+; Call the main function
+(main)
+''',
+            "coffeescript": '''# Welcome to your CoffeeScript space!
+
+main = ->
+  console.log "Hello, World!"
+  
+  # Try adding your own code below:
+  name = "CoffeeScript Coder"
+  console.log "Welcome, #{name}!"
+  
+  # You can use loops:
+  for i in [0..2]
+    console.log "Count: #{i}"
+  
+  # And conditions:
+  if name is "CoffeeScript Coder"
+    console.log "You're a CoffeeScript coder!"
+  else
+    console.log "You can become a CoffeeScript coder!"
+
+# Call the main function
+main()
+''',
+            "racket": '''#lang racket
+;; Welcome to your Racket space!
+
+(define (main)
+  (displayln "Hello, World!")
+  
+  ;; Try adding your own code below:
+  (define name "Racket Coder")
+  (printf "Welcome, ~a!~n" name)
+  
+  ;; You can use loops:
+  (for ([i (in-range 3)])
+    (printf "Count: ~a~n" i))
+  
+  ;; And conditions:
+  (if (equal? name "Racket Coder")
+      (displayln "You're a Racket coder!")
+      (displayln "You can become a Racket coder!")))
+
+;; Call the main function
+(main)
+''',
+            "powershell": '''# Welcome to your PowerShell space!
+
+function Main {
+    Write-Host "Hello, World!"
+    
+    # Try adding your own code below:
+    $name = "PowerShell Coder"
+    Write-Host "Welcome, $name!"
+    
+    # You can use loops:
+    for ($i = 0; $i -lt 3; $i++) {
+        Write-Host "Count: $i"
+    }
+    
+    # And conditions:
+    if ($name -eq "PowerShell Coder") {
+        Write-Host "You're a PowerShell coder!"
+    } else {
+        Write-Host "You can become a PowerShell coder!"
+    }
+}
+
+# Call the main function
+Main
+''',
+            "fsharp": '''// Welcome to your F# space!
+
+let main() =
+    printfn "Hello, World!"
+    
+    // Try adding your own code below:
+    let name = "F# Coder"
+    printfn "Welcome, %s!" name
+    
+    // You can use loops:
+    for i in 0..2 do
+        printfn "Count: %d" i
+    
+    // And conditions:
+    if name = "F# Coder" then
+        printfn "You're an F# coder!"
+    else
+        printfn "You can become an F# coder!"
+
+// Call the main function
+main()
+''',
+            "fsharp.net": '''// Welcome to your F# space!
+
+let main() =
+    printfn "Hello, World!"
+    
+    // Try adding your own code below:
+    let name = "F# Coder"
+    printfn "Welcome, %s!" name
+    
+    // You can use loops:
+    for i in 0..2 do
+        printfn "Count: %d" i
+    
+    // And conditions:
+    if name = "F# Coder" then
+        printfn "You're an F# coder!"
+    else
+        printfn "You can become an F# coder!"
+
+// Call the main function
+main()
+''',
+            "html": '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My HTML Space</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h1 {
+            color: #333;
+        }
+        .highlight {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-left: 3px solid #3498db;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to my HTML Space!</h1>
+        
+        <p>This is a simple HTML template to get you started. Feel free to modify it!</p>
+        
+        <div class="highlight">
+            <p>Try changing the styles, adding new elements, or implementing JavaScript functionality.</p>
+        </div>
+        
+        <h2>Things to try:</h2>
+        <ul>
+            <li>Add more sections to this page</li>
+            <li>Change the colors and styling</li>
+            <li>Add images or videos</li>
+            <li>Implement a simple form</li>
+        </ul>
+        
+        <button id="demoButton">Click Me!</button>
+        
+        <p id="demoText"></p>
+    </div>
+
+    <script>
+        // Simple JavaScript example
+        document.getElementById('demoButton').addEventListener('click', function() {
+            document.getElementById('demoText').textContent = 'Button was clicked at ' + new Date().toLocaleTimeString();
+        });
+    </script>
+</body>
+</html>
+''',
+            "css": '''/* Welcome to your CSS Space!
+   This is a template with some common CSS styles */
+
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    margin-bottom: 15px;
+    color: #222;
+}
+
+h1 {
+    font-size: 2.5em;
+}
+
+h2 {
+    font-size: 2em;
+}
+
+p {
+    margin-bottom: 15px;
+}
+
+/* Links */
+a {
+    color: #3498db;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+/* Buttons */
+.button {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: #2980b9;
+}
+
+.button.secondary {
+    background-color: #95a5a6;
+}
+
+.button.secondary:hover {
+    background-color: #7f8c8d;
+}
+
+/* Cards */
+.card {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+
+/* Form elements */
+input[type="text"],
+input[type="email"],
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Utility classes */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mb-1 {
+    margin-bottom: 10px;
+}
+
+.mb-2 {
+    margin-bottom: 20px;
+}
+
+.mb-3 {
+    margin-bottom: 30px;
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2em;
+    }
+    
+    .container {
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+}
 '''
         }
         
-        # Additional templates for common languages
-        if language == "php":
-            return "<?php\n\n// Welcome to your PHP space!\n\nfunction main() {\n    echo \"Hello, World!\";\n    \n    // Try adding your own code below:\n    $name = \"PHP Coder\";\n    echo \"\nWelcome, $name!\";\n    \n    // You can use loops:\n    for ($i = 0; $i < 3; $i++) {\n        echo \"\nCount: $i\";\n    }\n    \n    // And conditions:\n    if ($name === \"PHP Coder\") {\n        echo \"\nYou're a PHP coder!\";\n    } else {\n        echo \"\nYou can become a PHP coder!\";\n    }\n}\n\n// Call the main function\nmain();\n";
-        elif language == "swift":
-            return "// Welcome to your Swift space!\n\nfunc main() {\n    print(\"Hello, World!\")\n    \n    // Try adding your own code below:\n    let name = \"Swift Coder\"\n    print(\"Welcome, \\(name)!\")\n    \n    // You can use loops:\n    for i in 0..<3 {\n        print(\"Count: \\(i)\")\n    }\n    \n    // And conditions:\n    if name == \"Swift Coder\" {\n        print(\"You're a Swift coder!\")\n    } else {\n        print(\"You can become a Swift coder!\")\n    }\n}\n\n// Call the main function\nmain()\n";
-        elif language == "kotlin":
-            return "// Welcome to your Kotlin space!\n\nfun main() {\n    println(\"Hello, World!\")\n    \n    // Try adding your own code below:\n    val name = \"Kotlin Coder\"\n    println(\"Welcome, $name!\")\n    \n    // You can use loops:\n    for (i in 0..2) {\n        println(\"Count: $i\")\n    }\n    \n    // And conditions:\n    if (name == \"Kotlin Coder\") {\n        println(\"You're a Kotlin coder!\")\n    } else {\n        println(\"You can become a Kotlin coder!\")\n    }\n}\n";
-        elif language == "lua":
-            return "-- Welcome to your Lua space!\n\nfunction main()\n    print(\"Hello, World!\")\n    \n    -- Try adding your own code below:\n    local name = \"Lua Coder\"\n    print(\"Welcome, \" .. name .. \"!\")\n    \n    -- You can use loops:\n    for i = 0, 2 do\n        print(\"Count: \" .. i)\n    end\n    \n    -- And conditions:\n    if name == \"Lua Coder\" then\n        print(\"You're a Lua coder!\")\n    else\n        print(\"You can become a Lua coder!\")\n    end\nend\n\n-- Call the main function\nmain()\n";
-        elif language == "perl":
-            return "# Welcome to your Perl space!\n\nsub main {\n    print \"Hello, World!\\n\";\n    \n    # Try adding your own code below:\n    my $name = \"Perl Coder\";\n    print \"Welcome, $name!\\n\";\n    \n    # You can use loops:\n    for (my $i = 0; $i < 3; $i++) {\n        print \"Count: $i\\n\";\n    }\n    \n    # And conditions:\n    if ($name eq \"Perl Coder\") {\n        print \"You're a Perl coder!\\n\";\n    } else {\n        print \"You can become a Perl coder!\\n\";\n    }\n}\n\n# Call the main function\nmain();\n";
-        elif language == "r":
-            return "# Welcome to your R space!\n\nmain <- function() {\n  print(\"Hello, World!\")\n  \n  # Try adding your own code below:\n  name <- \"R Coder\"\n  print(paste(\"Welcome,\", name, \"!\"))\n  \n  # You can use loops:\n  for (i in 0:2) {\n    print(paste(\"Count:\", i))\n  }\n  \n  # And conditions:\n  if (name == \"R Coder\") {\n    print(\"You're an R coder!\")\n  } else {\n    print(\"You can become an R coder!\")\n  }\n}\n\n# Call the main function\nmain()\n";
-        elif language == "bash":
-            return "#!/bin/bash\n\n# Welcome to your Bash space!\n\nmain() {\n    echo \"Hello, World!\"\n    \n    # Try adding your own code below:\n    name=\"Bash Coder\"\n    echo \"Welcome, $name!\"\n    \n    # You can use loops:\n    for i in {0..2}; do\n        echo \"Count: $i\"\n    done\n    \n    # And conditions:\n    if [[ \"$name\" == \"Bash Coder\" ]]; then\n        echo \"You're a Bash coder!\"\n    else\n        echo \"You can become a Bash coder!\"\n    fi\n}\n\n# Call the main function\nmain\n";
+        # For languages not in the explicit templates, generate a generic template
+        if language in templates:
+            return templates[language]
         
-        # Generate reasonable default templates based on language
-        language_capitalized = language.capitalize() 
-        if language in ["javascript", "typescript", "scala", "dart", "solidity", "groovy"]:
+        # Generate generic templates for languages that don't have a specific template
+        language_capitalized = language.capitalize()
+        
+        # Group languages by syntax family to generate appropriate templates
+        if language in ["javascript", "typescript", "coffeescript", "dart", "solidity"]:
             return f"// Welcome to your {language_capitalized} space!\n\nfunction main() {{\n  console.log(\"Hello, World!\");\n\n  // Write your code here\n}}\n\nmain();\n"
-        elif language in ["python", "ruby", "perl", "r"]:
+        
+        elif language in ["python", "ruby", "crystal", "nim"]:
             return f"# Welcome to your {language_capitalized} space!\n\ndef main():\n    print(\"Hello, World!\")\n    \n    # Write your code here\n\n# Call the main function\nmain()\n"
-        elif language in ["lua"]:
+        
+        elif language in ["lua", "moonscript"]:
             return f"-- Welcome to your {language_capitalized} space!\n\nfunction main()\n    print(\"Hello, World!\")\n    \n    -- Write your code here\nend\n\nmain()\n"
-        else:
-            # C-style languages default
-            return f"// Welcome to your {language_capitalized} space!\n\n// Main function\nvoid main() {{\n    // Write your code here\n    print(\"Hello, World!\");\n}}\n\nmain();\n"
+        
+        elif language in ["c", "cpp", "c++", "java", "csharp", "d", "rust", "go", "swift", "kotlin"]:
+            return f"// Welcome to your {language_capitalized} space!\n\n// Main function\n{language == 'go' and 'func' or language in ['c', 'cpp', 'c++'] and 'int' or 'void'} main() {{\n    // Write your code here\n    printf(\"Hello, World!\\n\");\n{language in ['c', 'cpp', 'c++'] and '    return 0;\n' or ''}}}\n"
+        
+        elif language in ["bash", "powershell", "shell"]:
+            prefix = "#!" + ("/bin/bash" if language == "bash" else "")
+            return f"{prefix}\n# Welcome to your {language_capitalized} space!\n\nfunction main() {{\n    echo \"Hello, World!\"\n    \n    # Write your code here\n}}\n\n# Call the main function\nmain\n"
+        
+        elif language in ["r", "rscript"]:
+            return f"# Welcome to your R space!\n\nmain <- function() {{\n  print(\"Hello, World!\")\n  \n  # Write your code here\n}}\n\n# Call the main function\nmain()\n"
+        
+        elif language in ["php"]:
+            return f"<?php\n// Welcome to your PHP space!\n\nfunction main() {{\n    echo \"Hello, World!\\n\";\n    \n    // Write your code here\n}}\n\n// Call the main function\nmain();\n?>\n"
+        
+        elif language in ["haskell", "fsharp", "ocaml", "elm"]:
+            return f"-- Welcome to your {language_capitalized} space!\n\nmain = do\n  putStrLn \"Hello, World!\"\n  \n  -- Write your code here\n\n-- Execute main function\nmain\n"
+        
+        elif language in ["clojure", "scheme", "racket", "lisp"]:
+            return f";;; Welcome to your {language_capitalized} space!\n\n(defn main []\n  (println \"Hello, World!\")\n  \n  ;; Write your code here\n)\n\n;; Call the main function\n(main)\n"
+        
+        elif language == "html":
+            return f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My {language_capitalized} Space</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }}
+        .container {{
+            max-width: 800px;
+            margin: 0 auto;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to my {language_capitalized} Space!</h1>
+        <p>Edit this template and make it your own!</p>
+    </div>
+</body>
+</html>'''
+        
+        elif language == "css":
+            return f'''/* Welcome to your CSS Space */
 
-    @classmethod
-    def get_language_icon(cls, language: str) -> str:
-        """Get the Font Awesome icon for a language."""
-        icon_map = {
-            "python": "fab fa-python",
-            "javascript": "fab fa-js",
-            "typescript": "fab fa-js",
-            "java": "fab fa-java",
-            "c": "fas fa-code",
-            "cpp": "fas fa-code",
-            "csharp": "fab fa-microsoft",
-            "go": "fas fa-code",
-            "ruby": "fas fa-gem",
-            "rust": "fas fa-cogs",
-            "php": "fab fa-php",
-            "swift": "fab fa-swift",
-            "kotlin": "fab fa-android",
-            "dart": "fas fa-bullseye",
-            "scala": "fas fa-code",
-            "perl": "fas fa-code",
-            "r": "fas fa-chart-line",
-            "bash": "fas fa-terminal",
-            "lua": "fas fa-moon",
-            "haskell": "fas fa-lambda",
-            "elixir": "fas fa-vial",
-            "erlang": "fas fa-phone",
-            "clojure": "fas fa-code",
-            "julia": "fas fa-circle",
-            "nim": "fas fa-feather",
-            "crystal": "fas fa-gem",
-            "ocaml": "fas fa-code",
-            "zig": "fas fa-bolt",
-        }
-        return icon_map.get(language, "fas fa-code")
+body {{
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}}
+
+.container {{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}}
+
+h1 {{
+    color: #333;
+}}
+
+p {{
+    line-height: 1.6;
+}}
+'''
+        
+        # Default template for any other language
+        return f"// Welcome to your {language_capitalized} space!\n\n// Write your code here\nprint(\"Hello, World!\");\n"
