@@ -62,8 +62,46 @@ function initializeEditor() {
     // Load files from localStorage if they exist
     loadFiles();
     
+    // Fetch additional files from the server
+    fetchSiteFiles();
+    
     // Set up the initial file tab
     setupInitialFile();
+}
+
+/**
+ * Fetch site files from the server
+ */
+function fetchSiteFiles() {
+    const siteId = document.getElementById('site-id').value;
+    
+    fetch(`/api/site/${siteId}/pages`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.pages) {
+                // Process each file
+                data.pages.forEach(page => {
+                    // Only add if not already in files object
+                    if (!files[page.filename]) {
+                        files[page.filename] = {
+                            content: page.content,
+                            language: detectLanguageFromFileName(page.filename)
+                        };
+                        
+                        // Create a tab for this file if it doesn't exist
+                        if (!document.querySelector(`.file-tab[data-filename="${page.filename}"]`)) {
+                            createFileTab(page.filename, false);
+                        }
+                    }
+                });
+                
+                // Save to localStorage
+                saveFiles();
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching site files:", error);
+        });
 }
 
 /**
@@ -579,6 +617,13 @@ function loadFiles() {
     
     if (savedFiles) {
         files = JSON.parse(savedFiles);
+        
+        // Create tabs for all loaded files
+        Object.keys(files).forEach(filename => {
+            if (!document.querySelector(`.file-tab[data-filename="${filename}"]`)) {
+                createFileTab(filename, false);
+            }
+        });
     } else {
         // Initialize with the current content
         const fileExtension = getFileExtension(currentLanguage);
@@ -590,6 +635,15 @@ function loadFiles() {
                 language: currentLanguage
             }
         };
+    }
+    
+    // If no tabs are active, activate the first one
+    const activeTabs = document.querySelectorAll('.file-tab.active');
+    if (activeTabs.length === 0) {
+        const firstTab = document.querySelector('.file-tab');
+        if (firstTab) {
+            activateTab(firstTab);
+        }
     }
 }
 
