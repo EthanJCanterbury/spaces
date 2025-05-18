@@ -106,14 +106,16 @@ class PistonService:
                     "error": f"Language '{language}' not supported or no version available"
                 }
         
-        # Prepare the request payload
-        extension = cls._get_file_extension(language)
+        # Prepare the request payload - ensure we get the extension correctly
+        file_ext = cls._get_file_extension(language.lower())
+        logger.info(f"Using extension '{file_ext}' for language '{language}'")
+        
         payload = {
             "language": language,
             "version": version,
             "files": [
                 {
-                    "name": f"main.{extension}",
+                    "name": f"main.{file_ext}",
                     "content": code
                 }
             ],
@@ -356,6 +358,7 @@ class PistonService:
     @classmethod
     def get_language_extension(cls, language: str) -> str:
         """Get the file extension for a given language."""
+        language = language.lower()  # Normalize to lowercase
         extension_map = {
             # Mainstream languages
             "python": "py",
@@ -442,11 +445,14 @@ class PistonService:
             "vhdl": "vhd",
             "tcl": "tcl"
         }
-        return extension_map.get(language.lower(), "txt")
+        extension = extension_map.get(language, "txt")
+        logger.info(f"Language extension for '{language}': '{extension}'")
+        return extension
     
     @staticmethod
     def _get_file_extension(language: str) -> str:
         """Get the appropriate file extension for a language."""
+        language = language.lower()  # Normalize language to lowercase
         extension_map = {
             # Mainstream languages
             "python": "py",
@@ -547,7 +553,7 @@ class PistonService:
             "yeethon": "py"
         }
         # Get appropriate extension without adding a period
-        return extension_map.get(language.lower(), "txt")
+        return extension_map.get(language, "txt")
     
     @classmethod
     def get_language_template(cls, language: str) -> str:

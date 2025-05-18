@@ -1,6 +1,7 @@
 # Helper function for file extensions
 def get_file_extension(language):
     """Get the appropriate file extension for a language."""
+    language = language.lower()  # Normalize to lowercase
     extension_map = {
         "python": ".py",
         "javascript": ".js",
@@ -23,5 +24,7 @@ def get_file_extension(language):
         "bash": ".sh",
         "lua": ".lua",
         "haskell": ".hs",
+        "html": ".html",
+        "css": ".css",
     }
-    return extension_map.get(language.lower(), ".txt")
+    return extension_map.get(language, ".txt")
