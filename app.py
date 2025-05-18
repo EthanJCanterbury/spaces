@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timedelta
 from functools import wraps
 from dotenv import load_dotenv
-from flask import Flask, render_template, redirect, flash, request, jsonify, url_for, abort, session, Response
+from flask import Flask, render_template, redirect, flash, request, jsonify, url_for, abort, session, Response, current_app
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from models import db, User, Site, SitePage, UserActivity, Club, ClubMembership, ClubFeaturedProject, ClubAssignment
@@ -886,6 +886,62 @@ def edit_site(site_id):
     except Exception as e:
         app.logger.error(f'Error in edit_site: {str(e)}')
         abort(500)
+
+
+@app.route('/api/execute', methods=['POST'])
+@login_required
+@csrf.exempt
+def execute_command():
+    """Execute a command in the console."""
+    try:
+        data = request.get_json()
+        code = data.get('code', '')
+        language = data.get('language', 'python')
+        is_command = data.get('isCommand', False)
+
+        if not code:
+            return jsonify({
+                'output': 'Error: No code provided',
+                'error': True
+            }), 400
+
+        if len(code) > 10000:
+            return jsonify({
+                'output': 'Error: Code exceeds maximum allowed length (10,000 characters)',
+                'error': True
+            }), 400
+
+        # Import the PistonService
+        from piston_service import PistonService
+
+        # Execute the code using Piston API
+        result = PistonService.execute_code(
+            language=language.lower(),
+            code=code,
+            version=None,  # Let Piston choose the latest version
+            stdin='',
+            args=[]
+        )
+
+        # Format the response
+        if result.get('success', False):
+            return jsonify({
+                'output': result.get('output', '').strip(),
+                'execution_time': result.get('execution_time', 0),
+                'error': False
+            })
+        else:
+            return jsonify({
+                'output': result.get('error', 'Execution failed').strip(),
+                'error': True
+            }), 400
+
+    except Exception as e:
+        app.logger.error(f'Error in execute_command: {str(e)}')
+        return jsonify({
+            'output': f'Server error: {str(e)}',
+            'error': True
+        }), 500
 
 
 @app.route('/api/sites/<int:site_id>/run', methods=['POST'])

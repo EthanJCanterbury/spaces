@@ -65,6 +65,97 @@
     .console-output .info {
         color: #4dabf7;
     }
+    
+    .console-command-bar {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        background-color: #1e1e1e;
+        border-top: 1px solid #333;
+        gap: 8px;
+    }
+    
+    .command-prompt {
+        color: #4dabf7;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-weight: bold;
+        user-select: none;
+        font-size: 14px;
+    }
+    
+    .command-input {
+        flex: 1;
+        background: #252525;
+        border: 1px solid #3a3a3a;
+        color: #ffffff !important; /* Force white text */
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 14px;
+        outline: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        -webkit-text-fill-color: #ffffff; /* For WebKit browsers */
+    }
+    
+    /* Ensure text remains white in all states */
+    .command-input,
+    .command-input:focus,
+    .command-input:active,
+    .command-input:hover {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    
+    .command-input:not(:focus) {
+        background: #1f1f1f;
+        border-color: #2d2d2d;
+    }
+    
+    .command-input:focus {
+        border-color: #4dabf7;
+        box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);
+        background-color: #252525;
+    }
+    
+    .command-input::placeholder {
+        color: #9e9e9e; /* Lighter gray for better visibility */
+        opacity: 1;
+    }
+    
+    /* Fix autofill background color in Chrome */
+    .command-input:-webkit-autofill,
+    .command-input:-webkit-autofill:hover,
+    .command-input:-webkit-autofill:focus,
+    .command-input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px #252525 inset !important;
+        -webkit-text-fill-color: #ffffff !important;
+        caret-color: #ffffff;
+    }
+    
+    .command-output {
+        color: #4dabf7;
+        font-weight: 500;
+        padding: 4px 15px;
+        margin: 0;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+        line-height: 1.5;
+    }
+    
+    .command-output.user-command {
+        color: #fff;
+        background-color: rgba(77, 171, 247, 0.1);
+        border-left: 3px solid #4dabf7;
+        padding-left: 12px;
+        margin: 5px 0;
+    }
+    
+    .command-output.command-result {
+        color: #e0e0e0;
+        padding: 8px 15px;
+    }
 
     .file-tabs {
         display: flex;
@@ -422,6 +513,136 @@ function showToast(type, message) {
                     </button>
                 </div>
                 <pre id="consoleOutput" class="console-output">Run your code to see the output here!</pre>
+                <div class="console-command-bar">
+                    <span class="command-prompt">$</span>
+                    <input type="text" id="commandInput" class="command-input" 
+                           placeholder="Type a command and press Enter..." 
+                           autocomplete="off"
+                           onkeydown="if(event.key === 'Enter') executeCommand(event)">
+                    <button class="btn-icon" onclick="executeCommand(event)" title="Execute Command">
+                        <i class="fas fa-play"></i>
+                    </button>
+                </div>
+                <script>
+                // Make sure the function is globally available
+                async function executeCommand(event) {
+                    event.preventDefault();
+                    const commandInput = document.getElementById('commandInput');
+                    const command = commandInput.value.trim();
+                    
+                    if (!command) return;
+                    
+                    const consoleOutput = document.getElementById('consoleOutput');
+                    
+                    // Display the command that was executed
+                    const commandDisplay = document.createElement('div');
+                    commandDisplay.className = 'command-output user-command';
+                    commandDisplay.textContent = `$ ${command}`;
+                    consoleOutput.appendChild(commandDisplay);
+                    
+                    // Clear the input
+                    commandInput.value = '';
+                    
+                    // Handle special commands
+                    if (command.toLowerCase() === 'clear') {
+                        consoleOutput.innerHTML = '';
+                        return;
+                    }
+                    
+                    // Show executing message
+                    const executingDiv = document.createElement('div');
+                    executingDiv.className = 'command-output command-result';
+                    executingDiv.textContent = 'Executing...';
+                    consoleOutput.appendChild(executingDiv);
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                    
+                    try {
+                        // Get current language from the editor or default to python
+                        const currentLanguage = '{{ site.language|default("python") }}'.toLowerCase();
+                        
+                        // Execute the command using the current language
+                        const response = await fetch(`/api/execute`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                language: currentLanguage,
+                                code: command,
+                                isCommand: true
+                            })
+                        });
+
+                        // Remove the "Executing..." message
+                        consoleOutput.removeChild(executingDiv);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        
+                        const result = await response.json();
+                        
+                        // Display the output
+                        const outputDiv = document.createElement('div');
+                        outputDiv.className = 'command-output command-result';
+                        
+                        if (result.error) {
+                            outputDiv.style.color = '#ff6b6b';
+                            outputDiv.textContent = `Error: ${result.output || 'Unknown error occurred'}`;
+                        } else {
+                            outputDiv.textContent = result.output || '(No output)';
+                            
+                            // If there's execution time, show it
+                            if (result.execution_time) {
+                                const timeDiv = document.createElement('div');
+                                timeDiv.style.fontSize = '0.8em';
+                                timeDiv.style.color = '#888';
+                                timeDiv.style.marginTop = '4px';
+                                timeDiv.textContent = `Execution time: ${result.execution_time.toFixed(2)}ms`;
+                                outputDiv.appendChild(timeDiv);
+                            }
+                        }
+                        
+                        consoleOutput.appendChild(outputDiv);
+                    } catch (error) {
+                        console.error('Error executing command:', error);
+                        // Remove the "Executing..." message if it still exists
+                        if (executingDiv.parentNode === consoleOutput) {
+                            consoleOutput.removeChild(executingDiv);
+                        }
+                        
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'command-output command-result';
+                        errorDiv.style.color = '#ff6b6b';
+                        errorDiv.textContent = `Error: ${error.message || 'Failed to execute command'}`;
+                        consoleOutput.appendChild(errorDiv);
+                    }
+                    
+                    // Scroll to bottom
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                    
+                    // Focus back on input
+                    commandInput.focus();
+                }
+                
+                // Make the function available globally
+                window.executeCommand = executeCommand;
+                
+                // Add keyboard shortcut to focus command input (Ctrl+`)
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === '`') {
+                        e.preventDefault();
+                        const commandInput = document.getElementById('commandInput');
+                        commandInput.focus();
+                    }
+                });
+                
+                // Focus the command input when the console is clicked
+                document.querySelector('.console-frame').addEventListener('click', () => {
+                    document.getElementById('commandInput').focus();
+                });
+                </script>
             </div>
         </div>
     </div>
@@ -774,6 +995,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Select the appropriate mode based on language
         let editorMode = getCodeMirrorMode(currentLanguage);
 
+        // Command execution is now handled by the inline script above
+        
         // Set up the CodeMirror editor
         const editor = CodeMirror.fromTextArea(document.getElementById("codeEditor"), {
             lineNumbers: true,
