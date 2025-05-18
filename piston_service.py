@@ -52,7 +52,11 @@ class PistonService:
         """Get a list of available programming languages."""
         cls.get_runtimes()  # Ensure cache is populated
         if cls._runtimes_by_language:
-            return sorted(cls._runtimes_by_language.keys())
+            # Filter out inappropriate language names
+            excluded_languages = ["brainfuck"]
+            filtered_languages = [lang for lang in cls._runtimes_by_language.keys() 
+                                if lang.lower() not in excluded_languages]
+            return sorted(filtered_languages)
         return []
     
     @classmethod

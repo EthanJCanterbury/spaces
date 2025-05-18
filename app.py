@@ -1348,8 +1348,11 @@ def python_editor(site_id):
 @login_required
 def code_editor(site_id):
     try:
+        # Get the site or return 404
         site = Site.query.get_or_404(site_id)
+        app.logger.info(f'Found site {site_id} with language {site.language}')
 
+        # Check permissions
         is_admin = current_user.is_admin
         is_owner = site.user_id == current_user.id
 
@@ -1366,29 +1369,26 @@ def code_editor(site_id):
         app.logger.info(f'User {current_user.id} editing code site {site_id}')
 
         # Import the PistonService to get the language icon
-        from piston_service import PistonService
-        language_icon = PistonService.get_language_icon(site.language)
+        try:
+            from piston_service import PistonService
+            language_icon = PistonService.get_language_icon(site.language)
+            app.logger.info(f'Got language icon for {site.language}: {language_icon}')
+        except Exception as lang_err:
+            app.logger.error(f'Error getting language icon: {str(lang_err)}')
+            language_icon = 'fas fa-code'  # Default icon
 
-        socket_join_script = f'''
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {{
-                if (typeof socket !== 'undefined') {{
-                    console.log('Auto-joining socket room: site_{site_id}');
-                    socket.emit('join', {{ site_id: {site_id} }});
-                }} else {{
-                    console.error('Socket not initialized');
-                }}
-            }});
-        </script>
-        '''
-
-        return render_template('code_editor.html', 
-                            site=site, 
-                            language_icon=language_icon,
-                            additional_scripts=socket_join_script)
+        # Render the template with basic parameters
+        try:
+            return render_template('code-editor.html', 
+                                site=site, 
+                                language_icon=language_icon)
+        except Exception as template_err:
+            app.logger.error(f'Template rendering error: {str(template_err)}')
+            # Try to render a basic error template instead
+            return f'<h1>Error loading code editor</h1><p>{str(template_err)}</p>', 500
     except Exception as e:
         app.logger.error(f'Error in code_editor: {str(e)}')
-        abort(500)
+        return f'<h1>500 Server Error</h1><p>Details: {str(e)}</p>', 500
 
 
 @app.route('/api/sites/<int:site_id>', methods=['DELETE'])
@@ -3301,171 +3301,6 @@ def export_users():
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error exporting users: {str(e)}')
-        return jsonify({
-            'success': False,
-            'message': f'Failed to export users: {str(e)}'
-        }), 500
-
-@app.route('/api/sites/<int:site_id>/files', methods=['GET', 'POST'])
-@login_required
-def site_files(site_id):
-    try:
-        site = Site.query.get_or_404(site_id)
-
-        if site.user_id != current_user.id and not current_user.is_admin:
-            return jsonify({'error': 'Unauthorized'}), 403
-
-        if request.method == 'GET':
-            pages = SitePage.query.filter_by(site_id=site_id).all()
-            files = [{
-                'filename': page.filename,
-                'content': page.content,
-                'file_type': page.file_type,
-                'updated_at': page.updated_at.isoformat() if page.updated_at else None
-            } for page in pages]
-            
-            return jsonify({
-                'success': True,
-                'files': files
-            })
-        
-        elif request.method == 'POST':
-            data = request.get_json()
-            filename = data.get('filename')
-            content = data.get('content', '')
-
-            if not filename:
-                return jsonify({'message': 'Filename is required'}), 400
-
-            # Check if the page already exists
-            page = SitePage.query.filter_by(site_id=site.id,
-                                            filename=filename).first()
-
-            if page:
-                page.content = content
-                page.updated_at = datetime.utcnow()
-            else:
-                # Create a new page
-                file_type = filename.split('.')[-1] if '.' in filename else 'txt'
-                page = SitePage(site_id=site.id,
-                                filename=filename,
-                                content=content,
-                                file_type=file_type)
-                db.session.add(page)
-            
-            db.session.commit()
-            
-            # Log activity
-            activity = UserActivity(activity_type='file_update',
-                                    message=f'Updated file {filename}',
-                                    username=current_user.username,
-                                    user_id=current_user.id,
-                                    site_id=site.id)
-            db.session.add(activity)
-            db.session.commit()
-
-            return jsonify({
-                'success': True,
-                'message': f'File {filename} saved successfully'
-            })
-
-        return jsonify({'error': 'Invalid request method'}), 405
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'Error in site_files: {str(e)}')
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
-
-
-@app.route('/site/update/<int:site_id>', methods=['POST'])
-@login_required
-def update_site_form(site_id):
-    site = Site.query.get_or_404(site_id)
-
-    if site.user_id != current_user.id:
-        abort(403)
-
-    if site.site_type == 'web' and 'html_content' in request.form:
-        site.html_content = request.form['html_content']
-    elif site.site_type == 'python' and 'python_content' in request.form:
-        # Handle legacy Python spaces
-        site.python_content = request.form['python_content']
-    elif site.site_type == 'code' and 'language_content' in request.form:
-        site.language_content = request.form['language_content']
-        
-        # Update language if provided
-        if 'language' in request.form and request.form['language']:
-            # Only update if the language is changing
-            if site.language != request.form['language']:
-                from piston_service import PistonService
-                site.language = request.form['language']
-                
-                # Get the latest version for the new language
-                language_version = PistonService.get_latest_version(site.language)
-                if language_version:
-                    site.language_version = language_version
-    else:
-        return jsonify({'error': 'No content provided'}), 400
-
-    site.updated_at = datetime.utcnow()
-    db.session.commit()
-
-    return jsonify({'success': True})
-
-
-@app.route('/api/site/<int:site_id>/save', methods=['POST'])
-@login_required
-def save_site_content(site_id):
-    site = Site.query.get_or_404(site_id)
-
-    if site.user_id != current_user.id:
-        return jsonify({'error': 'Unauthorized'}), 403
-
-    data = request.get_json()
-
-    if site.site_type == 'web':
-        site.html_content = data.get('content')
-    elif site.site_type == 'python':
-        # Handle legacy Python spaces
-        site.python_content = data.get('content')
-    elif site.site_type == 'code':
-        # For code spaces
-        site.language_content = data.get('content')
-        
-        # Update language if provided
-        language = data.get('language')
-        if language and language != site.language:
-            from piston_service import PistonService
-            site.language = language
-            
-            # Get the latest version for the new language
-            language_version = PistonService.get_latest_version(language)
-            if language_version:
-                site.language_version = language_version
-
-    db.session.commit()
-
-    activity = UserActivity(activity_type='site_update',
-                            message=f'Updated site "{site.name}"',
-                            username=current_user.username,
-                            user_id=current_user.id,
-                            site_id=site.id)
-    db.session.add(activity)
-    db.session.commit()
-
-    return jsonify({'success': True, 'message': 'Content saved successfully'})
-
-
-@app.route('/api/admin/users-list')
-@login_required
-@admin_required
-def get_admin_users_list():
-    try:
-        page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 20, type=int)
-        search = request.args.get('search', '')
-
-        query = User.query
 
         if search:
             query = query.filter(
@@ -3555,21 +3390,212 @@ def get_admin_sites_list():
         app.logger.error(f'Error getting admin sites list: {str(e)}')
         return jsonify({'error': 'Failed to retrieve sites'}), 500
 
-    if site.site_type == 'web':
-        site.html_content = data.get('content')
+# Removed duplicate save_site_content function
+
+
+@app.route('/site/update/<int:site_id>', methods=['POST'])
+@login_required
+def update_site_form(site_id):
+    site = Site.query.get_or_404(site_id)
+
+    if site.user_id != current_user.id:
+        abort(403)
+
+    if site.site_type == 'web' and 'html_content' in request.form:
+        site.html_content = request.form['html_content']
+    elif site.site_type == 'python' and 'python_content' in request.form:
+        # Handle legacy Python spaces
+        site.python_content = request.form['python_content']
+    elif site.site_type == 'code' and 'language_content' in request.form:
+        site.language_content = request.form['language_content']
+        
+        # Update language if provided
+        if 'language' in request.form and request.form['language']:
+            # Only update if the language is changing
+            if site.language != request.form['language']:
+                from piston_service import PistonService
+                site.language = request.form['language']
+                
+                # Get the latest version for the new language
+                language_version = PistonService.get_latest_version(site.language)
+                if language_version:
+                    site.language_version = language_version
     else:
-        site.python_content = data.get('content')
+        return jsonify({'error': 'No content provided'}), 400
 
+    site.updated_at = datetime.utcnow()
     db.session.commit()
 
-    activity = UserActivity(activity_type='site_update',
-                            message=f'Updated site "{site.name}"',
-                            username=current_user.username,
-                            user_id=current_user.id,
-                            site_id=site.id)
-    db.session.add(activity)
-    db.session.commit()
+    return jsonify({'success': True})
 
+
+@app.route('/api/site/<int:site_id>/save', methods=['POST'])
+@login_required
+def save_site_content(site_id):
+    try:
+        site = Site.query.get_or_404(site_id)
+
+        if site.user_id != current_user.id and not current_user.is_admin:
+            # Check if user is a collaborator
+            collab = Collaborator.query.filter_by(site_id=site_id, user_id=current_user.id).first()
+            if not collab or not collab.can_edit:
+                return jsonify({'success': False, 'error': 'Permission denied'}), 403
+
+        data = request.get_json()
+        content = data.get('content', '')
+        files = data.get('files', {})
+
+        if site.site_type == 'web':
+            # Handle web content
+            site.html_content = data.get('content')
+            
+            # Handle multiple files if provided
+            if files:
+                # Update site pages
+                for filename, file_content in files.items():
+                    # Skip the main files which are stored in the site model
+                    if filename in ['index.html', 'script.js', 'style.css']:
+                        continue
+                        
+                    # Check if page exists
+                    page = SitePage.query.filter_by(site_id=site_id, filename=filename).first()
+                    
+                    if page:
+                        page.content = file_content
+                    else:
+                        new_page = SitePage(site_id=site_id, filename=filename, content=file_content)
+                        db.session.add(new_page)
+                
+                # Update main files
+                site.html_content = files.get('index.html', site.html_content)
+                site.js_content = files.get('script.js', site.js_content)
+                site.css_content = files.get('style.css', site.css_content)
+                
+        elif site.site_type == 'python':
+            # Handle legacy Python spaces
+            site.python_content = content
+            
+        elif site.site_type == 'code':
+            # For code spaces
+            site.language_content = content
+            
+            # Update language if provided
+            language = data.get('language')
+            if language and language != site.language:
+                from piston_service import PistonService
+                site.language = language
+                
+                # Get the latest version for the new language
+                language_version = PistonService.get_latest_version(language)
+                if language_version:
+                    site.language_version = language_version
+            
+            # Handle multiple files for code sites
+            if files and isinstance(files, dict):
+                from piston_service import PistonService
+                
+                for filename, file_data in files.items():
+                    # Skip the main file which is stored in site.language_content
+                    if filename == f"main.{PistonService._get_file_extension(site.language)}":
+                        continue
+                    
+                    # Handle file data based on format
+                    if isinstance(file_data, dict):
+                        file_content = file_data.get('content', '')
+                        file_language = file_data.get('language', site.language)
+                    else:
+                        file_content = file_data
+                        file_language = site.language
+                    
+                    # Check if page exists
+                    page = SitePage.query.filter_by(site_id=site_id, filename=filename).first()
+                    
+                    if page:
+                        page.content = file_content
+                        page.metadata = json.dumps({'language': file_language})
+                    else:
+                        new_page = SitePage(
+                            site_id=site_id, 
+                            filename=filename, 
+                            content=file_content,
+                            metadata=json.dumps({'language': file_language})
+                        )
+                        db.session.add(new_page)
+
+        # Update last modified time
+        site.updated_at = datetime.utcnow()
+        db.session.commit()
+
+        # Log activity
+        activity = UserActivity(activity_type='site_update',
+                                message=f'Updated site "{site.name}"',
+                                username=current_user.username,
+                                user_id=current_user.id,
+                                site_id=site.id)
+        db.session.add(activity)
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Content saved successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error saving site content: {str(e)}')
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/admin/users-list')
+@login_required
+@admin_required
+def get_admin_users_list():
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        search = request.args.get('search', '')
+
+        query = User.query
+
+        if search:
+            query = query.filter(
+                db.or_(User.username.ilike(f'%{search}%'),
+                       User.email.ilike(f'%{search}%')))
+
+        total = query.count()
+        users = query.order_by(User.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False)
+
+        users_list = []
+        for user in users.items:
+            is_club_leader = Club.query.filter_by(
+                leader_id=user.id).first() is not None
+
+            users_list.append({
+                'id':
+                user.id,
+                'username':
+                user.username,
+                'email':
+                user.email,
+                'created_at':
+                user.created_at.isoformat(),
+                'is_admin':
+                user.is_admin,
+                'is_suspended':
+                user.is_suspended,
+                'is_club_leader':
+                is_club_leader,
+                'sites_count':
+                Site.query.filter_by(user_id=user.id).count()
+            })
+
+        return jsonify({
+            'users': users_list,
+            'total': total,
+            'pages': users.pages,
+            'current_page': users.page
+        })
+    except Exception as e:
+        app.logger.error(f'Error getting admin users list: {str(e)}')
+        return jsonify({'error': 'Failed to retrieve users'}), 500
     return jsonify({'success': True, 'message': 'Content saved successfully'})
 
 
@@ -6031,23 +6057,139 @@ def integrations():
     return render_template('integrations.html')
 
 
-if __name__ == '__main__':
-    # Configure more detailed logging
-    import logging
-    logging.basicConfig(level=logging.INFO,
-                        format='[%(asctime)s] [%(levelname)s] %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
-    app.logger.info("Starting server directly from app.py")
-
+@app.route('/api/run/<int:site_id>', methods=['POST'])
+@login_required
+@rate_limit('api_run')
+@csrf.exempt
+def run_piston_code(site_id):
+    """Run code using the Piston API for any supported language"""
     try:
-        app.logger.info("Initializing database...")
-        initialize_database()
-        app.logger.info("Database initialization complete")
-    except Exception as e:
-        app.logger.warning(f"Database initialization error: {e}")
+        site = Site.query.get_or_404(site_id)
+        if site.user_id != current_user.id and not current_user.is_admin:
+            abort(403)
 
-    app.logger.info("Server running on http://0.0.0.0:3000")
-    app.run(host='0.0.0.0', port=3000, debug=True)
+        data = request.get_json()
+        code = data.get('code', '')
+        language = data.get('language', site.language)
+        stdin = data.get('stdin', '')
+        args = data.get('args', [])
+
+        if len(code) > 10000:
+            return jsonify({
+                'success': False,
+                'error': 'Code exceeds maximum allowed length (10,000 characters)'
+            }), 400
+
+        # Import the PistonService
+        from piston_service import PistonService
+
+        # Get the latest version for the language if not specified
+        version = site.language_version or PistonService.get_latest_version(language)
+
+        # Execute the code using Piston API
+        result = PistonService.execute_code(
+            language=language,
+            code=code,
+            version=version,
+            stdin=stdin,
+            args=args
+        )
+
+        # Format the response
+        if result.get('success', False):
+            return jsonify({
+                'success': True,
+                'run_output': result.get('output', ''),
+                'compile_output': result.get('compile_output', ''),
+                'execution_time': result.get('execution_time', 0)
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('error', 'Execution failed')
+            }), 400
+
+    except Exception as e:
+        app.logger.error(f'Error in run_piston_code: {str(e)}')
+        return jsonify({
+            'success': False,
+            'error': f'Server error: {str(e)}'
+        }), 500
+
+@app.route('/api/format/<int:site_id>', methods=['POST'])
+@login_required
+@rate_limit('api_run')
+@csrf.exempt
+def format_code(site_id):
+    """Format code using language-specific formatters"""
+    try:
+        site = Site.query.get_or_404(site_id)
+        if site.user_id != current_user.id and not current_user.is_admin:
+            abort(403)
+
+        data = request.get_json()
+        code = data.get('code', '')
+        language = data.get('language', site.language)
+
+        if len(code) > 10000:
+            return jsonify({
+                'success': False,
+                'error': 'Code exceeds maximum allowed length (10,000 characters)'
+            }), 400
+
+        # Import the PistonService
+        from piston_service import PistonService
+
+        # Format the code based on language
+        formatted_code = code
+        formatter_commands = {
+            'python': 'black -',
+            'javascript': 'prettier --parser=babel',
+            'typescript': 'prettier --parser=typescript',
+            'java': 'google-java-format -',
+            'c': 'clang-format',
+            'cpp': 'clang-format',
+            'go': 'gofmt',
+            'rust': 'rustfmt',
+            'php': 'php-cs-fixer fix --rules=@PSR2 -',
+            'ruby': 'rubocop -a -',
+            'html': 'prettier --parser=html',
+            'css': 'prettier --parser=css'
+        }
+
+        # If we have a formatter for this language, use Piston to run it
+        if language in formatter_commands:
+            formatter_cmd = formatter_commands[language]
+            
+            # For languages that need a specific format command
+            if language == 'python':
+                format_code = f"import sys, black; print(black.format_str(sys.stdin.read(), mode=black.Mode()))"
+                result = PistonService.execute_code(
+                    language='python',
+                    code=format_code,
+                    stdin=code
+                )
+            else:
+                # For now, just return the original code for other languages
+                # In a real implementation, you would use the appropriate formatter
+                result = {'success': True, 'output': code}
+
+            if result.get('success', False) and result.get('output'):
+                formatted_code = result.get('output')
+
+        return jsonify({
+            'success': True,
+            'formatted_code': formatted_code
+        })
+
+    except Exception as e:
+        app.logger.error(f'Error in format_code: {str(e)}')
+        return jsonify({
+            'success': False,
+            'error': f'Server error: {str(e)}'
+        }), 500
+
+
 @app.route('/api/sites/bulk-delete', methods=['DELETE'])
 @login_required
 def bulk_delete_sites():
@@ -6079,3 +6221,21 @@ def bulk_delete_sites():
         db.session.rollback()
         app.logger.error(f"Error in bulk delete: {str(e)}")
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+if __name__ == '__main__':
+    # Configure more detailed logging
+    import logging
+    logging.basicConfig(level=logging.INFO,
+                        format='[%(asctime)s] [%(levelname)s] %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
+    app.logger.info("Starting server directly from app.py")
+
+    try:
+        app.logger.info("Initializing database...")
+        initialize_database()
+        app.logger.info("Database initialization complete")
+    except Exception as e:
+        app.logger.warning(f"Database initialization error: {e}")
+        
+    app.logger.info("Server running on http://0.0.0.0:3000")
+    app.run(host='0.0.0.0', port=3000, debug=True)

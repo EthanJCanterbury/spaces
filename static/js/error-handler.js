@@ -16,12 +16,15 @@ if (!isClubDashboard) {
     };
 
     window.addEventListener('error', function(event) {
-        console.error('Caught error:', event.error);
-        
-        event.preventDefault();
-        
-        if (typeof showToast === 'function') {
-            showToast('error', 'An error occurred: ' + (event.error?.message || 'Unknown error'));
+        // Only log errors if they exist and aren't null
+        if (event.error) {
+            console.error('Caught error:', event.error);
+            
+            event.preventDefault();
+            
+            if (typeof showToast === 'function') {
+                showToast('error', 'An error occurred: ' + (event.error.message || 'Unknown error'));
+            }
         }
         
         return true;
@@ -395,58 +398,77 @@ function testError(type) {
 // Global error handler - skip for club dashboard page
 if (!isClubDashboard) {
     window.addEventListener('error', function(event) {
+        // Skip if the error is null or undefined
+        if (!event.error && !event.message) return;
+        
+        // Handle cross-origin errors (which show up as "Script error." with no details)
+        if (event.message === 'Script error.' && !event.filename) {
+            // This is a cross-origin error, we can't get details due to browser security
+            console.log('Cross-origin script error detected - this is normal and can be ignored');
+            return; // Ignore these errors as they're usually from third-party scripts
+        }
+        
         const errorInfo = {
             type: event.error ? event.error.name : 'Error',
             message: event.error ? event.error.message : event.message,
-            file: event.filename,
-            line: event.lineno,
-            column: event.colno,
+            file: event.filename || 'Unknown',
+            line: event.lineno || 0,
+            column: event.colno || 0,
             stack: event.error ? event.error.stack : null
         };
         
-        console.error('Caught error:', errorInfo);
-        
-        // Send error to server
-        fetch('/api/log-error', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(errorInfo)
-        }).catch(err => {
-            console.error('Failed to log error:', err);
-        });
-        
-        // Show error toast
-        if (typeof showToast === 'function') {
-            showToast('error', `JavaScript error: ${errorInfo.message}`);
+        // Only log if we have a meaningful message
+        if (errorInfo.message && errorInfo.message !== 'Script error.') {
+            console.error('Caught error:', errorInfo);
+            
+            // Send error to server
+            fetch('/api/log-error', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(errorInfo)
+            }).catch(err => {
+                console.error('Failed to log error:', err);
+            });
+            
+            // Show error toast only for non-cross-origin errors
+            if (typeof showToast === 'function') {
+                showToast('error', `JavaScript error: ${errorInfo.message}`);
+            }
         }
     });
 
     // Promise rejection handler
     window.addEventListener('unhandledrejection', function(event) {
+        // Skip if the reason is null or undefined
+        if (!event.reason) return;
+        
         const errorInfo = {
             type: 'Promise Rejection',
             message: event.reason ? (event.reason.message || String(event.reason)) : 'Unknown rejection reason',
             stack: event.reason && event.reason.stack ? event.reason.stack : null
         };
         
-        console.error('Unhandled promise rejection:', errorInfo);
-        
-        // Send error to server
-        fetch('/api/log-error', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(errorInfo)
-        }).catch(err => {
-            console.error('Failed to log error:', err);
-        });
-        
-        // Show error toast
-        if (typeof showToast === 'function') {
-            showToast('error', `Promise error: ${errorInfo.message}`);
+        // Only log if we have a meaningful message
+        if (errorInfo.message) {
+            console.error('Unhandled promise rejection:', errorInfo);
+            
+            // Send error to server
+            fetch('/api/log-error', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(errorInfo)
+            }).catch(err => {
+                console.error('Failed to log error:', err);
+            });
+            
+            // Show error toast
+            if (typeof showToast === 'function') {
+                showToast('error', `Promise error: ${errorInfo.message}`);
+            }
         }
     });
 }

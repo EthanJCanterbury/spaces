@@ -6,14 +6,23 @@ let siteType = null;
 let lastCursorPosition = { line: 0, ch: 0 };
 let isDirty = false;
 let completionActive = false;
+let coreEditor = null; // Renamed to avoid conflicts
 
 let currentFilename = 'index.html';
 
 function initEditor(initialContent, type) {
     siteType = type;
-    siteId = document.getElementById('site-id').value;
+    const siteIdElement = document.getElementById('site-id');
+    siteId = siteIdElement ? siteIdElement.value : null;
+    
+    // Try to find the editor element
+    const editorElement = document.getElementById("editor") || document.getElementById("code-editor");
+    if (!editorElement) {
+        console.error("Editor element not found");
+        return;
+    }
 
-    editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+    coreEditor = CodeMirror.fromTextArea(editorElement, {
         lineNumbers: true,
         theme: "eclipse",
         indentUnit: 4,
@@ -35,7 +44,7 @@ function initEditor(initialContent, type) {
             closeOnUnfocus: false,
             hint: function(editor, options) {
                 var result = CodeMirror.hint.anyword(editor, options);
-                var mode = editor.getModeAt(editor.getCursor());
+                var mode = coreEditor.getModeAt(coreEditor.getCursor());
 
                 // Add additional suggestions based on mode
                 if (mode.name === "javascript") {
@@ -131,7 +140,7 @@ function initEditor(initialContent, type) {
             updatePreview();
         }, 500);
     } else {
-        editor.setValue(initialContent || "print('Hello, World!')");
+        coreEditor.setValue(initialContent || "print('Hello, World!')");
     }
 
     setupEventListeners();
@@ -186,7 +195,7 @@ h1 {
         "script.js": defaultJs
     };
 
-    editor.setValue(fileContents["index.html"]);
+    coreEditor.setValue(fileContents["index.html"]);
 
     fetchSitePages();
 
@@ -208,7 +217,7 @@ function fetchSitePages() {
                 });
 
                 if (fileContents[currentFile]) {
-                    editor.setValue(fileContents[currentFile]);
+                    coreEditor.setValue(fileContents[currentFile]);
                 }
 
                 if (siteType === 'web') {
@@ -246,7 +255,7 @@ function setupFileTabListeners() {
 
 function switchToFile(filename) {
     if (currentFile) {
-        fileContents[currentFile] = editor.getValue();
+        fileContents[currentFile] = coreEditor.getValue();
     }
 
     currentFile = filename;
@@ -260,7 +269,7 @@ function switchToFile(filename) {
         }
     });
 
-    editor.setValue(fileContents[filename] || "");
+    coreEditor.setValue(fileContents[filename] || "");
 
     setEditorMode(filename);
 
@@ -268,20 +277,56 @@ function switchToFile(filename) {
 }
 
 function setEditorMode(filename) {
-    const extension = filename.split('.').pop().toLowerCase();
-
-    switch (extension) {
-        case 'html':
-            editor.setOption('mode', 'htmlmixed');
-            break;
-        case 'css':
-            editor.setOption('mode', 'css');
-            break;
-        case 'js':
-            editor.setOption('mode', 'javascript');
-            break;
-        default:
-            editor.setOption('mode', 'text/plain');
+    if (!filename) return;
+    
+    let mode = "text/plain";
+    const ext = filename.split('.').pop().toLowerCase();
+    
+    // Map file extensions to CodeMirror modes
+    const modeMap = {
+        'js': 'javascript',
+        'jsx': 'jsx',
+        'ts': 'text/typescript',
+        'tsx': 'text/typescript-jsx',
+        'css': 'css',
+        'scss': 'text/x-scss',
+        'sass': 'text/x-sass',
+        'less': 'text/x-less',
+        'html': 'htmlmixed',
+        'htm': 'htmlmixed',
+        'php': 'php',
+        'py': 'python',
+        'rb': 'ruby',
+        'java': 'text/x-java',
+        'c': 'text/x-csrc',
+        'cpp': 'text/x-c++src',
+        'cs': 'text/x-csharp',
+        'go': 'text/x-go',
+        'rs': 'text/x-rustsrc',
+        'swift': 'text/x-swift',
+        'kt': 'text/x-kotlin',
+        'dart': 'dart',
+        'json': { name: 'javascript', json: true },
+        'xml': 'xml',
+        'yaml': 'yaml',
+        'yml': 'yaml',
+        'md': 'markdown',
+        'sql': 'text/x-sql',
+        'sh': 'shell'
+    };
+    
+    // Set mode based on file extension
+    mode = modeMap[ext] || 'text/plain';
+    
+    // Update editor mode if the editor exists
+    if (coreEditor) {
+        try {
+            coreEditor.setOption('mode', mode);
+            console.log(`Set editor mode to: ${typeof mode === 'object' ? mode.name : mode}`);
+        } catch (error) {
+            console.error('Error setting editor mode:', error);
+            coreEditor.setOption('mode', 'text/plain');
+        }
     }
 }
 
@@ -415,16 +460,16 @@ function removeFile(filename) {
 }
 
 function setupEventListeners() {
-    editor.on('cursorActivity', updateCursorPosition);
+    coreEditor.on('cursorActivity', updateCursorPosition);
 
-    editor.on('change', function() {
+    coreEditor.on('change', function() {
         updateUndoRedoStatus();
         updateFileSize();
         isDirty = true;
     });
 
     // Add keyup handler for better autocomplete triggering
-    editor.on('keyup', function(cm, event) {
+    coreEditor.on('keyup', function(cm, event) {
         // Only trigger autocomplete when actually typing characters
         // Trigger on alphanumeric, underscore, dot, parentheses, brackets
         var mode = cm.getModeAt(cm.getCursor());
@@ -493,7 +538,7 @@ function setupEventListeners() {
 }
 
 function updateCursorPosition() {
-    const cursor = editor.getCursor();
+    const cursor = coreEditor.getCursor();
     lastCursorPosition = cursor;
     const cursorPositionElement = document.getElementById('cursorPosition');
     // Clear existing content
@@ -513,19 +558,19 @@ function updateCursorPosition() {
 }
 
 function updateFileSize() {
-    const content = editor.getValue();
+    const content = coreEditor.getValue();
     const bytes = new Blob([content]).size;
     document.getElementById('fileSize').textContent = bytes;
 }
 
 function updateUndoRedoStatus() {
-    const history = editor.getDoc().historySize();
+    const history = coreEditor.getDoc().historySize();
     document.getElementById('undoBtn').disabled = history.undo === 0;
     document.getElementById('redoBtn').disabled = history.redo === 0;
 }
 
 function changeEditorTheme(theme) {
-    editor.setOption('theme', theme);
+    coreEditor.setOption('theme', theme);
 }
 
 function changeEditorFontSize(size) {
@@ -533,7 +578,7 @@ function changeEditorFontSize(size) {
 }
 
 function toggleWordWrap(enabled) {
-    editor.setOption('lineWrapping', enabled);
+    coreEditor.setOption('lineWrapping', enabled);
 }
 
 function toggleLinting(enabled) {
@@ -545,11 +590,13 @@ function toggleLinting(enabled) {
 }
 
 function focusSearch() {
-    CodeMirror.commands.find(editor);
+    if (coreEditor) {
+        CodeMirror.commands.find(coreEditor);
+    }
 }
 
 function saveContent(silent = false) {
-    fileContents[currentFile] = editor.getValue();
+    fileContents[currentFile] = coreEditor.getValue();
 
     if (siteType === 'web') {
         if (!fileContents['index.html'] || fileContents['index.html'].trim() === '') {
@@ -571,21 +618,13 @@ function saveContent(silent = false) {
             saveBtn.removeChild(saveBtn.firstChild);
         }
         
-        // Clear existing content
-        while (saveBtn.firstChild) {
-            saveBtn.removeChild(saveBtn.firstChild);
-        }
-        
-        // Create spinner icon
-        const saveSpinnerIcon = document.createElement("i");
-        saveSpinnerIcon.className = "fas fa-spinner fa-spin";
-        
-        // Add text node
-        const saveTextNode = document.createTextNode(" Saving...");
-        
-        // Assemble button content
-        saveBtn.appendChild(saveSpinnerIcon);
-        saveBtn.appendChild(saveTextNode);
+        // Clear existing content and show saving state
+        saveBtn.innerHTML = '';
+        const spinnerIcon = document.createElement("i");
+        spinnerIcon.className = "fas fa-spinner fa-spin";
+        const savingText = document.createTextNode(" Saving...");
+        saveBtn.appendChild(spinnerIcon);
+        saveBtn.appendChild(savingText);
         saveBtn.disabled = true;
 
         fetch(`/api/site/${siteId}/save_pages`, {
@@ -603,87 +642,18 @@ function saveContent(silent = false) {
                 saveBtn.removeChild(saveBtn.firstChild);
             }
             
-        // Clear existing content
-        while (saveBtn.firstChild) {
-            saveBtn.removeChild(saveBtn.firstChild);
-        }
-        
-        // Create spinner icon
-        const spinnerIcon = document.createElement("i");
-        spinnerIcon.className = "fas fa-spinner fa-spin";
-        
-        // Add text node
-        const textNode = document.createTextNode(" Saving...");
-        
-        // Assemble button content
-        saveBtn.appendChild(spinnerIcon);
-        saveBtn.appendChild(textNode);
+            // Show saved state
+            saveBtn.innerHTML = '';
             const saveIcon = document.createElement("i");
             saveIcon.className = "fas fa-save";
-            
-            // Add text node
-            const textNode = document.createTextNode(" Save Changes");
-            
-            // Assemble button content
+            const saveText = document.createTextNode(" Save Changes");
             saveBtn.appendChild(saveIcon);
-            saveBtn.appendChild(textNode);
-                if (!silent) {
-                    showToast("success", "Changes saved successfully!");
-            // Clear existing content
-            while (saveBtn.firstChild) {
-                saveBtn.removeChild(saveBtn.firstChild);
-            }
+            saveBtn.appendChild(saveText);
             
-            // Create save icon
-            const saveIcon = document.createElement("i");
-            saveIcon.className = "fas fa-save";
-            
-            // Add text node
-            const saveChangesTextNode = document.createTextNode(" Save Changes");
-            // Clear existing content
-            while (saveBtn.firstChild) {
-                saveBtn.removeChild(saveBtn.firstChild);
-            }
-            
-        // Create spinner icon
-        const savingSpinnerIcon = document.createElement("i");
-        savingSpinnerIcon.className = "fas fa-spinner fa-spin";
-        
-        // Add text node
-        const savingTextNode = document.createTextNode(" Saving...");
-        
-        // Assemble button content
-        saveBtn.appendChild(spinnerIcon);
-        saveBtn.appendChild(textNode);
-            const saveIcon = document.createElement("i");
-            saveIcon.className = "fas fa-save";
-            
-            // Add text node
-            const textNode = document.createTextNode(" Save Changes");
-            
-            // Assemble button content
-            saveBtn.appendChild(saveIcon);
-            saveBtn.appendChild(textNode);
-            // Assemble button content
-            saveBtn.appendChild(saveIcon);
-            // Clear existing content
-            while (saveBtn.firstChild) {
-                saveBtn.removeChild(saveBtn.firstChild);
-            }
-            
-            // Create save icon
-            const saveIcon = document.createElement("i");
-            saveIcon.className = "fas fa-save";
-            
-            // Add text node
-            const textNode = document.createTextNode(" Save Changes");
-            
-            // Assemble button content
-            saveBtn.appendChild(saveIcon);
-            saveBtn.appendChild(textNode);
+            if (!silent) {
+                showToast("success", "Changes saved successfully!");
                 updatePreview();
-            } else {
-                showToast("Error saving files", "error");
+            }
             }
         })
         .catch(error => {
@@ -691,50 +661,25 @@ function saveContent(silent = false) {
             showToast("Error saving files", "error");
         })
         .finally(() => {
-            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
-            saveBtn.disabled = false;
         });
     } else {
         const saveBtn = document.getElementById('saveBtn');
-        // Clear existing content
-        while (runBtn.firstChild) {
-            runBtn.removeChild(runBtn.firstChild);
-        }
-        
-        // Create spinner icon
-        const spinnerIcon = document.createElement("i");
-        spinnerIcon.className = "fas fa-spinner fa-spin";
-        
-        // Add text node
-        const textNode = document.createTextNode(" Running...");
-        
-        // Assemble button content
-        runBtn.appendChild(spinnerIcon);
-        runBtn.appendChild(textNode);
+        // Set save button to saving state
         saveBtn.disabled = true;
-
-        // Clear existing content in run button
-        while (runBtn.firstChild) {
-            runBtn.removeChild(runBtn.firstChild);
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        
+        // Set run button to default state
+        const runBtn = document.getElementById('runBtn');
+        if (runBtn) {
+            runBtn.innerHTML = '<i class="fas fa-play"></i> Run';
         }
-        
-        // Create play icon
-        const playIcon = document.createElement("i");
-        playIcon.className = "fas fa-play";
-        
-        // Add text node
-        const runTextNode = document.createTextNode(" Run");
-        
-        // Assemble button content
-        runBtn.appendChild(playIcon);
-        runBtn.appendChild(runTextNode);
 
         fetch(`/api/site/${siteId}/save`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ content: editor.getValue() })
+            body: JSON.stringify({ content: coreEditor.getValue() })
         })
         .then(response => response.json())
         .then(data => {
@@ -760,43 +705,34 @@ function saveContent(silent = false) {
 
 function updatePreview() {
     if (siteType !== 'web') return;
-        // Clear existing content
-        while (deployBtn.firstChild) {
-            deployBtn.removeChild(deployBtn.firstChild);
-        }
-        
-        // Create spinner icon
-        const spinnerIcon = document.createElement("i");
-        spinnerIcon.className = "fas fa-spinner fa-spin";
-        
-        // Add text node
-        const textNode = document.createTextNode(" Deploying...");
-        
-        // Assemble button content
-        deployBtn.appendChild(spinnerIcon);
-        deployBtn.appendChild(textNode);
+    
     const previewFrame = document.getElementById('preview');
     if (!previewFrame) return;
 
     const siteSlug = document.getElementById('site-slug').value;
     if (!siteSlug) return;
-
-            // Clear existing content
-            while (deployBtn.firstChild) {
-                deployBtn.removeChild(deployBtn.firstChild);
-            }
-            
-            // Create rocket icon
-            const rocketIcon = document.createElement("i");
-            rocketIcon.className = "fas fa-rocket";
-            rocketIcon.style.color = "white";
-            
-            // Add text node
-            const textNode = document.createTextNode(" Deploy");
-            
-            // Assemble button content
-            deployBtn.appendChild(rocketIcon);
-            deployBtn.appendChild(textNode);
+    
+    // Set deploy button to default state
+    const deployBtn = document.getElementById('deployBtn');
+    if (deployBtn) {
+        // Clear existing content
+        while (deployBtn.firstChild) {
+            deployBtn.removeChild(deployBtn.firstChild);
+        }
+        
+        // Create rocket icon
+        const rocketIcon = document.createElement("i");
+        rocketIcon.className = "fas fa-rocket";
+        rocketIcon.style.color = "white";
+        
+        // Add text node
+        const deployText = document.createTextNode(" Deploy");
+        
+        // Assemble button content
+        deployBtn.appendChild(rocketIcon);
+        deployBtn.appendChild(deployText);
+    }
+    
     const currentDomain = window.location.hostname;
     const timestamp = new Date().getTime();
     const publicUrl = `https://${currentDomain}/s/${siteSlug}?preview=true&t=${timestamp}`;
@@ -819,7 +755,7 @@ function runCode() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ code: editor.getValue() })
+            body: JSON.stringify({ code: coreEditor.getValue() })
         })
         .then(response => response.json())
         .then(data => {
@@ -846,12 +782,12 @@ function formatCode() {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ code: editor.getValue() })
+        body: JSON.stringify({ code: coreEditor.getValue() })
     })
     .then(response => response.json())
     .then(data => {
         if (data.formatted) {
-            editor.setValue(data.formatted);
+            coreEditor.setValue(data.formatted);
             showToast("Code formatted successfully", "success");
         } else {
             showToast("Error formatting code", "error");
@@ -916,10 +852,36 @@ function closeDeployModal() {
     closeModal('deployModal');
 }
 
-// Using the unified showToast function from main.js
+// Show a toast message directly instead of relying on window.showToast
 function showToast(type, message) {
-    // Using the global showToast function defined in main.js
-    window.showToast(type, message);
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // Find or create toast container
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+    
+    container.appendChild(toast);
+    
+    // Trigger reflow to enable animation
+    toast.offsetHeight;
+    toast.classList.add('show');
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
 }
 
 
@@ -1024,39 +986,51 @@ function initializeTabs() {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    const siteContent = document.getElementById('editor').value;
-    const siteType = document.getElementById('site-type').value;
+    // Safely get elements with null checks
+    const editorElement = document.getElementById('code-editor');
+    const siteTypeElement = document.getElementById('site-type');
+    
+    // Default to 'code' if site-type is not found
+    const siteType = siteTypeElement ? siteTypeElement.value : 'code';
+    const siteContent = editorElement ? editorElement.value : '';
+    
+    // Initialize the editor
     initEditor(siteContent, siteType);
-
+    
+    // Safely get UI elements with null checks
     const addFileBtn = document.getElementById('addFileBtn');
     const newFileModal = document.getElementById('new-file-modal');
-    const closeBtn = newFileModal.querySelector('.close-btn');
-    const cancelBtn = document.getElementById('cancelNewFile');
-
-    if (addFileBtn) {
-        addFileBtn.addEventListener('click', function() {
-            newFileModal.style.display = 'flex';
-            document.getElementById('newFilename').focus();
-        });
-    }
-
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function() {
-            newFileModal.style.display = 'none';
-        });
-    }
-
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', function() {
-            newFileModal.style.display = 'none';
-        });
-    }
-
-    window.addEventListener('click', function(event) {
-        if (event.target === newFileModal) {
-            newFileModal.style.display = 'none';
+    
+    // Only proceed with modal setup if elements exist
+    if (newFileModal) {
+        const closeBtn = newFileModal.querySelector('.close-btn');
+        const cancelBtn = document.getElementById('cancelNewFile');
+        
+        if (addFileBtn) {
+            addFileBtn.addEventListener('click', function() {
+                newFileModal.style.display = 'flex';
+                document.getElementById('newFilename').focus();
+            });
         }
-    });
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                newFileModal.style.display = 'none';
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                newFileModal.style.display = 'none';
+            });
+        }
+
+        window.addEventListener('click', function(event) {
+            if (event.target === newFileModal) {
+                newFileModal.style.display = 'none';
+            }
+        });
+    }
     if (document.getElementById('particles-js')) {
         particlesJS('particles-js', {
             "particles": {

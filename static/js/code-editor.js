@@ -1,495 +1,944 @@
-// Code Editor Functionality
+/**
+ * Code Editor for Piston Languages
+ * Handles code editing, execution, and file management for multiple programming languages
+ */
+
+let editor; // CodeMirror instance
+let currentLanguage = ''; // Current programming language
+let currentVersion = ''; // Current language version
+let files = {}; // Object to store multiple files
+let currentFile = ''; // Currently active file
+let undoManager = null; // For undo/redo functionality
+let splitView = true; // Track split view state
+
+// Initialize the editor when the document is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // File tab functionality
-    const addFileTab = document.getElementById('add-file-tab');
-    if (addFileTab) {
-        addFileTab.addEventListener('click', function() {
+    initializeEditor();
+    setupEventListeners();
+    hideLoadingOverlay();
+});
+
+/**
+ * Initialize the CodeMirror editor with appropriate settings
+ */
+function initializeEditor() {
+    // Get the current language from the hidden input
+    currentLanguage = document.getElementById('current-language').value || 'python';
+    
+    // Initialize CodeMirror
+    editor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
+        lineNumbers: true,
+        mode: getLanguageMode(currentLanguage),
+        theme: 'eclipse',
+        indentUnit: 4,
+        smartIndent: true,
+        tabSize: 4,
+        indentWithTabs: false,
+        lineWrapping: true,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        autoRefresh: true,
+        styleActiveLine: true,
+        foldGutter: true,
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        extraKeys: {
+            "Ctrl-Space": "autocomplete",
+            "Ctrl-S": saveContent,
+            "Ctrl-Enter": runCode,
+            "Shift-Alt-F": formatCode,
+            "Tab": function(cm) {
+                if (cm.somethingSelected()) {
+                    cm.indentSelection("add");
+                } else {
+                    cm.replaceSelection(Array(cm.getOption("indentUnit") + 1).join(" "), "end", "+input");
+                }
+            }
+        }
+    });
+    
+    // Set up undo/redo functionality
+    setupUndoRedo();
+    
+    // Load files from localStorage if they exist
+    loadFiles();
+    
+    // Set up the initial file tab
+    setupInitialFile();
+}
+
+/**
+ * Set up event listeners for various UI elements
+ */
+function setupEventListeners() {
+    // Add file button
+    const addFileBtn = document.getElementById('addFileBtn');
+    if (addFileBtn) {
+        console.log('Setting up new file button click handler');
+        addFileBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('New file button clicked');
             openNewFileModal();
         });
+    } else {
+        console.error('Add file button not found in the DOM');
     }
-
-    // Initialize the new file modal
-    function openNewFileModal() {
-        // Create modal if it doesn't exist
-        if (!document.getElementById('new-file-modal')) {
-            createNewFileModal();
-        }
-        
-        // Open the modal
-        openModal('new-file-modal');
+    
+    // New file modal
+    const newFileModal = document.getElementById('new-file-modal');
+    if (newFileModal) {
+        newFileModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeNewFileModal();
+            }
+        });
+    } else {
+        console.error('New file modal not found in the DOM');
     }
-
-    function createNewFileModal() {
-        const modal = document.createElement('div');
-        modal.id = 'new-file-modal';
-        modal.className = 'modal';
-        
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Create New File</h2>
-                    <span class="close-btn" onclick="closeModal('new-file-modal')">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="new-file-name">File Name:</label>
-                        <input type="text" id="new-file-name" placeholder="e.g., utils.js">
-                    </div>
-                    <div class="form-group">
-                        <label for="new-file-type">File Type:</label>
-                        <select id="new-file-type">
-                            <option value="js">JavaScript (.js)</option>
-                            <option value="py">Python (.py)</option>
-                            <option value="html">HTML (.html)</option>
-                            <option value="css">CSS (.css)</option>
-                            <option value="json">JSON (.json)</option>
-                            <option value="txt">Text (.txt)</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button id="create-file-btn" class="btn-primary">Create File</button>
-                        <button onclick="closeModal('new-file-modal')" class="btn-secondary">Cancel</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Add event listener to create file button
-        document.getElementById('create-file-btn').addEventListener('click', function() {
-            createNewFile();
+    
+    // Keyboard shortcuts modal
+    const keyboardShortcutsModal = document.getElementById('keyboardShortcutsModal');
+    if (keyboardShortcutsModal) {
+        keyboardShortcutsModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeKeyboardShortcutsModal();
+            }
         });
     }
-
-    function createNewFile() {
-        const fileName = document.getElementById('new-file-name').value;
-        const fileType = document.getElementById('new-file-type').value;
-        
-        if (!fileName) {
-            showToast('error', 'Please enter a file name');
-            return;
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (editor) {
+            editor.refresh();
         }
-        
-        // Create the file name with extension if not provided
-        let fullFileName = fileName;
-        if (!fullFileName.includes('.')) {
-            fullFileName += '.' + fileType;
+    });
+    
+    // Handle beforeunload to warn about unsaved changes
+    window.addEventListener('beforeunload', function(e) {
+        if (hasUnsavedChanges()) {
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
         }
-        
-        // Add file tab
-        addFileTab(fullFileName);
-        
-        // Close modal
-        closeModal('new-file-modal');
-        
-        // Show success message
-        showToast('success', `File ${fullFileName} created successfully`);
-    }
+    });
+}
 
-    function addFileTab(fileName) {
-        const fileTabs = document.querySelector('.file-tabs');
-        const addFileTab = document.getElementById('add-file-tab');
-        
-        // Create new tab
-        const newTab = document.createElement('div');
-        newTab.className = 'file-tab';
-        
-        // Determine icon based on file extension
-        let iconClass = 'fa-file';
-        const ext = fileName.split('.').pop().toLowerCase();
-        
-        if (ext === 'js') iconClass = 'fa-js';
-        else if (ext === 'py') iconClass = 'fa-python';
-        else if (ext === 'html') iconClass = 'fa-html5';
-        else if (ext === 'css') iconClass = 'fa-css3-alt';
-        else if (ext === 'json') iconClass = 'fa-file-code';
-        
-        newTab.innerHTML = `
-            <i class="fab ${iconClass}"></i>
-            <span>${fileName}</span>
-            <i class="fas fa-times close-tab" title="Close file"></i>
-        `;
-        
-        // Insert before the add tab button
-        fileTabs.insertBefore(newTab, addFileTab);
-        
-        // Add event listener to close button
-        const closeBtn = newTab.querySelector('.close-tab');
-        closeBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            removeFileTab(newTab, fileName);
-        });
-        
-        // Add event listener to switch to this file
-        newTab.addEventListener('click', function() {
-            switchToFile(fileName);
-        });
-        
-        // Switch to the new file
-        switchToFile(fileName);
+/**
+ * Set up the initial file tab based on the current language
+ */
+function setupInitialFile() {
+    const fileExtension = getFileExtension(currentLanguage);
+    const initialFileName = `main.${fileExtension}`;
+    
+    // Create the initial file if it doesn't exist
+    if (!files[initialFileName]) {
+        const initialContent = editor.getValue();
+        files[initialFileName] = {
+            content: initialContent,
+            language: currentLanguage
+        };
     }
+    
+    // Set the current file
+    currentFile = initialFileName;
+    
+    // Create the file tab
+    createFileTab(initialFileName, true);
+    
+    // Update editor content
+    editor.setValue(files[initialFileName].content);
+    editor.setOption('mode', getLanguageMode(files[initialFileName].language));
+}
 
-    function removeFileTab(tabElement, fileName) {
-        // Ask for confirmation if file has unsaved changes
-        if (confirm(`Are you sure you want to close ${fileName}?`)) {
-            tabElement.remove();
+/**
+ * Create a new file tab in the UI
+ * @param {string} fileName - Name of the file
+ * @param {boolean} isActive - Whether this tab should be active
+ */
+function createFileTab(fileName, isActive = false) {
+    const fileTabs = document.querySelector('.file-tabs');
+    const addBtn = document.getElementById('addFileBtn');
+    
+    // Check if tab already exists
+    const existingTab = document.querySelector(`.file-tab[data-filename="${fileName}"]`);
+    if (existingTab) {
+        activateTab(existingTab);
+        return;
+    }
+    
+    // Create new tab
+    const tab = document.createElement('button');
+    tab.className = `file-tab ${isActive ? 'active' : ''}`;
+    tab.setAttribute('data-filename', fileName);
+    
+    // Get file extension for icon
+    const fileExt = fileName.split('.').pop();
+    const iconClass = getFileIconClass(fileExt);
+    
+    tab.innerHTML = `
+        <i class="${iconClass}"></i>
+        <span>${fileName}</span>
+        <button class="file-tab-close" title="Close file">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    // Insert before the add button
+    fileTabs.insertBefore(tab, addBtn);
+    
+    // Add event listeners
+    tab.addEventListener('click', function(e) {
+        if (!e.target.closest('.file-tab-close')) {
+            activateTab(this);
+        }
+    });
+    
+    tab.querySelector('.file-tab-close').addEventListener('click', function(e) {
+        e.stopPropagation();
+        closeFile(fileName);
+    });
+    
+    // Activate the tab if needed
+    if (isActive) {
+        activateTab(tab);
+    }
+}
+
+/**
+ * Activate a file tab and load its content
+ * @param {HTMLElement} tab - The tab element to activate
+ */
+function activateTab(tab) {
+    // Save current file content
+    if (currentFile) {
+        files[currentFile].content = editor.getValue();
+    }
+    
+    // Deactivate all tabs
+    document.querySelectorAll('.file-tab').forEach(t => t.classList.remove('active'));
+    
+    // Activate this tab
+    tab.classList.add('active');
+    
+    // Update current file
+    const fileName = tab.getAttribute('data-filename');
+    currentFile = fileName;
+    
+    // Update editor content and mode
+    if (files[fileName]) {
+        editor.setValue(files[fileName].content);
+        editor.setOption('mode', getLanguageMode(files[fileName].language));
+        
+        // Update language indicator
+        updateLanguageIndicator(files[fileName].language);
+    }
+    
+    // Refresh editor to prevent rendering issues
+    setTimeout(() => editor.refresh(), 1);
+}
+
+/**
+ * Close a file tab
+ * @param {string} fileName - Name of the file to close
+ */
+function closeFile(fileName) {
+    // Don't allow closing the last file
+    if (Object.keys(files).length <= 1) {
+        showToast('warning', 'Cannot close the last file');
+        return;
+    }
+    
+    // Remove the tab
+    const tab = document.querySelector(`.file-tab[data-filename="${fileName}"]`);
+    if (tab) {
+        // If closing the active tab, activate another tab first
+        if (tab.classList.contains('active')) {
+            // Find the next tab to activate
+            let nextTab = tab.nextElementSibling;
+            if (!nextTab || nextTab.id === 'addFileBtn') {
+                nextTab = tab.previousElementSibling;
+            }
             
-            // Switch to first tab if available
-            const firstTab = document.querySelector('.file-tab:not(#add-file-tab)');
-            if (firstTab) {
-                switchToFile(firstTab.querySelector('span').textContent);
+            if (nextTab) {
+                activateTab(nextTab);
             }
         }
+        
+        tab.remove();
     }
+    
+    // Remove the file from files object
+    delete files[fileName];
+    
+    // Save files to localStorage
+    saveFiles();
+}
 
-    function switchToFile(fileName) {
-        // Update active tab
-        const fileTabs = document.querySelectorAll('.file-tab');
-        fileTabs.forEach(tab => {
-            tab.classList.remove('active');
-            if (tab.querySelector('span') && tab.querySelector('span').textContent === fileName) {
-                tab.classList.add('active');
-            }
-        });
-        
-        // Here you would load the file content
-        // For now, we'll just update the editor mode based on file extension
-        const ext = fileName.split('.').pop().toLowerCase();
-        updateEditorMode(ext);
+/**
+ * Show the new file modal
+ */
+function openNewFileModal() {
+    console.log('Opening new file modal');
+    const modal = document.getElementById('new-file-modal');
+    if (!modal) {
+        console.error('New file modal element not found');
+        return;
     }
-
-    function updateEditorMode(fileExtension) {
-        let mode = 'text/plain';
-        
-        // Map extensions to CodeMirror modes
-        if (fileExtension === 'js') mode = 'javascript';
-        else if (fileExtension === 'py') mode = 'python';
-        else if (fileExtension === 'html') mode = 'htmlmixed';
-        else if (fileExtension === 'css') mode = 'css';
-        else if (fileExtension === 'json') mode = 'application/json';
-        
-        // Update editor mode if editor is defined
-        if (window.editor) {
-            editor.setOption('mode', mode);
-        }
+    
+    // Show the modal
+    modal.style.display = 'flex';
+    
+    // Center the modal content
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.style.marginTop = '15vh';
     }
-
-    // Modal functionality
-    window.openModal = function(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'flex';
-        }
-    };
-
-    window.closeModal = function(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    };
-
-    // Toast notification
-    window.showToast = function(type, message) {
-        const toastContainer = document.getElementById('toast-container') || createToastContainer();
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        
-        const icon = type === 'success' ? 'check-circle' : 
-                     type === 'error' ? 'exclamation-circle' :
-                     type === 'warning' ? 'exclamation-triangle' : 'info-circle';
-        
-        toast.innerHTML = `
-            <div class="toast-content">
-                <i class="fas fa-${icon}"></i>
-                <span>${message}</span>
-            </div>
-        `;
-        
-        toastContainer.appendChild(toast);
-        
-        // Auto-remove toast after 3 seconds
+    
+    // Clear and focus the input field
+    const fileNameInput = document.getElementById('new-file-name');
+    if (fileNameInput) {
+        fileNameInput.value = '';
         setTimeout(() => {
-            toast.classList.add('toast-fade-out');
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        }, 3000);
-    };
+            fileNameInput.focus();
+        }, 100);
+    } else {
+        console.error('File name input not found');
+    }
+}
 
-    function createToastContainer() {
+/**
+ * Close the new file modal
+ */
+function closeNewFileModal() {
+    const modal = document.getElementById('new-file-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    
+    const fileNameInput = document.getElementById('new-file-name');
+    if (fileNameInput) {
+        fileNameInput.value = '';
+    }
+}
+
+/**
+ * Create a new file from the modal input
+ */
+function createNewFile() {
+    const fileName = document.getElementById('new-file-name').value.trim();
+    
+    // Validate file name
+    if (!fileName) {
+        showToast('error', 'Please enter a file name');
+        return;
+    }
+    
+    // Check if file already exists
+    if (files[fileName]) {
+        showToast('error', 'A file with this name already exists');
+        return;
+    }
+    
+    // Create the file
+    files[fileName] = {
+        content: '',
+        language: detectLanguageFromFileName(fileName)
+    };
+    
+    // Create the tab
+    createFileTab(fileName, true);
+    
+    // Close the modal
+    closeModal('new-file-modal');
+    
+    // Save files to localStorage
+    saveFiles();
+    
+    // Show success message
+    showToast('success', `Created file ${fileName}`);
+}
+
+/**
+ * Detect language based on file extension
+ * @param {string} fileName - Name of the file
+ * @returns {string} - Detected language
+ */
+function detectLanguageFromFileName(fileName) {
+    const ext = fileName.split('.').pop().toLowerCase();
+    
+    const extensionMap = {
+        'py': 'python',
+        'js': 'javascript',
+        'ts': 'typescript',
+        'html': 'html',
+        'css': 'css',
+        'java': 'java',
+        'c': 'c',
+        'cpp': 'cpp',
+        'cs': 'csharp',
+        'go': 'go',
+        'rb': 'ruby',
+        'rs': 'rust',
+        'php': 'php',
+        'swift': 'swift',
+        'kt': 'kotlin',
+        'sh': 'bash'
+    };
+    
+    return extensionMap[ext] || currentLanguage;
+}
+
+/**
+ * Get file extension for a language
+ * @param {string} language - Programming language
+ * @returns {string} - File extension
+ */
+function getFileExtension(language) {
+    const extensionMap = {
+        'python': 'py',
+        'javascript': 'js',
+        'typescript': 'ts',
+        'html': 'html',
+        'css': 'css',
+        'java': 'java',
+        'c': 'c',
+        'cpp': 'cpp',
+        'csharp': 'cs',
+        'go': 'go',
+        'ruby': 'rb',
+        'rust': 'rs',
+        'php': 'php',
+        'swift': 'swift',
+        'kotlin': 'kt',
+        'bash': 'sh'
+    };
+    
+    return extensionMap[language] || 'txt';
+}
+
+/**
+ * Get the appropriate icon class for a file extension
+ * @param {string} extension - File extension
+ * @returns {string} - Font Awesome icon class
+ */
+function getFileIconClass(extension) {
+    const iconMap = {
+        'py': 'fab fa-python',
+        'js': 'fab fa-js',
+        'ts': 'fab fa-js',
+        'html': 'fab fa-html5',
+        'css': 'fab fa-css3',
+        'java': 'fab fa-java',
+        'c': 'fas fa-code',
+        'cpp': 'fas fa-code',
+        'cs': 'fab fa-microsoft',
+        'go': 'fas fa-code',
+        'rb': 'fas fa-gem',
+        'rs': 'fas fa-cogs',
+        'php': 'fab fa-php',
+        'swift': 'fab fa-swift',
+        'kt': 'fab fa-android',
+        'sh': 'fas fa-terminal'
+    };
+    
+    return iconMap[extension] || 'fas fa-file-code';
+}
+
+/**
+ * Get the appropriate CodeMirror mode for a language
+ * @param {string} language - Programming language
+ * @returns {string} - CodeMirror mode
+ */
+function getLanguageMode(language) {
+    const modeMap = {
+        'python': 'python',
+        'javascript': 'javascript',
+        'typescript': 'text/typescript',
+        'html': 'htmlmixed',
+        'css': 'css',
+        'java': 'text/x-java',
+        'c': 'text/x-csrc',
+        'cpp': 'text/x-c++src',
+        'csharp': 'text/x-csharp',
+        'go': 'text/x-go',
+        'ruby': 'ruby',
+        'rust': 'rust',
+        'php': 'php',
+        'swift': 'swift',
+        'kotlin': 'text/x-kotlin',
+        'bash': 'shell'
+    };
+    
+    return modeMap[language] || 'plaintext';
+}
+
+/**
+ * Update the language indicator in the status bar
+ * @param {string} language - Programming language
+ */
+function updateLanguageIndicator(language) {
+    const languageIcon = document.getElementById('language-icon');
+    const languageName = document.getElementById('language-name');
+    
+    // Get the icon class
+    const iconClass = getPistonLanguageIcon(language);
+    
+    // Update the elements
+    languageIcon.className = iconClass;
+    languageName.textContent = language;
+}
+
+/**
+ * Get the Font Awesome icon class for a Piston language
+ * @param {string} language - Programming language
+ * @returns {string} - Font Awesome icon class
+ */
+function getPistonLanguageIcon(language) {
+    const iconMap = {
+        'python': 'fab fa-python',
+        'javascript': 'fab fa-js',
+        'typescript': 'fab fa-js',
+        'java': 'fab fa-java',
+        'c': 'fas fa-code',
+        'cpp': 'fas fa-code',
+        'csharp': 'fab fa-microsoft',
+        'go': 'fas fa-code',
+        'ruby': 'fas fa-gem',
+        'rust': 'fas fa-cogs',
+        'php': 'fab fa-php',
+        'swift': 'fab fa-swift',
+        'kotlin': 'fab fa-android',
+        'bash': 'fas fa-terminal'
+    };
+    
+    return iconMap[language] || 'fas fa-code';
+}
+
+/**
+ * Save files to localStorage
+ */
+function saveFiles() {
+    // Save current file content
+    if (currentFile && files[currentFile]) {
+        files[currentFile].content = editor.getValue();
+    }
+    
+    const siteId = document.getElementById('site-id').value;
+    localStorage.setItem(`files_${siteId}`, JSON.stringify(files));
+}
+
+/**
+ * Load files from localStorage
+ */
+function loadFiles() {
+    const siteId = document.getElementById('site-id').value;
+    const savedFiles = localStorage.getItem(`files_${siteId}`);
+    
+    if (savedFiles) {
+        files = JSON.parse(savedFiles);
+    } else {
+        // Initialize with the current content
+        const fileExtension = getFileExtension(currentLanguage);
+        const initialFileName = `main.${fileExtension}`;
+        
+        files = {
+            [initialFileName]: {
+                content: editor.getValue(),
+                language: currentLanguage
+            }
+        };
+    }
+}
+
+/**
+ * Set up undo/redo functionality
+ */
+function setupUndoRedo() {
+    const undoBtn = document.getElementById('undoBtn');
+    const redoBtn = document.getElementById('redoBtn');
+    
+    // Update button states
+    function updateUndoRedoButtons() {
+        undoBtn.disabled = !editor.historySize().undo;
+        redoBtn.disabled = !editor.historySize().redo;
+    }
+    
+    // Initial state
+    updateUndoRedoButtons();
+    
+    // Add event listeners
+    editor.on('change', updateUndoRedoButtons);
+    
+    // Set up button actions
+    undoBtn.addEventListener('click', function() {
+        editor.undo();
+        editor.focus();
+    });
+    
+    redoBtn.addEventListener('click', function() {
+        editor.redo();
+        editor.focus();
+    });
+}
+
+/**
+ * Run the code using the Piston API
+ */
+function runCode() {
+    // Save current file content
+    if (currentFile) {
+        files[currentFile].content = editor.getValue();
+    }
+    
+    // Get the code to run
+    const code = editor.getValue();
+    const language = files[currentFile].language;
+    
+    // Show loading in console
+    const consoleOutput = document.getElementById('consoleOutput');
+    consoleOutput.innerHTML = '<span class="info">Running code...</span>';
+    
+    // Prepare the request
+    const siteId = document.getElementById('site-id').value;
+    
+    // Make the API request
+    fetch(`/api/run/${siteId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            language: language,
+            code: code
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Format and display the output
+            let output = '';
+            
+            if (data.compile_output) {
+                output += `<span class="info">Compilation Output:</span>\n${escapeHtml(data.compile_output)}\n\n`;
+            }
+            
+            if (data.run_output) {
+                output += `<span class="info">Program Output:</span>\n${escapeHtml(data.run_output)}`;
+            }
+            
+            consoleOutput.innerHTML = output || '<span class="success">Program executed successfully with no output.</span>';
+        } else {
+            // Display error
+            consoleOutput.innerHTML = `<span class="error">Error: ${escapeHtml(data.error || 'Unknown error')}</span>`;
+        }
+    })
+    .catch(error => {
+        consoleOutput.innerHTML = `<span class="error">Error: ${escapeHtml(error.message)}</span>`;
+    });
+}
+
+/**
+ * Format the code
+ */
+function formatCode() {
+    // Get the code to format
+    const code = editor.getValue();
+    const language = files[currentFile].language;
+    
+    // Prepare the request
+    const siteId = document.getElementById('site-id').value;
+    
+    // Make the API request
+    fetch(`/api/format/${siteId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            language: language,
+            code: code
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.formatted_code) {
+            // Update the editor with formatted code
+            editor.setValue(data.formatted_code);
+            showToast('success', 'Code formatted successfully');
+        } else {
+            showToast('error', data.error || 'Failed to format code');
+        }
+    })
+    .catch(error => {
+        showToast('error', `Error: ${error.message}`);
+    });
+}
+
+/**
+ * Save the content to the server
+ */
+function saveContent() {
+    // Save current file content
+    if (currentFile) {
+        files[currentFile].content = editor.getValue();
+    }
+    
+    // Save files to localStorage
+    saveFiles();
+    
+    // Get the main file content (the one that should be executed)
+    const mainFileExt = getFileExtension(currentLanguage);
+    const mainFileName = `main.${mainFileExt}`;
+    const mainContent = files[mainFileName] ? files[mainFileName].content : editor.getValue();
+    
+    // Prepare the request
+    const siteId = document.getElementById('site-id').value;
+    
+    // Make the API request
+    fetch(`/api/site/${siteId}/save`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            language: currentLanguage,
+            content: mainContent,
+            files: files
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', 'Changes saved successfully');
+        } else {
+            showToast('error', data.error || 'Failed to save changes');
+        }
+    })
+    .catch(error => {
+        showToast('error', `Error: ${error.message}`);
+    });
+}
+
+/**
+ * Check if there are unsaved changes
+ * @returns {boolean} - Whether there are unsaved changes
+ */
+function hasUnsavedChanges() {
+    // Check if current file content is different from saved content
+    if (currentFile && files[currentFile]) {
+        const currentContent = editor.getValue();
+        return currentContent !== files[currentFile].content;
+    }
+    return false;
+}
+
+/**
+ * Toggle split view
+ */
+function toggleSplitView() {
+    const container = document.querySelector('.editor-container');
+    splitView = !splitView;
+    
+    if (splitView) {
+        container.classList.add('split-layout');
+    } else {
+        container.classList.remove('split-layout');
+    }
+    
+    // Refresh editor to prevent rendering issues
+    setTimeout(() => editor.refresh(), 1);
+}
+
+/**
+ * Show keyboard shortcuts modal
+ */
+function openKeyboardShortcutsModal() {
+    const modal = document.getElementById('keyboardShortcutsModal');
+    modal.style.display = 'block';
+}
+
+/**
+ * Close keyboard shortcuts modal
+ */
+function closeKeyboardShortcutsModal() {
+    const modal = document.getElementById('keyboardShortcutsModal');
+    modal.style.display = 'none';
+}
+
+/**
+ * Clear the console output
+ */
+function clearConsole() {
+    const consoleOutput = document.getElementById('consoleOutput');
+    consoleOutput.innerHTML = 'Console cleared. Run your code to see output.';
+}
+
+/**
+ * Hide the loading overlay
+ */
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 500);
+    }
+}
+
+/**
+ * Escape HTML to prevent XSS
+ * @param {string} unsafe - Unsafe string that might contain HTML
+ * @returns {string} - Escaped string
+ */
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+/**
+ * Change editor theme
+ * @param {string} theme - CodeMirror theme name
+ */
+function changeEditorTheme(theme) {
+    editor.setOption('theme', theme);
+    localStorage.setItem('editor_theme', theme);
+}
+
+/**
+ * Change editor font size
+ * @param {string} size - Font size with unit (e.g., '14px')
+ */
+function changeEditorFontSize(size) {
+    const editorElement = editor.getWrapperElement();
+    editorElement.style.fontSize = size;
+    localStorage.setItem('editor_font_size', size);
+    
+    // Refresh editor to prevent rendering issues
+    setTimeout(() => editor.refresh(), 1);
+}
+
+/**
+ * Toggle word wrap
+ * @param {boolean} enabled - Whether word wrap should be enabled
+ */
+function toggleWordWrap(enabled) {
+    editor.setOption('lineWrapping', enabled);
+    localStorage.setItem('editor_word_wrap', enabled ? 'true' : 'false');
+}
+
+/**
+ * Toggle code linting
+ * @param {boolean} enabled - Whether linting should be enabled
+ */
+function toggleLinting(enabled) {
+    // This would require additional linting libraries for each language
+    // For now, just save the preference
+    localStorage.setItem('editor_linting', enabled ? 'true' : 'false');
+    showToast('info', `Linting ${enabled ? 'enabled' : 'disabled'}`);
+}
+
+/**
+ * Toggle indentation with tabs
+ * @param {boolean} enabled - Whether to indent with tabs
+ */
+function toggleIndentWithTabs(enabled) {
+    editor.setOption('indentWithTabs', enabled);
+    localStorage.setItem('editor_indent_with_tabs', enabled ? 'true' : 'false');
+}
+
+/**
+ * Focus the search dialog
+ */
+function focusSearch() {
+    CodeMirror.commands.find(editor);
+}
+
+/**
+ * Show a toast message
+ * @param {string} type - Type of toast (success, error, info)
+ * @param {string} message - Message to display
+ */
+function showToast(type, message) {
+    const toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        // Create toast container if it doesn't exist
         const container = document.createElement('div');
         container.id = 'toast-container';
         document.body.appendChild(container);
-        return container;
     }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.getElementById('toast-container').appendChild(toast);
+    
+    // Force reflow
+    toast.offsetHeight;
+    
+    // Show the toast
+    toast.classList.add('show');
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
+}
 
-    // Run code functionality
-    const runBtn = document.getElementById('runBtn');
-    if (runBtn) {
-        runBtn.addEventListener('click', function() {
-            runCode();
-        });
+// Load saved preferences
+function loadSavedPreferences() {
+    // Theme
+    const savedTheme = localStorage.getItem('editor_theme');
+    if (savedTheme) {
+        changeEditorTheme(savedTheme);
+        const themeSelector = document.getElementById('themeSelector');
+        if (themeSelector) themeSelector.value = savedTheme;
     }
-
-    function runCode() {
-        const consoleOutput = document.getElementById('console-output');
-        const language = document.getElementById('site-language').value;
-        const content = editor.getValue();
-        const siteId = document.getElementById('site-id').value;
-        const stdinInput = document.getElementById('stdinInput')?.value || '';
-        const argsInput = document.getElementById('argsInput')?.value || '';
-        
-        // Clear previous output
-        consoleOutput.innerHTML = '<div class="console-running"><span class="console-prompt">></span> Running code...</div>';
-        
-        // Start execution timer
-        const startTime = performance.now();
-        
-        // Update run button
-        runBtn.disabled = true;
-        const originalBtnContent = runBtn.innerHTML;
-        runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
-        
-        // Call API to execute code
-        fetch(`/api/run_code`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                site_id: siteId,
-                language: language,
-                code: content,
-                stdin: stdinInput,
-                args: argsInput
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Calculate execution time
-            const endTime = performance.now();
-            const executionTime = ((endTime - startTime) / 1000).toFixed(2);
-            document.getElementById('time-value').textContent = executionTime + 's';
-            
-            // Display output
-            if (data.success) {
-                let output = data.output || 'No output';
-                
-                // Format output with syntax highlighting
-                consoleOutput.innerHTML = `<pre class="code-output">${escapeHtml(output)}</pre>`;
-                
-                if (data.errors) {
-                    consoleOutput.innerHTML += `<pre class="error-output">${escapeHtml(data.errors)}</pre>`;
-                }
-            } else {
-                consoleOutput.innerHTML = `<pre class="error-output">Error: ${escapeHtml(data.error || 'Unknown error')}</pre>`;
-            }
-        })
-        .catch(error => {
-            console.error('Error running code:', error);
-            consoleOutput.innerHTML = `<pre class="error-output">Error: ${error.message}</pre>`;
-        })
-        .finally(() => {
-            // Restore run button
-            runBtn.disabled = false;
-            runBtn.innerHTML = originalBtnContent;
-        });
+    
+    // Font size
+    const savedFontSize = localStorage.getItem('editor_font_size');
+    if (savedFontSize) {
+        changeEditorFontSize(savedFontSize);
+        const fontSizeSelector = document.getElementById('fontSizeSelector');
+        if (fontSizeSelector) fontSizeSelector.value = savedFontSize;
     }
+    
+    // Word wrap
+    const savedWordWrap = localStorage.getItem('editor_word_wrap');
+    const wordWrapEnabled = savedWordWrap !== 'false';
+    toggleWordWrap(wordWrapEnabled);
+    const wordWrapToggle = document.getElementById('wordWrapToggle');
+    if (wordWrapToggle) wordWrapToggle.checked = wordWrapEnabled;
+    
+    // Linting
+    const savedLinting = localStorage.getItem('editor_linting');
+    const lintingEnabled = savedLinting === 'true';
+    const lintToggle = document.getElementById('lintToggle');
+    if (lintToggle) lintToggle.checked = lintingEnabled;
+    
+    // Indent with tabs
+    const savedIndentWithTabs = localStorage.getItem('editor_indent_with_tabs');
+    const indentWithTabsEnabled = savedIndentWithTabs === 'true';
+    toggleIndentWithTabs(indentWithTabsEnabled);
+    const indentWithTabsToggle = document.getElementById('indentWithTabsToggle');
+    if (indentWithTabsToggle) indentWithTabsToggle.checked = indentWithTabsEnabled;
+}
 
-    function escapeHtml(text) {
-        return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
-    // Add CSS for new elements
-    addStyles();
-
-    function addStyles() {
-        const style = document.createElement('style');
-        style.textContent = `
-            .modal {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-                z-index: 1000;
-                justify-content: center;
-                align-items: center;
-            }
-            
-            .modal-content {
-                background-color: #fff;
-                border-radius: 8px;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-                width: 500px;
-                max-width: 90%;
-                max-height: 90vh;
-                overflow-y: auto;
-            }
-            
-            .modal-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 15px 20px;
-                border-bottom: 1px solid #eee;
-            }
-            
-            .modal-header h2 {
-                margin: 0;
-                font-size: 1.2rem;
-                color: #333;
-            }
-            
-            .close-btn {
-                font-size: 1.5rem;
-                cursor: pointer;
-                color: #999;
-                transition: color 0.2s;
-            }
-            
-            .close-btn:hover {
-                color: #333;
-            }
-            
-            .modal-body {
-                padding: 20px;
-            }
-            
-            .form-group {
-                margin-bottom: 15px;
-            }
-            
-            .form-group label {
-                display: block;
-                margin-bottom: 5px;
-                font-weight: 500;
-            }
-            
-            .form-group input,
-            .form-group select {
-                width: 100%;
-                padding: 8px 12px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                font-size: 14px;
-            }
-            
-            .form-actions {
-                display: flex;
-                justify-content: flex-end;
-                gap: 10px;
-                margin-top: 20px;
-            }
-            
-            .btn-primary {
-                background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-                color: white;
-                border: none;
-                border-radius: 4px;
-                padding: 8px 16px;
-                font-weight: 500;
-                cursor: pointer;
-                transition: all 0.2s;
-            }
-            
-            .btn-secondary {
-                background-color: #f5f5f5;
-                color: #333;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                padding: 8px 16px;
-                font-weight: 500;
-                cursor: pointer;
-                transition: all 0.2s;
-            }
-            
-            .btn-primary:hover {
-                background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
-            }
-            
-            .btn-secondary:hover {
-                background-color: #e9e9e9;
-            }
-            
-            #toast-container {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                z-index: 9999;
-            }
-            
-            .toast {
-                margin-top: 10px;
-                padding: 12px 15px;
-                border-radius: 4px;
-                background-color: #333;
-                color: #fff;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-                min-width: 250px;
-                max-width: 350px;
-                opacity: 1;
-                transition: opacity 0.3s;
-            }
-            
-            .toast-content {
-                display: flex;
-                align-items: center;
-            }
-            
-            .toast-content i {
-                margin-right: 10px;
-                font-size: 1.1rem;
-            }
-            
-            .toast-success {
-                background-color: #4caf50;
-            }
-            
-            .toast-error {
-                background-color: #f44336;
-            }
-            
-            .toast-warning {
-                background-color: #ff9800;
-            }
-            
-            .toast-info {
-                background-color: #2196f3;
-            }
-            
-            .toast-fade-out {
-                opacity: 0;
-            }
-            
-            .code-output {
-                color: #8bc34a;
-                margin: 0;
-                white-space: pre-wrap;
-                word-break: break-word;
-            }
-            
-            .error-output {
-                color: #f44336;
-                margin: 0;
-                white-space: pre-wrap;
-                word-break: break-word;
-            }
-            
-            .console-running {
-                color: #64b5f6;
-                margin-bottom: 10px;
-            }
-        `;
-        document.head.appendChild(style);
-    }
+// Call this after the editor is initialized
+document.addEventListener('DOMContentLoaded', function() {
+    // Load preferences after editor is initialized
+    setTimeout(loadSavedPreferences, 100);
 });
