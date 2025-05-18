@@ -191,39 +191,163 @@ class PistonService:
     def get_language_icon(cls, language: str) -> str:
         """Get the appropriate Font Awesome icon class for a language."""
         icon_map = {
+            # Main languages with specific icons
             "python": "fab fa-python",
             "javascript": "fab fa-js",
-            "typescript": "fab fa-js",
             "java": "fab fa-java",
-            "c": "fas fa-code",
-            "cpp": "fas fa-code",
+            "c": "fas fa-c",
             "c++": "fas fa-code",
             "csharp": "fab fa-microsoft",
-            "go": "fab fa-google",
+            "go": "fab fa-golang",
             "ruby": "fas fa-gem",
-            "rust": "fas fa-cogs",
+            "rust": "fas fa-cog",
             "php": "fab fa-php",
             "swift": "fab fa-swift",
             "kotlin": "fab fa-android",
-            "dart": "fas fa-bullseye",
-            "bash": "fas fa-terminal",
+            "dart": "fab fa-dart",
+            "scala": "fas fa-s",
+            "r": "fab fa-r-project",
+            "matlab": "fas fa-sigma",
+            "octave": "fas fa-sigma",
             "html": "fab fa-html5",
-            "css": "fab fa-css3-alt"
+            "css": "fab fa-css3-alt",
+            "bash": "fas fa-terminal",
+            "powershell": "fas fa-terminal",
+            "lua": "fas fa-moon",
+            "perl": "fab fa-perl",
+            "haskell": "fas fa-lambda",
+            "elixir": "fas fa-bolt",
+            "erlang": "fab fa-erlang",
+            "clojure": "fas fa-code",
+            "lisp": "fas fa-code",
+            "racket": "fas fa-code",
+            "fsharp.net": "fas fa-code",
+            "ocaml": "fas fa-code",
+            "zig": "fas fa-arrow-up",
+            "vlang": "fas fa-v",
+            "nim": "fas fa-code",
+            "crystal": "fas fa-gem",
+            "groovy": "fas fa-code",
+            "basic": "fab fa-microsoft",
+            "basic.net": "fab fa-microsoft",
+            "d": "fas fa-code",
+            "fortran": "fas fa-code",
+            "cobol": "fas fa-code",
+            "pascal": "fas fa-code",
+            "prolog": "fas fa-code",
+            "smalltalk": "fas fa-code",
+            "sqlite3": "fas fa-database",
+            "coffeescript": "fas fa-coffee",
+            "julia": "fas fa-superscript",
+            "raku": "fab fa-perl",
+            "brainfuck": "far fa-brain",
+            "befunge93": "fas fa-chess-board",
+            "rockstar": "fas fa-guitar",
+            "emojicode": "far fa-smile",
+            "vyxal": "fas fa-v",
+            "yeethon": "fas fa-yin-yang",
+            "golfscript": "fas fa-golf-ball",
+            "retina": "far fa-eye",
+            "samarium": "fas fa-atom",
+            "husk": "fas fa-otter",
+            "iverilog": "fas fa-microchip",
+            "japt": "fas fa-mountain",
+            "llvm_ir": "fas fa-microchip",
+            "osabie": "fas fa-chess",
+            "paradoc": "fas fa-paragraph",
+            "pyth": "fas fa-snake",
+            "raku": "fab fa-perl",
+            "file": "far fa-file-code",
+            "forte": "fas fa-music",
+            "freebasic": "fas fa-bolt",
+            "fsi": "fas fa-terminal"
         }
         return icon_map.get(language.lower(), "fas fa-code")
-    
-    @staticmethod
-    def _get_file_extension(language: str) -> str:
-        """Get the appropriate file extension for a language."""
+
+    @classmethod
+    def get_codemirror_mode(cls, language: str) -> str:
+        """Get the CodeMirror mode for a given language."""
+        mode_map = {
+            # Mainstream languages with specific modes
+            "python": "python",
+            "python2": "python",
+            "python3": "python",
+            "javascript": "javascript",
+            "typescript": "javascript",
+            "java": "clike",
+            "c": "clike",
+            "c++": "clike",
+            "csharp": "clike",
+            "csharp.net": "clike",
+            "go": "go",
+            "ruby": "ruby",
+            "rust": "rust",
+            "php": "php",
+            "swift": "swift",
+            "kotlin": "clike",
+            "dart": "dart",
+            "scala": "clike",
+            "rscript": "r",
+            "matlab": "octave",
+            "octave": "octave",
+            "bash": "shell",
+            "powershell": "powershell",
+            "lua": "lua",
+            "perl": "perl",
+            "haskell": "haskell",
+            "elixir": "elixir",
+            "erlang": "erlang",
+            "clojure": "clojure",
+            "lisp": "commonlisp",
+            "racket": "scheme",
+            "fsharp.net": "mllike",
+            "ocaml": "mllike",
+            "zig": "zig",
+            "vlang": "go",
+            "nim": "nim",
+            "crystal": "crystal",
+            "groovy": "groovy",
+            "basic": "vb",
+            "basic.net": "vb",
+            "d": "d",
+            "fortran": "fortran",
+            "cobol": "cobol",
+            "pascal": "pascal",
+            "prolog": "prolog",
+            "smalltalk": "smalltalk",
+            "sqlite3": "sql",
+            "coffeescript": "coffeescript",
+            "julia": "julia",
+            "raku": "perl",
+            "brainfuck": "brainfuck",
+            "llvm_ir": "llvm",
+            "ponylang": "pony",
+            "japt": "javascript",
+            "iverilog": "verilog",
+            "jelly": "jelly",
+            "lolcode": "lolcode",
+            "osabie": "osabie",
+            "vyxal": "vyxal",
+            "yeethon": "python",
+            "file": "text/plain"
+        }
+        return mode_map.get(language.lower(), "text/plain")
+
+    @classmethod
+    def get_language_extension(cls, language: str) -> str:
+        """Get the file extension for a given language."""
         extension_map = {
+            # Mainstream languages
             "python": "py",
+            "python2": "py",
+            "python3": "py",
             "javascript": "js",
             "typescript": "ts",
             "java": "java",
             "c": "c",
-            "cpp": "cpp",
             "c++": "cpp",
             "csharp": "cs",
+            "csharp.net": "cs",
             "go": "go",
             "ruby": "rb",
             "rust": "rs",
@@ -232,21 +356,297 @@ class PistonService:
             "kotlin": "kt",
             "dart": "dart",
             "scala": "scala",
+            "rscript": "r",
+            "matlab": "m",
+            "octave": "m",
+            "bash": "sh",
+            "powershell": "ps1",
+            "lua": "lua",
+            "perl": "pl",
+            "haskell": "hs",
+            "elixir": "ex",
+            "erlang": "erl",
+            "clojure": "clj",
+            "lisp": "lisp",
+            "racket": "rkt",
+            "fsharp.net": "fs",
+            "ocaml": "ml",
+            "zig": "zig",
+            "vlang": "v",
+            "nim": "nim",
+            "crystal": "cr",
+            "groovy": "groovy",
+            "basic": "bas",
+            "basic.net": "vb",
+            "d": "d",
+            "fortran": "f90",
+            "cobol": "cbl",
+            "pascal": "pas",
+            "prolog": "pl",
+            "smalltalk": "st",
+            "sqlite3": "sql",
+            "coffeescript": "coffee",
+            "julia": "jl",
+            "raku": "p6",
+            "brainfuck": "bf",
+            "befunge93": "bf93",
+            "emojicode": "emojic",
+            "golfscript": "gs",
+            "llvm_ir": "ll",
+            "ponylang": "pony",
+            "pyth": "pyth",
+            "rockstar": "rock",
+            "samarium": "sm",
+            "vyxal": "vy",
+            "yeethon": "yeet",
+            "japt": "js",
+            "husk": "hs",
+            "iverilog": "v",
+            "jelly": "jelly",
+            "lolcode": "lol",
+            "osabie": "osabie",
+            "paradoc": "pdc",
+            "retina": "retina",
+            "file": "txt"
+        }
+        return extension_map.get(language.lower(), "txt")
+            "cpp": "fas fa-code",
+            "c++": "fas fa-code",
+            "csharp": "fab fa-microsoft",
+            "go": "fab fa-golang",
+            "ruby": "fas fa-gem",
+            "rust": "fas fa-cogs",
+            "php": "fab fa-php",
+            "swift": "fab fa-swift",
+            "kotlin": "fab fa-android",
+            "dart": "fab fa-dart",
+            "scala": "fas fa-s",
+            "r": "fab fa-r-project",
+            "rscript": "fab fa-r-project",
+            "matlab": "fas fa-sigma",
+            "octave": "fas fa-sigma",
+            
+            # Web technologies
+            "html": "fab fa-html5",
+            "css": "fab fa-css3-alt",
+            "typescript": "fab fa-js-square",
+            "javascript": "fab fa-js-square",
+            
+            # Scripting languages
+            "bash": "fas fa-terminal",
+            "powershell": "fas fa-terminal",
+            "lua": "fas fa-moon",
+            "perl": "fab fa-perl",
+            "ruby": "fas fa-gem",
+            "python": "fab fa-python",
+            "php": "fab fa-php",
+            "dart": "fab fa-dart",
+            
+            # Functional languages
+            "haskell": "fas fa-lambda",
+            "elixir": "fas fa-bolt",
+            "erlang": "fab fa-erlang",
+            "clojure": "fas fa-code",
+            "lisp": "fas fa-code",
+            "racket": "fas fa-code",
+            "fsharp": "fas fa-code",
+            "ocaml": "fas fa-code",
+            
+            # Systems languages
+            "c": "fas fa-c",
+            "cpp": "fas fa-code",
+            "rust": "fas fa-cog",
+            "go": "fab fa-golang",
+            "zig": "fas fa-arrow-up",
+            "vlang": "fas fa-v",
+            "nim": "fas fa-code",
+            "crystal": "fas fa-gem",
+            
+            # JVM languages
+            "java": "fab fa-java",
+            "kotlin": "fab fa-android",
+            "scala": "fas fa-s",
+            "groovy": "fas fa-code",
+            "clojure": "fas fa-code",
+            
+            # .NET languages
+            "csharp": "fab fa-microsoft",
+            "fsharp": "fas fa-code",
+            "vb": "fab fa-microsoft",
+            
+            # Other languages
+            "swift": "fab fa-swift",
+            "dart": "fab fa-dart",
+            "r": "fab fa-r-project",
+            "rscript": "fab fa-r-project",
+            "matlab": "fas fa-sigma",
+            "octave": "fas fa-sigma",
+            "sql": "fas fa-database",
+            "sqlite3": "fas fa-database",
+            "bash": "fas fa-terminal",
+            "powershell": "fas fa-terminal",
+            "lua": "fas fa-moon",
+            "perl": "fab fa-perl",
+            "ruby": "fas fa-gem",
+            "python": "fab fa-python",
+            "php": "fab fa-php",
+            "dart": "fab fa-dart",
+            "haskell": "fas fa-lambda",
+            "elixir": "fas fa-bolt",
+            "erlang": "fab fa-erlang",
+            "clojure": "fas fa-code",
+            "lisp": "fas fa-code",
+            "racket": "fas fa-code",
+            "fsharp": "fas fa-code",
+            "ocaml": "fas fa-code",
+            "c": "fas fa-c",
+            "cpp": "fas fa-code",
+            "rust": "fas fa-cog",
+            "go": "fab fa-golang",
+            "zig": "fas fa-arrow-up",
+            "vlang": "fas fa-v",
+            "nim": "fas fa-code",
+            "crystal": "fas fa-gem",
+            "java": "fab fa-java",
+            "kotlin": "fab fa-android",
+            "scala": "fas fa-s",
+            "groovy": "fas fa-code",
+            "clojure": "fas fa-code",
+            "csharp": "fab fa-microsoft",
+            "fsharp": "fas fa-code",
+            "vb": "fab fa-microsoft",
+            "swift": "fab fa-swift",
+            "dart": "fab fa-dart",
+            "r": "fab fa-r-project",
+            "rscript": "fab fa-r-project",
+            "matlab": "fas fa-sigma",
+            "octave": "fas fa-sigma",
+            "sql": "fas fa-database",
+            "sqlite3": "fas fa-database"
+        }
+        return icon_map.get(language.lower(), "fas fa-code")
+    
+    @staticmethod
+    def _get_file_extension(language: str) -> str:
+        """Get the appropriate file extension for a language."""
+        extension_map = {
+            # Mainstream languages
+            "python": "py",
+            "python2": "py",
+            "python3": "py",
+            "javascript": "js",
+            "typescript": "ts",
+            "java": "java",
+            "c": "c",
+            "cpp": "cpp",
+            "c++": "cpp",
+            "csharp": "cs",
+            "c#": "cs",
+            "go": "go",
+            "ruby": "rb",
+            "rust": "rs",
+            "php": "php",
+            "swift": "swift",
+            "kotlin": "kt",
+            "dart": "dart",
+            "scala": "scala",
+            "groovy": "groovy",
+            
+            # Scripting languages
+            "lua": "lua",
             "perl": "pl",
             "r": "r",
+            "rscript": "r",
             "bash": "sh",
-            "lua": "lua",
+            "shell": "sh",
+            "powershell": "ps1",
+            "ruby": "rb",
+            "php": "php",
+            "python": "py",
+            "python2": "py",
+            "python3": "py",
+            
+            # Functional languages
             "haskell": "hs",
             "elixir": "exs",
             "erlang": "erl",
             "clojure": "clj",
-            "julia": "jl",
+            "lisp": "lisp",
+            "scheme": "scm",
+            "racket": "rkt",
+            "f#": "fs",
+            "fsharp": "fs",
+            "ocaml": "ml",
+            
+            # Systems languages
+            "c": "c",
+            "cpp": "cpp",
+            "rust": "rs",
+            "go": "go",
+            "zig": "zig",
+            "vlang": "v",
             "nim": "nim",
             "crystal": "cr",
-            "ocaml": "ml",
-            "zig": "zig",
+            "d": "d",
+            "fortran": "f90",
+            "cobol": "cbl",
+            "pascal": "pas",
+            "ada": "adb",
+            "assembly": "asm",
+            "nasm": "asm",
+            "nasm64": "asm",
+            
+            # JVM languages
+            "java": "java",
+            "kotlin": "kt",
+            "scala": "scala",
+            "groovy": "groovy",
+            "clojure": "clj",
+            
+            # .NET languages
+            "csharp": "cs",
+            "fsharp": "fs",
+            "basic": "vb",
+            "vb": "vb",
+            "vb.net": "vb",
+            
+            # Other languages
+            "swift": "swift",
+            "dart": "dart",
+            "r": "r",
+            "rscript": "r",
+            "matlab": "m",
+            "octave": "m",
+            "sql": "sql",
+            "sqlite3": "sql",
+            "prolog": "pl",
+            "lolcode": "lol",
+            "brainfuck": "bf",
+            "befunge93": "b93",
+            "emojicode": "emojic",
+            "rockstar": "rock",
+            "vyxal": "vy",
+            "jelly": "jelly",
+            "osabie": "osabie",
+            "paradoc": "pdc",
+            "ponylang": "pony",
+            "samarium": "sm",
+            "smalltalk": "st",
+            "tcl": "tcl",
+            "verilog": "v",
+            "vhdl": "vhd",
+            "coffeescript": "coffee",
+            "typescript": "ts",
+            "javascript": "js",
+            "html": "html",
+            "css": "css",
+            "elm": "elm",
+            "solidity": "sol",
+            "llvm_ir": "ll",
+            "yeethon": "py"
         }
-        return extension_map.get(language, "txt")
+        # Get appropriate extension or default to language name + txt if not found
+        return extension_map.get(language.lower(), f"{language.lower()}.txt")
     
     @classmethod
     def get_language_template(cls, language: str) -> str:
@@ -561,7 +961,7 @@ fun main() {
     println("Welcome, $name!")
     
     // You can use loops:
-    for (i in 0 until 3) {
+    for (i in 0..2) {
         println("Count: $i")
     }
     
@@ -572,6 +972,101 @@ fun main() {
         println("You can become a Kotlin coder!")
     }
 }
+''',
+            "dart": '''// Welcome to your Dart space!
+
+void main() {
+  print('Hello, World!');
+  
+  // Try adding your own code below:
+  var name = 'Dart Coder';
+  print('Welcome, $name!');
+  
+  // You can use loops:
+  for (var i = 0; i < 3; i++) {
+    print('Count: $i');
+  }
+  
+  // And conditions:
+  if (name == 'Dart Coder') {
+    print('You\'re a Dart coder!');
+  } else {
+    print('You can become a Dart coder!');
+  }
+}
+''',
+            "scala": '''// Welcome to your Scala space!
+
+object Main extends App {
+  println("Hello, World!")
+  
+  // Try adding your own code below:
+  val name = "Scala Coder"
+  println(s"Welcome, $name!")
+  
+  // You can use loops:
+  for (i <- 0 until 3) {
+    println(s"Count: $i")
+  }
+  
+  // And conditions:
+  if (name == "Scala Coder") {
+    println("You're a Scala coder!")
+  } else {
+    println("You can become a Scala coder!")
+  }
+}
+''',
+            "haskell": '''-- Welcome to your Haskell space!
+
+main :: IO ()
+main = do
+  putStrLn "Hello, World!"
+  
+  -- Try adding your own code below:
+  let name = "Haskell Coder"
+  putStrLn $ "Welcome, " ++ name ++ "!"
+  
+  -- You can use loops:
+  let loop i = 
+        if i < 3
+          then do
+            putStrLn $ "Count: " ++ show i
+            loop (i + 1)
+          else return ()
+  loop 0
+  
+  -- And conditions:
+  if name == "Haskell Coder"
+    then putStrLn "You're a Haskell coder!"
+    else putStrLn "You can become a Haskell coder!"
+''',
+            "elixir": '''# Welcome to your Elixir space!
+
+defmodule Main do
+  def main do
+    IO.puts "Hello, World!"
+    
+    # Try adding your own code below:
+    name = "Elixir Coder"
+    IO.puts "Welcome, #{name}!"
+    
+    # You can use loops:
+    for i <- 0..2 do
+      IO.puts "Count: #{i}"
+    end
+    
+    # And conditions:
+    if name == "Elixir Coder" do
+      IO.puts "You're an Elixir coder!"
+    else
+      IO.puts "You can become an Elixir coder!"
+    end
+  end
+end
+
+# Call the main function
+Main.main()
 ''',
             "bash": '''#!/bin/bash
 # Welcome to your Bash space!
@@ -602,7 +1097,33 @@ main
 '''
         }
         
-        return templates.get(language, f"// Welcome to your {language} space!\n\n// Write your code here\n")
+        # Additional templates for common languages
+        if language == "php":
+            return "<?php\n\n// Welcome to your PHP space!\n\nfunction main() {\n    echo \"Hello, World!\";\n    \n    // Try adding your own code below:\n    $name = \"PHP Coder\";\n    echo \"\nWelcome, $name!\";\n    \n    // You can use loops:\n    for ($i = 0; $i < 3; $i++) {\n        echo \"\nCount: $i\";\n    }\n    \n    // And conditions:\n    if ($name === \"PHP Coder\") {\n        echo \"\nYou're a PHP coder!\";\n    } else {\n        echo \"\nYou can become a PHP coder!\";\n    }\n}\n\n// Call the main function\nmain();\n";
+        elif language == "swift":
+            return "// Welcome to your Swift space!\n\nfunc main() {\n    print(\"Hello, World!\")\n    \n    // Try adding your own code below:\n    let name = \"Swift Coder\"\n    print(\"Welcome, \\(name)!\")\n    \n    // You can use loops:\n    for i in 0..<3 {\n        print(\"Count: \\(i)\")\n    }\n    \n    // And conditions:\n    if name == \"Swift Coder\" {\n        print(\"You're a Swift coder!\")\n    } else {\n        print(\"You can become a Swift coder!\")\n    }\n}\n\n// Call the main function\nmain()\n";
+        elif language == "kotlin":
+            return "// Welcome to your Kotlin space!\n\nfun main() {\n    println(\"Hello, World!\")\n    \n    // Try adding your own code below:\n    val name = \"Kotlin Coder\"\n    println(\"Welcome, $name!\")\n    \n    // You can use loops:\n    for (i in 0..2) {\n        println(\"Count: $i\")\n    }\n    \n    // And conditions:\n    if (name == \"Kotlin Coder\") {\n        println(\"You're a Kotlin coder!\")\n    } else {\n        println(\"You can become a Kotlin coder!\")\n    }\n}\n";
+        elif language == "lua":
+            return "-- Welcome to your Lua space!\n\nfunction main()\n    print(\"Hello, World!\")\n    \n    -- Try adding your own code below:\n    local name = \"Lua Coder\"\n    print(\"Welcome, \" .. name .. \"!\")\n    \n    -- You can use loops:\n    for i = 0, 2 do\n        print(\"Count: \" .. i)\n    end\n    \n    -- And conditions:\n    if name == \"Lua Coder\" then\n        print(\"You're a Lua coder!\")\n    else\n        print(\"You can become a Lua coder!\")\n    end\nend\n\n-- Call the main function\nmain()\n";
+        elif language == "perl":
+            return "# Welcome to your Perl space!\n\nsub main {\n    print \"Hello, World!\\n\";\n    \n    # Try adding your own code below:\n    my $name = \"Perl Coder\";\n    print \"Welcome, $name!\\n\";\n    \n    # You can use loops:\n    for (my $i = 0; $i < 3; $i++) {\n        print \"Count: $i\\n\";\n    }\n    \n    # And conditions:\n    if ($name eq \"Perl Coder\") {\n        print \"You're a Perl coder!\\n\";\n    } else {\n        print \"You can become a Perl coder!\\n\";\n    }\n}\n\n# Call the main function\nmain();\n";
+        elif language == "r":
+            return "# Welcome to your R space!\n\nmain <- function() {\n  print(\"Hello, World!\")\n  \n  # Try adding your own code below:\n  name <- \"R Coder\"\n  print(paste(\"Welcome,\", name, \"!\"))\n  \n  # You can use loops:\n  for (i in 0:2) {\n    print(paste(\"Count:\", i))\n  }\n  \n  # And conditions:\n  if (name == \"R Coder\") {\n    print(\"You're an R coder!\")\n  } else {\n    print(\"You can become an R coder!\")\n  }\n}\n\n# Call the main function\nmain()\n";
+        elif language == "bash":
+            return "#!/bin/bash\n\n# Welcome to your Bash space!\n\nmain() {\n    echo \"Hello, World!\"\n    \n    # Try adding your own code below:\n    name=\"Bash Coder\"\n    echo \"Welcome, $name!\"\n    \n    # You can use loops:\n    for i in {0..2}; do\n        echo \"Count: $i\"\n    done\n    \n    # And conditions:\n    if [[ \"$name\" == \"Bash Coder\" ]]; then\n        echo \"You're a Bash coder!\"\n    else\n        echo \"You can become a Bash coder!\"\n    fi\n}\n\n# Call the main function\nmain\n";
+        
+        # Generate reasonable default templates based on language
+        language_capitalized = language.capitalize() 
+        if language in ["javascript", "typescript", "scala", "dart", "solidity", "groovy"]:
+            return f"// Welcome to your {language_capitalized} space!\n\nfunction main() {{\n  console.log(\"Hello, World!\");\n\n  // Write your code here\n}}\n\nmain();\n"
+        elif language in ["python", "ruby", "perl", "r"]:
+            return f"# Welcome to your {language_capitalized} space!\n\ndef main():\n    print(\"Hello, World!\")\n    \n    # Write your code here\n\n# Call the main function\nmain()\n"
+        elif language in ["lua"]:
+            return f"-- Welcome to your {language_capitalized} space!\n\nfunction main()\n    print(\"Hello, World!\")\n    \n    -- Write your code here\nend\n\nmain()\n"
+        else:
+            # C-style languages default
+            return f"// Welcome to your {language_capitalized} space!\n\n// Main function\nvoid main() {{\n    // Write your code here\n    print(\"Hello, World!\");\n}}\n\nmain();\n"
 
     @classmethod
     def get_language_icon(cls, language: str) -> str:
