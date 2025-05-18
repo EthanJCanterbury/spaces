@@ -545,8 +545,8 @@ class PistonService:
             "llvm_ir": "ll",
             "yeethon": "py"
         }
-        # Get appropriate extension or default to language name + txt if not found
-        return extension_map.get(language.lower(), f"{language.lower()}.txt")
+        # Get appropriate extension or default to txt if not found
+        return extension_map.get(language.lower(), "txt")
     
     @classmethod
     def get_language_template(cls, language: str) -> str:
