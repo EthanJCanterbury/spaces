@@ -455,6 +455,17 @@ function getFileIconClass(extension) {
  * @returns {string} - CodeMirror mode
  */
 function getLanguageMode(language) {
+    // Normalize language to lowercase
+    language = language.toLowerCase();
+    
+    // Special handling for variants
+    if (language === 'c++') language = 'cpp';
+    if (language === 'c#') language = 'csharp';
+    if (language === 'python3' || language === 'python2') language = 'python';
+    if (language === 'typescript') language = 'text/typescript';
+    if (language === 'shell') language = 'bash';
+    if (language === 'f#' || language === 'fsharp') language = 'text/x-fsharp';
+    
     const modeMap = {
         'python': 'python',
         'javascript': 'javascript',
@@ -471,7 +482,34 @@ function getLanguageMode(language) {
         'php': 'php',
         'swift': 'swift',
         'kotlin': 'text/x-kotlin',
-        'bash': 'shell'
+        'dart': 'dart',
+        'scala': 'text/x-scala',
+        'r': 'r',
+        'rscript': 'r',
+        'bash': 'shell',
+        'powershell': 'powershell',
+        'lua': 'lua',
+        'perl': 'perl',
+        'haskell': 'haskell',
+        'elixir': 'elixir',
+        'erlang': 'erlang',
+        'clojure': 'clojure',
+        'lisp': 'commonlisp',
+        'scheme': 'scheme',
+        'racket': 'scheme',
+        'ocaml': 'text/x-ocaml',
+        'fortran': 'fortran',
+        'pascal': 'pascal',
+        'sql': 'sql',
+        'sqlite3': 'sql',
+        'yaml': 'yaml',
+        'yml': 'yaml',
+        'markdown': 'markdown',
+        'md': 'markdown',
+        'coffeescript': 'coffeescript',
+        'groovy': 'groovy',
+        'nim': 'nim',
+        'd': 'd'
     };
     
     return modeMap[language] || 'plaintext';

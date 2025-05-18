@@ -552,6 +552,19 @@ class PistonService:
             "llvm_ir": "ll",
             "yeethon": "py"
         }
+        
+        # Special handling for known languages to ensure they always get proper extensions
+        if language in ["c++", "cpp"]:
+            return "cpp"
+        elif language in ["python", "python2", "python3"]:
+            return "py"
+        elif language in ["javascript", "js"]:
+            return "js"
+        elif language in ["typescript", "ts"]:
+            return "ts"
+        elif language in ["csharp", "c#"]:
+            return "cs"
+            
         # Get appropriate extension without adding a period
         return extension_map.get(language, "txt")
     
