@@ -31,9 +31,7 @@ class HackatimeTracker {
 
         // Get editor reference
         this.editor = null;
-        if (window.pythonEditor) {
-            this.editor = window.pythonEditor;
-        } else if (window.editor && typeof window.editor.on === 'function') {
+        if (window.editor && typeof window.editor.on === 'function') {
             this.editor = window.editor;
         }
 

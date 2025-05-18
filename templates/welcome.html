@@ -806,7 +806,11 @@
                         </div>
                         <div class="site-actions">
                             {% if site.site_type == 'python' %}
-                            <a href="{{ url_for('python_editor', site_id=site.id) }}" class="btn-icon" title="Edit Space">
+                            <a href="{{ url_for('code_editor', site_id=site.id) }}" class="btn-icon" title="Edit Space">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% elif site.site_type == 'code' %}
+                            <a href="{{ url_for('code_editor', site_id=site.id) }}" class="btn-icon" title="Edit Space">
                                 <i class="fas fa-edit"></i>
                             </a>
                             {% else %}
@@ -814,12 +818,14 @@
                                 <i class="fas fa-edit"></i>
                             </a>
                             {% endif %}
+                            {% if site.site_type == 'web' %}
                             <a href="/s/{{ site.slug }}" target="_blank" class="btn-icon" title="View Live Space">
                                 <i class="fas fa-external-link-alt"></i>
                             </a>
                             <button class="btn-icon" onclick="copyPublicLink('{{ site.slug }}')" title="Copy Public Link">
                                 <i class="fas fa-link"></i>
                             </button>
+                            {% endif %}
                             <button class="btn-icon delete-btn" onclick="openDeleteModal('{{ site.id }}')" title="Delete Space">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
@@ -868,7 +874,11 @@
                         <div class="site-actions">
                             {% if collab.is_active %}
                                 {% if collab.site.site_type == 'python' %}
-                                <a href="{{ url_for('python_editor', site_id=collab.site.id) }}" class="btn-icon" title="Edit Space">
+                                <a href="{{ url_for('code_editor', site_id=collab.site.id) }}" class="btn-icon" title="Edit Space">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% elif collab.site.site_type == 'code' %}
+                                <a href="{{ url_for('code_editor', site_id=collab.site.id) }}" class="btn-icon" title="Edit Space">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 {% else %}
@@ -881,9 +891,11 @@
                                 <i class="fas fa-lock"></i>
                             </button>
                             {% endif %}
+                            {% if collab.site.site_type == 'web' %}
                             <a href="/s/{{ collab.site.slug }}" target="_blank" class="btn-icon" title="View Live Space">
                                 <i class="fas fa-external-link-alt"></i>
                             </a>
+                            {% endif %}
                             <button class="btn-icon delete-btn" onclick="leaveSharedSpace({{ collab.id }})" title="Leave Shared Space">
                                 <i class="fas fa-sign-out-alt"></i>
                             </button>

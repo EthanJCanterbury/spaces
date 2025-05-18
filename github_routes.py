@@ -3,6 +3,7 @@ from flask_login import current_user, login_required, login_user
 from github import Github, GithubException
 from dotenv import load_dotenv
 from models import db, GitHubRepo, Site, User, SitePage, UserActivity
+from github_routes_helper import get_file_extension
 import os
 import requests
 import time
@@ -521,21 +522,25 @@ def push_changes():
         # Get all site files
         files_to_update = {}
 
-        if site.site_type == 'python':
-            files_to_update['main.py'] = site.python_content or ''
-
-            # Add requirements.txt if it exists
-            try:
-                req_file = repo.get_contents("requirements.txt")
-                files_to_update['requirements.txt'] = "# Python dependencies\n" + \
-                                                    "flask\n" + \
-                                                    "PyGithub\n" + \
+        if site.site_type == 'python' or site.site_type == 'code':
+            # For all code spaces including Python
+            extension = '.py' if site.site_type == 'python' or site.language == 'python' else get_file_extension(site.language)
+            files_to_update[f'main{extension}'] = site.language_content or ''
+            
+            # Add requirements.txt for Python projects
+            if site.site_type == 'python' or site.language == 'python':
+                try:
+                    req_file = repo.get_contents("requirements.txt")
+                    files_to_update['requirements.txt'] = "# Python dependencies\n" + \
+                                                      "flask\n" + \
+                                                      "requests\n" + \
                                                     "python-dotenv\n"
-            except:
-                # Create requirements.txt
-                files_to_update['requirements.txt'] = "# Python dependencies\n" + \
-                                                    "flask\n" + \
-                                                    "PyGithub\n" + \
+                except:
+                    # Create requirements.txt
+                    files_to_update['requirements.txt'] = "# Python dependencies\n" + \
+                                                        "flask\n" + \
+                                                        "requests\n" + \
+                                                        "PyGithub\n" + \
                                                     "python-dotenv\n"
         else:
             # For web sites, get all pages

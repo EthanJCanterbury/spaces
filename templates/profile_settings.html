@@ -88,11 +88,13 @@
                         <div class="project-visibility-item">
                             <div class="project-info">
                                 <h4>{{ site.name }}</h4>
-                                <span class="project-type {% if site.site_type == 'python' %}python-badge{% else %}web-badge{% endif %}">
+                                <span class="project-type {% if site.site_type == 'python' or site.site_type == 'code' %}code-badge{% else %}web-badge{% endif %}">
                                     {% if site.site_type == 'python' %}
                                     <i class="fab fa-python"></i> Python
+                                    {% elif site.site_type == 'code' %}
+                                    <i class="fas fa-code"></i> {{ site.language|capitalize }}
                                     {% else %}
-                                    <i class="fas fa-code"></i> Web
+                                    <i class="fab fa-html5"></i> Web
                                     {% endif %}
                                 </span>
                             </div>

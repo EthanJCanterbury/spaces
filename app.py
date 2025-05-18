@@ -53,6 +53,7 @@ def get_database_url():
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev')
+app.config['REDIRECT_PYTHON_TO_CODE'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Set up CSRF protection
@@ -1307,41 +1308,8 @@ def get_languages():
 @app.route('/python/<int:site_id>')
 @login_required
 def python_editor(site_id):
-    site = Site.query.get_or_404(site_id)
-
-    is_admin = current_user.is_admin
-    is_owner = site.user_id == current_user.id
-
-    if not is_owner and not is_admin:
-        # Check if the user is a collaborator
-        collab = Collaborator.query.filter_by(site_id=site_id,
-                                              user_id=current_user.id).first()
-        if not collab:
-            app.logger.warning(
-                f'User {current_user.id} attempted to access Python site {site_id} owned by {site.user_id}'
-            )
-            abort(403)
-
-    app.logger.info(f'User {current_user.id} editing Python site {site_id}')
-
-    # For legacy Python spaces, redirect to the new code editor if configured
-    if app.config.get('REDIRECT_PYTHON_TO_CODE', False):
-        return redirect(url_for('code_editor', site_id=site_id))
-
-    socket_join_script = f'''
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {{
-            if (typeof socket !== 'undefined') {{
-                console.log('Auto-joining socket room: site_{site_id}');
-                socket.emit('join', {{ site_id: {site_id} }});
-            }} else {{
-                console.error('Socket not initialized');
-            }}
-        }});
-    </script>
-    '''
-
-    return render_template('pythoneditor.html', site=site, additional_scripts=socket_join_script)
+    # Redirect all Python spaces to the unified code editor
+    return redirect(url_for('code_editor', site_id=site_id))
 
 
 @app.route('/code/<int:site_id>')
@@ -3403,11 +3371,13 @@ def update_site_form(site_id):
 
     if site.site_type == 'web' and 'html_content' in request.form:
         site.html_content = request.form['html_content']
-    elif site.site_type == 'python' and 'python_content' in request.form:
-        # Handle legacy Python spaces
-        site.python_content = request.form['python_content']
-    elif site.site_type == 'code' and 'language_content' in request.form:
+    elif (site.site_type == 'python' or site.site_type == 'code') and 'language_content' in request.form:
+        # Handle all code spaces including Python
         site.language_content = request.form['language_content']
+        
+        # Ensure Python spaces have language set
+        if site.site_type == 'python' and not site.language:
+            site.language = 'python'
         
         # Update language if provided
         if 'language' in request.form and request.form['language']:
@@ -3471,16 +3441,16 @@ def save_site_content(site_id):
                 site.js_content = files.get('script.js', site.js_content)
                 site.css_content = files.get('style.css', site.css_content)
                 
-        elif site.site_type == 'python':
-            # Handle legacy Python spaces
-            site.python_content = content
-            
-        elif site.site_type == 'code':
-            # For code spaces
+        elif site.site_type == 'python' or site.site_type == 'code':
+            # For all code spaces including Python
             site.language_content = content
             
             # Update language if provided
             language = data.get('language')
+            
+            # Ensure Python spaces have language set
+            if site.site_type == 'python' and not site.language:
+                site.language = 'python'
             if language and language != site.language:
                 from piston_service import PistonService
                 site.language = language
@@ -3514,10 +3484,22 @@ def save_site_content(site_id):
                         page.content = file_content
                         page.metadata = json.dumps({'language': file_language})
                     else:
+                        # Determine file type based on filename or language
+                        file_type = 'code'
+                        if '.' in filename:
+                            ext = filename.split('.')[-1].lower()
+                            if ext in ['html', 'htm', 'xml', 'svg']:
+                                file_type = 'html'
+                            elif ext in ['css', 'scss', 'sass']:
+                                file_type = 'css'
+                            elif ext in ['js', 'ts', 'jsx', 'tsx']:
+                                file_type = 'javascript'
+                        
                         new_page = SitePage(
                             site_id=site_id, 
                             filename=filename, 
                             content=file_content,
+                            file_type=file_type,
                             metadata=json.dumps({'language': file_language})
                         )
                         db.session.add(new_page)
