@@ -2,48 +2,194 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="error-container">
-    <div class="error-content">
+<div class="suspended-container">
+    <div class="suspended-card">
+        <div class="lock-icon">
+            <i class="fas fa-lock"></i>
+        </div>
         <h1>Account Suspended</h1>
-        <p>Your account has been suspended by an administrator. Please join #spaces on Slack to discuss this further.</p>
-        <a href="https://hackclub.slack.com" target="_blank" class="button-link">
-            <span class="button-content">
-                <i class="fab fa-slack"></i>
-                Join Hack Club Slack
-            </span>
-        </a>
+        <div class="divider"></div>
+        <p class="message">Your account has been suspended by an administrator. Please join #spaces on Slack to discuss this further.</p>
+        <div class="action-area">
+            <a href="https://hackclub.slack.com" target="_blank" class="slack-button">
+                <span class="slack-icon"><i class="fab fa-slack"></i></span>
+                <span>Join Hack Club Slack</span>
+            </a>
+            <a href="/" class="home-button">
+                <i class="fas fa-home"></i> Return to Home
+            </a>
+        </div>
     </div>
 </div>
 
 <style>
-.button-link {
-    display: inline-block;
-    background: linear-gradient(45deg, #4A154B, #611f69);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    margin-top: 20px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 6px rgba(74, 21, 75, 0.1);
+.suspended-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f6f9fc, #edf2f7);
+    animation: gradientMove 15s ease infinite;
+    background-size: 400% 400%;
 }
 
-.button-content {
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.suspended-card {
+    width: 100%;
+    max-width: 480px;
+    background: white;
+    border-radius: 16px;
+    padding: 3rem 2.5rem;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: cardAppear 0.6s ease-out forwards;
+}
+
+@keyframes cardAppear {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.suspended-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(90deg, #eb3750, #ff8c37);
+}
+
+.lock-icon {
+    width: 80px;
+    height: 80px;
+    background: #eb3750;
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 10px;
-}
-
-.button-link:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(74, 21, 75, 0.2);
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    color: white;
+    font-size: 2.5rem;
+    box-shadow: 0 8px 25px rgba(235, 55, 80, 0.3);
+    animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0% {
+        box-shadow: 0 0 0 0 rgba(235, 55, 80, 0.5);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(235, 55, 80, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(235, 55, 80, 0);
+    }
+}
+
+.suspended-card h1 {
+    font-size: 2.25rem;
+    color: #1f2d3d;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.divider {
+    height: 3px;
+    width: 60px;
+    background: linear-gradient(90deg, #eb3750, #ff8c37);
+    margin: 0 auto 1.5rem;
+    border-radius: 3px;
+}
+
+.message {
+    font-size: 1.1rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.action-area {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.slack-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(90deg, #4A154B, #611f69);
+    color: white;
+    padding: 14px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 12px rgba(74, 21, 75, 0.2);
+    width: 100%;
+}
+
+.slack-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(74, 21, 75, 0.3);
+}
+
+.slack-icon {
+    display: inline-flex;
+    align-items: center;
+    font-size: 1.25rem;
+}
+
+.home-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: center;
+}
+
+.home-button:hover {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+@media (max-width: 768px) {
+    .suspended-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .suspended-card h1 {
+        font-size: 1.75rem;
+    }
+    
+    .message {
+        font-size: 1rem;
+    }
 }
 </style>
 {% endblock %}

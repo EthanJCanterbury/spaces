@@ -17,32 +17,19 @@
 
 {% block content %}
 <div id="loading-overlay" class="loading-overlay">
-    <div class="particles-container" id="particles-js"></div>
     <div class="loading-content">
-        <div class="loading-spinner-container">
-            <div class="loading-spinner"></div>
-            <div class="loading-spinner-shadow"></div>
+        <div class="loading-image-container">
+            <img src="{{ url_for('static', filename='images/typingdino.gif') }}" alt="Loading..." class="loading-dino">
         </div>
         <div class="loading-text-container">
-            <p class="loading-text">Building Your Space :D</p>
+            <h2 class="loading-title">Building Your Space</h2>
+            <p class="loading-text">Setting up your coding environment...</p>
         </div>
         <div class="loading-progress-container">
             <div class="loading-progress-bar">
                 <div class="loading-progress-fill"></div>
             </div>
         </div>
-        <div class="loading-facts">
-            <div class="fact-container">
-                <p class="loading-fact">Building your digital canvas...</p>
-            </div>
-        </div>
-    </div>
-    <div class="loading-glow"></div>
-    <div class="loading-corners">
-        <div class="corner top-left"></div>
-        <div class="corner top-right"></div>
-        <div class="corner bottom-left"></div>
-        <div class="corner bottom-right"></div>
     </div>
 </div>
 <div class="editor-container split-layout">
@@ -201,7 +188,7 @@
                 <div class="browser-header">
                     <div class="browser-address" style="display: flex; align-items: center; width: 100%;">
                         <div style="flex: 1"></div>
-                        <div style="display: flex; align-items: center; position: absolute; left: 50%; transform: translateX(-50%); z-index: 10000;">
+                        <div style="display: flex; align-items: center; position: absolute; left: 50%; transform: translateX(-50%); z-index: 10;">
                             <i class="fas fa-lock"></i>
                             <span class="browser-url">https://hackclub.space/s/{{ site.slug|default('', true) }}</span>
                             <button id="openDeployedSiteBtn" class="btn-icon" title="Open deployed site in new tab" onclick="openDeployedSite()" style="z-index: 10000;">
@@ -235,7 +222,46 @@
     </div>
 </div>
 
+<!-- Toast container -->
 <div id="toast-container"></div>
+
+<script>
+function showToast(type, message) {
+    // Import the shared toast.js functionality
+    if (window.showToast) {
+        window.showToast(type, message);
+    } else {
+        const toastContainer = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+
+        const icon = type === 'success' ? 'check-circle' : 
+                     type === 'error' ? 'exclamation-circle' :
+                     type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        // Force reflow
+        toast.offsetHeight;
+
+        // Show the toast
+        toast.classList.add('show');
+
+        // Automatically remove after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+}
+</script>
 
 <div id="githubModal" class="modal" style="display: none; opacity: 1; visibility: visible;">
     <div class="github-modal-content">
@@ -735,8 +761,56 @@ a:hover {
             </div>
 
             <div class="tutorial-step" data-step="9" style="display: none;">
-                <h3 style="color: #4e54c8; margin-top: 0;">Part III: Publishing Your Site</h3>
-                <p>Now that you've created your website, it's time to share it with the world!</p>
+                <h3 style="color: #4e54c8; margin-top: 0;">Part III: Connecting GitHub</h3>
+                <p>Before publishing your site, you'll need to connect it to GitHub. This is <strong>required</strong> for YSWS applications (Boba Drops and Swirl)!</p>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Why GitHub is Important:</h4>
+                    <ul style="padding-left: 20px; line-height: 1.6;">
+                        <li>Tracks your code changes and history</li>
+                        <li>Required for YSWS applications (Boba Drops & Swirl)</li>
+                        <li>Industry-standard tool used by professional developers</li>
+                        <li>Makes collaboration with others possible</li>
+                    </ul>
+                </div>
+                
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Connecting to GitHub:</h4>
+                    <ol style="padding-left: 20px; line-height: 1.6;">
+                        <li>Click the <strong>"Git"</strong> button in the editor toolbar</li>
+                        <li>Click <strong>"Link GitHub Account"</strong> and authorize Hack Club Spaces</li>
+                        <li>After connecting, you'll need to create a repository:
+                            <ul style="padding-left: 20px; margin-top: 5px;">
+                                <li>Enter a name for your repository (e.g., "my-personal-website")</li>
+                                <li>Optionally add a description</li>
+                                <li>Choose whether it should be public or private</li>
+                                <li>Click <strong>"Create Repository"</strong></li>
+                            </ul>
+                        </li>
+                        <li>Your site will automatically push its initial files to GitHub</li>
+                    </ol>
+                </div>
+
+                <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top: 0;">Pushing Changes:</h4>
+                    <ol style="padding-left: 20px; line-height: 1.6;">
+                        <li>After making changes to your site, click the <strong>"Git"</strong> button again</li>
+                        <li>Enter a message describing your changes (e.g., "Update homepage design")</li>
+                        <li>Click <strong>"Push Changes"</strong> to update your GitHub repository</li>
+                        <li>Make sure to push your latest changes before applying for YSWS!</li>
+                    </ol>
+                </div>
+                
+                <div style="margin: 15px 0; text-align: center;">
+                    <img src="https://cloud-4zpw37atj-hack-club-bot.vercel.app/0github_tutorial.png" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" alt="GitHub integration screenshot">
+                </div>
+                
+                <p><strong>Remember:</strong> Both Boba Drops and Swirl require your code to be on GitHub. The reviewers will check your repository to verify your work!</p>
+            </div>
+
+            <div class="tutorial-step" data-step="10" style="display: none;">
+                <h3 style="color: #4e54c8; margin-top: 0;">Part IV: Publishing Your Site</h3>
+                <p>Now that you've created your website and connected GitHub, it's time to share it with the world!</p>
 
                 <div style="margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                     <h4 style="margin-top: 0;">Deploying with Hack Club Spaces:</h4>
@@ -756,7 +830,7 @@ a:hover {
                 <p><i>For a limited time: <a href="https://hack.club/boba" target="_blank">get a free bubble tea</a> after your site deploys!</i></p>
             </div>
 
-            <div class="tutorial-step" data-step="10" style="display: none;">
+            <div class="tutorial-step" data-step="11" style="display: none;">
                 <h3 style="color: #4e54c8; margin-top: 0;">Next Steps & Resources</h3>
                 <p>Congratulations on creating your personal website! Here are some ways to take it further:</p>
 
@@ -826,9 +900,9 @@ a:hover {
                 </ul>
             </div>
 
-            <a href="https://forms.hackclub.com/t/tLf8GYVBqSus" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease;">
+            <button id="bobaApplyBtn" onclick="checkGitHubAndApplyForBoba()" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease; border: none; cursor: pointer;">
                 <i class="fas fa-external-link-alt"></i> Apply for Boba Drops
-            </a>
+            </button>
         </div>
 
         <div class="ysws-section" style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #8c52ff;">
@@ -850,9 +924,9 @@ a:hover {
                 </ul>
             </div>
 
-            <a href="https://forms.hackclub.com/t/t1UL6ZK4Nyus" target="_blank" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #8c52ff 0%, #a56fff 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease;">
+            <button id="swirlApplyBtn" onclick="checkGitHubAndApplyForSwirl()" class="btn-primary" style="display: inline-block; margin-top: 15px; text-decoration: none; padding: 10px 20px; background: linear-gradient(135deg, #8c52ff 0%, #a56fff 100%); color: white; border-radius: 8px; font-weight: bold; transition: all 0.2s ease; border: none; cursor: pointer;">
                 <i class="fas fa-external-link-alt"></i> Apply for Swirl
-            </a>
+            </button>
         </div>
 
         <div style="text-align: center; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 12px;">
@@ -992,7 +1066,7 @@ window.closeTutorialModal = function() {
 };
 
 let currentTutorialStep = 1;
-const totalTutorialSteps = 10;
+const totalTutorialSteps = 11;
 
 window.nextTutorialStep = function() {
     if (currentTutorialStep < totalTutorialSteps) {
@@ -1070,6 +1144,188 @@ window.makeDraggable = function(element, dragHandle) {
     document.addEventListener('mouseup', endDrag);
 };
 
+// Function to check GitHub connection and open GitHub modal for Boba Drops
+function checkGitHubAndApplyForBoba() {
+    const bobaBtn = document.getElementById('bobaApplyBtn');
+    
+    // Disable the button temporarily
+    bobaBtn.disabled = true;
+    bobaBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking GitHub connection...';
+    
+    // Get the site ID
+    const siteId = document.getElementById('site-id').value || sessionStorage.getItem('current_site_id');
+    
+    if (!siteId) {
+        showToast('error', 'Could not determine site ID. Please refresh the page.');
+        bobaBtn.disabled = false;
+        bobaBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> Apply for Boba Drops';
+        return;
+    }
+    
+    // Check if GitHub is connected
+    fetch(`/api/github/status?site_id=${siteId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.connected) {
+                showToast('error', 'Please connect your GitHub account first!');
+                bobaBtn.disabled = false;
+                bobaBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> Connect GitHub First';
+                
+                // Open GitHub modal to help user connect
+                setTimeout(() => {
+                    GitHubManager.openModal();
+                }, 1000);
+                return;
+            }
+            
+            if (!data.repo_connected) {
+                showToast('error', 'Please create or connect a GitHub repository first!');
+                bobaBtn.disabled = false;
+                bobaBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> Create Repository First';
+                
+                // Open GitHub modal to help user create repo
+                setTimeout(() => {
+                    GitHubManager.openModal();
+                }, 1000);
+                return;
+            }
+            
+            // If we get here, GitHub is connected and repo exists
+            // Show a toast message prompting to push changes first
+            showToast('info', 'Remember to push your latest changes before applying!');
+            
+            // Open the GitHub modal for the user to manually push changes
+            GitHubManager.openModal();
+            
+            // Set a message that appears in the commit message box
+            const commitMsgElement = document.getElementById('commitMessage');
+            if (commitMsgElement) {
+                commitMsgElement.value = 'Update before Boba Drops application';
+            }
+            
+            // Create a new toast with application link
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-success';
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <i class="fas fa-info-circle"></i>
+                    <span>
+                        After pushing your changes, 
+                        <a href="https://forms.hackclub.com/t/tLf8GYVBqSus" target="_blank" 
+                           style="color: #333333; text-decoration: underline; font-weight: bold;">
+                           click here to apply for Boba Drops
+                        </a>
+                    </span>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            toast.offsetHeight; // Force reflow
+            toast.classList.add('show');
+            
+            // Reset the button
+            bobaBtn.disabled = false;
+            bobaBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> Apply for Boba Drops';
+        })
+        .catch(error => {
+            showToast('error', 'Error checking GitHub status: ' + error.message);
+            bobaBtn.disabled = false;
+            bobaBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> Apply for Boba Drops';
+        });
+}
+
+// Function to check GitHub connection and open GitHub modal for Swirl
+function checkGitHubAndApplyForSwirl() {
+    const swirlBtn = document.getElementById('swirlApplyBtn');
+    
+    // Disable the button temporarily
+    swirlBtn.disabled = true;
+    swirlBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking GitHub connection...';
+    
+    // Get the site ID
+    const siteId = document.getElementById('site-id').value || sessionStorage.getItem('current_site_id');
+    
+    if (!siteId) {
+        showToast('error', 'Could not determine site ID. Please refresh the page.');
+        swirlBtn.disabled = false;
+        swirlBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> Apply for Swirl';
+        return;
+    }
+    
+    // Check if GitHub is connected
+    fetch(`/api/github/status?site_id=${siteId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.connected) {
+                showToast('error', 'Please connect your GitHub account first!');
+                swirlBtn.disabled = false;
+                swirlBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> Connect GitHub First';
+                
+                // Open GitHub modal to help user connect
+                setTimeout(() => {
+                    GitHubManager.openModal();
+                }, 1000);
+                return;
+            }
+            
+            if (!data.repo_connected) {
+                showToast('error', 'Please create or connect a GitHub repository first!');
+                swirlBtn.disabled = false;
+                swirlBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> Create Repository First';
+                
+                // Open GitHub modal to help user create repo
+                setTimeout(() => {
+                    GitHubManager.openModal();
+                }, 1000);
+                return;
+            }
+            
+            // If we get here, GitHub is connected and repo exists
+            // Show a toast message prompting to push changes first
+            showToast('info', 'Remember to push your latest changes before applying!');
+            
+            // Open the GitHub modal for the user to manually push changes
+            GitHubManager.openModal();
+            
+            // Set a message that appears in the commit message box
+            const commitMsgElement = document.getElementById('commitMessage');
+            if (commitMsgElement) {
+                commitMsgElement.value = 'Update before Swirl application';
+            }
+            
+            // Create a new toast with application link
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-success';
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <i class="fas fa-info-circle"></i>
+                    <span>
+                        After pushing your changes, 
+                        <a href="https://forms.hackclub.com/t/t1UL6ZK4Nyus" target="_blank" 
+                           style="color: #333333; text-decoration: underline; font-weight: bold;">
+                           click here to apply for Swirl
+                        </a>
+                    </span>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            toast.offsetHeight; // Force reflow
+            toast.classList.add('show');
+            
+            // Reset the button
+            swirlBtn.disabled = false;
+            swirlBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> Apply for Swirl';
+        })
+        .catch(error => {
+            showToast('error', 'Error checking GitHub status: ' + error.message);
+            swirlBtn.disabled = false;
+            swirlBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> Apply for Swirl';
+        });
+}
+
 // Initialize the modals when the document is ready
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize YSWS widget
@@ -1092,7 +1348,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-{% if additional_scripts %}
-{{ additional_scripts|safe }}
-{% endif %}
+{# Removed Socket.io and collaboration features #}
 {% endblock %}

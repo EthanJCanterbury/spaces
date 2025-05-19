@@ -3,18 +3,18 @@
   "allowed_imports": [
     "math",
     "random",
+    "time",
     "datetime",
     "json",
-    "collections",
     "re",
-    "string",
+    "collections",
+    "itertools",
     "functools",
-    "time",
-    "statistics",
-    "decimal",
-    "fractions",
-    "os.path",
+    "string",
     "sys",
-    "csv"
+    "os.path",
+    "urllib.parse",
+    "typing",
+    "enum"
   ]
 }

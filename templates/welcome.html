@@ -1,39 +1,275 @@
+
 {% extends "base.html" %}
 
 {% block head %}
 <style>
+    :root {
+        --primary-gradient: linear-gradient(to right, #ec3750, #ff8c38);
+        --card-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        --transition-speed: 0.25s;
+    }
+
+    .welcome-container {
+        max-width: 1200px;
+        margin: 80px auto 40px;
+        padding: 0 2rem;
+    }
+
+    .welcome-header {
+        background: var(--primary-gradient);
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin-bottom: 2.5rem;
+        color: white;
+        box-shadow: var(--card-shadow);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+    }
+
+    .welcome-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: rotate(-30deg);
+        z-index: 0;
+    }
+
+    .welcome-title {
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-title h1 {
+        font-size: 2.5rem;
+        margin: 0 0 0.5rem;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .welcome-title .subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .button-group {
+        position: relative;
+        z-index: 1;
+    }
+
+    .site-limit-info {
+        position: absolute;
+        bottom: 1rem;
+        right: 1.5rem;
+        background: rgba(0, 0, 0, 0.15);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        backdrop-filter: blur(4px);
+    }
+
+    .btn-primary {
+        background: white;
+        color: #ec3750;
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all var(--transition-speed);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        background: #f8f8f8;
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .spaces-tabs-container {
+        margin-bottom: 2rem;
+    }
+
+    .spaces-tabs {
+        display: flex;
+        border-bottom: 1px solid #e1e4e8;
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .spaces-tabs::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: #e1e4e8;
+        z-index: 0;
+    }
+
+    .tab-btn {
+        padding: 1rem 1.5rem;
+        background: none;
+        border: none;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #586069;
+        cursor: pointer;
+        transition: all var(--transition-speed);
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tab-btn:hover {
+        color: #ec3750;
+    }
+
+    .tab-btn.active {
+        color: #ec3750;
+        font-weight: 600;
+    }
+
+    .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: #ec3750;
+        border-radius: 3px 3px 0 0;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
     .sites-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1rem;
-        margin-top: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
     }
 
     .site-card {
         background: white;
         border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        transition: all 0.2s ease;
+        box-shadow: var(--card-shadow);
+        transition: all var(--transition-speed);
         overflow: hidden;
         position: relative;
         height: 100%;
         display: flex;
         flex-direction: column;
+        border: 1px solid #f0f0f0;
     }
 
     .site-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    }
+    
+    .site-checkbox {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 10;
+    }
+    
+    .site-checkbox input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: var(--primary);
+    }
+    
+    .bulk-actions-container {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        padding: 0 10px;
+    }
+    
+    .bulk-actions-container button {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 8px 15px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .bulk-actions-container .btn-danger {
+        background-color: #dc3545;
+        border: none;
+        color: white;
+    }
+    
+    .bulk-actions-container .btn-danger:hover {
+        background-color: #c82333;
+    }
+    
+    .bulk-actions-container .btn-danger:disabled {
+        background-color: #e9a2a9;
+        cursor: not-allowed;
+    }
+    
+    .bulk-actions-container .btn-secondary {
+        background-color: #f1f5f9;
+        border: none;
+        color: #334155;
+    }
+    
+    .bulk-actions-container .btn-secondary:hover {
+        background-color: #e2e8f0;
     }
 
     .site-preview {
-        padding: 1rem;
+        padding: 1.5rem;
         display: flex;
         align-items: center;
         justify-content: center;
         position: relative;
         background-color: #f8f9fa;
-        height: 100px;
+        height: 120px;
         border-bottom: 1px solid #eaeaea;
     }
 
@@ -42,11 +278,16 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 60px;
-        height: 60px;
-        border-radius: 30px;
+        width: 70px;
+        height: 70px;
+        border-radius: 35px;
         background: white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: all var(--transition-speed);
+    }
+
+    .site-card:hover .site-icon {
+        transform: scale(1.05);
     }
 
     .site-icon.python {
@@ -58,11 +299,11 @@
     }
 
     .site-icon i {
-        font-size: 1.8rem;
+        font-size: 2rem;
     }
 
     .site-info {
-        padding: 1rem;
+        padding: 1.5rem;
         display: flex;
         flex-direction: column;
         height: 100%;
@@ -73,42 +314,42 @@
     }
 
     .site-meta h3 {
-        font-size: 1rem;
+        font-size: 1.2rem;
         font-weight: 600;
         margin: 0 0 0.5rem 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        color: #333;
     }
 
     .site-date {
         color: #718096;
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         display: block;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
     }
 
     .site-actions {
-        opacity: 0.7; /* Added opacity for non-hover state */
-        transform: translateY(0);
         display: flex;
-        margin-top: 0.5rem;
+        margin-top: 1rem;
         gap: 0.5rem;
+        opacity: 0.8;
+        transition: all var(--transition-speed);
     }
 
     .site-card:hover .site-actions {
         opacity: 1;
-        transform: translateY(0);
     }
 
     .btn-icon {
-        padding: 0.5rem;
-        border-radius: 6px;
+        padding: 0.6rem;
+        border-radius: 8px;
         background: #f1f5f9;
         border: none;
         color: #64748b;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all var(--transition-speed);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -118,6 +359,7 @@
     .btn-icon:hover {
         background: #e2e8f0;
         color: #334155;
+        transform: translateY(-2px);
     }
 
     .delete-btn:hover {
@@ -125,28 +367,121 @@
         color: #b91c1c;
     }
 
-    .site-type-badge {
+    .site-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
         position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 500;
+        top: 0.75rem;
+        right: 0.75rem;
+    }
+    
+    .site-badge i {
+        margin-right: 6px;
+        font-size: 14px;
     }
 
     .python-badge {
-        background-color: rgba(55, 118, 171, 0.2);
-        color: #3776AB;
+        background-color: rgba(53, 114, 165, 0.2);
+        color: #3572A5;
+        border-left: 3px solid #3572A5;
+    }
+    .python-badge:hover {
+        background-color: rgba(53, 114, 165, 0.3);
+        transform: translateY(-1px);
     }
 
     .web-badge {
         background-color: rgba(255, 87, 34, 0.2);
         color: #FF5722;
+        border-left: 3px solid #FF5722;
+    }
+    .web-badge:hover {
+        background-color: rgba(255, 87, 34, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    .code-badge {
+        background-color: rgba(0, 120, 215, 0.2);
+        color: #0078D7;
+        border-left: 3px solid #0078D7;
+    }
+    .code-badge:hover {
+        background-color: rgba(0, 120, 215, 0.3);
+        transform: translateY(-1px);
+    }
+    
+    /* Language-specific badge colors */
+    .code-badge.javascript {
+        background-color: rgba(240, 219, 79, 0.2);
+        color: #B3A039;
+        border-left: 3px solid #F0DB4F;
+    }
+    .code-badge.javascript:hover {
+        background-color: rgba(240, 219, 79, 0.3);
+    }
+    
+    .code-badge.java {
+        background-color: rgba(176, 114, 25, 0.2);
+        color: #B07219;
+        border-left: 3px solid #B07219;
+    }
+    .code-badge.java:hover {
+        background-color: rgba(176, 114, 25, 0.3);
+    }
+    
+    .code-badge.cpp {
+        background-color: rgba(243, 75, 125, 0.2);
+        color: #F34B7D;
+        border-left: 3px solid #F34B7D;
+    }
+    .code-badge.cpp:hover {
+        background-color: rgba(243, 75, 125, 0.3);
+    }
+    
+    .code-badge.ruby {
+        background-color: rgba(204, 52, 45, 0.2);
+        color: #CC342D;
+        border-left: 3px solid #CC342D;
+    }
+    .code-badge.ruby:hover {
+        background-color: rgba(204, 52, 45, 0.3);
+    }
+    
+    .code-badge.go {
+        background-color: rgba(0, 173, 216, 0.2);
+        color: #00ADD8;
+        border-left: 3px solid #00ADD8;
+    }
+    .code-badge.go:hover {
+        background-color: rgba(0, 173, 216, 0.3);
+    }
+    
+    .code-badge.rust {
+        background-color: rgba(222, 165, 132, 0.2);
+        color: #DEA584;
+        border-left: 3px solid #DEA584;
+    }
+    .code-badge.rust:hover {
+        background-color: rgba(222, 165, 132, 0.3);
+    }
+    
+    .code-badge.php {
+        background-color: rgba(79, 93, 149, 0.2);
+        color: #4F5D95;
+        border-left: 3px solid #4F5D95;
+    }
+    .code-badge.php:hover {
+        background-color: rgba(79, 93, 149, 0.3);
     }
 
     .shared-site-card {
-        border-left: 3px solid var(--primary);
+        border-left: 3px solid #ec3750;
     }
 
     .inactive-space {
@@ -162,94 +497,64 @@
         bottom: 0;
         background-color: rgba(0, 0, 0, 0.3);
         z-index: 1;
+        border-radius: 12px;
     }
 
     .inactive-badge {
         position: absolute;
-        top: 0.5rem;
-        left: 0.5rem;
+        top: 0.75rem;
+        left: 0.75rem;
         background-color: #dc3545;
         color: white;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 500;
+        padding: 0.3rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
         z-index: 2;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
 
     .shared-badge {
         position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-        background-color: var(--primary);
+        top: 0.75rem;
+        right: 0.75rem;
+        background-color: #ec3750;
         color: white;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
         z-index: 2;
-    }
-
-    .spaces-tabs-container {
-        margin-bottom: 1.5rem;
-    }
-
-    .spaces-tabs {
-        display: flex;
-        border-bottom: 1px solid #e1e4e8;
-        margin-bottom: 1rem;
-    }
-
-    .tab-btn {
-        padding: 0.75rem 1.25rem;
-        background: none;
-        border: none;
-        border-bottom: 3px solid transparent;
-        font-size: 0.95rem;
-        font-weight: 500;
-        color: #586069;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .tab-btn:hover {
-        color: var(--primary);
-    }
-
-    .tab-btn.active {
-        color: var(--primary);
-        border-bottom-color: var(--primary);
-    }
-
-    .tab-content {
-        display: none;
-    }
-
-    .tab-content.active {
-        display: block;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
 
     .empty-state {
         text-align: center;
         color: #718096;
-        padding: 2rem;
+        padding: 3rem 2rem;
         background: #f8fafc;
         border-radius: 12px;
         border: 1px dashed #cbd5e1;
+        grid-column: 1 / -1;
     }
 
     .empty-state .empty-icon {
-        font-size: 2rem;
-        color: var(--primary);
-        margin-bottom: 1rem;
+        font-size: 3rem;
+        color: #ec3750;
+        margin-bottom: 1.5rem;
+        opacity: 0.7;
     }
 
     .empty-state h2 {
-        font-size: 1.25rem;
-        margin-bottom: 0.5rem;
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
         color: #334155;
+    }
+
+    .empty-state p {
+        color: #64748b;
+        max-width: 500px;
+        margin: 0 auto;
     }
 
     .special-access-form {
@@ -257,20 +562,162 @@
         text-align: center;
     }
 
-    .special-access-form input[type="text"] {
-        padding: 8px;
-        margin-right: 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
+    .rename-form-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.5rem;
     }
 
-    .special-access-form button[type="submit"] {
-        padding: 8px 16px;
-        background-color: #4CAF50;
-        color: white;
+    .rename-btn {
+        padding: 4px;
+        font-size: 12px;
+        background: none;
         border: none;
-        border-radius: 4px;
+        color: #64748b;
         cursor: pointer;
+        transition: color var(--transition-speed);
+    }
+
+    .rename-btn:hover {
+        color: #ec3750;
+    }
+
+    .modal {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        border: none;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #f0f0f0;
+        padding: 1.5rem;
+    }
+
+    .modal-header h2 {
+        font-size: 1.5rem;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #64748b;
+        cursor: pointer;
+        transition: color var(--transition-speed);
+    }
+
+    .close-btn:hover {
+        color: #ec3750;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .form-group input, 
+    .form-group select {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all var(--transition-speed);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        border-color: #ec3750;
+        box-shadow: 0 0 0 3px rgba(236, 55, 80, 0.1);
+        outline: none;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-top: 0.5rem;
+    }
+
+    .modal-actions {
+        padding: 1.5rem;
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    .btn-secondary {
+        background: #f1f5f9;
+        color: #334155;
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all var(--transition-speed);
+    }
+
+    .btn-secondary:hover {
+        background: #e2e8f0;
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all var(--transition-speed);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+    }
+
+    #toast-container {
+        z-index: 9999;
+    }
+
+    @media (max-width: 768px) {
+        .welcome-header {
+            padding: 2rem 1.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .site-limit-info {
+            position: relative;
+            bottom: auto;
+            right: auto;
+            margin-top: 1rem;
+        }
+        
+        .sites-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     @media (hover: hover) {
@@ -289,32 +736,23 @@
     <div class="welcome-header">
         <div class="welcome-title">
             <h1>Welcome, {{ current_user.username }}! 👋</h1>
-            <p class="subtitle">Lets make some cool stuff :D</p>
-            <p class="subtitle">Heads Up: This build a pre-beta and stuff WILL break!</p>
-            {% if not current_user.is_admin and not current_user.has_special_access %}
-            <!-- Special access form removed as it's no longer needed -->
-            {% endif %}
+            <p class="subtitle">Let's make some cool stuff :D</p>
         </div>
         <div class="button-group">
             {% if sites|length < max_sites %}
-            <button class="btn-primary" onclick="openNewSpaceModal()" style="transition: background 0.2s ease;">
+            <button class="btn-primary" onclick="openNewSpaceModal()">
                 <i class="fas fa-plus"></i>
                 New Space
             </button>
-<style>
-    .btn-primary:hover {
-        background: #ff6b6b !important; /* Salmon pink-ish color to match site theme */
-    }
-</style>
             {% else %}
             <button class="btn-primary" disabled title="Maximum limit of {{ max_sites }} Spaces reached">
-                <i class="fas fa-plus"></i>
+                <i class="fas fa-exclamation-circle"></i>
                 Space Limit Reached
             </button>
             {% endif %}
         </div>
         <div class="site-limit-info">
-            {{ sites|length }}/{{ max_sites }} spaces used (During Beta)
+            <i class="fas fa-info-circle"></i> {{ sites|length }}/{{ max_sites }} spaces used (Request Increase <a href="https://hackclub.com/slack" target="_blank" style="color: white; text-decoration: underline;">here</a>)
         </div>
     </div>
 
@@ -327,37 +765,52 @@
                 <i class="fas fa-users"></i> Shared Spaces
             </button>
         </div>
+        
+        <div class="bulk-actions-container">
+            <button id="bulkDeleteBtn" class="btn-danger" onclick="openBulkDeleteModal()" style="display: none;">
+                <i class="fas fa-trash-alt"></i> Delete Selected Spaces
+            </button>
+        </div>
 
         <div id="mySpacesContent" class="tab-content active">
-            <div class="sites-grid" style="margin-top: 0;">
+            <div class="sites-grid">
                 {% for site in sites %}
                 <div class="site-card">
+                    <div class="site-checkbox">
+                        <input type="checkbox" class="space-select" data-site-id="{{ site.id }}" data-site-name="{{ site.name }}">
+                    </div>
                     <div class="site-preview">
                         {% if site.site_type == 'python' %}
-                        <div class="site-icon python">
-                            <i class="fab fa-python"></i>
-                        </div>
-                        <span class="site-type-badge python-badge">Python</span>
+                        <span class="site-badge python-badge">
+                            <i class="fab fa-python"></i> Python
+                        </span>
+                        {% elif site.site_type == 'code' %}
+                        <span class="site-badge code-badge {{ site.language }}-badge">
+                            <i class="{{ language_icons.get(site.language, 'fas fa-code') }}"></i> {{ site.language|capitalize }}
+                        </span>
                         {% else %}
-                        <div class="site-icon web">
-                            <i class="fas fa-globe"></i>
-                        </div>
-                        <span class="site-type-badge web-badge">Web</span>
+                        <span class="site-badge web-badge">
+                            <i class="fas fa-globe"></i> Web
+                        </span>
                         {% endif %}
                     </div>
                     <div class="site-info">
                         <div class="site-meta">
-                            <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="rename-form-group">
                                 <h3>{{ site.name }}</h3>
-                                <button class="btn-icon" onclick="openRenameModal('{{ site.id }}', '{{ site.name }}')" title="Rename Site" style="padding: 4px; font-size: 12px;">
-                                    <i class="fas fa-edit"></i>
+                                <button class="rename-btn" onclick="openRenameModal('{{ site.id }}', '{{ site.name }}')" title="Rename Site">
+                                    <i class="fas fa-pencil"></i>
                                 </button>
                             </div>
-                            <span class="site-date">Last updated {{ site.updated_at.strftime('%b %d, %Y') }}</span>
+                            <span class="site-date"><i class="far fa-clock"></i> Last updated {{ site.updated_at.strftime('%b %d, %Y') }}</span>
                         </div>
                         <div class="site-actions">
                             {% if site.site_type == 'python' %}
-                            <a href="{{ url_for('python_editor', site_id=site.id) }}" class="btn-icon" title="Edit Space">
+                            <a href="{{ url_for('code_editor', site_id=site.id) }}" class="btn-icon" title="Edit Space">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% elif site.site_type == 'code' %}
+                            <a href="{{ url_for('code_editor', site_id=site.id) }}" class="btn-icon" title="Edit Space">
                                 <i class="fas fa-edit"></i>
                             </a>
                             {% else %}
@@ -365,13 +818,14 @@
                                 <i class="fas fa-edit"></i>
                             </a>
                             {% endif %}
+                            {% if site.site_type == 'web' %}
                             <a href="/s/{{ site.slug }}" target="_blank" class="btn-icon" title="View Live Space">
                                 <i class="fas fa-external-link-alt"></i>
                             </a>
                             <button class="btn-icon" onclick="copyPublicLink('{{ site.slug }}')" title="Copy Public Link">
                                 <i class="fas fa-link"></i>
                             </button>
-
+                            {% endif %}
                             <button class="btn-icon delete-btn" onclick="openDeleteModal('{{ site.id }}')" title="Delete Space">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
@@ -391,7 +845,7 @@
         </div>
 
         <div id="sharedSpacesContent" class="tab-content">
-            <div class="sites-grid" style="margin-top: 0;">
+            <div class="sites-grid">
                 {% for collab in shared_spaces %}
                 <div class="site-card shared-site-card {% if not collab.is_active %}inactive-space{% endif %}">
                     <div class="site-preview">
@@ -414,13 +868,17 @@
                     <div class="site-info">
                         <div class="site-meta">
                             <h3>{{ collab.site.name }}</h3>
-                            <span class="site-date">Shared by {{ collab.site.user.username }}</span>
-                            <span class="site-date">Last updated {{ collab.site.updated_at.strftime('%b %d, %Y') }}</span>
+                            <span class="site-date"><i class="fas fa-user"></i> Shared by {{ collab.site.user.username }}</span>
+                            <span class="site-date"><i class="far fa-clock"></i> Last updated {{ collab.site.updated_at.strftime('%b %d, %Y') }}</span>
                         </div>
                         <div class="site-actions">
                             {% if collab.is_active %}
                                 {% if collab.site.site_type == 'python' %}
-                                <a href="{{ url_for('python_editor', site_id=collab.site.id) }}" class="btn-icon" title="Edit Space">
+                                <a href="{{ url_for('code_editor', site_id=collab.site.id) }}" class="btn-icon" title="Edit Space">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% elif collab.site.site_type == 'code' %}
+                                <a href="{{ url_for('code_editor', site_id=collab.site.id) }}" class="btn-icon" title="Edit Space">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 {% else %}
@@ -433,10 +891,12 @@
                                 <i class="fas fa-lock"></i>
                             </button>
                             {% endif %}
+                            {% if collab.site.site_type == 'web' %}
                             <a href="/s/{{ collab.site.slug }}" target="_blank" class="btn-icon" title="View Live Space">
                                 <i class="fas fa-external-link-alt"></i>
                             </a>
-                            <button class="btn-icon" onclick="leaveSharedSpace({{ collab.id }})" title="Leave Shared Space">
+                            {% endif %}
+                            <button class="btn-icon delete-btn" onclick="leaveSharedSpace({{ collab.id }})" title="Leave Shared Space">
                                 <i class="fas fa-sign-out-alt"></i>
                             </button>
                         </div>
@@ -472,17 +932,42 @@
                     placeholder="my_awesome_space" maxlength="15" 
                     pattern="^[a-zA-Z0-9_-]+$"
                     title="Only letters, numbers, underscores and dashes allowed (max 15 characters, no spaces)">
-                <small class="form-text text-muted">Max 15 characters. Only letters, numbers, underscores and dashes allowed (no spaces).</small>
+                <div class="form-text">Max 15 characters. Only letters, numbers, underscores and dashes allowed (no spaces).</div>
             </div>
             <div class="form-group">
                 <label for="spaceType">
                     <i class="fas fa-code"></i>
                     Space Type
                 </label>
-                <select id="spaceType" name="type" required class="space-type-select">
+                <select id="spaceType" name="type" required class="space-type-select" onchange="handleSpaceTypeChange()">
                     <option value="web">Web Space</option>
-                    <option value="python">Python Space</option>
+                    <option value="code">Code Space</option>
                 </select>
+            </div>
+            
+            <!-- Language selection (only visible for code spaces) -->
+            <div class="form-group" id="languageSelectGroup" style="display: none;">
+                <label for="language">
+                    <i class="fas fa-code"></i>
+                    Programming Language
+                </label>
+                <select id="language" name="language" class="language-select">
+                    <option value="python" data-icon="fab fa-python">Python</option>
+                    <option value="javascript" data-icon="fab fa-js">JavaScript</option>
+                    <option value="java" data-icon="fab fa-java">Java</option>
+                    <option value="cpp" data-icon="fas fa-code">C++</option>
+                    <option value="c" data-icon="fas fa-code">C</option>
+                    <option value="csharp" data-icon="fab fa-microsoft">C#</option>
+                    <option value="go" data-icon="fas fa-code">Go</option>
+                    <option value="ruby" data-icon="fas fa-gem">Ruby</option>
+                    <option value="rust" data-icon="fas fa-cogs">Rust</option>
+                    <option value="php" data-icon="fab fa-php">PHP</option>
+                    <option value="typescript" data-icon="fab fa-js">TypeScript</option>
+                    <option value="swift" data-icon="fab fa-swift">Swift</option>
+                    <option value="kotlin" data-icon="fab fa-android">Kotlin</option>
+                    <option value="bash" data-icon="fas fa-terminal">Bash</option>
+                </select>
+                <div class="form-text">Choose the programming language for your code space.</div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn-secondary" onclick="closeNewSpaceModal()">
@@ -503,7 +988,7 @@
             <h2><i class="fas fa-exclamation-triangle"></i> Delete Space?</h2>
             <button class="close-btn" onclick="closeDeleteModal()">&times;</button>
         </div>
-        <p>Are you sure you want to delete this space? This action cannot be undone.</p>
+        <p style="padding: 0 1.5rem;">Are you sure you want to delete this space? This action cannot be undone.</p>
         <div class="modal-actions">
             <button class="btn-secondary" onclick="closeDeleteModal()">
                 Cancel
@@ -515,6 +1000,35 @@
         </div>
     </div>
 </div>
+
+<div id="renameSiteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> Rename Space</h2>
+            <button class="close-btn" onclick="closeRenameModal()">&times;</button>
+        </div>
+        <form id="renameSiteForm" onsubmit="renameSite(event)">
+            <input type="hidden" id="renameSiteId">
+            <div class="form-group">
+                <label for="newSiteName">
+                    <i class="fas fa-font"></i>
+                    New Space Name
+                </label>
+                <input type="text" id="newSiteName" name="name" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeRenameModal()">
+                    Cancel
+                </button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="newPythonModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -543,14 +1057,31 @@
     </div>
 </div>
 
-<br>
-<br>
-<br>
+<div id="bulkDeleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-exclamation-triangle"></i> Delete Multiple Spaces?</h2>
+            <button class="close-btn" onclick="closeBulkDeleteModal()">&times;</button>
+        </div>
+        <p style="padding: 0 1.5rem;">Are you sure you want to delete the selected spaces? This action cannot be undone.</p>
+        <div id="selectedSpacesList" style="padding: 0 1.5rem; max-height: 200px; overflow-y: auto;"></div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeBulkDeleteModal()">
+                Cancel
+            </button>
+            <button class="btn-danger" onclick="bulkDeleteSites()">
+                <i class="fas fa-trash-alt"></i>
+                Delete Selected Spaces
+            </button>
+        </div>
+    </div>
+</div>
 
 <div id="toast-container"></div>
 
 <script>
 let currentSiteId = null;
+let selectAllActive = false;
 
 function openNewSpaceModal() {
     const modal = document.getElementById('newSpaceModal');
@@ -569,6 +1100,41 @@ function closeNewSpaceModal() {
     }, 300);
 }
 
+function handleSpaceTypeChange() {
+    const spaceType = document.getElementById('spaceType').value;
+    const languageGroup = document.getElementById('languageSelectGroup');
+    
+    if (spaceType === 'code') {
+        languageGroup.style.display = 'block';
+    } else {
+        languageGroup.style.display = 'none';
+    }
+}
+
+async function loadLanguages() {
+    try {
+        const response = await fetch('/api/languages');
+        if (response.ok) {
+            const data = await response.json();
+            const languageSelect = document.getElementById('language');
+            
+            // Clear existing options
+            languageSelect.innerHTML = '';
+            
+            // Add options for each language
+            data.languages.forEach(lang => {
+                const option = document.createElement('option');
+                option.value = lang.name;
+                option.textContent = lang.display_name;
+                option.setAttribute('data-icon', lang.icon);
+                languageSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading languages:', error);
+    }
+}
+
 async function createNewSpace(event) {
     event.preventDefault();
     const form = event.target;
@@ -585,26 +1151,38 @@ async function createNewSpace(event) {
     }
     
     submitBtn.disabled = true;
-
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+    
     try {
-        const endpoint = spaceType === 'python' ? '/api/sites/python' : '/api/sites';
+        let endpoint = '/api/sites';
+        let requestData = { name: spaceName };
+        
+        if (spaceType === 'code') {
+            endpoint = '/api/sites/code';
+            const language = document.getElementById('language').value;
+            requestData.language = language;
+        }
+        
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                name: spaceName,
-                type: spaceType
-            })
+            body: JSON.stringify(requestData)
         });
-
+        
         const data = await response.json();
+        
         if (response.ok) {
-            showToast('success', `${spaceType === 'python' ? 'Python' : 'Web'} space created successfully!`);
-            window.location.href = spaceType === 'python' 
-                ? `/python/${data.site_id}`
-                : `/edit/${data.site_id}`;
+            showToast('success', data.message || 'Space created successfully!');
+            closeNewSpaceModal();
+            
+            // Redirect to the editor
+            if (spaceType === 'code') {
+                window.location.href = `/code/${data.site_id}`;
+            } else {
+                window.location.href = `/edit/${data.site_id}`;
+            }
         } else {
             showToast('error', data.message || 'Failed to create space');
         }
@@ -613,6 +1191,7 @@ async function createNewSpace(event) {
         showToast('error', 'Failed to create space');
     } finally {
         submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Space';
     }
 }
 
@@ -631,39 +1210,6 @@ function closeDeleteModal() {
         modal.style.display = 'none';
         currentSiteId = null;
     }, 300);
-}
-
-async function createNewSite(e) {
-    e.preventDefault();
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    showToast('info', 'Creating your Space...');
-
-    try {
-        const response = await fetch('/api/sites', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                name: form.name.value
-            })
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-            showToast('success', 'Space created successfully!');
-            window.location.href = `{{ url_for('welcome') }}`.replace('/welcome', `/edit/${data.site_id}`);
-        } else {
-            showToast('error', data.message || 'Failed to create Space');
-        }
-    } catch (error) {
-        console.error('Error creating site:', error);
-        showToast('error', 'An error occurred while creating the Space');
-    } finally {
-        submitBtn.disabled = false;
-    }
 }
 
 async function deleteSite() {
@@ -762,32 +1308,6 @@ async function createNewPython(e) {
     }
 }
 
-function showToast(type, message) {
-    const toastContainer = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-
-    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
-
-    toast.innerHTML = `
-        <div class="toast-content">
-            <i class="fas fa-${icon}"></i>
-            <span>${message}</span>
-        </div>
-    `;
-
-    toastContainer.appendChild(toast);
-
-    toast.offsetHeight;
-
-    toast.classList.add('show');
-
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
 async function leaveSharedSpace(collaborationId) {
     if (!confirm('Are you sure you want to leave this shared space?')) {
         return;
@@ -811,36 +1331,104 @@ async function leaveSharedSpace(collaborationId) {
         showToast('error', `Error: ${error.message}`);
     }
 }
-</script>
-<div id="renameSiteModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2><i class="fas fa-edit"></i> Rename Space</h2>
-            <button class="close-btn" onclick="closeRenameModal()">&times;</button>
-        </div>
-        <form id="renameSiteForm" onsubmit="renameSite(event)">
-            <input type="hidden" id="renameSiteId">
-            <div class="form-group">
-                <label for="newSiteName">
-                    <i class="fas fa-font"></i>
-                    New Space Name
-                </label>
-                <input type="text" id="newSiteName" name="name" required>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn-secondary" onclick="closeRenameModal()">
-                    Cancel
-                </button>
-                <button type="submit" class="btn-primary">
-                    <i class="fas fa-save"></i>
-                    Save Changes
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
 
-<script>
+// Bulk delete related functions
+function updateSelectedCount() {
+    const selectedCheckboxes = document.querySelectorAll('.space-select:checked');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    
+    if (selectedCheckboxes.length > 0) {
+        bulkDeleteBtn.style.display = 'flex';
+        bulkDeleteBtn.innerHTML = `<i class="fas fa-trash-alt"></i> Delete Selected (${selectedCheckboxes.length})`;
+    } else {
+        bulkDeleteBtn.style.display = 'none';
+    }
+}
+
+function openBulkDeleteModal() {
+    const selectedCheckboxes = document.querySelectorAll('.space-select:checked');
+    
+    if (selectedCheckboxes.length === 0) return;
+    
+    const selectedSpacesList = document.getElementById('selectedSpacesList');
+    selectedSpacesList.innerHTML = '';
+    
+    const ul = document.createElement('ul');
+    ul.style.paddingLeft = '20px';
+    
+    selectedCheckboxes.forEach(checkbox => {
+        const li = document.createElement('li');
+        li.textContent = checkbox.dataset.siteName;
+        ul.appendChild(li);
+    });
+    
+    selectedSpacesList.appendChild(ul);
+    
+    const modal = document.getElementById('bulkDeleteModal');
+    modal.style.display = 'flex';
+    modal.offsetHeight;
+    modal.classList.add('show');
+}
+
+function closeBulkDeleteModal() {
+    const modal = document.getElementById('bulkDeleteModal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
+}
+
+async function bulkDeleteSites() {
+    const selectedCheckboxes = document.querySelectorAll('.space-select:checked');
+    const siteIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.siteId);
+    
+    if (siteIds.length === 0) return;
+    
+    const deleteBtn = document.querySelector('#bulkDeleteModal .btn-danger');
+    const originalHtml = deleteBtn.innerHTML;
+    deleteBtn.disabled = true;
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+    try {
+        // Check for GitHub repos and disconnect them
+        for (const siteId of siteIds) {
+            const repoResponse = await fetch(`/api/github/repo-info?site_id=${siteId}`);
+            if (repoResponse.ok) {
+                await fetch(`/api/github/disconnect-repo?site_id=${siteId}`, {
+                    method: 'POST'
+                });
+            }
+        }
+
+        // Perform bulk delete
+        const response = await fetch(`/api/sites/bulk-delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ site_ids: siteIds })
+        });
+
+        if (response.ok) {
+            const count = siteIds.length;
+            showToast('success', `${count} space${count !== 1 ? 's' : ''} deleted successfully!`);
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            const data = await response.json();
+            showToast('error', data.message || 'Failed to delete spaces');
+        }
+    } catch (error) {
+        console.error('Error during bulk delete:', error);
+        showToast('error', 'An error occurred while deleting spaces');
+    } finally {
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = originalHtml;
+        closeBulkDeleteModal();
+    }
+}
+
 function openRenameModal(siteId, siteName) {
     const modal = document.getElementById('renameSiteModal');
     modal.style.display = 'flex';
@@ -848,6 +1436,7 @@ function openRenameModal(siteId, siteName) {
     modal.classList.add('show');
     document.getElementById('renameSiteId').value = siteId;
     document.getElementById('newSiteName').value = siteName;
+    document.getElementById('newSiteName').focus();
 }
 
 function closeRenameModal() {
@@ -862,6 +1451,11 @@ async function renameSite(e) {
     e.preventDefault();
     const siteId = document.getElementById('renameSiteId').value;
     const newName = document.getElementById('newSiteName').value;
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalHtml = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
     try {
         const response = await fetch(`/api/sites/${siteId}/rename`, {
@@ -883,6 +1477,9 @@ async function renameSite(e) {
         }
     } catch (error) {
         showToast('error', 'Failed to rename Space');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHtml;
     }
 }
 
@@ -913,11 +1510,27 @@ document.addEventListener('DOMContentLoaded', function() {
     {% if message %}
     showToast('warning', '{{ message }}');
     {% endif %}
+    
+    // Add event listeners to checkboxes
+    document.querySelectorAll('.space-select').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+    
+    // Initialize language selection
+    handleSpaceTypeChange();
+    loadLanguages();
+    
+    // Initialize new space modal
+    const newSpaceModal = document.getElementById('newSpaceModal');
+    if (newSpaceModal) {
+        newSpaceModal.addEventListener('show', function() {
+            handleSpaceTypeChange();
+        });
+    }
 });
 
 function showOwnerInactiveMessage() {
     showToast('error', 'Access denied: This space cannot be accessed because the owner is currently offline. Collaboration is only available when the space owner is active.');
 }
 </script>
-
 {% endblock %}

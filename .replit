@@ -11,8 +11,9 @@ language = "python3"
 requiredFiles = [".replit", "replit.nix"]
 
 [deployment]
-run = ["python3", "main.py"]
+run = ["sh", "-c", "python main.py"]
 deploymentTarget = "cloudrun"
+build = ["sh", "-c", "pip install -r requirements.txt"]
 
 [[ports]]
 localPort = 3000
@@ -20,35 +21,75 @@ externalPort = 80
 
 [[ports]]
 localPort = 3001
-externalPort = 6000
 
 [[ports]]
-localPort = 32805
-externalPort = 4200
-
-[[ports]]
-localPort = 34767
+localPort = 5000
 externalPort = 5000
 
 [[ports]]
-localPort = 35749
-externalPort = 3001
+localPort = 32805
 
 [[ports]]
-localPort = 37367
-externalPort = 3003
+localPort = 32809
+externalPort = 5173
 
 [[ports]]
-localPort = 44299
+localPort = 32929
 externalPort = 3002
 
 [[ports]]
-localPort = 44357
+localPort = 34337
 externalPort = 3000
 
 [[ports]]
+localPort = 34767
+
+[[ports]]
+localPort = 35749
+
+[[ports]]
+localPort = 36055
+externalPort = 4200
+
+[[ports]]
+localPort = 37367
+
+[[ports]]
+localPort = 38387
+externalPort = 8008
+
+[[ports]]
+localPort = 39445
+externalPort = 8000
+
+[[ports]]
+localPort = 44299
+
+[[ports]]
+localPort = 44357
+
+[[ports]]
+localPort = 44839
+externalPort = 3003
+
+[[ports]]
+localPort = 45795
+externalPort = 8080
+
+[[ports]]
 localPort = 45843
-externalPort = 5173
+
+[[ports]]
+localPort = 45925
+externalPort = 6000
+
+[[ports]]
+localPort = 46463
+externalPort = 6800
+
+[[ports]]
+localPort = 46683
+externalPort = 3001
 
 [env]
 
@@ -66,4 +107,4 @@ args = "kill -9 $(lsof -t -i:3000) 2>/dev/null || true"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python3 main.py"
+args = "python app.py"

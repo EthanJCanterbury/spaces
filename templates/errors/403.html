@@ -39,9 +39,7 @@
 {% endblock %}
 
 {% block error_icon %}
-<div class="lock-animation">
-    <i class="fas fa-lock"></i>
-</div>
+<i class="fas fa-lock"></i>
 {% endblock %}
 
 {% block error_title %}
@@ -50,24 +48,36 @@ Access Denied
 
 {% block error_message %}
 <div class="error-content">
-    <i class="fas fa-shield-alt shield"></i>
-    <p>{{ message|default('Sorry, but you don\'t have permission to access this page.') }}</p>
-    <p>If you believe this is a mistake, try signing in or contact the administrator.</p>
+  <p>{{ message|default('Sorry, you don\'t have permission to access this page.') }}</p>
+  <p>This could be because:</p>
+  <ul style="text-align: left; display: inline-block;">
+    <li>You're not logged in</li>
+    <li>Your account doesn't have the necessary permissions</li>
+    <li>The content is restricted to specific users</li>
+  </ul>
 </div>
 {% endblock %}
 
 {% block error_actions %}
-<a href="{{ url_for('welcome') }}" class="error-btn error-btn-primary">
-    <i class="fas fa-home"></i> Back to Home
+<a href="{{ url_for('login') }}" class="error-btn error-btn-primary">
+  <i class="fas fa-sign-in-alt"></i> Log In
 </a>
-<a href="{{ url_for('login') }}" class="error-btn error-btn-secondary">
-    <i class="fas fa-sign-in-alt"></i> Sign In
+<a href="{{ url_for('welcome') }}" class="error-btn error-btn-secondary">
+  <i class="fas fa-home"></i> Back to Home
 </a>
+<button onclick="createGitHubIssue()" class="error-btn error-btn-github js-github-issue">
+  <i class="fab fa-github"></i> Report Issue
+</button>
 {% endblock %}
 
 {% block error_details %}
 <div class="error-details">
-    <p>Error Code: 403</p>
-    <p>If you need access to this resource, please request permissions from your administrator.</p>
+  <p id="error-code">Error Code: 403</p>
+  <p>Time: <span id="errorTime"></span></p>
+  <p>If you believe this is a mistake and you should have access to this resource, please report this issue.</p>
 </div>
+
+<script>
+document.getElementById('errorTime').textContent = new Date().toLocaleString();
+</script>
 {% endblock %}

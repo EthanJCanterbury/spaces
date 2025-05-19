@@ -19,14 +19,14 @@ async function saveContent() {
         });
 
         if (!response.ok) throw new Error(`Failed to save ${currentFile}`);
-        showNotification(`Changes Saved!`, 'success');
+        showNotification(`Changes to ${currentFile} saved successfully!`, 'success');
 
         // Use delayed update to ensure server has time to process changes
         if (siteType === 'web') {
             delayedUpdatePreview();
         }
     } catch (error) {
-        console.error(`Error saving ${currentFile}:`, error);
+        console.error(`Error saving ${currentFile}`);
         showNotification(`Error saving ${currentFile}`, 'error');
     }
 }
@@ -36,7 +36,7 @@ function updatePreview() {
     // Get the preview iframe
     const previewFrame = document.getElementById('preview');
     if (!previewFrame) return;
-    
+
     // Force reload by setting the same src again
     const currentSrc = previewFrame.src;
     if (currentSrc) {
@@ -52,4 +52,9 @@ function delayedUpdatePreview() {
     setTimeout(updatePreview, 500); // Adjust delay as needed
 }
 
-// ... rest of the file (assumed to contain declarations for currentFile, editor, fileContents, siteType, showNotification, and potentially the preview-frame element) ...
+function showNotification(message, type) {
+    // Call the global showToast with correct parameter order
+    window.showToast(type, message);
+}
+
+// ... rest of the file (assumed to contain declarations for currentFile, editor, fileContents, siteType, showToast, and potentially the preview-frame element) ...

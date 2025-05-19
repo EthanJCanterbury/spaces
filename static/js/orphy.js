@@ -90,18 +90,34 @@ function sendOrphyMessage() {
 
     const editorContent = editor.getValue();
     const filename = document.querySelector('.topbar-left h1').textContent;
-
-    fetch('/api/orphy/chat', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            message: message,
-            code: editorContent,
-            filename: filename
+    
+    // Fetch documentation content via an AJAX request
+    const fetchDocContent = fetch('/documentation')
+        .then(response => response.text())
+        .then(html => {
+            // Extract content from HTML using a simple regex approach
+            const docContentMatch = html.match(/<main class="docs-content">([\s\S]*?)<\/main>/);
+            return docContentMatch ? docContentMatch[1] : '';
         })
-    })
+        .catch(error => {
+            console.error('Error fetching documentation:', error);
+            return '';
+        });
+    
+    // Wait for the documentation content to be fetched
+    fetchDocContent.then(docContent => {
+        fetch('/api/orphy/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: message,
+                code: editorContent,
+                filename: filename,
+                documentation: docContent
+            })
+        })
     .then(response => {
         if (!response.ok) {
             throw new Error(`Server error: ${response.status}`);
@@ -129,6 +145,7 @@ function sendOrphyMessage() {
     .finally(() => {
         scrollOrphyToBottom();
     });
+    });
 }
 
 function displayOrphyMessage(role, message) {
@@ -139,18 +156,91 @@ function displayOrphyMessage(role, message) {
     messageDiv.className = `orphy-message orphy-${role}`;
     messageDiv.id = `orphy-msg-${Date.now()}`; 
 
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'orphy-message-content';
+    
     if (role === 'assistant') {
-        let htmlContent = message
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/```(.*?)\n([\s\S]*?)```/g, '<pre><code class="$1">$2</code></pre>')
-            .replace(/`([^`]+)`/g, '<code>$1</code>')
-            .replace(/\n/g, '<br>');
-
-        messageDiv.innerHTML = `<div class="orphy-message-content">${htmlContent}</div>`;
+        // Process markdown-like syntax safely
+        let processedMessage = message;
+        const fragments = [];
+        
+        // Process code blocks first (most specific)
+        const codeBlockRegex = /```(.*?)\n([\s\S]*?)```/g;
+        let lastIndex = 0;
+        let match;
+        
+        while ((match = codeBlockRegex.exec(message)) !== null) {
+            // Add text before the match
+            if (match.index > lastIndex) {
+                fragments.push({ type: 'text', content: message.substring(lastIndex, match.index) });
+            }
+            
+            // Add the code block
+            const language = match[1].trim();
+            const code = match[2];
+            fragments.push({ type: 'code', language, content: code });
+            
+            lastIndex = match.index + match[0].length;
+        }
+        
+        // Add any remaining text
+        if (lastIndex < message.length) {
+            fragments.push({ type: 'text', content: message.substring(lastIndex) });
+        }
+        
+        // Process each fragment
+        fragments.forEach(fragment => {
+            if (fragment.type === 'code') {
+                const pre = document.createElement('pre');
+                const code = document.createElement('code');
+                if (fragment.language) {
+                    code.className = `language-${fragment.language}`;
+                }
+                code.textContent = fragment.content;
+                pre.appendChild(code);
+                contentDiv.appendChild(pre);
+            } else {
+                // Process inline formatting
+                let text = fragment.content
+                    .replace(/\*\*(.*?)\*\*/g, '**$1**')
+                    .replace(/\*(.*?)\*/g, '*$1*')
+                    .replace(/`([^`]+)`/g, '`$1`');
+                
+                // Split by line breaks and add <br> elements
+                const lines = text.split('\n');
+                lines.forEach((line, i) => {
+                    if (i > 0) contentDiv.appendChild(document.createElement('br'));
+                    
+                    // Process inline formatting
+                    const parts = line.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
+                    parts.forEach(part => {
+                        if (!part) return;
+                        
+                        if (part.startsWith('**') && part.endsWith('**')) {
+                            const strong = document.createElement('strong');
+                            strong.textContent = part.slice(2, -2);
+                            contentDiv.appendChild(strong);
+                        } else if (part.startsWith('*') && part.endsWith('*')) {
+                            const em = document.createElement('em');
+                            em.textContent = part.slice(1, -1);
+                            contentDiv.appendChild(em);
+                        } else if (part.startsWith('`') && part.endsWith('`')) {
+                            const code = document.createElement('code');
+                            code.textContent = part.slice(1, -1);
+                            contentDiv.appendChild(code);
+                        } else {
+                            contentDiv.appendChild(document.createTextNode(part));
+                        }
+                    });
+                });
+            }
+        });
     } else {
-        messageDiv.innerHTML = `<div class="orphy-message-content">${message}</div>`;
+        // For user messages, just add text content
+        contentDiv.textContent = message;
     }
+    
+    messageDiv.appendChild(contentDiv);
 
     orphyMessages.appendChild(messageDiv);
 
@@ -187,15 +277,25 @@ function showThinkingIndicator() {
     const thinkingDiv = document.createElement('div');
     thinkingDiv.id = id;
     thinkingDiv.className = 'orphy-message orphy-assistant';
-    thinkingDiv.innerHTML = `
-        <div class="orphy-message-content">
-            <div class="typing-indicator">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-            </div>
-        </div>
-    `;
+    
+    // Create message content
+    const messageContent = document.createElement('div');
+    messageContent.className = 'orphy-message-content';
+    
+    // Create typing indicator
+    const typingIndicator = document.createElement('div');
+    typingIndicator.className = 'typing-indicator';
+    
+    // Create typing dots
+    for (let i = 0; i < 3; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'typing-dot';
+        typingIndicator.appendChild(dot);
+    }
+    
+    // Assemble the thinking indicator
+    messageContent.appendChild(typingIndicator);
+    thinkingDiv.appendChild(messageContent);
     orphyMessages.appendChild(thinkingDiv);
 
     setTimeout(() => {

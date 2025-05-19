@@ -1,35 +1,43 @@
-window.onerror = function(msg, url, lineNo, columnNo, error) {
-    handleError({
-        type: 'JavaScript Error',
-        message: msg,
-        file: url,
-        line: lineNo,
-        column: columnNo,
-        stack: error ? error.stack : null
+// Check if the current page is club_dashboard before attaching error handlers
+const isClubDashboard = window.location.pathname.includes('club-dashboard');
+
+// Skip error handling for club dashboard page
+if (!isClubDashboard) {
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+        handleError({
+            type: 'JavaScript Error',
+            message: msg,
+            file: url,
+            line: lineNo,
+            column: columnNo,
+            stack: error ? error.stack : null
+        });
+        return false;
+    };
+
+    window.addEventListener('error', function(event) {
+        // Only log errors if they exist and aren't null
+        if (event.error) {
+            console.error('Caught error:', event.error);
+            
+            event.preventDefault();
+            
+            if (typeof showToast === 'function') {
+                showToast('error', 'An error occurred: ' + (event.error.message || 'Unknown error'));
+            }
+        }
+        
+        return true;
     });
-    return false;
-};
 
-window.addEventListener('error', function(event) {
-  console.error('Caught error:', event.error);
-  
-  event.preventDefault();
-  
-  if (typeof showToast === 'function') {
-    showToast('error', 'An error occurred: ' + (event.error?.message || 'Unknown error'));
-  }
-  
-  return true;
-});
-
-
-window.addEventListener('unhandledrejection', function(event) {
-    handleError({
-        type: 'Promise Error',
-        message: event.reason.message || 'Unhandled Promise Rejection',
-        stack: event.reason.stack
+    window.addEventListener('unhandledrejection', function(event) {
+        handleError({
+            type: 'Promise Error',
+            message: event.reason.message || 'Unhandled Promise Rejection',
+            stack: event.reason.stack
+        });
     });
-});
+}
 
 $(document).ajaxError(function(event, jqXHR, settings, error) {
     handleError({
@@ -56,27 +64,86 @@ function createErrorModal() {
     const modal = document.createElement('div');
     modal.id = 'errorModal';
     modal.className = 'error-modal';
-    modal.innerHTML = `
-        <div class="error-modal-content">
-            <div class="error-modal-header">
-                <h2><i class="fas fa-exclamation-circle"></i> <span id="errorType">Error</span></h2>
-                <button class="close-button" onclick="closeErrorModal()">&times;</button>
-            </div>
-            <div class="error-modal-body">
-                <div id="errorMessage" class="error-message"></div>
-                <div id="errorDetails" class="error-details">
-                    <div id="errorLocation" class="error-location"></div>
-                    <pre id="errorStack" class="error-stack"></pre>
-                </div>
-            </div>
-            <div class="error-modal-footer">
-                <button onclick="closeErrorModal()" class="error-btn">Close</button>
-                <button onclick="reportError()" class="error-btn error-btn-primary">
-                    <i class="fas fa-bug"></i> Report Issue
-                </button>
-            </div>
-        </div>
-    `;
+    
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.className = 'error-modal-content';
+    
+    // Create modal header
+    const header = document.createElement('div');
+    header.className = 'error-modal-header';
+    
+    const headerTitle = document.createElement('h2');
+    
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-exclamation-circle';
+    
+    const errorType = document.createElement('span');
+    errorType.id = 'errorType';
+    errorType.textContent = 'Error';
+    
+    const closeButton = document.createElement('button');
+    closeButton.className = 'close-button';
+    closeButton.innerHTML = '&times;';
+    closeButton.addEventListener('click', closeErrorModal);
+    
+    headerTitle.appendChild(icon);
+    headerTitle.appendChild(document.createTextNode(' '));
+    headerTitle.appendChild(errorType);
+    header.appendChild(headerTitle);
+    header.appendChild(closeButton);
+    
+    // Create modal body
+    const body = document.createElement('div');
+    body.className = 'error-modal-body';
+    
+    const errorMessage = document.createElement('div');
+    errorMessage.id = 'errorMessage';
+    errorMessage.className = 'error-message';
+    
+    const errorDetails = document.createElement('div');
+    errorDetails.id = 'errorDetails';
+    errorDetails.className = 'error-details';
+    
+    const errorLocation = document.createElement('div');
+    errorLocation.id = 'errorLocation';
+    errorLocation.className = 'error-location';
+    
+    const errorStack = document.createElement('pre');
+    errorStack.id = 'errorStack';
+    errorStack.className = 'error-stack';
+    
+    errorDetails.appendChild(errorLocation);
+    errorDetails.appendChild(errorStack);
+    body.appendChild(errorMessage);
+    body.appendChild(errorDetails);
+    
+    // Create modal footer
+    const footer = document.createElement('div');
+    footer.className = 'error-modal-footer';
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'error-btn';
+    closeBtn.textContent = 'Close';
+    closeBtn.addEventListener('click', closeErrorModal);
+    
+    const reportBtn = document.createElement('button');
+    reportBtn.className = 'error-btn error-btn-primary';
+    reportBtn.addEventListener('click', reportError);
+    
+    const bugIcon = document.createElement('i');
+    bugIcon.className = 'fas fa-bug';
+    reportBtn.appendChild(bugIcon);
+    reportBtn.appendChild(document.createTextNode(' Report Issue'));
+    
+    footer.appendChild(closeBtn);
+    footer.appendChild(reportBtn);
+    
+    // Assemble modal
+    modalContent.appendChild(header);
+    modalContent.appendChild(body);
+    modalContent.appendChild(footer);
+    modal.appendChild(modalContent);
 
     const style = document.createElement('style');
     style.textContent = `
@@ -217,18 +284,33 @@ function updateErrorModal(modal, errorInfo) {
     modal.querySelector('#errorType').textContent = errorInfo.type;
     modal.querySelector('#errorMessage').textContent = errorInfo.message;
 
-    const locationEl = modal.querySelector('#errorLocation');
-    if (errorInfo.file) {
-        locationEl.innerHTML = `
-            <strong>File:</strong> ${errorInfo.file}
-            ${errorInfo.line ? `<br><strong>Line:</strong> ${errorInfo.line}` : ''}
-            ${errorInfo.column ? `<strong>Column:</strong> ${errorInfo.column}` : ''}
-        `;
-        locationEl.style.display = 'block';
-    } else {
-        locationEl.style.display = 'none';
+    const locationEl = document.createElement('div');
+    locationEl.className = 'error-location';
+    
+    const fileLabel = SafeHTML.createElement('strong', {}, 'File:');
+    const fileValue = document.createTextNode(` ${errorInfo.file || 'Unknown'}`);
+    locationEl.appendChild(fileLabel);
+    locationEl.appendChild(fileValue);
+    
+    if (errorInfo.line) {
+        const lineBreak = document.createElement('br');
+        const lineLabel = SafeHTML.createElement('strong', {}, 'Line:');
+        const lineValue = document.createTextNode(` ${errorInfo.line}`);
+        locationEl.appendChild(lineBreak);
+        locationEl.appendChild(lineLabel);
+        locationEl.appendChild(lineValue);
     }
-
+    
+    if (errorInfo.column) {
+        const columnLabel = SafeHTML.createElement('strong', {}, 'Column:');
+        const columnValue = document.createTextNode(` ${errorInfo.column}`);
+        locationEl.appendChild(document.createTextNode(' '));
+        locationEl.appendChild(columnLabel);
+        locationEl.appendChild(columnValue);
+    }
+    
+    modal.querySelector('#errorLocation').replaceWith(locationEl);
+    
     const stackEl = modal.querySelector('#errorStack');
     if (errorInfo.stack) {
         stackEl.textContent = errorInfo.stack;
@@ -255,18 +337,42 @@ function reportError() {
         timestamp: new Date().toISOString()
     };
 
+    // First log the error to our server
     fetch('/api/report-error', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(errorDetails)
-    }).then(() => {
-        alert('Error report sent successfully. Thank you for helping us improve!');
+    }).then(async response => {
+        const data = await response.json();
+        console.log('Report submission response:', data);
+        showToast('success', 'Error report sent successfully. Thank you for helping us improve!');
+        
+        // Prepare GitHub issue URL with error details
+        const title = encodeURIComponent(`Error Report: ${errorDetails.type}`);
+        const body = encodeURIComponent(
+            `## Error Details\n\n` +
+            `**Type:** ${errorDetails.type}\n` +
+            `**Message:** ${errorDetails.message}\n` +
+            `**Location:** ${errorDetails.location}\n\n` +
+            `**User Agent:** ${errorDetails.userAgent}\n` +
+            `**Timestamp:** ${errorDetails.timestamp}\n\n` +
+            `## Stack Trace\n\`\`\`\n${errorDetails.stack || 'No stack trace available'}\n\`\`\``
+        );
+        
+        // Open GitHub new issue page with prefilled details
+        window.open(`https://github.com/hackclub/spaces/issues/new?title=${title}&body=${body}`, '_blank');
+        
         closeErrorModal();
     }).catch(err => {
         console.error('Failed to send error report:', err);
-        alert('Failed to send error report. Please try again later.');
+        showToast('error', 'Failed to send error report. Please try again later.');
+        
+        // Try to open GitHub issue anyway as a fallback
+        const title = encodeURIComponent(`Error Report: ${errorDetails.type}`);
+        const body = encodeURIComponent(`Error occurred but failed to submit to server.\n\n${errorDetails.message}`);
+        window.open(`https://github.com/hackclub/spaces/issues/new?title=${title}&body=${body}`, '_blank');
     });
 }
 
@@ -289,59 +395,80 @@ function testError(type) {
             break;
     }
 }
-// Global error handler
-window.addEventListener('error', function(event) {
-    const errorInfo = {
-        type: event.error ? event.error.name : 'Error',
-        message: event.error ? event.error.message : event.message,
-        file: event.filename,
-        line: event.lineno,
-        column: event.colno,
-        stack: event.error ? event.error.stack : null
-    };
-    
-    console.error('Caught error:', errorInfo);
-    
-    // Send error to server
-    fetch('/api/log-error', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(errorInfo)
-    }).catch(err => {
-        console.error('Failed to log error:', err);
+// Global error handler - skip for club dashboard page
+if (!isClubDashboard) {
+    window.addEventListener('error', function(event) {
+        // Skip if the error is null or undefined
+        if (!event.error && !event.message) return;
+        
+        // Handle cross-origin errors (which show up as "Script error." with no details)
+        if (event.message === 'Script error.' && !event.filename) {
+            // This is a cross-origin error, we can't get details due to browser security
+            console.log('Cross-origin script error detected - this is normal and can be ignored');
+            return; // Ignore these errors as they're usually from third-party scripts
+        }
+        
+        const errorInfo = {
+            type: event.error ? event.error.name : 'Error',
+            message: event.error ? event.error.message : event.message,
+            file: event.filename || 'Unknown',
+            line: event.lineno || 0,
+            column: event.colno || 0,
+            stack: event.error ? event.error.stack : null
+        };
+        
+        // Only log if we have a meaningful message
+        if (errorInfo.message && errorInfo.message !== 'Script error.') {
+            console.error('Caught error:', errorInfo);
+            
+            // Send error to server
+            fetch('/api/log-error', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(errorInfo)
+            }).catch(err => {
+                console.error('Failed to log error:', err);
+            });
+            
+            // Show error toast only for non-cross-origin errors
+            if (typeof showToast === 'function') {
+                showToast('error', `JavaScript error: ${errorInfo.message}`);
+            }
+        }
     });
-    
-    // Show error toast
-    if (typeof showToast === 'function') {
-        showToast('error', `JavaScript error: ${errorInfo.message}`);
-    }
-});
 
-// Promise rejection handler
-window.addEventListener('unhandledrejection', function(event) {
-    const errorInfo = {
-        type: 'Promise Rejection',
-        message: event.reason ? (event.reason.message || String(event.reason)) : 'Unknown rejection reason',
-        stack: event.reason && event.reason.stack ? event.reason.stack : null
-    };
-    
-    console.error('Unhandled promise rejection:', errorInfo);
-    
-    // Send error to server
-    fetch('/api/log-error', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(errorInfo)
-    }).catch(err => {
-        console.error('Failed to log error:', err);
+    // Promise rejection handler
+    window.addEventListener('unhandledrejection', function(event) {
+        // Skip if the reason is null or undefined
+        if (!event.reason) return;
+        
+        const errorInfo = {
+            type: 'Promise Rejection',
+            message: event.reason ? (event.reason.message || String(event.reason)) : 'Unknown rejection reason',
+            stack: event.reason && event.reason.stack ? event.reason.stack : null
+        };
+        
+        // Only log if we have a meaningful message
+        if (errorInfo.message) {
+            console.error('Unhandled promise rejection:', errorInfo);
+            
+            // Send error to server
+            fetch('/api/log-error', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(errorInfo)
+            }).catch(err => {
+                console.error('Failed to log error:', err);
+            });
+            
+            // Show error toast
+            if (typeof showToast === 'function') {
+                showToast('error', `Promise error: ${errorInfo.message}`);
+            }
+        }
     });
-    
-    // Show error toast
-    if (typeof showToast === 'function') {
-        showToast('error', `Promise error: ${errorInfo.message}`);
-    }
-});
+}

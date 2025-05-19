@@ -1,0 +1,765 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Hack Club Spaces Gallery{% endblock %}
+
+{% block content %}
+<div class="gallery-container">
+    <div class="gallery-header">
+        <h1><i class="fas fa-paint-brush"></i> Project Gallery</h1>
+        
+        <div class="gallery-actions">
+            <a href="{{ url_for('gallery_submit') }}" class="btn-primary">
+                <i class="fas fa-plus"></i> Submit Your Site
+            </a>
+            
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="gallerySearch" class="search-input" placeholder="Search projects, tags, or creators...">
+            </div>
+        </div>
+        
+        <div class="filter-container">
+            <span class="filter-label">Filter by tag:</span>
+            <a href="{{ url_for('gallery') }}" class="tag-filter {% if not current_tag %}active{% endif %}">All</a>
+            {% for tag in all_tags %}
+            <a href="{{ url_for('gallery_filter_by_tag', tag=tag) }}" class="tag-filter {% if current_tag == tag %}active{% endif %}">{{ tag }}</a>
+            {% endfor %}
+        </div>
+    </div>
+    
+    {% if featured_entries %}
+    <div class="gallery-section featured-section">
+        <div class="section-heading">
+            <i class="fas fa-star"></i>
+            <h2>Featured Projects</h2>
+        </div>
+        
+        <div class="projects-grid">
+            {% for entry, site, user in featured_entries %}
+            <div class="project-card" data-tags="{{ entry.tags }}" data-title="{{ entry.title }}" data-creator="{{ user.username }}">
+                <div class="project-thumbnail">
+                    <span class="featured-badge">
+                        <i class="fas fa-star"></i> Featured
+                    </span>
+                    
+                    {% if entry.thumbnail_url %}
+                    <img src="{{ entry.thumbnail_url }}" alt="{{ entry.title }}">
+                    {% else %}
+                    <div class="placeholder-thumbnail">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="project-preview">
+                        <a href="/s/{{ site.slug }}" target="_blank" class="preview-btn">
+                            <i class="fas fa-external-link-alt"></i> Visit Site
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="project-content">
+                    <h3 class="project-title">{{ entry.title }}</h3>
+                    <p class="project-description">{{ entry.description }}</p>
+                    
+                    {% if entry.tags %}
+                    <div class="project-tags">
+                        {% for tag in entry.tags.split(',') %}
+                        <span class="project-tag">{{ tag.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="project-meta">
+                        <div class="project-creator">
+                            <div class="creator-avatar">{{ user.username[0] }}</div>
+                            <span>{{ user.username }}</span>
+                        </div>
+                        <span class="project-date">{{ entry.added_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                    
+                    {% if current_user.is_authenticated and (current_user.id == entry.user_id or current_user.is_admin) %}
+                    <div class="project-actions">
+                        <form action="{{ url_for('remove_gallery_entry', entry_id=entry.id) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this entry from the gallery?')">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </form>
+                        
+                        {% if current_user.is_admin %}
+                        <button class="btn-{% if entry.is_featured %}warning{% else %}success{% endif %} btn-sm" 
+                                onclick="toggleFeature({{ entry.id }}, this)">
+                            <i class="fas {% if entry.is_featured %}fa-star{% else %}fa-star-o{% endif %}"></i> 
+                            {% if entry.is_featured %}Unfeature{% else %}Feature{% endif %}
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="gallery-section">
+        <div class="section-heading">
+            <i class="fas fa-th"></i>
+            <h2>All Projects</h2>
+        </div>
+        
+        {% if entries %}
+        <div class="projects-grid" id="entriesContainer">
+            {% for entry, site, user in entries %}
+            <div class="project-card" data-tags="{{ entry.tags }}" data-title="{{ entry.title }}" data-creator="{{ user.username }}">
+                <div class="project-thumbnail">
+                    {% if entry.is_featured and not current_tag %}
+                    <span class="featured-badge">
+                        <i class="fas fa-star"></i> Featured
+                    </span>
+                    {% endif %}
+                    
+                    {% if entry.thumbnail_url %}
+                    <img src="{{ entry.thumbnail_url }}" alt="{{ entry.title }}">
+                    {% else %}
+                    <div class="placeholder-thumbnail">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="project-preview">
+                        <a href="/s/{{ site.slug }}" target="_blank" class="preview-btn">
+                            <i class="fas fa-external-link-alt"></i> Visit Site
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="project-content">
+                    <h3 class="project-title">{{ entry.title }}</h3>
+                    <p class="project-description">{{ entry.description }}</p>
+                    
+                    {% if entry.tags %}
+                    <div class="project-tags">
+                        {% for tag in entry.tags.split(',') %}
+                        <span class="project-tag">{{ tag.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="project-meta">
+                        <div class="project-creator">
+                            <div class="creator-avatar">{{ user.username[0] }}</div>
+                            <span>{{ user.username }}</span>
+                        </div>
+                        <span class="project-date">{{ entry.added_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                    
+                    {% if current_user.is_authenticated and (current_user.id == entry.user_id or current_user.is_admin) %}
+                    <div class="project-actions">
+                        <form action="{{ url_for('remove_gallery_entry', entry_id=entry.id) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this entry from the gallery?')">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </form>
+                        
+                        {% if current_user.is_admin %}
+                        <button class="btn-{% if entry.is_featured %}warning{% else %}success{% endif %} btn-sm" 
+                                onclick="toggleFeature({{ entry.id }}, this)">
+                            <i class="fas {% if entry.is_featured %}fa-star{% else %}fa-star-o{% endif %}"></i> 
+                            {% if entry.is_featured %}Unfeature{% else %}Feature{% endif %}
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div id="noResultsMessage" class="empty-state" style="display: none;">
+            <i class="fas fa-search"></i>
+            <h2>No matching projects found</h2>
+            <p>Try adjusting your search terms or filters</p>
+        </div>
+        
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-paint-brush"></i>
+            <h2>The Gallery is Empty!</h2>
+            <p>Be the first to submit your awesome project to the gallery.</p>
+            <a href="{{ url_for('gallery_submit') }}" class="btn-submit-empty">
+                <i class="fas fa-plus"></i> Submit Your Site
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+:root {
+    --primary: #ec3750;
+    --primary-dark: #cf142b;
+    --primary-light: #ff5a69;
+    --secondary: #e83e8c;
+    --success: #059669;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --light: #f3f4f6;
+    --dark: #1f2937;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --card-bg: #ffffff;
+    --body-bg: #f9fafb;
+    --gradient-start: #ec3750;
+    --gradient-end: #ff8c38;
+}
+
+.gallery-container {
+    max-width: 1200px;
+    margin: 80px auto 40px;
+    padding: 0 1.5rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.gallery-header {
+    margin-bottom: 2rem;
+}
+
+.gallery-header h1 {
+    margin-bottom: 1.5rem;
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.gallery-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.search-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(236, 55, 80, 0.1);
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.filter-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.filter-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+}
+
+.tag-filter {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    background-color: var(--light);
+    margin: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    text-decoration: none;
+}
+
+.tag-filter:hover {
+    background-color: #e9ecef;
+    border-color: #ddd;
+}
+
+.tag-filter.active {
+    background-color: var(--primary);
+    color: white;
+    font-weight: 500;
+}
+
+.gallery-section {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 5px 10px rgba(0, 0, 0, 0.02);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.featured-section {
+    background: linear-gradient(to right, rgba(236, 55, 80, 0.03), rgba(255, 140, 55, 0.03));
+    border: 1px solid rgba(236, 55, 80, 0.1);
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    color: var(--primary);
+}
+
+.section-heading i {
+    margin-right: 0.75rem;
+    font-size: 1.5rem;
+}
+
+.section-heading h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.project-card {
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.project-thumbnail {
+    height: 180px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(45deg, #f9f9f9, #f0f0f0);
+    border-radius: 10px;
+}
+
+.project-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.placeholder-thumbnail {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #ddd;
+    font-size: 3rem;
+}
+
+.project-card:hover .project-thumbnail img {
+    transform: scale(1.05);
+}
+
+.featured-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(255, 193, 7, 0.9);
+    color: #333;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.project-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.project-card:hover .project-preview {
+    opacity: 1;
+}
+
+.preview-btn {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.7rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.preview-btn:hover {
+    background-color: var(--primary-dark);
+}
+
+.project-content {
+    padding: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.project-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem 0;
+    color: var(--text-primary);
+}
+
+.project-description {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.2rem;
+    flex-grow: 1;
+}
+
+.project-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.2rem;
+}
+
+.project-tag {
+    background-color: rgba(236, 55, 80, 0.1);
+    color: var(--primary);
+    font-size: 0.8rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.project-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.project-creator {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.creator-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: white;
+    text-transform: uppercase;
+}
+
+.project-date {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.project-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background-color: var(--light);
+    border-radius: 12px;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #ddd;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h2 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 0 auto 2rem;
+}
+
+.btn-submit-empty {
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(236, 55, 80, 0.25);
+    text-decoration: none;
+    margin-top: 1.5rem;
+}
+
+.btn-submit-empty:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(236, 55, 80, 0.35);
+    background: linear-gradient(to right, var(--primary-dark), var(--secondary));
+}
+
+.btn-submit-empty i {
+    font-size: 1.2rem;
+    margin-right: 8px;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    text-decoration: none;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+    background-color: #b91c1c;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-success {
+    background-color: var(--success);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-success:hover {
+    background-color: #047857;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-warning {
+    background-color: var(--warning);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-warning:hover {
+    background-color: #b45309;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.8125rem;
+}
+
+@media (max-width: 768px) {
+    .gallery-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-container {
+        max-width: 100%;
+    }
+    
+    .projects-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .gallery-header h1 {
+        font-size: 1.75rem;
+    }
+}
+</style>
+
+<script>
+// Toggle featured status
+function toggleFeature(entryId, button) {
+    fetch(`/api/admin/gallery/feature/${entryId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.is_featured) {
+                button.innerHTML = '<i class="fas fa-star"></i> Unfeature';
+                button.classList.remove('btn-success');
+                button.classList.add('btn-warning');
+            } else {
+                button.innerHTML = '<i class="fas fa-star-o"></i> Feature';
+                button.classList.remove('btn-warning');
+                button.classList.add('btn-success');
+            }
+            // Reload page to see the changes in the featured section
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// Search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('gallerySearch');
+    const entriesContainer = document.getElementById('entriesContainer');
+    const noResultsMessage = document.getElementById('noResultsMessage');
+    const entries = document.querySelectorAll('.project-card');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let results = 0;
+            
+            entries.forEach(entry => {
+                const title = entry.getAttribute('data-title').toLowerCase();
+                const tags = entry.getAttribute('data-tags').toLowerCase();
+                const creator = entry.getAttribute('data-creator').toLowerCase();
+                
+                if (title.includes(searchTerm) || tags.includes(searchTerm) || creator.includes(searchTerm)) {
+                    entry.style.display = '';
+                    results++;
+                } else {
+                    entry.style.display = 'none';
+                }
+            });
+            
+            if (results === 0 && entriesContainer && entries.length > 0) {
+                entriesContainer.style.display = 'none';
+                noResultsMessage.style.display = 'block';
+            } else {
+                if (entriesContainer) entriesContainer.style.display = 'grid';
+                if (noResultsMessage) noResultsMessage.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

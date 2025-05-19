@@ -1,104 +1,248 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HackClub Spaces - Static Website Hosting</title>
+    <title>Spaces - Create. Test. Deploy.</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!--
-    <div class="unofficial-banner">
-        <div class="banner-content">
-            <span class="banner-icon">🚧</span>
-            <span class="banner-text">This is currently unofficial - We need your help to make it official!</span>
-            <span class="banner-icon">🚀</span>
-        </div>
-        -->
+    <div class="bg-animation">
+        <div class="gradient-blob blob-1"></div>
+        <div class="gradient-blob blob-2"></div>
+        <div class="gradient-blob blob-3"></div>
     </div>
-    <div class="background-animation"></div>
+    
+    <div class="particle-container" id="particles-js"></div>
+    
     <a href="https://hackclub.com" target="_blank" class="flag-orpheus">
         <img src="{{ url_for('static', filename='images/flag-orpheus-left.svg') }}" alt="Orpheus Flag">
     </a>
-    <nav class="navbar banner-adjusted">
+    
+    <nav class="navbar">
         <div class="nav-content">
-            <div class="logo">
-                <img src="{{ url_for('static', filename='images/logo-rounded.png') }}" alt="HackClub" style="height: 30px; margin-right: 8px; vertical-align: middle;">
-                <span style="vertical-align: middle;">Spaces</span>
+            <a href="/" class="logo">
+                <img src="{{ url_for('static', filename='images/logo-rounded.png') }}" alt="Hack Club" class="logo-img">
+                <span class="logo-text">Spaces</span>
+            </a>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="/" class="nav-link active">Home</a>
+                <a href="{{ url_for('gallery') }}" class="nav-link">Gallery</a>
+                <a href="/profile" class="nav-link">Profile</a>
+                <a href="{{ url_for('documentation') }}" class="nav-link">Documentation</a>
+                
+                <!-- Auth links for mobile -->
+                <div class="mobile-auth">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('welcome') }}" class="nav-button pulse">Dashboard</a>
+                        {% if current_user.is_authenticated and current_user.is_club_leader %}
+                        <a href="{{ url_for('club_dashboard') }}" class="nav-button">Clubs</a>
+                        {% endif %}
+                        {% if current_user.is_authenticated and current_user.is_admin %}
+                        <a href="{{ url_for('admin_panel') }}" class="nav-button">Admin</a>
+                        {% endif %}
+                        <a href="{{ url_for('settings') }}" class="nav-button">Settings</a>
+                        <a href="{{ url_for('logout') }}" class="nav-button">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="nav-button">Login</a>
+                    {% endif %}
+                </div>
             </div>
-            <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#how-to-join">Join</a>
-                <a href="{{ url_for('documentation') }}">Documentation</a>
-                <a href="https://hackclub.com" target="_blank">HackClub</a>
+            
+            <div class="nav-auth desktop-auth">
                 {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('welcome') }}" class="auth-button">Dashboard</a>
+                    <a href="{{ url_for('welcome') }}" class="nav-button pulse">Dashboard</a>
+                    {% if current_user.is_authenticated and current_user.is_club_leader %}
+                    <a href="{{ url_for('club_dashboard') }}" class="nav-button">Clubs</a>
+                    {% endif %}
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <a href="{{ url_for('admin_panel') }}" class="nav-button">Admin</a>
+                    {% endif %}
+                    <a href="{{ url_for('settings') }}" class="nav-button">Settings</a>
+                    <a href="{{ url_for('logout') }}" class="nav-button">Logout</a>
                 {% else %}
-                    <a href="{{ url_for('login') }}" class="auth-button">Login</a>
+                    <a href="{{ url_for('login') }}" class="nav-button glow">Login</a>
                 {% endif %}
             </div>
+            
+            <button class="hamburger" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
     <main class="banner-adjusted">
+        <br>
+        <br>
         <section class="hero">
             <div class="hero-content">
                 <h1>Make anything you can imagine!</h1>
-                <p class="subtitle">Free, fast, and simple static website or python Web-IDE and hosting service.</p>
+                <p class="subtitle" style="color: #1f2d3d;">Free beginner friendly all-in-one platform to create, host and collaborate with on web-apps & other projects.</p>
                 <div class="cta-buttons">
                     {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('welcome') }}" class="btn primary">Go to Dashboard</a>
+                        <a href="{{ url_for('welcome') }}" class="btn primary">Go to Dashboard &#160;<i class="fas fa-arrow-right"></i></a>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="btn primary">Login</a>
-                        <a href="{{ url_for('signup') }}" class="btn secondary">Sign Up</a>
+                        <a href="{{ url_for('login') }}" class="btn primary"><i class="fas fa-sign-in-alt"></i> &#160;Login</a>
+                        <a href="{{ url_for('signup') }}" class="btn secondary"><i class="fas fa-user-plus"></i> &#160;Sign Up</a>
                     {% endif %}
-                    <a href="#features" class="btn secondary">Learn More</a>
+                    <a href="#features" class="btn-scroll-down">
+                        <span>Learn More</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </a>
                 </div>
             </div>
             <div class="hero-backdrop"></div>
+            <div class="hero-image">
+                <div class="floating-code-snippet">
+                    <div class="code-header">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                        <span class="code-title">index.html</span>
+                    </div>
+                    <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;My Space&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Hello World!&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </div>
+            </div>
         </section>
 
         <section id="features" class="features">
-            <h2>Why Choose Spaces?</h2>
+            <div class="section-header">
+                <h2>Why Choose Spaces?</h2>
+                <p>Discover the power of Spaces and take your web development to the next level.</p>
+            </div>
             <div class="feature-grid">
                 <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
                     <h3>Lightning Fast</h3>
-                    <p>Our Global CDN (Cloudflare) ensures your sites load instantly</p>
+                    <p>Our optimized hosting infrastructure ensures your sites load quickly from anywhere in the world.</p>
                 </div>
                 <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-terminal"></i>
+                    </div>
                     <h3>No Commands!</h3>
-                    <p>No terminal knowledge is required!!</p>
+                    <p>No terminal knowledge required! Our intuitive interface makes development accessible to everyone.</p>
                 </div>
                 <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
                     <h3>Always Free</h3>
-                    <p>No hidden costs or limitations (Fair use!!!)</p>
+                    <p>No hidden costs or limitations (Fair use!!!) - just pure creativity without barriers.</p>
                 </div>
+                <!--
                 <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
                     <h3>Custom Domains</h3>
-                    <p>Use your own domain name or choose one from our list!</p>
+                    <p>Use your own domain name or choose one from our list for a professional web presence.</p>
+                </div>
+                -->
+            </div>
+        </section>
+        
+        <section class="workflow-section">
+            <div class="section-header" style="margin: 0 auto; text-align: center;">
+                <h2>How It Works</h2>
+                <p style="text-align: center; max-width: 600px; margin: 0 auto;">Start building your dream website in minutes with our simple workflow</p>
+            </div>
+            <br>
+            <br>
+            <br>
+            <div class="workflow-steps">
+                <div class="workflow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>Create</h3>
+                    <p>Write your code in our powerful editor with syntax highlighting and live preview.</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">
+                        <i class="fas fa-vial"></i>
+                    </div>
+                    <h3>Test</h3>
+                    <p>Preview your site in real-time and make adjustments on the fly.</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>Deploy</h3>
+                    <p>Publish your site with a single click and share it with the world.</p>
                 </div>
             </div>
         </section>
     </main>
 
     <section id="how-to-join" class="join-section">
-        <h2>Start Building Today</h2>
+        <div class="section-header light">
+            <h2>Start Building Today</h2>
+            <p>Join our community and bring your ideas to life</p>
+        </div>
         <div class="join-content">
             <div class="join-card">
-                <h3>1. Join the Community</h3>
-                <p>Spaces is exclusively available to HackClub members. Join our vibrant Slack community where thousands of students build amazing things together.</p>
-                <a href="https://hackclub.com/slack" class="btn primary" target="_blank">Join the Slack →</a>
+                <div class="card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Join the Community</h3>
+                <p>Spaces is exclusively available to Hack Club members. Join our vibrant Slack community where thousands of students build amazing things together.</p>
+                <a href="https://hackclub.com/slack" class="btn primary" target="_blank">Join the Slack&#160; <i class="fas fa-external-link-alt"></i></a>
             </div>
             <div class="join-card">
+                <div class="card-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
                 <h3>Sign up</h3>
-                <p>Sign up for a free account on our website or with our slack bot</p>
-                <a href="{{ url_for('signup') }}" class="btn secondary">Sign up →</a>
+                <p>Sign up for a free account on our website or with our slack bot and start building right away.</p>
+                <a href="{{ url_for('signup') }}" class="btn secondary">Sign up&#160; <i class="fas fa-arrow-right"></i></a>
             </div>
             <div class="join-card">
-                <h3>3. SYS - Ship Your Site & Get FREE Boba!!</h3>
-                <p>Use our simple web editor to make deploy your static site in seconds. Just click <code>deploy</code> and your site will be live!</p>
-                <a href="#cool" class="btn secondary" target="_blank">Thats it!</a>
+                <div class="card-icon">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+                <h3>Ship Your Site</h3>
+                <p>Use our simple web editor to deploy your static site in seconds. Just click <code>deploy</code> and your site will be live!</p>
+                <a href="#cool" class="btn secondary">That's it!&#160; <i class="fas fa-check"></i></a>
+            </div>
+        </div>
+        
+        <div class="testimonials">
+            <div class="testimonial">
+                <div class="quote">
+                    <i class="fas fa-quote-left"></i>
+                    <p>Hack Club Spaces is a great way for new and experienced programmers to quickly test and publish websites and programs.</p>
+                    <i class="fas fa-quote-right"></i>
+                </div>
+                <div class="author">
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="author-info">
+                        <h4>Ivie F (@charmunk)</h4>
+                        <p>High School Hacker</p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -106,16 +250,39 @@
     <section class="stats-section">
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>150+</h3>
+                <div class="stat-number" data-count="150">0</div>
                 <p>Active Sites</p>
+                <div class="stat-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
             </div>
             <div class="stat-card">
-                <h3>99.9%</h3>
-                <p>Uptime</p>
+                <div class="stat-number" data-count="99.9">0</div>
+                <p>Uptime %</p>
+                <div class="stat-icon">
+                    <i class="fas fa-server"></i>
+                </div>
             </div>
             <div class="stat-card">
-                <h3>Global</h3>
-                <p>CDN (Thanks, Cloudflare)</p>
+                <div class="stat-number" data-count="100">0</div>
+                <p>Global CDN Coverage %</p>
+                <div class="stat-icon">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>Ready to build something amazing?</h2>
+            <p>Join Hack Club Spaces today and start creating.</p>
+            <div class="cta-buttons">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('welcome') }}" class="btn primary large">Go to Dashboard <i class="fas fa-arrow-right"></i></a>
+                {% else %}
+                    <a href="{{ url_for('signup') }}" class="btn primary large">Get Started <i class="fas fa-rocket"></i></a>
+                {% endif %}
             </div>
         </div>
     </section>
@@ -123,24 +290,156 @@
     <footer>
         <div class="footer-content">
             <div class="footer-section">
-                <h4>HackClub Webspaces</h4>
-                <p>Made with ❤️ by <a href="https://hackclub.com" target="_blank">HackClub</a> & <a href="https://github.com/EthanCanterburyAtWillow">Ethan</a></p>
+                <h4>Hack Club Spaces</h4>
+                <p>Made with <i class="fas fa-heart pulse-heart"></i> by <a href="https://hackclub.com" target="_blank">Hack Club</a> & <a href="https://github.com/EthanJCanterbury">Ethan</a></p>
             </div>
             <div class="footer-section">
                 <h4>Links</h4>
-                <a href="https://hackclub.com/slack">Slack</a>
-                <a href="https://github.com/hackclub">GitHub</a>
-                <a href="https://spaces.learnwillow.org/documentation">Documentation</a>
+                <a href="https://hackclub.com/slack"><i class="fab fa-slack"></i> Slack</a>
+                <a href="https://github.com/hackclub/spaces"><i class="fab fa-github"></i> GitHub</a>
+                <a href="/documentation"><i class="fas fa-book"></i> Documentation</a>
+                <a href="/support"><i class="fas fa-question-circle"></i> Support</a>
             </div>
+            
         </div>
-        <div id="webring-wrapper">
-          <a href="https://webring.hackclub.com/" id="previousBtn" class="webring-anchor" title="Previous">‹</a>
-          <a href="https://webring.hackclub.com/" class="webring-logo" title="Hack Club Webring" alt="Hack Club Webring"></a>
-          <a href="https://webring.hackclub.com/" id="nextBtn" class="webring-anchor" title="Next">›</a>
-          <script src="https://webring.hackclub.com/embed.min.js"></script>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Hack Club. All rights reserved.</p>
         </div>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Particles.js configuration
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof particlesJS !== 'undefined') {
+                particlesJS('particles-js', {
+                    "particles": {
+                        "number": {
+                            "value": 80,
+                            "density": {
+                                "enable": true,
+                                "value_area": 800
+                            }
+                        },
+                        "color": {
+                            "value": "#eb3750"
+                        },
+                        "shape": {
+                            "type": "circle",
+                            "stroke": {
+                                "width": 0,
+                                "color": "#000000"
+                            },
+                        },
+                        "opacity": {
+                            "value": 0.5,
+                            "random": false,
+                            "anim": {
+                                "enable": false,
+                                "speed": 1,
+                                "opacity_min": 0.1,
+                                "sync": false
+                            }
+                        },
+                        "size": {
+                            "value": 3,
+                            "random": true,
+                            "anim": {
+                                "enable": false,
+                                "speed": 40,
+                                "size_min": 0.1,
+                                "sync": false
+                            }
+                        },
+                        "line_linked": {
+                            "enable": true,
+                            "distance": 150,
+                            "color": "#eb3750",
+                            "opacity": 0.2,
+                            "width": 1
+                        },
+                        "move": {
+                            "enable": true,
+                            "speed": 2,
+                            "direction": "none",
+                            "random": false,
+                            "straight": false,
+                            "out_mode": "out",
+                            "bounce": false,
+                            "attract": {
+                                "enable": false,
+                                "rotateX": 600,
+                                "rotateY": 1200
+                            }
+                        }
+                    },
+                    "interactivity": {
+                        "detect_on": "canvas",
+                        "events": {
+                            "onhover": {
+                                "enable": true,
+                                "mode": "grab"
+                            },
+                            "onclick": {
+                                "enable": true,
+                                "mode": "push"
+                            },
+                            "resize": true
+                        },
+                        "modes": {
+                            "grab": {
+                                "distance": 140,
+                                "line_linked": {
+                                    "opacity": 1
+                                }
+                            },
+                            "push": {
+                                "particles_nb": 4
+                            }
+                        }
+                    },
+                    "retina_detect": true
+                });
+            }
+            
+            // Animate stats counters
+            const statsSection = document.querySelector('.stats-section');
+            const statNumbers = document.querySelectorAll('.stat-number');
+            let animated = false;
+            
+            function animateValue(obj, start, end, duration) {
+                let startTimestamp = null;
+                const decimal = String(end).includes('.') ? 1 : 0;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    const value = progress * (end - start) + start;
+                    obj.innerHTML = value.toFixed(decimal);
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    }
+                };
+                window.requestAnimationFrame(step);
+            }
+            
+            function checkScroll() {
+                if (animated) return;
+                const rect = statsSection.getBoundingClientRect();
+                const isInView = (rect.top <= window.innerHeight && rect.bottom >= 0);
+                
+                if (isInView) {
+                    animated = true;
+                    statNumbers.forEach(stat => {
+                        const count = parseFloat(stat.getAttribute('data-count'));
+                        animateValue(stat, 0, count, 1500);
+                    });
+                }
+            }
+            
+            window.addEventListener('scroll', checkScroll);
+            checkScroll(); // Check on page load
+        });
+    </script>
 </body>
 </html>

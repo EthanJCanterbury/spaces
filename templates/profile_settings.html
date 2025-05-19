@@ -1,0 +1,583 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="profile-settings-container">
+    <div class="settings-header">
+        <h1>Public Profile Settings</h1>
+        <p class="settings-subtitle">Manage your public profile information</p>
+    </div>
+
+    <div class="settings-card">
+        <form id="profile-settings-form" class="settings-form">
+            <div class="form-group form-switch">
+                <label for="is_profile_public">
+                    <i class="fas fa-globe"></i>
+                    Public Profile
+                </label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="is_profile_public" name="is_profile_public" {% if current_user.is_profile_public %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                </div>
+                <div class="toggle-description">
+                    <span class="toggle-status">{{ 'Enabled' if current_user.is_profile_public else 'Disabled' }}</span>
+                    <small>When enabled, your profile will be visible at /p/{{ current_user.username }}</small>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="avatar">
+                    <i class="fas fa-user-circle"></i>
+                    Profile Picture URL
+                </label>
+                <input type="url" id="avatar" name="avatar" value="{{ current_user.avatar or '' }}" placeholder="https://example.com/your-image.jpg">
+                <small>Use a direct image URL (must end with .jpg, .png, .gif, etc.)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="profile_banner">
+                    <i class="fas fa-image"></i>
+                    Banner Image URL
+                </label>
+                <input type="url" id="profile_banner" name="profile_banner" value="{{ current_user.profile_banner or '' }}" placeholder="https://example.com/your-banner.jpg">
+                <small>Recommended size: 1200×400 pixels</small>
+            </div>
+
+            <div class="form-group">
+                <label for="bio">
+                    <i class="fas fa-user-edit"></i>
+                    About Me
+                </label>
+                <textarea id="bio" name="bio" rows="6" placeholder="Tell the world about yourself...">{{ current_user.bio or '' }}</textarea>
+                <small>Markdown formatting is supported</small>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <i class="fas fa-link"></i>
+                    Social Links
+                </label>
+                <div class="social-links-inputs">
+                    <div class="social-input">
+                        <i class="fas fa-globe"></i>
+                        <input type="url" id="website" name="website" value="{{ social_links.website or '' }}" placeholder="Your website URL">
+                    </div>
+                    <div class="social-input">
+                        <i class="fab fa-github"></i>
+                        <input type="url" id="github" name="github" value="{{ social_links.github or '' }}" placeholder="GitHub profile URL">
+                    </div>
+                    <div class="social-input">
+                        <i class="fab fa-slack"></i>
+                        <input type="url" id="slack" name="slack" value="{{ social_links.slack or '' }}" placeholder="Slack profile URL">
+                    </div>
+                    <div class="social-input">
+                        <i class="fas fa-book"></i>
+                        <input type="url" id="scrapbook" name="scrapbook" value="{{ social_links.scrapbook or '' }}" placeholder="Scrapbook URL">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <i class="fas fa-project-diagram"></i>
+                    Public Projects
+                </label>
+                <div class="project-visibility-section">
+                    <p class="project-visibility-help">Select which projects to display on your public profile:</p>
+                    <div class="project-list">
+                        {% for site in sites %}
+                        <div class="project-visibility-item">
+                            <div class="project-info">
+                                <h4>{{ site.name }}</h4>
+                                <span class="project-type {% if site.site_type == 'python' or site.site_type == 'code' %}code-badge{% else %}web-badge{% endif %}">
+                                    {% if site.site_type == 'python' %}
+                                    <i class="fab fa-python"></i> Python
+                                    {% elif site.site_type == 'code' %}
+                                    <i class="fas fa-code"></i> {{ site.language|capitalize }}
+                                    {% else %}
+                                    <i class="fab fa-html5"></i> Web
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="project-visibility-toggle">
+                                <input type="checkbox" class="project-checkbox" id="site_{{ site.id }}" name="public_sites" value="{{ site.id }}" 
+                                       {% if site.id in public_site_ids %}checked{% endif %}>
+                                <label for="site_{{ site.id }}"></label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Save Profile
+                </button>
+                <a href="{{ url_for('public_profile', username=current_user.username) }}" class="btn-secondary" target="_blank">
+                    <i class="fas fa-eye"></i>
+                    View Public Profile
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle profile status display
+    const toggleCheckbox = document.getElementById('is_profile_public');
+    const toggleStatus = document.querySelector('.toggle-status');
+
+    if (toggleCheckbox) {
+        toggleCheckbox.addEventListener('change', function() {
+            toggleStatus.textContent = this.checked ? 'Enabled' : 'Disabled';
+        });
+
+        // Make sure the toggle is clickable by fixing z-index issues
+        const toggleSwitch = document.querySelector('.toggle-switch');
+        if (toggleSwitch) {
+            toggleSwitch.style.zIndex = "5";
+        }
+    }
+
+    // Form submission
+    document.getElementById('profile-settings-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append('is_profile_public', document.getElementById('is_profile_public').checked);
+        formData.append('avatar', document.getElementById('avatar').value);
+        formData.append('profile_banner', document.getElementById('profile_banner').value);
+        formData.append('bio', document.getElementById('bio').value);
+
+        // Social links
+        const socialLinks = {
+            website: document.getElementById('website').value,
+            github: document.getElementById('github').value,
+            slack: document.getElementById('slack').value,
+            scrapbook: document.getElementById('scrapbook').value
+        };
+        formData.append('social_links', JSON.stringify(socialLinks));
+
+        // Public sites
+        const publicSites = [];
+        document.querySelectorAll('input[name="public_sites"]:checked').forEach(checkbox => {
+            publicSites.push(checkbox.value);
+        });
+        formData.append('public_sites', JSON.stringify(publicSites));
+
+        try {
+            const response = await fetch('/api/profile/settings', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                showToast('success', 'Profile settings saved successfully');
+            } else {
+                showToast('error', result.message || 'Failed to save profile settings');
+            }
+        } catch (error) {
+            console.error('Error saving profile settings:', error);
+            showToast('error', 'An error occurred while saving profile settings');
+        }
+    });
+
+    // Toast notification function
+    function showToast(type, message) {
+        const toastContainer = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
+});
+</script>
+
+<style>
+.profile-settings-container {
+    max-width: 800px;
+    margin: 80px auto 40px;
+    padding: 0 20px;
+}
+
+.settings-header {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.settings-header h1 {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.settings-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.settings-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    padding: 32px;
+    margin-bottom: 32px;
+}
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group label i {
+    color: var(--primary);
+}
+
+.form-group small {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="url"],
+.form-group textarea {
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: var(--surface-secondary);
+    color: var(--text-primary);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(236, 55, 80, 0.1);
+}
+
+.form-switch {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+    z-index: 10;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    position: absolute;
+    z-index: 15;
+    cursor: pointer;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+    pointer-events: none;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: var(--primary);
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+.toggle-description {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.toggle-status {
+    font-weight: 600;
+}
+
+.social-links-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.social-input {
+    display: flex;
+    align-items: center;
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.social-input i {
+    padding: 0 16px;
+    color: var(--text-secondary);
+}
+
+.social-input input {
+    flex: 1;
+    border: none;
+    padding: 12px 16px 12px 0;
+    background: transparent;
+}
+
+.social-input input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.project-visibility-section {
+    background: var(--surface-secondary);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.project-visibility-help {
+    margin: 0 0 16px;
+}
+
+.project-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.project-visibility-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--surface-primary);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.project-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.project-info h4 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.project-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.python-badge {
+    background-color: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+.web-badge {
+    background-color: rgba(240, 130, 50, 0.1);
+    color: #f08232;
+}
+
+.project-visibility-toggle input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.project-visibility-toggle label {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 20px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.project-visibility-toggle label:after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: white;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s;
+}
+
+.project-visibility-toggle input:checked + label {
+    background-color: var(--primary);
+}
+
+.project-visibility-toggle input:checked + label:after {
+    left: 22px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.btn-primary, .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 42px;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #d23048;
+}
+
+.btn-secondary {
+    background-color: rgba(236, 55, 80, 0.1);
+    color: var(--primary);
+}
+
+.btn-secondary:hover {
+    background-color: rgba(236, 55, 80, 0.2);
+}
+
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.toast {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    margin-top: 16px;
+    min-width: 300px;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toast-success {
+    border-left: 4px solid #2ecc71;
+}
+
+.toast-success i {
+    color: #2ecc71;
+}
+
+.toast-error {
+    border-left: 4px solid #e74c3c;
+}
+
+.toast-error i {
+    color: #e74c3c;
+}
+</style>
+{% endblock %}

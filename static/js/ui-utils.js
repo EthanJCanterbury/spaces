@@ -12,13 +12,45 @@ function showToast(type, message) {
   
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.innerHTML = `
-    <div class="toast-content">
-      <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-      <span>${message}</span>
-    </div>
-    <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
-  `;
+  
+  // Create toast content
+  const toastContent = document.createElement('div');
+  toastContent.className = 'toast-content';
+  
+  // Create icon element
+  const icon = document.createElement('i');
+  let iconClass = 'fas fa-';
+  
+  // Determine icon based on type
+  if (type === 'success') {
+    iconClass += 'check-circle';
+  } else if (type === 'error') {
+    iconClass += 'exclamation-circle';
+  } else if (type === 'warning') {
+    iconClass += 'exclamation-triangle';
+  } else {
+    iconClass += 'info-circle';
+  }
+  
+  icon.className = iconClass;
+  
+  // Create message element
+  const messageSpan = document.createElement('span');
+  messageSpan.textContent = message;
+  
+  // Create close button
+  const closeButton = document.createElement('button');
+  closeButton.className = 'toast-close';
+  closeButton.innerHTML = '&times;';
+  closeButton.addEventListener('click', function() {
+    this.parentElement.remove();
+  });
+  
+  // Assemble the toast
+  toastContent.appendChild(icon);
+  toastContent.appendChild(messageSpan);
+  toast.appendChild(toastContent);
+  toast.appendChild(closeButton);
   
   toastContainer.appendChild(toast);
   
@@ -39,9 +71,33 @@ function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
   
+  // Prevent body scrolling when modal is open
+  document.body.style.overflow = 'hidden';
+  
+  // Reset modal scroll position
+  const modalContent = modal.querySelector('.modal-content');
+  if (modalContent) {
+    modalContent.scrollTop = 0;
+  }
+  
   modal.style.display = 'flex';
-  modal.offsetHeight; 
+  modal.offsetHeight; // Trigger reflow
   modal.classList.add('show');
+  
+  // Ensure modal is centered in viewport
+  if (modalContent) {
+    const viewportHeight = window.innerHeight;
+    const contentHeight = modalContent.offsetHeight;
+    
+    // If content is taller than viewport, adjust styles for scrolling
+    if (contentHeight > viewportHeight * 0.9) {
+      modalContent.style.height = '90vh';
+      modalContent.style.overflowY = 'auto';
+    } else {
+      modalContent.style.height = 'auto';
+      modalContent.style.overflowY = 'visible';
+    }
+  }
 }
 
 function closeModal(modalId) {
@@ -51,6 +107,8 @@ function closeModal(modalId) {
   modal.classList.remove('show');
   setTimeout(() => {
     modal.style.display = 'none';
+    // Restore body scrolling
+    document.body.style.overflow = '';
   }, 300);
 }
 

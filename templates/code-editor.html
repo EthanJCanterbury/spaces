@@ -1,0 +1,1022 @@
+{% extends "base.html" %}
+
+{% block body_class %}editor-page{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/eclipse.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/matchesonscrollbar.min.css">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hackatime-badge.css') }}">
+<style>
+    .console-frame {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .console-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        background-color: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+    }
+
+    .console-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: #24292e;
+    }
+
+    .console-output {
+        flex: 1;
+        margin: 0;
+        padding: 12px;
+        background-color: #1e1e1e;
+        color: #f0f0f0;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        height: calc(100% - 40px);
+    }
+
+    .console-output .error {
+        color: #ff6b6b;
+    }
+
+    .console-output .success {
+        color: #69db7c;
+    }
+
+    .console-output .info {
+        color: #4dabf7;
+    }
+    
+    .console-command-bar {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        background-color: #1e1e1e;
+        border-top: 1px solid #333;
+        gap: 8px;
+    }
+    
+    .command-prompt {
+        color: #4dabf7;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-weight: bold;
+        user-select: none;
+        font-size: 14px;
+    }
+    
+    .command-input {
+        flex: 1;
+        background: #252525;
+        border: 1px solid #3a3a3a;
+        color: #ffffff !important; /* Force white text */
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 14px;
+        outline: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        -webkit-text-fill-color: #ffffff; /* For WebKit browsers */
+    }
+    
+    /* Ensure text remains white in all states */
+    .command-input,
+    .command-input:focus,
+    .command-input:active,
+    .command-input:hover {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    
+    .command-input:not(:focus) {
+        background: #1f1f1f;
+        border-color: #2d2d2d;
+    }
+    
+    .command-input:focus {
+        border-color: #4dabf7;
+        box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);
+        background-color: #252525;
+    }
+    
+    .command-input::placeholder {
+        color: #9e9e9e; /* Lighter gray for better visibility */
+        opacity: 1;
+    }
+    
+    /* Fix autofill background color in Chrome */
+    .command-input:-webkit-autofill,
+    .command-input:-webkit-autofill:hover,
+    .command-input:-webkit-autofill:focus,
+    .command-input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px #252525 inset !important;
+        -webkit-text-fill-color: #ffffff !important;
+        caret-color: #ffffff;
+    }
+    
+    .command-output {
+        color: #4dabf7;
+        font-weight: 500;
+        padding: 4px 15px;
+        margin: 0;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+        line-height: 1.5;
+    }
+    
+    .command-output.user-command {
+        color: #fff;
+        background-color: rgba(77, 171, 247, 0.1);
+        border-left: 3px solid #4dabf7;
+        padding-left: 12px;
+        margin: 5px 0;
+    }
+    
+    .command-output.command-result {
+        color: #e0e0e0;
+        padding: 8px 15px;
+    }
+
+    .file-tabs {
+        display: flex;
+        overflow-x: auto;
+        background-color: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+        padding-left: 8px;
+        padding-top: 8px;
+        scrollbar-width: thin;
+    }
+
+    .file-tabs::-webkit-scrollbar {
+        height: 5px;
+    }
+
+    .file-tabs::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .file-tabs::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 5px;
+    }
+
+    .file-tab {
+        padding: 8px 16px;
+        background-color: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-bottom: none;
+        border-radius: 6px 6px 0 0;
+        margin-right: 4px;
+        cursor: pointer;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        position: relative;
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .file-tab.active {
+        background-color: #fff;
+        border-bottom: 1px solid #fff;
+        margin-bottom: -1px;
+        z-index: 1;
+    }
+
+    .file-tab-close {
+        background: none;
+        border: none;
+        font-size: 12px;
+        color: #6e7781;
+        cursor: pointer;
+        padding: 2px;
+        margin-left: 4px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .file-tab-close:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+        color: #24292e;
+    }
+
+    .file-tab-add {
+        padding: 8px 12px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #6e7781;
+        border-radius: 6px 6px 0 0;
+    }
+
+    .file-tab-add:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        color: #24292e;
+    }
+
+    .language-selector {
+        display: flex;
+        align-items: center;
+        margin-right: 16px;
+    }
+
+    .language-selector select {
+        padding: 6px 10px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background-color: #f6f8fa;
+        font-size: 14px;
+    }
+
+    /* Adjust the editor container to accommodate the language selector */
+    .editor-container.with-language-selector .editor-pane {
+        height: calc(100% - 50px);
+    }
+
+    /* Modal Styles */
+    .modal {
+        position: fixed;
+        z-index: 9999; /* Extremely high z-index to ensure it's on top */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        overflow: auto;
+    }
+
+    .modal-content {
+        position: relative;
+        background-color: #fff;
+        padding: 0;
+        border-radius: 8px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+        width: 90%;
+        max-width: 500px;
+        margin: 0;
+        animation: modalAppear 0.3s ease-out;
+    }
+
+    @keyframes modalAppear {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e1e4e8;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 18px;
+    }
+
+    .close-modal {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6e7781;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-footer {
+        padding: 16px 20px;
+        border-top: 1px solid #e1e4e8;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script>
+function showToast(type, message) {
+    const toastContainer = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    const icon = type === 'success' ? 'check-circle' : 
+                 type === 'error' ? 'exclamation-circle' :
+                 type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    toastContainer.appendChild(toast);
+    toast.offsetHeight;
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+</script>
+
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="loading-image-container">
+            <img src="{{ url_for('static', filename='images/typingdino.gif') }}" alt="Loading..." class="loading-dino">
+        </div>
+        <div class="loading-text-container">
+            <h2 class="loading-title">Building Your Coding Space</h2>
+            <p class="loading-text">Setting up your coding environment...</p>
+        </div>
+        <div class="loading-progress-container">
+            <div class="loading-progress-bar">
+                <div class="loading-progress-fill"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="editor-container split-layout">
+    <div class="editor-topbar">
+        <div class="topbar-left">
+            <a href="{{ url_for('welcome') }}" class="btn-icon" title="Back to Dashboard">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1>{{ site.name }}</h1>
+        </div>
+        <div class="topbar-actions">
+            <button id="undoBtn" class="btn-icon" title="Undo (Ctrl+Z)" disabled>
+                <i class="fas fa-undo"></i>
+            </button>
+            <button id="redoBtn" class="btn-icon" title="Redo (Ctrl+Y)" disabled>
+                <i class="fas fa-redo"></i>
+            </button>
+
+            <div class="dropdown">
+                <button class="btn-icon dropdown-toggle" title="Editor Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <div class="dropdown-menu">
+                    <div class="dropdown-section">
+                        <label for="themeSelector">Theme:</label>
+                        <select id="themeSelector" onchange="changeEditorTheme(this.value)">
+                            <option value="eclipse">Eclipse</option>
+                            <option value="monokai">Monokai</option>
+                            <option value="dracula">Dracula</option>
+                            <option value="material">Material</option>
+                            <option value="mdn-like">MDN-like</option>
+                            <option value="solarized light">Solarized Light</option>
+                        </select>
+                    </div>
+                    <div class="dropdown-section">
+                        <label for="fontSizeSelector">Font Size:</label>
+                        <select id="fontSizeSelector" onchange="changeEditorFontSize(this.value)">
+                            <option value="12px">Small</option>
+                            <option value="14px" selected>Medium</option>
+                            <option value="16px">Large</option>
+                            <option value="18px">X-Large</option>
+                        </select>
+                    </div>
+                    <div class="dropdown-section checkbox">
+                        <label>
+                            <input type="checkbox" id="wordWrapToggle" checked onchange="toggleWordWrap(this.checked)">
+                            Word Wrap
+                        </label>
+                    </div>
+                    <div class="dropdown-section checkbox">
+                        <label>
+                            <input type="checkbox" id="lintToggle" onchange="toggleLinting(this.checked)">
+                            Lint Code
+                        </label>
+                    </div>
+                    <div class="dropdown-section checkbox">
+                        <label>
+                            <input type="checkbox" id="indentWithTabsToggle" onchange="toggleIndentWithTabs(this.checked)">
+                            Indent With Tabs
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button id="searchBtn" class="btn-icon" title="Search (Ctrl+F)" onclick="focusSearch()">
+                <i class="fas fa-search"></i>
+            </button>
+
+            <button id="runBtn" class="btn-primary" onclick="runCode()">
+                <i class="fas fa-play"></i>
+                Run
+            </button>
+            <button id="formatterBtn" class="btn-primary" onclick="formatCode()">
+                <i class="fas fa-magic"></i>
+                Format
+            </button>
+            <button id="saveBtn" class="btn-primary" onclick="saveContent()">
+                <i class="fas fa-save"></i>
+                Save Changes
+            </button>
+        </div>
+    </div>
+    <div class="editor-main">
+        <div class="editor-pane">
+            <div class="file-tabs">
+                <!-- File tabs will be dynamically generated -->
+                <button class="file-tab-add" title="Add new file" id="addFileBtn" onclick="openModal('new-file-modal');setTimeout(function(){document.getElementById('new-file-name').focus();},100);return false;">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <div id="editor-container">
+                <textarea id="codeEditor">{{ site.language_content }}</textarea>
+            </div>
+            <input type="hidden" id="site-slug" value="{{ site.slug }}">
+            <input type="hidden" id="site-id" value="{{ site.id }}">
+            <input type="hidden" id="site-type" value="{{ site.site_type }}">
+            <input type="hidden" id="current-language" value="{{ site.language }}">
+            <div class="editor-status-bar">
+                <div class="status-left">
+                    <div class="language-indicator">
+                        <i class="{{ language_icon }}" id="language-icon"></i>
+                        <span id="language-name">{{ site.language }}</span>
+                    </div>
+                </div>
+                <div class="status-right">
+                    <div class="editor-info">
+                        <i class="fas fa-keyboard"></i>
+                        <a href="#" onclick="showKeyboardShortcutsModal(); return false;">Shortcuts</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="preview-pane">
+            <div class="console-frame">
+                <div class="console-header">
+                    <div class="console-title">
+                        <i class="fas fa-terminal"></i>
+                        <span>Console Output</span>
+                    </div>
+                    <button class="btn-icon" onclick="clearConsole()" title="Clear Console">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+                <pre id="consoleOutput" class="console-output">Run your code to see the output here!</pre>
+                <div class="console-command-bar">
+                    <span class="command-prompt">$</span>
+                    <input type="text" id="commandInput" class="command-input" 
+                           placeholder="Type a command and press Enter..." 
+                           autocomplete="off"
+                           onkeydown="if(event.key === 'Enter') executeCommand(event)">
+                    <button class="btn-icon" onclick="executeCommand(event)" title="Execute Command">
+                        <i class="fas fa-play"></i>
+                    </button>
+                </div>
+                <script>
+                // Make sure the function is globally available
+                async function executeCommand(event) {
+                    event.preventDefault();
+                    const commandInput = document.getElementById('commandInput');
+                    const command = commandInput.value.trim();
+                    
+                    if (!command) return;
+                    
+                    const consoleOutput = document.getElementById('consoleOutput');
+                    
+                    // Display the command that was executed
+                    const commandDisplay = document.createElement('div');
+                    commandDisplay.className = 'command-output user-command';
+                    commandDisplay.textContent = `$ ${command}`;
+                    consoleOutput.appendChild(commandDisplay);
+                    
+                    // Clear the input
+                    commandInput.value = '';
+                    
+                    // Handle special commands
+                    if (command.toLowerCase() === 'clear') {
+                        consoleOutput.innerHTML = '';
+                        return;
+                    }
+                    
+                    // Show executing message
+                    const executingDiv = document.createElement('div');
+                    executingDiv.className = 'command-output command-result';
+                    executingDiv.textContent = 'Executing...';
+                    consoleOutput.appendChild(executingDiv);
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                    
+                    try {
+                        // Get current language from the editor or default to python
+                        const currentLanguage = '{{ site.language|default("python") }}'.toLowerCase();
+                        
+                        // Execute the command using the current language
+                        const response = await fetch(`/api/execute`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                language: currentLanguage,
+                                code: command,
+                                isCommand: true
+                            })
+                        });
+
+                        // Remove the "Executing..." message
+                        consoleOutput.removeChild(executingDiv);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        
+                        const result = await response.json();
+                        
+                        // Display the output
+                        const outputDiv = document.createElement('div');
+                        outputDiv.className = 'command-output command-result';
+                        
+                        if (result.error) {
+                            outputDiv.style.color = '#ff6b6b';
+                            outputDiv.textContent = `Error: ${result.output || 'Unknown error occurred'}`;
+                        } else {
+                            outputDiv.textContent = result.output || '(No output)';
+                            
+                            // If there's execution time, show it
+                            if (result.execution_time) {
+                                const timeDiv = document.createElement('div');
+                                timeDiv.style.fontSize = '0.8em';
+                                timeDiv.style.color = '#888';
+                                timeDiv.style.marginTop = '4px';
+                                timeDiv.textContent = `Execution time: ${result.execution_time.toFixed(2)}ms`;
+                                outputDiv.appendChild(timeDiv);
+                            }
+                        }
+                        
+                        consoleOutput.appendChild(outputDiv);
+                    } catch (error) {
+                        console.error('Error executing command:', error);
+                        // Remove the "Executing..." message if it still exists
+                        if (executingDiv.parentNode === consoleOutput) {
+                            consoleOutput.removeChild(executingDiv);
+                        }
+                        
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'command-output command-result';
+                        errorDiv.style.color = '#ff6b6b';
+                        errorDiv.textContent = `Error: ${error.message || 'Failed to execute command'}`;
+                        consoleOutput.appendChild(errorDiv);
+                    }
+                    
+                    // Scroll to bottom
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                    
+                    // Focus back on input
+                    commandInput.focus();
+                }
+                
+                // Make the function available globally
+                window.executeCommand = executeCommand;
+                
+                // Add keyboard shortcut to focus command input (Ctrl+`)
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === '`') {
+                        e.preventDefault();
+                        const commandInput = document.getElementById('commandInput');
+                        commandInput.focus();
+                    }
+                });
+                
+                // Focus the command input when the console is clicked
+                document.querySelector('.console-frame').addEventListener('click', () => {
+                    document.getElementById('commandInput').focus();
+                });
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New File Modal -->
+<div id="new-file-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Create New File</h2>
+            <button class="close-btn" id="closeNewFileModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="new-file-name">Filename (include extension):</label>
+                <input type="text" id="new-file-name" placeholder="e.g., about.html, styles.css, script.js">
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" id="cancelNewFile">Cancel</button>
+            <button class="btn-primary" id="createNewFileBtn">Create</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Modal functions to match the behavior in editor-core.js
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+}
+
+// Setup everything when the document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Setting up file modal handlers for code editor');
+
+    // Add file button should open the modal
+    const addFileBtn = document.getElementById('addFileBtn');
+    if (addFileBtn) {
+        addFileBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal('new-file-modal');
+            setTimeout(() => {
+                const input = document.getElementById('new-file-name');
+                if (input) {
+                    input.value = '';
+                    input.focus();
+                }
+            }, 100);
+        });
+    }
+
+    // Close modal button
+    const closeBtn = document.getElementById('closeNewFileModal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            closeModal('new-file-modal');
+        });
+    }
+
+    // Cancel button
+    const cancelBtn = document.getElementById('cancelNewFile');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            closeModal('new-file-modal');
+        });
+    }
+
+    // Create button
+    const createBtn = document.getElementById('createNewFileBtn');
+    if (createBtn) {
+        createBtn.addEventListener('click', function() {
+            const fileName = document.getElementById('new-file-name').value.trim();
+            if (fileName) {
+                // Call the original createNewFile function
+                createNewFile();
+            } else {
+                alert('Please enter a file name');
+            }
+        });
+    }
+
+    // Close modal when clicking outside
+    const newFileModal = document.getElementById('new-file-modal');
+    if (newFileModal) {
+        newFileModal.addEventListener('click', function(e) {
+            if (e.target === newFileModal) {
+                closeModal('new-file-modal');
+            }
+        });
+    }
+});
+</script>
+
+<!-- Keyboard Shortcuts Modal -->
+<div id="keyboardShortcutsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Keyboard Shortcuts</h2>
+            <button class="close-modal" onclick="closeKeyboardShortcutsModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="shortcut-container">
+                <div class="shortcut-category">
+                    <h4>Editor</h4>
+                    <div class="shortcut-item">
+                        <span>Save</span>
+                        <span class="shortcut-key">Ctrl+S</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span>Undo</span>
+                        <span class="shortcut-key">Ctrl+Z</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span>Redo</span>
+                        <span class="shortcut-key">Ctrl+Y</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span>Find</span>
+                        <span class="shortcut-key">Ctrl+F</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span>Replace</span>
+                        <span class="shortcut-key">Ctrl+H</span>
+                    </div>
+                </div>
+                <div class="shortcut-category">
+                    <h4>Code</h4>
+                    <div class="shortcut-item">
+                        <span>Run Code</span>
+                        <span class="shortcut-key">Ctrl+Enter</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span>Format Code</span>
+                        <span class="shortcut-key">Shift+Alt+F</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="splitViewToggle" class="btn-icon split-view-toggle" title="Toggle Split View" onclick="toggleSplitView()">
+    <i class="fas fa-columns"></i>
+</div>
+
+<!-- CodeMirror Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+
+<!-- CodeMirror Addons -->
+<!-- Mode addons (must be loaded before language modes) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/mode/simple.min.js"></script>
+
+<!-- Edit addons -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
+
+<!-- Search addons -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/searchcursor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/search.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/scroll/annotatescrollbar.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/matchesonscrollbar.min.js"></script>
+
+<!-- Fold addons -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/brace-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/comment-fold.min.js"></script>
+
+<!-- Hint addons -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/anyword-hint.min.js"></script>
+
+<!-- Other addons -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/selection/active-line.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/lint/lint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/display/placeholder.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/scroll/simplescrollbars.min.js"></script>
+
+<!-- Language Modes -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/ruby/ruby.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/php/php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/go/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/rust/rust.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/perl/perl.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/r/r.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/shell/shell.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/lua/lua.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/haskell/haskell.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/swift/swift.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/yaml/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/markdown/markdown.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/sql/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/coffeescript/coffeescript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/ruby/ruby.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/rust/rust.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/php/php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/shell/shell.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/go/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/swift/swift.min.js"></script>
+
+<!-- Editor JS -->
+<script src="{{ url_for('static', filename='js/code-editor.js') }}"></script>
+
+{% if current_user.wakatime_api_key %}
+<script src="{{ url_for('static', filename='js/hackatime-tracker.js') }}"></script>
+{% endif %}
+
+{# Removed Socket.io and collaboration features #}
+{% endblock %}
+
+<script>
+        // Initialize editor with the current language
+        const currentLanguage = "{{ site.language }}";
+        const fileExtension = getFileExtension(currentLanguage);
+        let currentFileName = `main.${fileExtension}`;
+
+        // Function to get proper file extension for a language
+        function getFileExtension(language) {
+            if (!language) return 'txt';
+
+            language = language.toLowerCase();
+
+            const extensionMap = {
+                // Mainstream languages
+                "python": "py",
+                "python2": "py",
+                "python3": "py",
+                "javascript": "js",
+                "typescript": "ts",
+                "java": "java",
+                "c": "c",
+                "cpp": "cpp",
+                "c++": "cpp",
+                "csharp": "cs",
+                "c#": "cs",
+                "go": "go",
+                "ruby": "rb",
+                "rust": "rs",
+                "php": "php",
+                "swift": "swift",
+                "kotlin": "kt",
+                "dart": "dart",
+                "scala": "scala",
+                "groovy": "groovy",
+                "lua": "lua",
+                "perl": "pl",
+                "r": "r",
+                "rscript": "r",
+                "bash": "sh",
+                "shell": "sh",
+                "powershell": "ps1",
+                "haskell": "hs",
+                "elixir": "ex",
+                "erlang": "erl",
+                "clojure": "clj",
+                "lisp": "lisp",
+                "racket": "rkt",
+                "fsharp": "fs",
+                "ocaml": "ml",
+                "zig": "zig",
+                "nim": "nim",
+                "crystal": "cr",
+                "d": "d",
+                "fortran": "f90",
+                "cobol": "cbl",
+                "pascal": "pas",
+                "prolog": "pl",
+                "smalltalk": "st",
+                "sql": "sql",
+                "sqlite3": "sql",
+                "coffeescript": "coffee",
+                "julia": "jl",
+                "html": "html",
+                "css": "css",
+                "basic": "bas"
+            };
+
+            return extensionMap[language] || 'txt';
+        }
+
+        // Function to get the appropriate CodeMirror mode
+        function getCodeMirrorMode(language) {
+            language = language.toLowerCase();
+
+            const modeMap = {
+                // Common languages
+                "python": "python",
+                "javascript": "javascript",
+                "typescript": "javascript",
+                "c++": "text/x-c++src",
+                "cpp": "text/x-c++src",
+                "c": "text/x-csrc",
+                "java": "text/x-java",
+                "php": "php",
+                "html": "htmlmixed",
+                "css": "css",
+                "xml": "xml",
+                "json": "javascript",
+                "go": "go",
+                "ruby": "ruby",
+                "rust": "rust",
+                "sql": "sql",
+                "csharp": "text/x-csharp",
+                "c#": "text/x-csharp",
+                "bash": "shell",
+                "sh": "shell",
+                "lua": "lua",
+                "perl": "perl",
+                "r": "r",
+                "swift": "swift",
+                "kotlin": "text/x-java",
+                "scala": "text/x-scala",
+                "haskell": "haskell",
+                "lisp": "commonlisp",
+                ""markdown": "markdown",
+                "fortran": "fortran",
+                "pascal": "pascal",
+                "yaml": "yaml",
+                "basic": "vb"
+            };
+
+            return modeMap[language] || "text/plain";
+        }
+
+        // Select the appropriate mode based on language
+        let editorMode = getCodeMirrorMode(currentLanguage);
+
+        // Command execution is now handled by the inline script above
+        
+        // Set up the CodeMirror editor
+        const editor = CodeMirror.fromTextArea(document.getElementById("codeEditor"), {
+            lineNumbers: true,
+            indentUnit: 4,
+            mode: editorMode,
+            theme: "eclipse",
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            styleActiveLine: true,
+            foldGutter: true,
+            gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+            extraKeys: {
+                "Ctrl-Space": "autocomplete",
+                "Tab": function(cm) {
+                    if (cm.somethingSelected()) {
+                        cm.indentSelection("add");
+                    } else {
+                        cm.replaceSelection("    ", "end", "+input");
+                    }
+                }
+            }
+        });
+</script>

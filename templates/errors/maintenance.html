@@ -1,81 +1,8 @@
+
 {% extends "errors/base_error.html" %}
 
-{% block head %}
-{{ super() }}
-<style>
-.error-icon {
-    color: var(--info-color);
-}
-
-.error-box {
-    border-left: 5px solid var(--info-color);
-}
-
-.maintenance-animation {
-    position: relative;
-    width: 150px;
-    height: 150px;
-    margin: 0 auto 2rem;
-}
-
-.tool-container {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    animation: spin 8s linear infinite;
-}
-
-.tool {
-    position: absolute;
-    font-size: 2.5rem;
-    color: var(--info-color);
-}
-
-.tool-1 { top: 0; left: 50%; transform: translateX(-50%); }
-.tool-2 { top: 50%; right: 0; transform: translateY(-50%); }
-.tool-3 { bottom: 0; left: 50%; transform: translateX(-50%); }
-.tool-4 { top: 50%; left: 0; transform: translateY(-50%); }
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-.maintenance-time {
-    background: rgba(33, 150, 243, 0.1);
-    padding: 1rem;
-    border-radius: 0.5rem;
-    margin: 1.5rem 0;
-}
-
-.time-block {
-    display: inline-block;
-    background: var(--info-color);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 0.3rem;
-    margin: 0 0.2rem;
-    min-width: 60px;
-    text-align: center;
-}
-
-.time-label {
-    font-size: 0.8rem;
-    margin-top: 0.3rem;
-    opacity: 0.8;
-}
-</style>
-{% endblock %}
-
 {% block error_icon %}
-<div class="maintenance-animation">
-    <div class="tool-container">
-        <div class="tool tool-1"><i class="fas fa-wrench"></i></div>
-        <div class="tool tool-2"><i class="fas fa-cog"></i></div>
-        <div class="tool tool-3"><i class="fas fa-screwdriver"></i></div>
-        <div class="tool tool-4"><i class="fas fa-tools"></i></div>
-    </div>
-</div>
+<i class="fas fa-tools"></i>
 {% endblock %}
 
 {% block error_title %}
@@ -84,70 +11,158 @@ Scheduled Maintenance
 
 {% block error_message %}
 <div class="error-content">
-    <p>We're currently performing scheduled maintenance to improve our services.</p>
-    <p>We'll be back online shortly!</p>
-    
-    <div class="maintenance-time">
-        <p>Estimated time remaining:</p>
-        <div id="countdown-timer">
-            <div class="time-block">
-                <span id="hours">00</span>
-                <div class="time-label">Hours</div>
-            </div>
-            <div class="time-block">
-                <span id="minutes">00</span>
-                <div class="time-label">Minutes</div>
-            </div>
-            <div class="time-block">
-                <span id="seconds">00</span>
-                <div class="time-label">Seconds</div>
-            </div>
-        </div>
+  <p>We're currently performing planned maintenance to improve our services.</p>
+  <p>This shouldn't take long, and we'll be back online shortly!</p>
+  
+  <div class="maintenance-timer">
+    <h3>Estimated time remaining:</h3>
+    <div class="timer-display">
+      <div class="time-unit">
+        <span id="hours">00</span>
+        <label>Hours</label>
+      </div>
+      <div class="timer-separator">:</div>
+      <div class="time-unit">
+        <span id="minutes">00</span>
+        <label>Minutes</label>
+      </div>
+      <div class="timer-separator">:</div>
+      <div class="time-unit">
+        <span id="seconds">00</span>
+        <label>Seconds</label>
+      </div>
     </div>
+  </div>
+  
+  <div class="maintenance-progress">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+  
+  <style>
+    .maintenance-timer {
+      margin: 2rem 0;
+    }
+    
+    .timer-display {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    
+    .time-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .time-unit span {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--light-color);
+      font-size: 2rem;
+      font-weight: 700;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .time-unit label {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .timer-separator {
+      font-size: 2rem;
+      margin: 0 0.5rem;
+      color: rgba(255, 255, 255, 0.5);
+      align-self: flex-start;
+      padding-top: 0.5rem;
+    }
+    
+    .maintenance-progress {
+      margin: 2rem 0;
+    }
+    
+    .progress-track {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      width: 30%;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      border-radius: 4px;
+      transition: width 1s ease;
+    }
+  </style>
 </div>
 {% endblock %}
 
 {% block error_actions %}
 <button onclick="window.location.reload()" class="error-btn error-btn-primary">
-    <i class="fas fa-sync"></i> Check Status
+  <i class="fas fa-sync"></i> Check Status
 </button>
 <a href="https://status.hackclub.com" target="_blank" class="error-btn error-btn-secondary">
-    <i class="fas fa-chart-line"></i> View Status Page
+  <i class="fas fa-chart-line"></i> Status Page
 </a>
+<button onclick="createGitHubIssue()" class="error-btn error-btn-github js-github-issue">
+  <i class="fab fa-github"></i> Report Issue
+</button>
 {% endblock %}
 
 {% block error_details %}
 <div class="error-details">
-    <p>Maintenance Window: {{ start_time|default('2025-03-19 00:00 UTC', true) }} - {{ end_time|default('2025-03-19 02:00 UTC', true) }}</p>
-    <p>We appreciate your patience while we make these improvements.</p>
+  <p id="error-code">Maintenance Window: {{ start_time|default('2024-04-05 00:00 UTC', true) }} - {{ end_time|default('2024-04-05 02:00 UTC', true) }}</p>
+  <p>Time: <span id="errorTime"></span></p>
+  <p>We appreciate your patience while we make these improvements.</p>
 </div>
 
 <script>
+document.getElementById('errorTime').textContent = new Date().toLocaleString();
+
+// Maintenance countdown timer
 function updateCountdown() {
-    // Example end time - replace with actual maintenance end time
-    const endTime = new Date('{{ end_time|default('2025-03-19 02:00 UTC', true) }}').getTime();
+  // Example end time - use the provided maintenance end time
+  const endTime = new Date('{{ end_time|default('2024-04-05 02:00 UTC', true) }}').getTime();
+  
+  function update() {
+    const now = new Date().getTime();
+    const distance = endTime - now;
     
-    function update() {
-        const now = new Date().getTime();
-        const distance = endTime - now;
-        
-        if (distance < 0) {
-            document.getElementById('countdown-timer').innerHTML = 
-                '<div style="color: var(--success-color);">Maintenance should be complete. Please try refreshing.</div>';
-            return;
-        }
-        
-        const hours = Math.floor(distance / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        
-        document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
-        document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
-        document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+    if (distance < 0) {
+      document.querySelector('.timer-display').innerHTML = 
+        '<div style="color: var(--success-color); font-size: 1.2rem;"><i class="fas fa-check-circle"></i> Maintenance should be complete. Please try refreshing the page.</div>';
+      document.getElementById('progressFill').style.width = '100%';
+      return;
     }
     
-    update();
-    setInterval(update, 1000);
+    // Calculate progress percentage
+    const startTime = new Date('{{ start_time|default('2024-04-05 00:00 UTC', true) }}').getTime();
+    const totalDuration = endTime - startTime;
+    const elapsed = now - startTime;
+    const progressPercentage = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+    
+    document.getElementById('progressFill').style.width = `${progressPercentage}%`;
+    
+    // Calculate time units
+    const hours = Math.floor(distance / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    
+    document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+    document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+    document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+  }
+  
+  update();
+  setInterval(update, 1000);
 }
 
 document.addEventListener('DOMContentLoaded', updateCountdown);

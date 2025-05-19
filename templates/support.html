@@ -1,0 +1,156 @@
+
+{% extends "base.html" %}
+
+{% block title %}Support - Hack Club Spaces{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/support.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="support-container">
+    <section class="support-header">
+        <h1>How Can We Help?</h1>
+        <p class="subtitle">We're here to help you make the most of Hack Club Spaces!</p>
+    </section>
+
+    <section class="support-grid">
+        <div class="support-card">
+            <div class="card-icon">
+                <i class="fas fa-book" style="font-size: 2.5rem; margin: 0 auto;"></i>
+            </div>
+            <div class="card-content">
+                <h3>Documentation</h3>
+                <p>Our documentation covers most common questions and provides detailed guides.</p>
+                <a href="{{ url_for('documentation') }}" class="support-btn">View Documentation</a>
+            </div>
+        </div>
+
+        <div class="support-card">
+            <div class="card-icon">
+                <i class="fas fa-comment-dots" style="font-size: 2.5rem; margin: 0 auto;"></i>
+            </div>
+            <div class="card-content">
+                <h3>Slack Community</h3>
+                <p>Join our community on Slack for real-time support and to connect with other members.</p>
+                <a href="https://hackclub.com/slack" target="_blank" class="support-btn">Join #spaces on Slack</a>
+            </div>
+        </div>
+
+        <div class="support-card">
+            <div class="card-icon">
+                <i class="fas fa-envelope" style="font-size: 2.5rem; margin: 0 auto;"></i>
+            </div>
+            <div class="card-content">
+                <h3>Email Support</h3>
+                <p>For direct assistance, email our dedicated support team.</p>
+                <a href="mailto:spaces@hackclub.com" class="support-btn">spaces@hackclub.com</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        
+        <div class="faq-container">
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How do I deploy my website?</h3>
+                    <span class="toggle-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>Click the "Deploy" button in the editor after making your changes. Your site will be instantly deployed to your Spaces URL.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How do I set up a custom domain?</h3>
+                    <span class="toggle-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>Go to your site settings, enter your domain in the custom domain section, and follow the DNS instructions provided to point your domain to Spaces. This feature is only enabled for select users!</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>My site isn't updating after deployment</h3>
+                    <span class="toggle-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>Make sure to save changes (CTRL + S) and/or try clearing your browser cache or doing a hard refresh (Ctrl+F5 or Cmd+Shift+R). If the issue persists, check if there are any error messages in the deployment logs.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Can I use JavaScript frameworks?</h3>
+                    <span class="toggle-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes! Spaces supports many popular frameworks. For advanced deployments, you might need to adjust your build settings or use a build step. You can use npm and yarn commands in node.js spaces for this!</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How do I give others access to edit my site?</h3>
+                    <span class="toggle-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>Currently, Spaces only allows specific users to use our collaboration feature. However, you can use the GitHub integration to collaborate with others through a shared repository.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="troubleshooting-section">
+        <h2>Common Troubleshooting Steps</h2>
+        
+        <div class="troubleshooting-grid">
+            <div class="troubleshooting-card">
+                <h3><i class="fas fa-sync-alt"></i> Clear Your Cache</h3>
+                <p>If your changes aren't showing up, try clearing your browser cache or doing a hard refresh (Ctrl+F5).</p>
+            </div>
+            
+            <div class="troubleshooting-card">
+                <h3><i class="fas fa-code"></i> Check HTML Structure</h3>
+                <p>Ensure all your HTML tags are properly closed and nested correctly to avoid unexpected display issues.</p>
+            </div>
+            
+            <div class="troubleshooting-card">
+                <h3><i class="fas fa-file"></i> File Paths (IMPORTANT)</h3>
+                <p>A common issue occurs when people when linking files by using a path like "/styles.css". This will NOT work. Make sure your file paths are formatted like "/s/[sitename]/[filename]" Double-check that all file paths in your HTML, CSS, and JavaScript are correct, especially for images and stylesheets.</p>
+            </div>
+            
+            <div class="troubleshooting-card">
+                <h3><i class="fas fa-mobile-alt"></i> Test on Multiple Devices</h3>
+                <p>Use the device preview feature to ensure your site works well on different screen sizes.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const faqItems = document.querySelectorAll('.faq-question');
+        
+        faqItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const parent = this.parentElement;
+                parent.classList.toggle('active');
+                
+                const icon = this.querySelector('.toggle-icon i');
+                if (parent.classList.contains('active')) {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                } else {
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

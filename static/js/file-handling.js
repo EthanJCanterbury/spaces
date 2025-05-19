@@ -101,7 +101,7 @@ function createNewFile(filename, fileType) {
   })
   .catch(error => {
     console.error('Error:', error);
-    showToast('Failed to create file: ' + error.message, 'error');
+    showToast('error', 'Failed to create file: ' + error.message);
   });
 }
 
@@ -279,33 +279,85 @@ function setupTabContextMenu() {
 }
 
 function showTabContextMenu(filename, x, y) {
-  // Create context menu if it doesn't exist
-  if (!contextMenu) {
-    contextMenu = document.createElement('div');
-    contextMenu.className = 'tab-context-menu';
-    document.body.appendChild(contextMenu);
+  // Close any existing context menu
+  if (contextMenu) {
+    contextMenu.remove();
   }
 
-  // Hide the menu first (reset state)
-  contextMenu.classList.remove('visible');
-
-  // Build menu items based on file
-  let menuItems = '';
-
-  menuItems += `<div class="context-menu-item rename-item" data-filename="${filename}">
-    <i class="fas fa-edit"></i> Rename
-  </div>`;
-
-  if (filename !== 'index.html') {
-    menuItems += `<div class="context-menu-item danger delete-item" data-filename="${filename}">
-      <i class="fas fa-trash"></i> Delete
-    </div>`;
-  }
-
-  // Set content and position
-  contextMenu.innerHTML = menuItems;
+  // Create context menu
+  contextMenu = document.createElement('div');
+  contextMenu.className = 'tab-context-menu';
+  contextMenu.style.position = 'fixed';
   contextMenu.style.left = `${x}px`;
   contextMenu.style.top = `${y}px`;
+  contextMenu.style.zIndex = '1000';
+  contextMenu.style.minWidth = '160px';
+  contextMenu.style.padding = '5px 0';
+  contextMenu.style.backgroundColor = '#2d2d2d';
+  contextMenu.style.borderRadius = '4px';
+  contextMenu.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)';
+  contextMenu.style.overflow = 'hidden';
+  contextMenu.style.display = 'flex';
+  contextMenu.style.flexDirection = 'column';
+  contextMenu.style.gap = '2px';
+
+  // Create rename button
+  const renameBtn = document.createElement('button');
+  renameBtn.className = 'context-menu-item';
+  renameBtn.dataset.action = 'rename';
+  renameBtn.style.cssText = 'display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 8px 16px; background: transparent; border: none; color: #e0e0e0; cursor: pointer; font-size: 13px; transition: background-color 0.2s; border-radius: 0;';
+  
+  renameBtn.onmouseover = function() { this.style.backgroundColor = '#3a3a3a'; };
+  renameBtn.onmouseout = function() { this.style.backgroundColor = 'transparent'; };
+  
+  const renameIcon = document.createElement('i');
+  renameIcon.className = 'fas fa-edit';
+  renameIcon.style.width = '16px';
+  renameIcon.style.textAlign = 'center';
+  
+  const renameText = document.createTextNode('Rename');
+  
+  renameBtn.appendChild(renameIcon);
+  renameBtn.appendChild(document.createTextNode(' '));
+  renameBtn.appendChild(renameText);
+  
+  // Create delete button
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'context-menu-item';
+  deleteBtn.dataset.action = 'delete';
+  deleteBtn.style.cssText = 'display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 8px 16px; background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 13px; transition: background-color 0.2s; border-radius: 0;';
+  
+  deleteBtn.onmouseover = function() { this.style.backgroundColor = '#3a3a3a'; };
+  deleteBtn.onmouseout = function() { this.style.backgroundColor = 'transparent'; };
+  
+  const deleteIcon = document.createElement('i');
+  deleteIcon.className = 'fas fa-trash-alt';
+  deleteIcon.style.width = '16px';
+  deleteIcon.style.textAlign = 'center';
+  
+  const deleteText = document.createTextNode('Delete');
+  
+  deleteBtn.appendChild(deleteIcon);
+  deleteBtn.appendChild(document.createTextNode(' '));
+  deleteBtn.appendChild(deleteText);
+  
+  // Add buttons to context menu
+  contextMenu.appendChild(renameBtn);
+  contextMenu.appendChild(deleteBtn);
+  
+  // Add event listeners
+  renameBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showRenameDialog(filename, x, y);
+  });
+  
+  deleteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteFile(filename);
+  });
+  
+  // Add to document
+  document.body.appendChild(contextMenu);
   
   // Make sure menu stays within viewport
   const rect = contextMenu.getBoundingClientRect();
@@ -315,24 +367,6 @@ function showTabContextMenu(filename, x, y) {
   if (rect.bottom > window.innerHeight) {
     contextMenu.style.top = `${window.innerHeight - rect.height - 10}px`;
   }
-  
-  // Show the menu
-  contextMenu.classList.add('visible');
-
-  // Add event listeners to menu items
-  contextMenu.querySelectorAll('.rename-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.stopPropagation();
-      showRenameDialog(filename, x, y);
-    });
-  });
-
-  contextMenu.querySelectorAll('.delete-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.stopPropagation();
-      deleteFile(filename);
-    });
-  });
   
   // Close menu when clicking elsewhere
   const closeMenu = function(e) {

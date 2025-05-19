@@ -36,7 +36,7 @@ function initEditor(initialContent, type) {
             hint: function(editor, options) {
                 var result = CodeMirror.hint.anyword(editor, options);
                 var mode = editor.getModeAt(editor.getCursor());
-                
+
                 // Add additional suggestions based on mode
                 if (mode.name === "javascript") {
                     result = CodeMirror.hint.javascript(editor, options) || result;
@@ -52,7 +52,7 @@ function initEditor(initialContent, type) {
                         return xmlHint;
                     }
                 }
-                
+
                 return result;
             }
         },
@@ -74,7 +74,7 @@ function initEditor(initialContent, type) {
                     completionActive = false;
                     return;
                 }
-                
+
                 if (cm.somethingSelected()) {
                     cm.indentSelection("add");
                 } else {
@@ -88,12 +88,12 @@ function initEditor(initialContent, type) {
                 var line = cursor.line;
                 var prevLine = cm.getLine(line - 1);
                 var mode = cm.getModeAt(cursor);
-                
+
                 // Auto-trigger hints after specific characters based on file type
                 setTimeout(function() {
                     var currentLine = cm.getLine(cursor.line);
                     var currentChar = currentLine.charAt(cursor.ch - 1);
-                    
+
                     // Check current mode to provide appropriate hints
                     if (cm.getModeAt(cursor).name === 'javascript' && /[a-z0-9_\$\.\(\{\[]/i.test(currentChar)) {
                         CodeMirror.commands.autocomplete(cm);
@@ -350,9 +350,19 @@ function addFileTab(filename, fileType) {
     tab.dataset.filetype = fileType;
 
     const extensionClass = `${fileType}-file`;
-    const iconHtml = `<span class="file-extension-icon ${fileType}-icon"></span>`;
-
-    tab.innerHTML = `${iconHtml}${filename}<span class="file-close">&times;</span>`;
+    // Create icon element safely
+    const icon = document.createElement('span');
+    icon.className = `file-extension-icon ${fileType}-icon`;
+    tab.appendChild(icon);
+    
+    // Add filename as text node
+    tab.appendChild(document.createTextNode(filename));
+    
+    // Add close button
+    const closeBtn = document.createElement('span');
+    closeBtn.className = 'file-close';
+    closeBtn.textContent = '×';
+    tab.appendChild(closeBtn);
 
     fileTabsContainer.insertBefore(tab, addButton);
 
@@ -360,7 +370,7 @@ function addFileTab(filename, fileType) {
         switchToFile(filename);
     });
 
-    const closeBtn = tab.querySelector('.file-close');
+    // Use the existing closeBtn variable instead of querying again
     closeBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         removeFile(filename);
@@ -412,7 +422,7 @@ function setupEventListeners() {
         updateFileSize();
         isDirty = true;
     });
-    
+
     // Add keyup handler for better autocomplete triggering
     editor.on('keyup', function(cm, event) {
         // Only trigger autocomplete when actually typing characters
@@ -422,10 +432,10 @@ function setupEventListeners() {
         var cursor = cm.getCursor();
         var line = cm.getLine(cursor.line);
         var prefix = line.slice(0, cursor.ch);
-        
+
         // Don't trigger on modifier keys, arrows, etc.
         var ignoreKeys = [16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 45, 91, 93, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 144, 145];
-        
+
         // Only show hints if:
         // 1. User is actively typing (not just moving cursor)
         // 2. Not a modifier key
@@ -434,14 +444,14 @@ function setupEventListeners() {
         if (!cm.state.completionActive && 
             !ignoreKeys.includes(event.keyCode) && 
             /[a-zA-Z0-9_\.\$\(\[\{\<\-\:]/.test(key)) {
-            
+
             // Auto-trigger after specific characters based on language
             if ((mode.name === 'javascript' && /[a-z0-9_\$\.\(\{\[]$/i.test(prefix)) ||
                 (mode.name === 'css' && /[a-z0-9_\-\:\.]$/i.test(prefix)) ||
                 (mode.name === 'htmlmixed' && (/<[a-z0-9_]*$/i.test(prefix) || /<\/[a-z0-9_]*$/i.test(prefix))) ||
                 (mode.name === 'xml' && (/<[a-z0-9_]*$/i.test(prefix) || /<\/[a-z0-9_]*$/i.test(prefix))) ||
                 (mode.name === 'python' && /[a-z0-9_\.\(\[\{]$/i.test(prefix))) {
-                
+
                 // Only trigger if prefix has at least 2 characters or after specific triggers
                 if (prefix.length >= 2 || /[\.\(\[\{\<]$/.test(prefix)) {
                     completionActive = true;
@@ -485,8 +495,22 @@ function setupEventListeners() {
 function updateCursorPosition() {
     const cursor = editor.getCursor();
     lastCursorPosition = cursor;
-    document.getElementById('cursorPosition').innerHTML = 
-        `<i class="fas fa-map-marker-alt"></i> Line ${cursor.line + 1}, Column ${cursor.ch + 1}`;
+    const cursorPositionElement = document.getElementById('cursorPosition');
+    
+    // Clear existing content safely
+    while (cursorPositionElement.firstChild) {
+        cursorPositionElement.removeChild(cursorPositionElement.firstChild);
+    }
+    
+    // Create icon element safely
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-map-marker-alt';
+    cursorPositionElement.appendChild(icon);
+    
+    // Add text node safely
+    cursorPositionElement.appendChild(
+        document.createTextNode(` Line ${cursor.line + 1}, Column ${cursor.ch + 1}`)
+    );
 }
 
 function updateFileSize() {
@@ -559,7 +583,7 @@ function saveContent(silent = false) {
             if (data.success) {
                 isDirty = false;
                 if (!silent) {
-                    showToast("Changes Saved!", "Changes Saved!");
+                    showToast("success", "Changes saved successfully!");
                 }
                 updatePreview();
             } else {
@@ -591,7 +615,7 @@ function saveContent(silent = false) {
             if (data.success) {
                 isDirty = false;
                 if (!silent) {
-                    showToast("Changes Saved!", "Changes Saved!");
+                    showToast("success", "Changes saved successfully!");
                 }
             } else {
                 showToast("Error saving content", "error");
@@ -737,25 +761,12 @@ function closeDeployModal() {
     closeModal('deployModal');
 }
 
-function showToast(message, type = "info") {
-    const toastContainer = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-
-    toastContainer.appendChild(toast);
-
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 10);
-
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            toastContainer.removeChild(toast);
-        }, 300);
-    }, 3000);
+// Using the unified showToast function from main.js
+function showToast(type, message) {
+    // Using the global showToast function defined in main.js
+    window.showToast(type, message);
 }
+
 
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
@@ -999,25 +1010,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    const loadingFacts = [
-        "Building your digital canvas...",
-        "Preparing your creative space...",
-        "Loading coding environment...",
-        "Initializing web tools...",
-        "Setting up your workspace...",
-        "Connecting to the code universe...",
-        "Gathering design elements...",
-        "Preparing your digital playground..."
-    ];
-
-    let factIndex = 0;
-    const factAnimation = setInterval(() => {
-        if (document.querySelector('.loading-fact')) {
-            document.querySelector('.loading-fact').textContent = loadingFacts[factIndex];
-            factIndex = (factIndex + 1) % loadingFacts.length;
-        }
-    }, 2000);
-
+    // Simple loading animation
     setTimeout(() => {
         if (document.querySelector('.loading-progress-fill')) {
             document.querySelector('.loading-progress-fill').style.width = '100%';
@@ -1027,7 +1020,6 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         const loadingOverlay = document.getElementById('loading-overlay');
         if (loadingOverlay) {
-            clearInterval(factAnimation);
             loadingOverlay.style.opacity = '0';
             setTimeout(() => {
                 loadingOverlay.style.display = 'none';
