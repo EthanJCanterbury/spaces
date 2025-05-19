@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Any, Union
 
 logger = logging.getLogger(__name__)
 
-PISTON_API_BASE = "https://emkc.org/api/v2/piston"
+PISTON_API_BASE = "http://compute.hackclub.space/api/v2"
 RUNTIMES_ENDPOINT = f"{PISTON_API_BASE}/runtimes"
 EXECUTE_ENDPOINT = f"{PISTON_API_BASE}/execute"
 
@@ -44,9 +44,50 @@ class PistonService:
                 
             except Exception as e:
                 logger.error(f"Error fetching Piston runtimes: {str(e)}")
-                return []
+                # Use hardcoded languages if API call fails
+                cls._runtimes_cache = cls._get_hardcoded_runtimes()
+                cls._runtimes_by_language = cls._get_hardcoded_languages_map()
         
         return cls._runtimes_cache
+    
+    @classmethod
+    def _get_hardcoded_runtimes(cls) -> List[Dict[str, Any]]:
+        """Get hardcoded list of runtimes if API call fails."""
+        return [
+            {"language": "python", "version": "3.12.0"},
+            {"language": "java", "version": "15.0.2"},
+            {"language": "go", "version": "1.16.2"},
+            {"language": "ruby", "version": "3.0.1"},
+            {"language": "rust", "version": "1.68.2"},
+            {"language": "php", "version": "8.2.3"},
+            {"language": "typescript", "version": "5.0.3"},
+            {"language": "swift", "version": "5.3.3"},
+            {"language": "kotlin", "version": "1.8.20"},
+            {"language": "bash", "version": "5.2.0"},
+            {"language": "javascript", "version": "20.11.1"},
+            {"language": "c", "version": "10.2.0"},
+            {"language": "cpp", "version": "10.2.0"},
+            {"language": "d", "version": "10.2.0"},
+            {"language": "fortran", "version": "10.2.0"},
+            {"language": "basic.net", "version": "5.0.201"},
+            {"language": "fsharp.net", "version": "5.0.201"},
+            {"language": "csharp.net", "version": "5.0.201"},
+            {"language": "fsi", "version": "5.0.201"}
+        ]
+    
+    @classmethod
+    def _get_hardcoded_languages_map(cls) -> Dict[str, List[Dict[str, Any]]]:
+        """Get hardcoded languages map if API call fails."""
+        runtimes = cls._get_hardcoded_runtimes()
+        languages_map = {}
+        
+        for runtime in runtimes:
+            lang = runtime['language']
+            if lang not in languages_map:
+                languages_map[lang] = []
+            languages_map[lang].append(runtime)
+        
+        return languages_map
     
     @classmethod
     def get_languages(cls) -> List[str]:
@@ -203,13 +244,18 @@ class PistonService:
             "c": "fas fa-code",
             "cpp": "fas fa-code",
             "c++": "fas fa-code",
-            "csharp": "fab fa-microsoft",
+            "csharp.net": "fab fa-microsoft",
             "go": "fab fa-golang",
             "ruby": "fas fa-gem",
             "rust": "fas fa-cogs",
             "php": "fab fa-php",
             "swift": "fab fa-swift",
             "kotlin": "fab fa-android",
+            "d": "fas fa-code",
+            "fortran": "fas fa-calculator",
+            "basic.net": "fab fa-microsoft",
+            "fsharp.net": "fab fa-microsoft",
+            "fsi": "fab fa-microsoft",
             
             # Scripting languages
             "bash": "fas fa-terminal"
@@ -228,14 +274,19 @@ class PistonService:
             "c": "clike",
             "c++": "clike",
             "cpp": "clike",
-            "csharp": "clike",
+            "csharp.net": "clike",
             "go": "go",
             "ruby": "ruby",
             "rust": "rust",
             "php": "php",
             "swift": "swift",
             "kotlin": "clike",
-            "bash": "shell"
+            "bash": "shell",
+            "d": "d",
+            "fortran": "fortran",
+            "basic.net": "vb",
+            "fsharp.net": "mllike",
+            "fsi": "mllike"
         }
         return mode_map.get(language.lower(), "text/plain")
 
@@ -252,14 +303,19 @@ class PistonService:
             "c": "c",
             "c++": "cpp",
             "cpp": "cpp",
-            "csharp": "cs",
+            "csharp.net": "cs",
             "go": "go",
             "ruby": "rb",
             "rust": "rs",
             "php": "php",
             "swift": "swift",
             "kotlin": "kt",
-            "bash": "sh"
+            "bash": "sh",
+            "d": "d",
+            "fortran": "f90",
+            "basic.net": "vb",
+            "fsharp.net": "fs",
+            "fsi": "fsx"
         }
         extension = extension_map.get(language, "txt")
         logger.info(f"Language extension for '{language}': '{extension}'")
@@ -278,8 +334,7 @@ class PistonService:
             "c": "c",
             "cpp": "cpp",
             "c++": "cpp",
-            "csharp": "cs",
-            "c#": "cs",
+            "csharp.net": "cs",
             "go": "go",
             "ruby": "rb",
             "rust": "rs",
@@ -287,7 +342,11 @@ class PistonService:
             "swift": "swift",
             "kotlin": "kt",
             "bash": "sh",
-            "shell": "sh"
+            "d": "d",
+            "fortran": "f90",
+            "basic.net": "vb",
+            "fsharp.net": "fs",
+            "fsi": "fsx"
         }
         
         # Special handling for known languages to ensure they always get proper extensions
@@ -299,7 +358,7 @@ class PistonService:
             return "js"
         elif language in ["typescript", "ts"]:
             return "ts"
-        elif language in ["csharp", "c#"]:
+        elif language in ["csharp.net"]:
             return "cs"
             
         # Get appropriate extension without adding a period
@@ -460,7 +519,7 @@ int main() {
     return 0;
 }
 ''',
-            "csharp": '''// Welcome to your C# space!
+            "csharp.net": '''// Welcome to your C# space!
 using System;
 
 class Program {
@@ -495,11 +554,11 @@ func main() {
     
     // Try adding your own code below:
     name := "Go Coder"
-    fmt.Printf("Welcome, %s!\n", name)
+    fmt.Printf("Welcome, %s!\\n", name)
     
     // You can use loops:
     for i := 0; i < 3; i++ {
-        fmt.Printf("Count: %d\n", i)
+        fmt.Printf("Count: %d\\n", i)
     }
     
     // And conditions:
@@ -586,22 +645,22 @@ main();
 // Welcome to your PHP space!
 
 function main() {
-    echo "Hello, World!\n";
+    echo "Hello, World!\\n";
     
     // Try adding your own code below:
     $name = "PHP Coder";
-    echo "Welcome, $name!\n";
+    echo "Welcome, $name!\\n";
     
     // You can use loops:
     for ($i = 0; $i < 3; $i++) {
-        echo "Count: $i\n";
+        echo "Count: $i\\n";
     }
     
     // And conditions:
     if ($name == "PHP Coder") {
-        echo "You're a PHP coder!\n";
+        echo "You're a PHP coder!\\n";
     } else {
-        echo "You can become a PHP coder!\n";
+        echo "You can become a PHP coder!\\n";
     }
 }
 
@@ -616,11 +675,11 @@ func main() {
     
     // Try adding your own code below:
     let name = "Swift Coder"
-    print("Welcome, \(name)!")
+    print("Welcome, \\(name)!")
     
     // You can use loops:
     for i in 0..<3 {
-        print("Count: \(i)")
+        print("Count: \\(i)")
     }
     
     // And conditions:
@@ -682,6 +741,119 @@ main() {
 
 # Call the main function
 main
+''',
+            "d": '''// Welcome to your D space!
+import std.stdio;
+
+void main() {
+    writeln("Hello, World!");
+    
+    // Try adding your own code below:
+    string name = "D Coder";
+    writeln("Welcome, ", name, "!");
+    
+    // You can use loops:
+    for (int i = 0; i < 3; i++) {
+        writeln("Count: ", i);
+    }
+    
+    // And conditions:
+    if (name == "D Coder") {
+        writeln("You're a D coder!");
+    } else {
+        writeln("You can become a D coder!");
+    }
+}
+''',
+            "fortran": '''! Welcome to your Fortran space!
+program hello
+    implicit none
+    character(len=20) :: name
+    integer :: i
+    
+    print *, "Hello, World!"
+    
+    ! Try adding your own code below:
+    name = "Fortran Coder"
+    print *, "Welcome, ", trim(name), "!"
+    
+    ! You can use loops:
+    do i = 0, 2
+        print *, "Count: ", i
+    end do
+    
+    ! And conditions:
+    if (name == "Fortran Coder") then
+        print *, "You're a Fortran coder!"
+    else
+        print *, "You can become a Fortran coder!"
+    end if
+end program hello
+''',
+            "basic.net": '''' Welcome to your Visual Basic space!
+Imports System
+
+Module Program
+    Sub Main()
+        Console.WriteLine("Hello, World!")
+        
+        ' Try adding your own code below:
+        Dim name As String = "VB Coder"
+        Console.WriteLine("Welcome, " & name & "!")
+        
+        ' You can use loops:
+        For i As Integer = 0 To 2
+            Console.WriteLine("Count: " & i)
+        Next
+        
+        ' And conditions:
+        If name = "VB Coder" Then
+            Console.WriteLine("You're a VB coder!")
+        Else
+            Console.WriteLine("You can become a VB coder!")
+        End If
+    End Sub
+End Module
+''',
+            "fsharp.net": '''// Welcome to your F# space!
+open System
+
+let main() =
+    printfn "Hello, World!"
+    
+    // Try adding your own code below:
+    let name = "F# Coder"
+    printfn "Welcome, %s!" name
+    
+    // You can use loops:
+    for i in 0..2 do
+        printfn "Count: %d" i
+    
+    // And conditions:
+    if name = "F# Coder" then
+        printfn "You're an F# coder!"
+    else
+        printfn "You can become an F# coder!"
+
+// Call the main function
+main()
+''',
+            "fsi": '''// Welcome to your F# Interactive space!
+open System
+
+let name = "F# Coder"
+printfn "Hello, World!"
+printfn "Welcome, %s!" name
+
+// You can use loops:
+for i in 0..2 do
+    printfn "Count: %d" i
+
+// And conditions:
+if name = "F# Coder" then
+    printfn "You're an F# coder!"
+else
+    printfn "You can become an F# coder!"
 '''
         }
         
@@ -702,7 +874,7 @@ main
         elif language in ["lua", "moonscript"]:
             return f"-- Welcome to your {language_capitalized} space!\n\nfunction main()\n    print(\"Hello, World!\")\n    \n    -- Write your code here\nend\n\nmain()\n"
         
-        elif language in ["c", "cpp", "c++", "java", "csharp", "d", "rust", "go", "swift", "kotlin"]:
+        elif language in ["c", "cpp", "c++", "java", "csharp.net", "d", "rust", "go", "swift", "kotlin"]:
             main_func = f"func" if language == 'go' else ("int" if language in ['c', 'cpp', 'c++'] else "void")
             return_str = f"// Welcome to your {language_capitalized} space!\n\n// Main function\n{main_func} main() {{\n    // Write your code here\n    printf(\"Hello, World!\\\\n\");\n"
             if language in ['c', 'cpp', 'c++']:
@@ -720,7 +892,7 @@ main
         elif language in ["php"]:
             return f"<?php\n// Welcome to your PHP space!\n\nfunction main() {{\n    echo \"Hello, World!\\n\";\n    \n    // Write your code here\n}}\n\n// Call the main function\nmain();\n?>\n"
         
-        elif language in ["haskell", "fsharp", "ocaml", "elm"]:
+        elif language in ["haskell", "fsharp.net", "ocaml", "elm"]:
             return f"-- Welcome to your {language_capitalized} space!\n\nmain = do\n  putStrLn \"Hello, World!\"\n  \n  -- Write your code here\n\n-- Execute main function\nmain\n"
         
         elif language in ["clojure", "scheme", "racket", "lisp"]:
