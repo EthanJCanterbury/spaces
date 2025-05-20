@@ -192,88 +192,82 @@ def github_callback():
                 user = current_user
                 user.github_token = access_token
                 user.github_username = gh_user.login
-    except Exception as e:
-        print(f"GitHub OAuth exception: {str(e)}")
-        from utils.logs_util import logs_manager
-        logs_manager.add_log(f"GitHub OAuth exception: {str(e)}", level="ERROR", source="github")
-        flash(f'GitHub authentication error: {str(e)}', 'error')
-        return redirect(url_for('login'))
+                db.session.commit()
+                activity = UserActivity(
+                    activity_type="github_connected",
+                    message=
+                    f'User {user.username} connected GitHub account @{gh_user.login}',
+                    username=user.username,
+                    user_id=user.id)
+                db.session.add(activity)
+                db.session.commit()
+            else:
+                try:
+                    primary_email = gh_user.email
 
-            db.session.commit()
+                    if not primary_email:
+                        emails = gh_user.get_emails()
+                        for email in emails:
+                            if email.primary:
+                                primary_email = email.email
+                                break
 
-            activity = UserActivity(
-                activity_type="github_connected",
-                message=
-                f'User {user.username} connected GitHub account @{gh_user.login}',
-                username=user.username,
-                user_id=user.id)
-            db.session.add(activity)
-            db.session.commit()
-        else:
-            try:
-                primary_email = gh_user.email
+                    if not primary_email:
+                        flash('Could not get email from GitHub account', 'error')
+                        return redirect(url_for('login'))
 
-                if not primary_email:
-                    emails = gh_user.get_emails()
-                    for email in emails:
-                        if email.primary:
-                            primary_email = email.email
-                            break
-
-                if not primary_email:
+                except Exception as e:
+                    print(f'Error getting GitHub email: {str(e)}')
                     flash('Could not get email from GitHub account', 'error')
                     return redirect(url_for('login'))
 
-            except Exception as e:
-                print(f'Error getting GitHub email: {str(e)}')
-                flash('Could not get email from GitHub account', 'error')
-                return redirect(url_for('login'))
+                if primary_email:
+                    user = User.query.filter_by(email=primary_email).first()
+                    if user:
+                        user.github_token = access_token
+                        user.github_username = gh_user.login
+                        db.session.commit()
+                        login_user(user)
 
-            if primary_email:
-                user = User.query.filter_by(email=primary_email).first()
-                if user:
-                    user.github_token = access_token
-                    user.github_username = gh_user.login
-                    db.session.commit()
-                    login_user(user)
+                        # Record activity
+                        activity = UserActivity(
+                            activity_type="github_connected",
+                            message=
+                            f'User {user.username} connected GitHub account @{gh_user.login}',
+                            username=user.username,
+                            user_id=user.id)
+                        db.session.add(activity)
+                        db.session.commit()
+                    else:
+                        user = User(username=gh_user.login,
+                                    email=primary_email,
+                                    github_token=access_token,
+                                    github_username=gh_user.login,
+                                    preview_code_verified=True)
+                        import secrets
+                        random_password = secrets.token_urlsafe(32)
+                        user.set_password(random_password)
+                        db.session.add(user)
+                        db.session.commit()
+                        login_user(user)
 
-                    # Record activity
-                    activity = UserActivity(
-                        activity_type="github_connected",
-                        message=
-                        f'User {user.username} connected GitHub account @{gh_user.login}',
-                        username=user.username,
-                        user_id=user.id)
-                    db.session.add(activity)
-                    db.session.commit()
-                else:
-                    user = User(username=gh_user.login,
-                                email=primary_email,
-                                github_token=access_token,
-                                github_username=gh_user.login,
-                                preview_code_verified=True)
-                    import secrets
-                    random_password = secrets.token_urlsafe(32)
-                    user.set_password(random_password)
-                    db.session.add(user)
-                    db.session.commit()
-                    login_user(user)
-
-                    # Record activity
-                    activity = UserActivity(
-                        activity_type="github_connected",
-                        message=
-                        f'User {user.username} connected GitHub account @{gh_user.login}',
-                        username=user.username,
-                        user_id=user.id)
-                    db.session.add(activity)
-                    db.session.commit()
+                        # Record activity
+                        activity = UserActivity(
+                            activity_type="github_connected",
+                            message=
+                            f'User {user.username} connected GitHub account @{gh_user.login}',
+                            username=user.username,
+                            user_id=user.id)
+                        db.session.add(activity)
+                        db.session.commit()
 
         next_url = session.pop('next_url', None)
         return redirect(next_url or url_for('welcome'))
 
-    flash('Failed to authenticate with GitHub', 'error')
-    return redirect(url_for('login'))
+    except Exception as e:
+        print(f"GitHub OAuth exception: {str(e)}")
+        flash('Failed to authenticate with GitHub', 'error')
+        return redirect(url_for('login'))
 
 
 @github_bp.route('/api/github/create-repo', methods=['POST'])
