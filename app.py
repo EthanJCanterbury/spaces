@@ -40,6 +40,7 @@ from slack_auth import slack_auth_bp
 from routes.hackatime_routes import hackatime_bp
 from routes.pizza_grants_routes import pizza_grants_bp
 from groq import Groq
+from better_stack_logger import setup_betterstack_logging
 
 load_dotenv()
 
@@ -58,6 +59,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Set up CSRF protection
 csrf = CSRFProtect(app)
+
+# Setup BetterStack logging
+if os.getenv('BETTERSTACK_TOKEN') and os.getenv('BETTERSTACK_URL'):
+    betterstack_handler = setup_betterstack_logging(app, logging.WARNING)
+    app.logger.info(f"BetterStack logging initialized with source ID: {os.getenv('BETTERSTACK_SOURCE_ID', 'spaces_prod')}")
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_size': 20,
     'pool_recycle': 1800,  # Recycle connections every 30 minutes
@@ -2339,6 +2345,115 @@ def update_leader_access_code():
         return jsonify({
             'success': False,
             'message': 'Failed to update access code'
+        }), 500
+
+@app.route('/api/admin/settings/betterstack', methods=['GET'])
+@login_required
+@admin_required
+def get_betterstack_settings():
+    """Get current BetterStack logging settings"""
+    try:
+        with db.engine.connect() as conn:
+            # Check if settings exist
+            result = conn.execute(
+                db.text("SELECT value FROM system_settings WHERE key = 'betterstack_enabled'")
+            )
+            enabled = result.fetchone()
+            enabled = enabled[0] if enabled else 'false'
+            
+            result = conn.execute(
+                db.text("SELECT value FROM system_settings WHERE key = 'betterstack_log_level'")
+            )
+            log_level = result.fetchone()
+            log_level = log_level[0] if log_level else 'WARNING'
+            
+            return jsonify({
+                'success': True,
+                'enabled': enabled.lower() == 'true',
+                'log_level': log_level
+            })
+    except Exception as e:
+        app.logger.error(f'Error retrieving BetterStack settings: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': 'Failed to retrieve BetterStack settings'
+        }), 500
+
+@app.route('/api/admin/settings/betterstack', methods=['POST'])
+@login_required
+@admin_required
+def update_betterstack_settings():
+    """Update BetterStack logging settings"""
+    try:
+        data = request.get_json()
+        enabled = data.get('enabled', False)
+        log_level = data.get('log_level', 'WARNING')
+        
+        # Validate log level
+        valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+        if log_level not in valid_levels:
+            return jsonify({
+                'success': False,
+                'message': f'Invalid log level. Must be one of: {", ".join(valid_levels)}'
+            }), 400
+            
+        with db.engine.connect() as conn:
+            # Update enabled setting
+            conn.execute(
+                db.text("""
+                    INSERT INTO system_settings (key, value) 
+                    VALUES ('betterstack_enabled', :enabled) 
+                    ON CONFLICT (key) DO UPDATE SET value = :enabled
+                """),
+                {"enabled": str(enabled).lower()}
+            )
+            
+            # Update log level setting
+            conn.execute(
+                db.text("""
+                    INSERT INTO system_settings (key, value) 
+                    VALUES ('betterstack_log_level', :level) 
+                    ON CONFLICT (key) DO UPDATE SET value = :level
+                """),
+                {"level": log_level}
+            )
+                
+            conn.commit()
+            
+        # Update logger if it exists
+        logger_level = getattr(logging, log_level)
+        for handler in app.logger.handlers:
+            if isinstance(handler, BetterStackHandler):
+                handler.setLevel(logger_level)
+                if enabled:
+                    handler.enabled = True
+                    app.logger.info(f"BetterStack logging enabled with level: {log_level}")
+                    # Test log
+                    app.logger.warning(f"BetterStack test log at {datetime.utcnow().isoformat()} from IP {request.remote_addr}")
+                else:
+                    handler.enabled = False
+                    app.logger.info("BetterStack logging disabled")
+        
+        # Record this admin action
+        activity = UserActivity(
+            activity_type="admin_action",
+            message=f"Admin {{username}} {enabled and 'enabled' or 'disabled'} BetterStack logging",
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
+        db.session.commit()
+            
+        return jsonify({
+            'success': True,
+            'message': f'BetterStack logging {enabled and "enabled" or "disabled"} successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error updating BetterStack settings: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': 'Failed to update BetterStack settings'
         }), 500
 
 
