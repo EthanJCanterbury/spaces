@@ -7,6 +7,9 @@ from github_routes_helper import get_file_extension
 import os
 import requests
 import time
+from datetime import datetime
+from flask import current_app as app  # Import the current app
+
 
 load_dotenv()
 
@@ -363,6 +366,40 @@ def create_repo():
 
     except GithubException as e:
         error_message = f"GitHub Error: {e.data.get('message', str(e))}"
+        app.logger.error(f'GitHub authentication error: {error_message}, Status: {e.status}, Data: {e.data}')
+
+        # Send to BetterStack for monitoring
+        try:
+            import requests
+            betterstack_token = os.environ.get('BETTERSTACK_TOKEN', '5d1y4HBT11qEa7sp3YL69oEB')
+            betterstack_url = os.environ.get('BETTERSTACK_URL', 'https://s1315397.eu-nbg-2.betterstackdata.com/')
+
+            payload = {
+                'dt': datetime.utcnow().isoformat(),
+                'message': f"GitHub Authentication Error: {error_message}",
+                'level': 'error',
+                'error': {
+                    'type': 'GitHubAuthError',
+                    'message': error_message,
+                    'status_code': e.status,
+                    'data': str(e.data),
+                    'url': request.path,
+                    'method': request.method
+                }
+            }
+
+            requests.post(
+                betterstack_url,
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {betterstack_token}'
+                },
+                json=payload,
+                timeout=3
+            )
+        except Exception as bs_error:
+            app.logger.warning(f'Failed to send GitHub error to BetterStack: {str(bs_error)}')
+
         return jsonify({'error': error_message}), e.status
     except Exception as e:
         print(f'Error creating repository: {str(e)}')
@@ -526,7 +563,7 @@ def push_changes():
             # For all code spaces including Python
             extension = '.py' if site.site_type == 'python' or site.language == 'python' else get_file_extension(site.language)
             files_to_update[f'main{extension}'] = site.language_content or ''
-            
+
             # Add requirements.txt for Python projects
             if site.site_type == 'python' or site.language == 'python':
                 try:
@@ -618,8 +655,41 @@ def push_changes():
         })
 
     except GithubException as e:
-        print(f'GitHub error: {str(e)}')
         error_message = f"GitHub Error: {e.data.get('message', str(e))}"
+        app.logger.error(f'GitHub authentication error: {error_message}, Status: {e.status}, Data: {e.data}')
+
+        # Send to BetterStack for monitoring
+        try:
+            import requests
+            betterstack_token = os.environ.get('BETTERSTACK_TOKEN', '5d1y4HBT11qEa7sp3YL69oEB')
+            betterstack_url = os.environ.get('BETTERSTACK_URL', 'https://s1315397.eu-nbg-2.betterstackdata.com/')
+
+            payload = {
+                'dt': datetime.utcnow().isoformat(),
+                'message': f"GitHub Authentication Error: {error_message}",
+                'level': 'error',
+                'error': {
+                    'type': 'GitHubAuthError',
+                    'message': error_message,
+                    'status_code': e.status,
+                    'data': str(e.data),
+                    'url': request.path,
+                    'method': request.method
+                }
+            }
+
+            requests.post(
+                betterstack_url,
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {betterstack_token}'
+                },
+                json=payload,
+                timeout=3
+            )
+        except Exception as bs_error:
+            app.logger.warning(f'Failed to send GitHub error to BetterStack: {str(bs_error)}')
+
         return jsonify({'error': error_message}), e.status
     except Exception as e:
         print(f'Error pushing changes: {str(e)}')
@@ -692,8 +762,41 @@ def delete_repo():
         })
 
     except GithubException as e:
-        print(f'GitHub error: {str(e)}')
         error_message = f"GitHub Error: {e.data.get('message', str(e))}"
+        app.logger.error(f'GitHub authentication error: {error_message}, Status: {e.status}, Data: {e.data}')
+
+        # Send to BetterStack for monitoring
+        try:
+            import requests
+            betterstack_token = os.environ.get('BETTERSTACK_TOKEN', '5d1y4HBT11qEa7sp3YL69oEB')
+            betterstack_url = os.environ.get('BETTERSTACK_URL', 'https://s1315397.eu-nbg-2.betterstackdata.com/')
+
+            payload = {
+                'dt': datetime.utcnow().isoformat(),
+                'message': f"GitHub Authentication Error: {error_message}",
+                'level': 'error',
+                'error': {
+                    'type': 'GitHubAuthError',
+                    'message': error_message,
+                    'status_code': e.status,
+                    'data': str(e.data),
+                    'url': request.path,
+                    'method': request.method
+                }
+            }
+
+            requests.post(
+                betterstack_url,
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': f'Bearer {betterstack_token}'
+                },
+                json=payload,
+                timeout=3
+            )
+        except Exception as bs_error:
+            app.logger.warning(f'Failed to send GitHub error to BetterStack: {str(bs_error)}')
+
         return jsonify({'error': error_message}), e.status
     except Exception as e:
         db.session.rollback()
