@@ -408,7 +408,7 @@ function testError(type) {
     }
 }
 
-// Use the isClubDashboard variable that was already declared at the top of the file
+// Using the existing isClubDashboard variable
 window.addEventListener('error', function(event) {
     // Skip if the error is null or undefined
     if (!isClubDashboard && event.error) {
@@ -464,7 +464,6 @@ window.addEventListener('error', function(event) {
 });
 
 // Promise rejection handler
-// Use the isClubDashboard variable that was already declared at the top of the file
 window.addEventListener('unhandledrejection', function(event) {
     if (!isClubDashboard && event.reason) {
         const errorInfo = {
