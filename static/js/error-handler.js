@@ -1,3 +1,4 @@
+
 // Check if the current page is club_dashboard before attaching error handlers
 const isClubDashboard = window.location.pathname.includes('club-dashboard');
 
@@ -407,12 +408,10 @@ function testError(type) {
     }
 }
 
-// Global error handler - use the isClubDashboard variable declared at the top of the file
-if (!isClubDashboard) {
-    window.addEventListener('error', function(event) {
-        // Skip if the error is null or undefined
-        if (!event.error && !event.message) return;
-
+// Use the isClubDashboard variable that was already declared at the top of the file
+window.addEventListener('error', function(event) {
+    // Skip if the error is null or undefined
+    if (!isClubDashboard && event.error) {
         // Handle cross-origin errors (which show up as "Script error." with no details)
         if (event.message === 'Script error.' && !event.filename) {
             // This is a cross-origin error, we can't get details due to browser security
@@ -461,13 +460,13 @@ if (!isClubDashboard) {
                 showToast('error', `JavaScript error: ${errorInfo.message}`);
             }
         }
-    });
+    }
+});
 
-    // Promise rejection handler
-    window.addEventListener('unhandledrejection', function(event) {
-        // Skip if the reason is null or undefined
-        if (!event.reason) return;
-
+// Promise rejection handler
+// Use the isClubDashboard variable that was already declared at the top of the file
+window.addEventListener('unhandledrejection', function(event) {
+    if (!isClubDashboard && event.reason) {
         const errorInfo = {
             type: 'Promise Rejection',
             message: event.reason ? (event.reason.message || String(event.reason)) : 'Unknown rejection reason',
@@ -503,5 +502,5 @@ if (!isClubDashboard) {
                 showToast('error', `Promise error: ${errorInfo.message}`);
             }
         }
-    });
-}
+    }
+});
