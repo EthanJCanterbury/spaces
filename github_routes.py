@@ -199,8 +199,6 @@ def github_callback():
         flash(f'GitHub authentication error: {str(e)}', 'error')
         return redirect(url_for('login'))
 
-        
-
             db.session.commit()
 
             activity = UserActivity(
