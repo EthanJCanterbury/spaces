@@ -1,3 +1,4 @@
+
 // Check if the current page is club_dashboard before attaching error handlers
 const isClubDashboard = window.location.pathname.includes('club-dashboard');
 
@@ -406,7 +407,9 @@ function testError(type) {
             break;
     }
 }
+
 // Global error handler - skip for club dashboard page
+// We've already defined isClubDashboard at the top, so we don't need to redefine it
 if (!isClubDashboard) {
     window.addEventListener('error', function(event) {
         // Skip if the error is null or undefined
