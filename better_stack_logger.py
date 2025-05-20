@@ -21,6 +21,13 @@ class BetterStackHandler(logging.Handler):
         else:
             self.enabled = True
             print(f"BetterStack logging enabled: {self.url}")
+            
+        # Custom log levels mapping
+        self.level_mapping = {
+            "1": logging.DEBUG,  # Level 1: Everything in console (DEBUG and above)
+            "2": logging.WARNING,  # Level 2: Warnings and errors (WARNING and above)
+            "3": logging.ERROR,  # Level 3: Only errors (ERROR and above)
+        }
     
     def emit(self, record):
         if not self.enabled:
@@ -90,11 +97,21 @@ class BetterStackHandler(logging.Handler):
         
         return log_entry
 
-def setup_betterstack_logging(app=None, level=logging.WARNING):
+def setup_betterstack_logging(app=None, level=logging.WARNING, level_str=None):
     """
     Set up BetterStack logging for a Flask application
+    
+    Args:
+        app: Flask application instance
+        level: Python logging level (used as fallback)
+        level_str: Custom level string ("1", "2", or "3")
     """
     handler = BetterStackHandler()
+    
+    # Map custom level string to Python logging level if provided
+    if level_str in handler.level_mapping:
+        level = handler.level_mapping[level_str]
+    
     handler.setLevel(level)
     
     # Create a formatter

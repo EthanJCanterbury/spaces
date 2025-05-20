@@ -63,7 +63,9 @@ csrf = CSRFProtect(app)
 
 # Setup BetterStack logging
 if os.getenv('BETTERSTACK_TOKEN') and os.getenv('BETTERSTACK_URL'):
-    betterstack_handler = setup_betterstack_logging(app, logging.WARNING)
+    # Default to level 2 (warnings and errors)
+    default_level = logging.WARNING
+    betterstack_handler = setup_betterstack_logging(app, default_level)
     app.logger.info(f"BetterStack logging initialized with source ID: {os.getenv('BETTERSTACK_SOURCE_ID', 'spaces_prod')}")
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_size': 20,
@@ -2366,7 +2368,7 @@ def get_betterstack_settings():
                 db.text("SELECT value FROM system_settings WHERE key = 'betterstack_log_level'")
             )
             log_level = result.fetchone()
-            log_level = log_level[0] if log_level else 'WARNING'
+            log_level = log_level[0] if log_level else '2'  # Default to level 2
             
             return jsonify({
                 'success': True,
@@ -2388,10 +2390,10 @@ def update_betterstack_settings():
     try:
         data = request.get_json()
         enabled = data.get('enabled', False)
-        log_level = data.get('log_level', 'WARNING')
+        log_level = data.get('log_level', '2')  # Default to level 2
         
         # Validate log level
-        valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+        valid_levels = ['1', '2', '3']
         if log_level not in valid_levels:
             return jsonify({
                 'success': False,
@@ -2421,16 +2423,27 @@ def update_betterstack_settings():
                 
             conn.commit()
             
+        # Map level string to actual log level
+        level_mapping = {
+            "1": logging.DEBUG,      # Level 1: Everything
+            "2": logging.WARNING,    # Level 2: Warnings and errors
+            "3": logging.ERROR       # Level 3: Errors only
+        }
+        logger_level = level_mapping.get(log_level, logging.WARNING)
+        
         # Update logger if it exists
-        logger_level = getattr(logging, log_level)
         for handler in app.logger.handlers:
             if isinstance(handler, BetterStackHandler):
                 handler.setLevel(logger_level)
                 if enabled:
                     handler.enabled = True
                     app.logger.info(f"BetterStack logging enabled with level: {log_level}")
-                    # Test log
-                    app.logger.warning(f"BetterStack test log at {datetime.utcnow().isoformat()} from IP {request.remote_addr}")
+                    # Test log based on level
+                    if log_level == "1":
+                        app.logger.debug(f"BetterStack test log (DEBUG) at {datetime.utcnow().isoformat()}")
+                    if log_level in ["1", "2"]:
+                        app.logger.warning(f"BetterStack test log (WARNING) at {datetime.utcnow().isoformat()}")
+                    app.logger.error(f"BetterStack test log (ERROR) at {datetime.utcnow().isoformat()}")
                 else:
                     handler.enabled = False
                     app.logger.info("BetterStack logging disabled")
@@ -2438,7 +2451,7 @@ def update_betterstack_settings():
         # Record this admin action
         activity = UserActivity(
             activity_type="admin_action",
-            message=f"Admin {{username}} {enabled and 'enabled' or 'disabled'} BetterStack logging",
+            message=f"Admin {{username}} {enabled and 'enabled' or 'disabled'} BetterStack logging with level {log_level}",
             username=current_user.username,
             user_id=current_user.id
         )
@@ -2447,7 +2460,7 @@ def update_betterstack_settings():
             
         return jsonify({
             'success': True,
-            'message': f'BetterStack logging {enabled and "enabled" or "disabled"} successfully'
+            'message': f'BetterStack logging {enabled and "enabled" or "disabled"} with level {log_level} successfully'
         })
     except Exception as e:
         db.session.rollback()
