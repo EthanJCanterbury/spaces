@@ -41,7 +41,7 @@ from slack_auth import slack_auth_bp
 from routes.hackatime_routes import hackatime_bp
 from routes.pizza_grants_routes import pizza_grants_bp
 from groq import Groq
-from better_stack_logger import setup_betterstack_logging
+from better_stack_logger import setup_betterstack_logging, BetterStackHandler
 
 load_dotenv()
 
