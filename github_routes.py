@@ -16,6 +16,11 @@ GITHUB_CLIENT_ID = os.getenv('GITHUB_CLIENT_ID')
 GITHUB_CLIENT_SECRET = os.getenv('GITHUB_CLIENT_SECRET')
 GITHUB_CALLBACK_URL = os.getenv('GITHUB_CALLBACK_URL')
 
+# Debug logging for GitHub auth
+print(f"GitHub Auth Config - Client ID: {'Set' if GITHUB_CLIENT_ID else 'MISSING'}")
+print(f"GitHub Auth Config - Client Secret: {'Set' if GITHUB_CLIENT_SECRET else 'MISSING'}")
+print(f"GitHub Auth Config - Callback URL: {GITHUB_CALLBACK_URL or 'MISSING'}")
+
 
 @github_bp.route('/api/github/status')
 @login_required
@@ -153,17 +158,35 @@ def github_callback():
         flash('GitHub authentication failed', 'error')
         return redirect(url_for('login'))
 
-    response = requests.post('https://github.com/login/oauth/access_token',
-                             headers={'Accept': 'application/json'},
-                             data={
-                                 'client_id': GITHUB_CLIENT_ID,
-                                 'client_secret': GITHUB_CLIENT_SECRET,
-                                 'code': code,
-                                 'redirect_uri': GITHUB_CALLBACK_URL
-                             })
+    try:
+        response = requests.post('https://github.com/login/oauth/access_token',
+                                headers={'Accept': 'application/json'},
+                                data={
+                                    'client_id': GITHUB_CLIENT_ID,
+                                    'client_secret': GITHUB_CLIENT_SECRET,
+                                    'code': code,
+                                    'redirect_uri': GITHUB_CALLBACK_URL
+                                })
 
-    data = response.json()
-    if 'access_token' in data:
+        data = response.json()
+        print(f"GitHub OAuth response status: {response.status_code}")
+        print(f"GitHub OAuth response (sanitized): {str(data)[:100]}...")
+        
+        from utils.logs_util import logs_manager
+        logs_manager.add_log(f"GitHub OAuth response status: {response.status_code}", level="INFO", source="github")
+        
+        if 'error' in data:
+            logs_manager.add_log(f"GitHub OAuth error: {data.get('error_description', data.get('error'))}", 
+                                level="ERROR", source="github")
+            print(f"GitHub OAuth error: {data.get('error_description', data.get('error'))}")
+            
+        if 'access_token' in data:
+    except Exception as e:
+        print(f"GitHub OAuth exception: {str(e)}")
+        from utils.logs_util import logs_manager
+        logs_manager.add_log(f"GitHub OAuth exception: {str(e)}", level="ERROR", source="github")
+        flash(f'GitHub authentication error: {str(e)}', 'error')
+        return redirect(url_for('login'))
         access_token = data['access_token']
         session['github_token'] = access_token
 
