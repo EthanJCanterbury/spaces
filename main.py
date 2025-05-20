@@ -75,6 +75,15 @@ def support():
 if __name__ == '__main__':
     app.logger.info("Starting Hack Club Spaces application")
 
+    # Clear and initialize logs
+    try:
+        from utils.logs_util import logs_manager
+        logs_manager.clear_logs()
+        logs_manager.add_log("Application started", level="INFO", source="system")
+        app.logger.info("Logs system initialized")
+    except Exception as e:
+        app.logger.warning(f"Logs initialization error: {e}")
+
     # Initialize database
     try:
         initialize_database()

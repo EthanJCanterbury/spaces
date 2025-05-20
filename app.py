@@ -244,7 +244,12 @@ def log_request_info():
 
     # Log only for specific error-prone endpoints or in debug mode
     if app.debug or 'admin' in request.path or request.method != 'GET':
-        app.logger.debug('Request: %s %s', request.method, request.path)
+        log_message = f'Request: {request.method} {request.path}'
+        app.logger.debug(log_message)
+        
+        # Also store in our logs manager
+        from utils.logs_util import logs_manager
+        logs_manager.add_log(log_message, level="DEBUG", source="request")
 
 
 @app.after_request
@@ -252,8 +257,12 @@ def log_response_info(response):
     """Log information about error responses only."""
     # Only log non-successful responses
     if response.status_code >= 400:
-        app.logger.warning('Response: %s %s → %d', request.method,
-                           request.path, response.status_code)
+        log_message = f'Response: {request.method} {request.path} → {response.status_code}'
+        app.logger.warning(log_message)
+        
+        # Also store in our logs manager
+        from utils.logs_util import logs_manager
+        logs_manager.add_log(log_message, level="WARNING", source="response")
     return response
 
 
@@ -3267,6 +3276,28 @@ def toggle_staff_status(user_id):
             'success': False,
             'message': f'Failed to update staff status: {str(e)}'
         }), 500
+
+@app.route('/api/admin/logs', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_logs():
+    """Get or clear logs for admin"""
+    from utils.logs_util import logs_manager
+    
+    if request.method == 'POST':
+        action = request.json.get('action')
+        if action == 'clear':
+            logs_manager.clear_logs()
+            return jsonify({'success': True, 'message': 'Logs cleared successfully'})
+        return jsonify({'success': False, 'message': 'Invalid action'})
+    
+    # GET request - return logs as JSON file download
+    logs = logs_manager.get_logs()
+    return Response(
+        json.dumps(logs, indent=2),
+        mimetype='application/json',
+        headers={'Content-Disposition': f'attachment;filename=logs_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.json'}
+    )
 
 @app.route('/api/admin/export-users', methods=['POST'])
 @login_required
