@@ -24,7 +24,7 @@ class BetterStackHandler(logging.Handler):
             
         # Custom log levels mapping
         self.level_mapping = {
-            "1": logging.DEBUG,  # Level 1: Everything in console (DEBUG and above)
+            "1": logging.NOTSET,  # Level 1: Absolutely EVERYTHING (NOTSET is lowest possible level)
             "2": logging.WARNING,  # Level 2: Warnings and errors (WARNING and above)
             "3": logging.ERROR,  # Level 3: Only errors (ERROR and above)
         }
@@ -130,8 +130,18 @@ def setup_betterstack_logging(app=None, level=logging.WARNING, level_str=None):
                 # Continue with the default handler
                 return app.handle_exception(e)
     
-    # Add to root logger to catch all logs
+    # Configure root logger to catch absolutely ALL logs
     root_logger = logging.getLogger()
+    root_logger.setLevel(logging.NOTSET)  # Capture everything at root level
     root_logger.addHandler(handler)
+    
+    # Force ALL loggers to propagate to root
+    for logger_name in logging.root.manager.loggerDict:
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(logging.NOTSET)
+        logger.propagate = True
+        
+    # Log a test message to verify setup
+    logging.debug("BetterStack logger initialized to capture ALL log messages")
     
     return handler
