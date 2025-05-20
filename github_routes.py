@@ -186,15 +186,15 @@ def github_callback():
 
             g = Github(access_token)
             gh_user = g.get_user()
+            
+            user = None
+            if current_user.is_authenticated:
     except Exception as e:
         print(f"GitHub OAuth exception: {str(e)}")
         from utils.logs_util import logs_manager
         logs_manager.add_log(f"GitHub OAuth exception: {str(e)}", level="ERROR", source="github")
         flash(f'GitHub authentication error: {str(e)}', 'error')
         return redirect(url_for('login'))
-
-        user = None
-        if current_user.is_authenticated:
             user = current_user
             user.github_token = access_token
             user.github_username = gh_user.login
