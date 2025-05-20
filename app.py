@@ -196,41 +196,6 @@ def handle_error(error):
 
     context = get_error_context(error)
     app.logger.error(f'Unhandled Exception: {context}')
-    
-    # Send to BetterStack
-    try:
-        import requests
-        betterstack_token = os.environ.get('BETTERSTACK_TOKEN', '5d1y4HBT11qEa7sp3YL69oEB')
-        betterstack_url = os.environ.get('BETTERSTACK_URL', 'https://s1315397.eu-nbg-2.betterstackdata.com/')
-        
-        payload = {
-            'dt': datetime.utcnow().isoformat(),
-            'message': f"Server Error: {str(error)}",
-            'level': 'error',
-            'error': {
-                'type': context.get('error_type', 'Server Error'),
-                'message': str(error),
-                'status_code': code,
-                'file': context.get('file_name'),
-                'line': context.get('line_number'),
-                'traceback': context.get('traceback'),
-                'url': request.path,
-                'method': request.method,
-                'user_id': current_user.id if not current_user.is_anonymous else None
-            }
-        }
-        
-        requests.post(
-            betterstack_url,
-            headers={
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {betterstack_token}'
-            },
-            json=payload,
-            timeout=3
-        )
-    except Exception as bs_error:
-        app.logger.warning(f'Failed to send error to BetterStack: {str(bs_error)}')
 
     return render_template('errors/generic.html', **context), code
 
@@ -262,31 +227,6 @@ def report_error():
 
         app.logger.error(
             f'Client Error Report: {json.dumps(error_log, indent=2)}')
-            
-        # Send to BetterStack
-        try:
-            import requests
-            betterstack_token = os.environ.get('BETTERSTACK_TOKEN', '5d1y4HBT11qEa7sp3YL69oEB')
-            betterstack_url = os.environ.get('BETTERSTACK_URL', 'https://s1315397.eu-nbg-2.betterstackdata.com/')
-            
-            payload = {
-                'dt': datetime.utcnow().isoformat(),
-                'message': f"Client Error: {error_data.get('message')}",
-                'level': 'error',
-                'error': error_log
-            }
-            
-            requests.post(
-                betterstack_url,
-                headers={
-                    'Content-Type': 'application/json',
-                    'Authorization': f'Bearer {betterstack_token}'
-                },
-                json=payload,
-                timeout=3
-            )
-        except Exception as bs_error:
-            app.logger.warning(f'Failed to send error to BetterStack: {str(bs_error)}')
 
         return jsonify({'status': 'success'}), 200
     except Exception as e:
