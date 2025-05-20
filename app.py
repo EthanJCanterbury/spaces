@@ -306,6 +306,37 @@ def log_request_info():
     if app.debug or 'admin' in request.path or request.method != 'GET':
         app.logger.debug('Request: %s %s', request.method, request.path)
 
+# Send startup/shutdown events to BetterStack
+def log_app_lifecycle_to_betterstack(event_type, message):
+    """Log application lifecycle events to BetterStack."""
+    try:
+        import requests
+        betterstack_token = os.environ.get('BETTERSTACK_TOKEN', '5d1y4HBT11qEa7sp3YL69oEB')
+        betterstack_url = os.environ.get('BETTERSTACK_URL', 'https://s1315397.eu-nbg-2.betterstackdata.com/')
+        
+        payload = {
+            'dt': datetime.utcnow().isoformat(),
+            'message': message,
+            'level': 'info',
+            'event': {
+                'type': event_type,
+                'timestamp': datetime.utcnow().isoformat(),
+                'hostname': os.environ.get('HOSTNAME', 'spaces-app')
+            }
+        }
+        
+        requests.post(
+            betterstack_url,
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {betterstack_token}'
+            },
+            json=payload,
+            timeout=3
+        )
+    except Exception as bs_error:
+        app.logger.warning(f'Failed to send lifecycle event to BetterStack: {str(bs_error)}')
+
 
 @app.after_request
 def log_response_info(response):
@@ -6339,13 +6370,43 @@ def bulk_delete_sites():
         app.logger.error(f"Error in bulk delete: {str(e)}")
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 
+# Register signal handlers for graceful shutdown
+def setup_shutdown_handlers():
+    import signal
+    import sys
+    
+    def signal_handler(sig, frame):
+        app.logger.info(f"Received signal {sig}, shutting down...")
+        app.logger.info("=== Application stopping ===")
+        # Log shutdown event to BetterStack
+        log_app_lifecycle_to_betterstack('app_shutdown', f'Application stopping (signal {sig})')
+        sys.exit(0)
+    
+    # Register handlers for common termination signals
+    signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
+    signal.signal(signal.SIGTERM, signal_handler) # Termination request
+    
+    # Register shutdown function with Flask
+    @app.teardown_appcontext
+    def teardown_db(exception=None):
+        app.logger.info("Cleaning up database connections")
+        db.session.remove()
+
 if __name__ == '__main__':
     # Configure more detailed logging
     import logging
     logging.basicConfig(level=logging.INFO,
                         format='[%(asctime)s] [%(levelname)s] %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
+    
+    app.logger.info("=== Application starting ===")
     app.logger.info("Starting server directly from app.py")
+    
+    # Log startup event to BetterStack
+    log_app_lifecycle_to_betterstack('app_startup', 'Application starting')
+    
+    # Setup handlers for graceful shutdown
+    setup_shutdown_handlers()
 
     try:
         app.logger.info("Initializing database...")
@@ -6353,6 +6414,11 @@ if __name__ == '__main__':
         app.logger.info("Database initialization complete")
     except Exception as e:
         app.logger.warning(f"Database initialization error: {e}")
-        
+    
+    # Log BetterStack configuration
+    betterstack_token = os.environ.get('BETTERSTACK_TOKEN', '5d1y4HBT11qEa7sp3YL69oEB')
+    betterstack_url = os.environ.get('BETTERSTACK_URL', 'https://s1315397.eu-nbg-2.betterstackdata.com/')
+    app.logger.info(f"BetterStack logging configured: URL={betterstack_url[:30]}...")
+    
     app.logger.info("Server running on http://0.0.0.0:3000")
     app.run(host='0.0.0.0', port=3000, debug=True)
