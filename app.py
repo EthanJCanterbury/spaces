@@ -3293,8 +3293,22 @@ def admin_logs():
     
     # GET request - return logs as JSON file download
     logs = logs_manager.get_logs()
+    
+    # Add information about auto-clearing to the logs metadata
+    metadata = {
+        "logs_count": len(logs),
+        "last_cleared": logs_manager.last_cleared.isoformat(),
+        "auto_clear_interval": "30 minutes",
+        "generated_at": datetime.utcnow().isoformat()
+    }
+    
+    response_data = {
+        "metadata": metadata,
+        "logs": logs
+    }
+    
     return Response(
-        json.dumps(logs, indent=2),
+        json.dumps(response_data, indent=2),
         mimetype='application/json',
         headers={'Content-Disposition': f'attachment;filename=logs_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.json'}
     )
