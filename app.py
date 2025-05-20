@@ -5,6 +5,7 @@ import json
 import hashlib
 import requests
 import jinja2
+import logging
 import werkzeug.exceptions
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timedelta
