@@ -171,33 +171,36 @@ def github_callback():
         data = response.json()
         print(f"GitHub OAuth response status: {response.status_code}")
         print(f"GitHub OAuth response (sanitized): {str(data)[:100]}...")
-        
+
         from utils.logs_util import logs_manager
         logs_manager.add_log(f"GitHub OAuth response status: {response.status_code}", level="INFO", source="github")
-        
+
         if 'error' in data:
             logs_manager.add_log(f"GitHub OAuth error: {data.get('error_description', data.get('error'))}", 
                                 level="ERROR", source="github")
             print(f"GitHub OAuth error: {data.get('error_description', data.get('error'))}")
-            
+
         if 'access_token' in data:
             access_token = data['access_token']
             session['github_token'] = access_token
 
             g = Github(access_token)
             gh_user = g.get_user()
-            
+
             user = None
             if current_user.is_authenticated:
+                user = current_user
+                user.github_token = access_token
+                user.github_username = gh_user.login
     except Exception as e:
         print(f"GitHub OAuth exception: {str(e)}")
         from utils.logs_util import logs_manager
         logs_manager.add_log(f"GitHub OAuth exception: {str(e)}", level="ERROR", source="github")
         flash(f'GitHub authentication error: {str(e)}', 'error')
         return redirect(url_for('login'))
-            user = current_user
-            user.github_token = access_token
-            user.github_username = gh_user.login
+
+        
+
             db.session.commit()
 
             activity = UserActivity(
@@ -549,7 +552,7 @@ def push_changes():
             # For all code spaces including Python
             extension = '.py' if site.site_type == 'python' or site.language == 'python' else get_file_extension(site.language)
             files_to_update[f'main{extension}'] = site.language_content or ''
-            
+
             # Add requirements.txt for Python projects
             if site.site_type == 'python' or site.language == 'python':
                 try:
