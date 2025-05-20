@@ -408,7 +408,7 @@ function testError(type) {
     }
 }
 
-// Using the existing isClubDashboard variable
+// Use the existing isClubDashboard variable
 window.addEventListener('error', function(event) {
     // Skip if the error is null or undefined
     if (!isClubDashboard && event.error) {
