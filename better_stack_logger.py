@@ -29,11 +29,21 @@ class BetterStackHandler(logging.Handler):
             "3": logging.ERROR,  # Level 3: Only errors (ERROR and above)
         }
     
+    # Class variable to prevent recursion
+    _recursion_protection = False
+    
     def emit(self, record):
         if not self.enabled:
             return
         
+        # Skip if we're already inside an emit call
+        if BetterStackHandler._recursion_protection:
+            return
+            
         try:
+            # Set recursion protection flag
+            BetterStackHandler._recursion_protection = True
+            
             # Format the record
             log_entry = self.format_log_entry(record)
             
@@ -53,6 +63,9 @@ class BetterStackHandler(logging.Handler):
                 sys.stderr.write(f"Failed to send log to BetterStack: {response.status_code} - {response.text}\n")
         except Exception as e:
             sys.stderr.write(f"Error sending log to BetterStack: {str(e)}\n")
+        finally:
+            # Always reset the recursion protection flag
+            BetterStackHandler._recursion_protection = False
 
     def format_log_entry(self, record):
         # Get exception info if it exists
