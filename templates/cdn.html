@@ -79,3 +79,21 @@
 
 <script src="{{ url_for('static', filename='js/cdn.js') }}"></script>
 {% endblock %}
+
+
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Confirm Delete</h2>
+            <span class="close-modal" id="closeDeleteModal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete "<span id="fileToDelete"></span>"?</p>
+            <p class="warning-text">This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button id="cancelDeleteBtn" class="btn-secondary">Cancel</button>
+                <button id="confirmDeleteBtn" class="btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>

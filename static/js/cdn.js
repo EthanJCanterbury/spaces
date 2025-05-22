@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('Please select files to upload', 'error');
             return;
         }
-        
+
         const formData = new FormData();
 
         // Append files to FormData
@@ -185,13 +185,13 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('Network error occurred. Check console for details.', 'error');
             console.error('CDN upload failed. The Hack Club CDN API requires publicly accessible URLs to files.');
         });
-        
+
         xhr.addEventListener('readystatechange', function() {
             if (xhr.readyState === 4) {
                 console.log('CDN Upload Response Status:', xhr.status);
                 console.log('CDN Upload Response Headers:', xhr.getAllResponseHeaders());
                 console.log('CDN Upload Response Body:', xhr.responseText);
-                
+
                 if (xhr.status >= 400) {
                     try {
                         const errorResponse = JSON.parse(xhr.responseText);
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         inspectXhr.send();
-        
+
         // Still log the file info for reference
         console.log('Files being uploaded (client side):');
         let fileCount = 0;
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         }
-        
+
         // Only send if we haven't already processed these files
         if (fileCount > 0) {
             xhr.send(formData);
@@ -407,9 +407,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 const fileElement = this.closest('.file-item');
                 const fileName = fileElement.querySelector('.file-original-name').textContent;
 
-                if (confirm(`Are you sure you want to delete "${fileName}"? This action cannot be undone.`)) {
+                // Show delete confirmation modal
+                const deleteModal = document.getElementById('deleteModal');
+                const fileToDelete = document.getElementById('fileToDelete');
+                const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+                fileToDelete.textContent = fileName;
+                deleteModal.style.display = 'flex';
+
+                // Confirm delete button
+                confirmDeleteBtn.onclick = function() {
                     deleteFile(fileId, fileElement);
-                }
+                    deleteModal.style.display = 'none';
+                };
+
+                // Cancel delete button
+                document.getElementById('cancelDeleteBtn').onclick = function() {
+                    deleteModal.style.display = 'none';
+                };
+
+                // Close when clicking outside
+                window.onclick = function(e) {
+                    if (e.target === deleteModal) {
+                        deleteModal.style.display = 'none';
+                    }
+                };
             });
         });
     }
@@ -454,19 +476,33 @@ document.addEventListener('DOMContentLoaded', function() {
     // Copy URL button in modal
     copyUrlBtn.addEventListener('click', function() {
         copyUrlInput.select();
-        document.execCommand('copy');
-        showToast('URL copied to clipboard', 'success');
+        navigator.clipboard.writeText(copyUrlInput.value)
+            .then(() => {
+                showToast('URL copied to clipboard', 'success');
+            })
+            .catch(err => {
+                console.error('Could not copy text: ', err);
+                // Fallback to older method
+                copyUrlInput.select();
+                document.execCommand('copy');
+                showToast('URL copied to clipboard', 'success');
+            });
     });
 
-    // Close modal
-    document.querySelector('.close-modal').addEventListener('click', function() {
-        copyModal.style.display = 'none';
+    // Close modals
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modal = this.closest('.modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        });
     });
 
-    // Close modal when clicking outside
+    // Close modals when clicking outside
     window.addEventListener('click', function(e) {
-        if (e.target === copyModal) {
-            copyModal.style.display = 'none';
+        if (e.target.classList.contains('modal')) {
+            e.target.style.display = 'none';
         }
     });
 
