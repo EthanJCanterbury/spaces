@@ -218,17 +218,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         xhr.setRequestHeader('X-CSRFToken', csrfToken);
 
-        // Log the request details to console
+        // Log the raw request details to console
         console.log('CDN Upload Request:');
         console.log('URL:', '/cdn/upload');
         console.log('Method:', 'POST');
         console.log('Headers:', {
             'X-CSRFToken': csrfToken,
-            // Other headers set by the browser automatically
+            'Content-Type': 'application/json'
         });
+
+        // Check what the server is actually sending to the Hack Club CDN
+        // Create a second XHR to inspect the actual request sent to the CDN
+        const inspectXhr = new XMLHttpRequest();
+        inspectXhr.open('GET', '/cdn/debug-last-request');
+        inspectXhr.responseType = 'json';
+        inspectXhr.onload = function() {
+            if (inspectXhr.status === 200) {
+                console.log('FULL REQUEST SENT TO HACK CLUB CDN:');
+                console.log(JSON.stringify(inspectXhr.response, null, 2));
+            }
+        };
+        inspectXhr.send();
         
-        // Log FormData contents (files being sent)
-        console.log('Files being uploaded:');
+        // Still log the file info for reference
+        console.log('Files being uploaded (client side):');
         for (const pair of formData.entries()) {
             if (pair[0] === 'files') {
                 const file = pair[1];

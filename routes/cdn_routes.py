@@ -11,6 +11,14 @@ import mimetypes
 
 cdn_bp = Blueprint('cdn', __name__, url_prefix='/cdn')
 
+# Store the last request sent to the CDN for debugging
+last_cdn_request = {
+    "headers": {},
+    "data": None,
+    "url": "",
+    "method": ""
+}
+
 @cdn_bp.route('/')
 @login_required
 def cdn_page():
@@ -78,13 +86,22 @@ def upload_files():
         # Make request to the Hack Club CDN API
         current_app.logger.info(f"Sending CDN API request with URLs: {file_urls}")
         
-        request_data = json.dumps(file_urls)
-        current_app.logger.info(f"Request data: {request_data}")
-        
+        # Store the actual request data for debugging
+        global last_cdn_request
         headers = {
             'Authorization': f'Bearer {api_token}',
             'Content-Type': 'application/json'
         }
+        
+        # Save the full request details
+        last_cdn_request = {
+            "headers": dict(headers),  # Convert to dict to make it JSON serializable
+            "data": file_urls,  # This is the actual payload we're sending
+            "url": 'https://cdn.hackclub.com/api/v3/new',
+            "method": "POST"
+        }
+        
+        current_app.logger.info(f"Request data: {json.dumps(file_urls)}")
         current_app.logger.info(f"Request headers: {headers}")
         
         response = requests.post(
@@ -184,6 +201,13 @@ def get_user_files():
     except Exception as e:
         current_app.logger.error(f"Error getting user files: {str(e)}")
         return jsonify({'success': False, 'message': f'Error getting files: {str(e)}'})
+
+@cdn_bp.route('/debug-last-request')
+@login_required
+def debug_last_request():
+    """Return the last request sent to the CDN for debugging purposes"""
+    global last_cdn_request
+    return jsonify(last_cdn_request)
 
 @cdn_bp.route('/files/<int:file_id>/delete', methods=['POST'])
 @login_required
