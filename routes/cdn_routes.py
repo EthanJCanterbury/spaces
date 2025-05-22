@@ -62,14 +62,14 @@ def upload_files():
         return jsonify({'success': False, 'message': 'No valid files to upload'})
 
     try:
-        # Make request to the Hack Club CDN API
+        # Make request to the Hack Club CDN API v2
         response = requests.post(
-            'https://cdn.hackclub.com/api/v3/new',
+            'https://cdn.hackclub.com/api/v2/new',
             headers={
                 'Authorization': f'Bearer {api_token}',
                 'Content-Type': 'application/json'
             },
-            json=file_urls,  # This should be an array, not an object
+            json=file_urls,  # Array of URLs to upload
             timeout=60  # Longer timeout for large files
         )
 
@@ -77,30 +77,34 @@ def upload_files():
             current_app.logger.error(f"CDN API error: {response.status_code} - {response.text}")
             return jsonify({'success': False, 'message': f'CDN API error: {response.status_code}'})
 
-        # Process the CDN response
+        # Process the CDN response (v2 returns a dict with filenames as keys)
         cdn_response = response.json()
 
         # Save the uploaded files information to database
         for i, file in enumerate(files):
             if file.filename == '':
                 continue
-
-            if i >= len(cdn_response['files']):
-                break
-
-            file_info = cdn_response['files'][i]
+                
+            # Get basename from the URL
+            filename = file.filename
+            
+            # Skip if filename is not in the response
+            if filename not in cdn_response:
+                continue
+                
+            cdn_url = cdn_response[filename]
             file_size = file.content_length
             file_type = file.content_type or mimetypes.guess_type(file.filename)[0]
 
             # Create database record
             upload = UserUpload(
                 user_id=current_user.id,
-                filename=file_info['file'],
+                filename=filename,
                 original_filename=file.filename,
                 file_type=file_type,
                 file_size=file_size,
-                cdn_url=file_info['deployedUrl'],
-                sha=file_info['sha']
+                cdn_url=cdn_url,
+                sha=""  # v2 API doesn't return SHA values
             )
 
             db.session.add(upload)
