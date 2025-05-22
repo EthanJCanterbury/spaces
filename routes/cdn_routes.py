@@ -161,6 +161,17 @@ def upload_files():
             file_size = file.content_length
             file_type = file.content_type or mimetypes.guess_type(file.filename)[0]
 
+            # Check if this file (by sha) was already uploaded by this user in the last minute
+            # This prevents duplicate entries if the same file is uploaded twice
+            recent_upload = UserUpload.query.filter_by(
+                user_id=current_user.id,
+                sha=file_info['sha']
+            ).order_by(desc(UserUpload.uploaded_at)).first()
+            
+            if recent_upload and (datetime.utcnow() - recent_upload.uploaded_at).total_seconds() < 60:
+                current_app.logger.info(f"Skipping duplicate upload for {file.filename} with SHA {file_info['sha']}")
+                continue
+
             # Create database record
             upload = UserUpload(
                 user_id=current_user.id,

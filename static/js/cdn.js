@@ -242,8 +242,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Still log the file info for reference
         console.log('Files being uploaded (client side):');
+        let fileCount = 0;
         for (const pair of formData.entries()) {
             if (pair[0] === 'files') {
+                fileCount++;
                 const file = pair[1];
                 console.log('File:', {
                     name: file.name,
@@ -253,8 +255,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         }
-
-        xhr.send(formData);
+        
+        // Only send if we haven't already processed these files
+        if (fileCount > 0) {
+            xhr.send(formData);
+        }
     }
 
     // Load user's files
