@@ -39,6 +39,7 @@ from slack_routes import slack_bp
 from slack_auth import slack_auth_bp
 from routes.hackatime_routes import hackatime_bp
 from routes.pizza_grants_routes import pizza_grants_bp
+from routes.cdn_routes import cdn_bp
 from groq import Groq
 
 load_dotenv()
@@ -504,6 +505,7 @@ app.register_blueprint(slack_bp)
 app.register_blueprint(slack_auth_bp)
 app.register_blueprint(hackatime_bp)
 app.register_blueprint(pizza_grants_bp)
+app.register_blueprint(cdn_bp)
 
 
 def check_db_connection():

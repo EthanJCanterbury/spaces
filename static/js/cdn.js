@@ -1,0 +1,441 @@
+
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('fileInput');
+    const uploadForm = document.getElementById('uploadForm');
+    const selectedFiles = document.getElementById('selected-files');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const progressText = document.getElementById('progressText');
+    const filesList = document.getElementById('filesList');
+    const copyModal = document.getElementById('copyModal');
+    const copyUrlInput = document.getElementById('copyUrlInput');
+    const copyUrlBtn = document.getElementById('copyUrlBtn');
+    const htmlUsage = document.getElementById('htmlUsage');
+    
+    // File input change handler
+    fileInput.addEventListener('change', function(e) {
+        selectedFiles.innerHTML = '';
+        if (this.files.length > 0) {
+            Array.from(this.files).forEach((file, index) => {
+                const fileElement = document.createElement('div');
+                fileElement.className = 'selected-file';
+                fileElement.innerHTML = `
+                    <i class="fas fa-file"></i>
+                    <span>${file.name}</span>
+                    <span class="file-size">(${formatFileSize(file.size)})</span>
+                    <i class="fas fa-times remove-file" data-index="${index}"></i>
+                `;
+                selectedFiles.appendChild(fileElement);
+            });
+            
+            // Add click handler for remove buttons
+            document.querySelectorAll('.remove-file').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // This is a bit of a hack since we can't modify FileList directly
+                    const dataTransfer = new DataTransfer();
+                    const files = fileInput.files;
+                    const index = parseInt(this.getAttribute('data-index'));
+                    
+                    for (let i = 0; i < files.length; i++) {
+                        if (i !== index) {
+                            dataTransfer.items.add(files[i]);
+                        }
+                    }
+                    
+                    fileInput.files = dataTransfer.files;
+                    this.closest('.selected-file').remove();
+                    
+                    // Update indices after removal
+                    document.querySelectorAll('.remove-file').forEach((btn, i) => {
+                        btn.setAttribute('data-index', i);
+                    });
+                });
+            });
+        }
+    });
+    
+    // Upload form submit handler
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!fileInput.files.length) {
+            showToast('Please select files to upload', 'error');
+            return;
+        }
+        
+        uploadFiles(fileInput.files);
+    });
+    
+    // Drag and drop handlers
+    const dropZone = document.querySelector('.file-input-container');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+        dropZone.style.borderColor = '#ec3750';
+        dropZone.style.backgroundColor = 'rgba(236, 55, 80, 0.05)';
+    }
+    
+    function unhighlight() {
+        dropZone.style.borderColor = 'var(--border-color)';
+        dropZone.style.backgroundColor = '';
+    }
+    
+    dropZone.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        
+        // Trigger change event to update UI
+        const event = new Event('change');
+        fileInput.dispatchEvent(event);
+    }
+    
+    // File upload function
+    function uploadFiles(files) {
+        const formData = new FormData();
+        
+        // Append files to FormData
+        for (let i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+        }
+        
+        // Show progress bar
+        uploadProgress.style.display = 'block';
+        progressBarFill.style.width = '0%';
+        progressText.textContent = 'Preparing upload...';
+        
+        // Send the request
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = Math.round((e.loaded / e.total) * 100);
+                progressBarFill.style.width = percentComplete + '%';
+                progressText.textContent = `Uploading... ${percentComplete}%`;
+            }
+        });
+        
+        xhr.addEventListener('load', function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                const response = JSON.parse(xhr.responseText);
+                
+                if (response.success) {
+                    progressText.textContent = 'Upload complete!';
+                    showToast('Files uploaded successfully', 'success');
+                    
+                    // Clear file input
+                    fileInput.value = '';
+                    selectedFiles.innerHTML = '';
+                    
+                    // Refresh file list
+                    setTimeout(() => {
+                        uploadProgress.style.display = 'none';
+                        loadUserFiles();
+                    }, 2000);
+                } else {
+                    progressText.textContent = 'Upload failed: ' + response.message;
+                    showToast(response.message, 'error');
+                }
+            } else {
+                progressText.textContent = 'Upload failed!';
+                showToast('Failed to upload files', 'error');
+            }
+        });
+        
+        xhr.addEventListener('error', function() {
+            progressText.textContent = 'Network error occurred!';
+            showToast('Network error occurred', 'error');
+        });
+        
+        xhr.addEventListener('abort', function() {
+            progressText.textContent = 'Upload aborted!';
+            showToast('Upload aborted', 'warning');
+        });
+        
+        xhr.open('POST', '/cdn/upload');
+        
+        // Get the CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        
+        xhr.send(formData);
+    }
+    
+    // Load user's files
+    function loadUserFiles() {
+        filesList.innerHTML = `
+            <div class="loading-files">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Loading your files...</span>
+            </div>
+        `;
+        
+        fetch('/cdn/files')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.files.length === 0) {
+                        filesList.innerHTML = `
+                            <div class="no-files">
+                                <p>You haven't uploaded any files yet.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    filesList.innerHTML = '';
+                    
+                    data.files.forEach(file => {
+                        const fileElement = document.createElement('div');
+                        fileElement.className = 'file-item';
+                        
+                        // Determine file icon based on file type
+                        let fileIcon = 'fa-file';
+                        if (file.file_type) {
+                            if (file.file_type.includes('image')) {
+                                fileIcon = 'fa-file-image';
+                            } else if (file.file_type.includes('video')) {
+                                fileIcon = 'fa-file-video';
+                            } else if (file.file_type.includes('audio')) {
+                                fileIcon = 'fa-file-audio';
+                            } else if (file.file_type.includes('pdf')) {
+                                fileIcon = 'fa-file-pdf';
+                            } else if (file.file_type.includes('word') || file.file_type.includes('document')) {
+                                fileIcon = 'fa-file-word';
+                            } else if (file.file_type.includes('excel') || file.file_type.includes('spreadsheet')) {
+                                fileIcon = 'fa-file-excel';
+                            } else if (file.file_type.includes('zip') || file.file_type.includes('archive')) {
+                                fileIcon = 'fa-file-archive';
+                            } else if (file.file_type.includes('text')) {
+                                fileIcon = 'fa-file-alt';
+                            } else if (file.file_type.includes('html')) {
+                                fileIcon = 'fa-file-code';
+                            }
+                        }
+                        
+                        fileElement.innerHTML = `
+                            <div class="file-name">
+                                <i class="fas ${fileIcon} file-icon"></i>
+                                <span class="file-original-name" title="${file.original_filename}">${file.original_filename}</span>
+                            </div>
+                            <div class="file-size">${formatFileSize(file.file_size)}</div>
+                            <div class="file-date">${formatDate(file.uploaded_at)}</div>
+                            <div class="file-actions">
+                                <button class="file-action-btn copy-url" title="Copy URL" data-url="${file.cdn_url}" data-filename="${file.original_filename}">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                                <button class="file-action-btn open-file" title="Open file" data-url="${file.cdn_url}">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                                <button class="file-action-btn delete-file" title="Delete file" data-id="${file.id}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        `;
+                        
+                        filesList.appendChild(fileElement);
+                    });
+                    
+                    // Add event listeners for file actions
+                    attachFileActionHandlers();
+                } else {
+                    filesList.innerHTML = `
+                        <div class="no-files">
+                            <p>Error loading files: ${data.message}</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading files:', error);
+                filesList.innerHTML = `
+                    <div class="no-files">
+                        <p>Failed to load files. Please try again later.</p>
+                    </div>
+                `;
+            });
+    }
+    
+    // Attach event handlers for file actions
+    function attachFileActionHandlers() {
+        // Copy URL button
+        document.querySelectorAll('.copy-url').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const url = this.getAttribute('data-url');
+                const filename = this.getAttribute('data-filename');
+                
+                // Set input value
+                copyUrlInput.value = url;
+                
+                // Set HTML usage example
+                let htmlExample = '';
+                if (url.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+                    htmlExample = `<img src="${url}" alt="${filename}">`;
+                } else if (url.match(/\.(mp4|webm|ogg)$/i)) {
+                    htmlExample = `<video controls>
+  <source src="${url}" type="video/${url.split('.').pop().toLowerCase()}">
+  Your browser does not support the video tag.
+</video>`;
+                } else if (url.match(/\.(mp3|wav)$/i)) {
+                    htmlExample = `<audio controls>
+  <source src="${url}" type="audio/${url.split('.').pop().toLowerCase()}">
+  Your browser does not support the audio tag.
+</audio>`;
+                } else {
+                    htmlExample = `<a href="${url}" target="_blank">${filename}</a>`;
+                }
+                
+                htmlUsage.textContent = htmlExample;
+                
+                // Show modal
+                copyModal.style.display = 'flex';
+            });
+        });
+        
+        // Open file button
+        document.querySelectorAll('.open-file').forEach(btn => {
+            btn.addEventListener('click', function() {
+                window.open(this.getAttribute('data-url'), '_blank');
+            });
+        });
+        
+        // Delete file button
+        document.querySelectorAll('.delete-file').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const fileId = this.getAttribute('data-id');
+                const fileElement = this.closest('.file-item');
+                const fileName = fileElement.querySelector('.file-original-name').textContent;
+                
+                if (confirm(`Are you sure you want to delete "${fileName}"? This action cannot be undone.`)) {
+                    deleteFile(fileId, fileElement);
+                }
+            });
+        });
+    }
+    
+    // Delete file function
+    function deleteFile(fileId, fileElement) {
+        // Get the CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        fetch(`/cdn/files/${fileId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the file element from the list
+                fileElement.remove();
+                showToast('File deleted successfully', 'success');
+                
+                // If no files left, show no files message
+                if (filesList.children.length === 0) {
+                    filesList.innerHTML = `
+                        <div class="no-files">
+                            <p>You haven't uploaded any files yet.</p>
+                        </div>
+                    `;
+                }
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting file:', error);
+            showToast('Failed to delete file', 'error');
+        });
+    }
+    
+    // Copy URL button in modal
+    copyUrlBtn.addEventListener('click', function() {
+        copyUrlInput.select();
+        document.execCommand('copy');
+        showToast('URL copied to clipboard', 'success');
+    });
+    
+    // Close modal
+    document.querySelector('.close-modal').addEventListener('click', function() {
+        copyModal.style.display = 'none';
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(e) {
+        if (e.target === copyModal) {
+            copyModal.style.display = 'none';
+        }
+    });
+    
+    // Helper functions
+    function formatFileSize(bytes) {
+        if (!bytes) return '0 B';
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    }
+    
+    // Toast notification function
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        let icon = 'info-circle';
+        if (type === 'success') icon = 'check-circle';
+        if (type === 'error') icon = 'exclamation-circle';
+        if (type === 'warning') icon = 'exclamation-triangle';
+        
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="fas fa-${icon}"></i>
+            </div>
+            <div class="toast-content">${message}</div>
+            <button class="toast-close">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        document.getElementById('toast-container').appendChild(toast);
+        
+        // Add event listener to close button
+        toast.querySelector('.toast-close').addEventListener('click', function() {
+            toast.remove();
+        });
+        
+        // Auto-remove toast after 5 seconds
+        setTimeout(() => {
+            toast.classList.add('toast-fade-out');
+            setTimeout(() => {
+                toast.remove();
+            }, 500);
+        }, 5000);
+    }
+    
+    // Load files on page load
+    loadUserFiles();
+});
