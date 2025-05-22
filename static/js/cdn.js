@@ -164,11 +164,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Clear file input
                     fileInput.value = '';
                     selectedFiles.innerHTML = '';
-                    
-                    // Disable upload button
-                    uploadBtn.setAttribute('disabled', true);
-                    uploadBtn.style.opacity = '0.5';
-                    uploadBtn.style.cursor = 'not-allowed';
 
                     // Refresh file list
                     setTimeout(() => {
@@ -181,8 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } else {
                 progressText.textContent = 'Upload failed!';
-                showToast('Failed to upload files. Status: ' + xhr.status, 'error');
-                console.error('CDN API error response:', xhr.responseText);
+                showToast('Failed to upload files', 'error');
             }
         });
 
