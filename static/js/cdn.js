@@ -124,6 +124,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // File upload function
     function uploadFiles(files) {
+        // Check if files is undefined or empty
+        if (!files || files.length === 0) {
+            showToast('Please select files to upload', 'error');
+            return;
+        }
+        
         const formData = new FormData();
 
         // Append files to FormData
@@ -457,7 +463,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Make the upload button work
 document.getElementById('uploadForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    uploadFiles();
+    // Pass the fileInput.files to the uploadFiles function
+    uploadFiles(fileInput.files);
 });
 
 // The fileInput and uploadBtn variables are already declared above
