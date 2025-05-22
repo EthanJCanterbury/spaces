@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, render_template, current_app
+from flask import Blueprint, jsonify, request, render_template, current_app, send_from_directory
 from flask_login import login_required, current_user
 import requests
 import json
@@ -91,7 +91,13 @@ def upload_files():
             # 2. Get a URL that can be accessed by the CDN API
             # For local development, we'll use the file:// protocol
             # In production, you'd use a URL that's publicly accessible
-            file_url = f"file://{temp_file_path}"
+            # Construct the temporary URL using the app's URL
+            app_url = current_app.config.get('APP_URL')
+            if not app_url:
+                current_app.logger.error("APP_URL not configured in Flask app.")
+                return jsonify({'success': False, 'message': 'APP_URL not configured.'})
+            
+            file_url = f"{app_url}/cdn/temp/{unique_filename}"
             file_urls.append(file_url)
             current_app.logger.info(f"Added URL for file: {file_url}")
         except Exception as e:
@@ -190,6 +196,12 @@ def upload_files():
                 'traceback': error_traceback
             }
         }), 500
+        
+@cdn_bp.route('/temp/<filename>')
+def serve_temp_file(filename):
+    """Serve temporary files from the hc_cdn_temp directory."""
+    temp_dir = os.path.join(tempfile.gettempdir(), 'hc_cdn_temp')
+    return send_from_directory(temp_dir, filename)
 
 @cdn_bp.route('/files')
 @login_required
