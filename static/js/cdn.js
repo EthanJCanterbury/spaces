@@ -185,6 +185,27 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('Network error occurred. Check console for details.', 'error');
             console.error('CDN upload failed. The Hack Club CDN API requires publicly accessible URLs to files.');
         });
+        
+        xhr.addEventListener('readystatechange', function() {
+            if (xhr.readyState === 4) {
+                console.log('CDN Upload Response Status:', xhr.status);
+                console.log('CDN Upload Response Headers:', xhr.getAllResponseHeaders());
+                console.log('CDN Upload Response Body:', xhr.responseText);
+                
+                if (xhr.status >= 400) {
+                    try {
+                        const errorResponse = JSON.parse(xhr.responseText);
+                        console.error('CDN Upload Error Details:', errorResponse);
+                        if (errorResponse.error_details) {
+                            console.error('Error Type:', errorResponse.error_details.type);
+                            console.error('Error Traceback:', errorResponse.error_details.traceback);
+                        }
+                    } catch (e) {
+                        console.error('Could not parse error response', e);
+                    }
+                }
+            }
+        });
 
         xhr.addEventListener('abort', function() {
             progressText.textContent = 'Upload aborted!';

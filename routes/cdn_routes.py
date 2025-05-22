@@ -21,16 +21,28 @@ def cdn_page():
 @login_required
 def upload_files():
     """Handle file uploads to the Hack Club CDN"""
+    current_app.logger.info("CDN upload request received")
+    current_app.logger.info(f"Request files: {request.files}")
+    current_app.logger.info(f"Request form: {request.form}")
+    current_app.logger.info(f"Request data: {request.data}")
+    
     if 'files' not in request.files:
+        current_app.logger.error("No files found in request")
         return jsonify({'success': False, 'message': 'No files provided'})
 
     files = request.files.getlist('files')
+    current_app.logger.info(f"Files count: {len(files)}")
+    
+    for file in files:
+        current_app.logger.info(f"File: {file.filename}, Content-Type: {file.content_type}, Size: {file.content_length}")
 
     if len(files) == 0:
+        current_app.logger.error("Empty files list")
         return jsonify({'success': False, 'message': 'No files provided'})
 
     # Hardcoded API token
     api_token = "beans"
+    current_app.logger.info(f"Using API token: {api_token}")
 
     # Prepare URLs for the CDN API
     file_urls = []
@@ -54,6 +66,7 @@ def upload_files():
             # For testing purposes, we'll use example URLs
             # This is just for demonstration - it won't actually work
             file_urls.append(f"https://example.com/{file.filename}")
+            current_app.logger.info(f"Added URL for file: {file.filename}")
         except Exception as e:
             current_app.logger.error(f"Error processing file {file.filename}: {str(e)}")
             return jsonify({'success': False, 'message': f'Error processing file {file.filename}'})
@@ -63,15 +76,27 @@ def upload_files():
 
     try:
         # Make request to the Hack Club CDN API
+        current_app.logger.info(f"Sending CDN API request with URLs: {file_urls}")
+        
+        request_data = json.dumps(file_urls)
+        current_app.logger.info(f"Request data: {request_data}")
+        
+        headers = {
+            'Authorization': f'Bearer {api_token}',
+            'Content-Type': 'application/json'
+        }
+        current_app.logger.info(f"Request headers: {headers}")
+        
         response = requests.post(
             'https://cdn.hackclub.com/api/v3/new',
-            headers={
-                'Authorization': f'Bearer {api_token}',
-                'Content-Type': 'application/json'
-            },
+            headers=headers,
             json=file_urls,  # This should be an array, not an object
             timeout=60  # Longer timeout for large files
         )
+        
+        current_app.logger.info(f"CDN API response status: {response.status_code}")
+        current_app.logger.info(f"CDN API response headers: {response.headers}")
+        current_app.logger.info(f"CDN API response body: {response.text}")
 
         if response.status_code != 200:
             current_app.logger.error(f"CDN API error: {response.status_code} - {response.text}")
@@ -114,9 +139,21 @@ def upload_files():
         })
 
     except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
         current_app.logger.error(f"Error in CDN upload: {str(e)}")
+        current_app.logger.error(f"Traceback: {error_traceback}")
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'Error uploading to CDN: {str(e)}'})
+        
+        # Include more detailed error information for debugging
+        return jsonify({
+            'success': False, 
+            'message': f'Error uploading to CDN: {str(e)}',
+            'error_details': {
+                'type': type(e).__name__,
+                'traceback': error_traceback
+            }
+        }), 500
 
 @cdn_bp.route('/files')
 @login_required
