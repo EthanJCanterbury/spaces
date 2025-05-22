@@ -11,11 +11,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const copyUrlInput = document.getElementById('copyUrlInput');
     const copyUrlBtn = document.getElementById('copyUrlBtn');
     const htmlUsage = document.getElementById('htmlUsage');
+    const uploadBtn = document.querySelector('.upload-btn');
+    
+    // Disable upload button initially
+    uploadBtn.disabled = true;
     
     // File input change handler
     fileInput.addEventListener('change', function(e) {
         selectedFiles.innerHTML = '';
         if (this.files.length > 0) {
+            // Enable upload button when files are selected
+            uploadBtn.disabled = false;
+            
             Array.from(this.files).forEach((file, index) => {
                 const fileElement = document.createElement('div');
                 fileElement.className = 'selected-file';
@@ -45,12 +52,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     fileInput.files = dataTransfer.files;
                     this.closest('.selected-file').remove();
                     
+                    // Disable upload button if no files left
+                    if (fileInput.files.length === 0) {
+                        uploadBtn.disabled = true;
+                    }
+                    
                     // Update indices after removal
                     document.querySelectorAll('.remove-file').forEach((btn, i) => {
                         btn.setAttribute('data-index', i);
                     });
                 });
             });
+        } else {
+            // Disable upload button when no files are selected
+            uploadBtn.disabled = true;
         }
     });
     
