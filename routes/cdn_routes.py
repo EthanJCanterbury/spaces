@@ -35,18 +35,24 @@ def upload_files():
     # Prepare URLs for the CDN API
     file_urls = []
 
-    # Save files temporarily and get their URLs
+    # The Hack Club CDN API needs accessible URL references to files
+    # In a production environment, you would upload files to a temporary
+    # storage and provide the public URLs to the CDN API
+    
+    # Since we don't have that set up here, this won't work in production
+    # But it demonstrates the correct format for the API request
     for file in files:
         if file.filename == '':
             continue
 
         try:
-            # TODO: Instead of URLs, we should directly upload the files to the CDN
-            # This is a placeholder for the actual implementation
-            # In a real implementation, we'd save the files to a temporary location
-            # and then upload them directly to the CDN API
-
-            # For now, we'll just pretend we have URLs for the files
+            # In a real implementation, you would:
+            # 1. Save file to temporary storage
+            # 2. Get a public URL for that file
+            # 3. Add that URL to file_urls array
+            
+            # For testing purposes, we'll use example URLs
+            # This is just for demonstration - it won't actually work
             file_urls.append(f"https://example.com/{file.filename}")
         except Exception as e:
             current_app.logger.error(f"Error processing file {file.filename}: {str(e)}")
@@ -63,7 +69,7 @@ def upload_files():
                 'Authorization': f'Bearer {api_token}',
                 'Content-Type': 'application/json'
             },
-            json=file_urls,
+            json=file_urls,  # This should be an array, not an object
             timeout=60  # Longer timeout for large files
         )
 
