@@ -218,6 +218,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         xhr.setRequestHeader('X-CSRFToken', csrfToken);
 
+        // Log the request details to console
+        console.log('CDN Upload Request:');
+        console.log('URL:', '/cdn/upload');
+        console.log('Method:', 'POST');
+        console.log('Headers:', {
+            'X-CSRFToken': csrfToken,
+            // Other headers set by the browser automatically
+        });
+        
+        // Log FormData contents (files being sent)
+        console.log('Files being uploaded:');
+        for (const pair of formData.entries()) {
+            if (pair[0] === 'files') {
+                const file = pair[1];
+                console.log('File:', {
+                    name: file.name,
+                    type: file.type,
+                    size: file.size + ' bytes (' + formatFileSize(file.size) + ')',
+                    lastModified: new Date(file.lastModified).toISOString()
+                });
+            }
+        }
+
         xhr.send(formData);
     }
 
