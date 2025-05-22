@@ -33,14 +33,14 @@ def upload_files():
     current_app.logger.info(f"Request files: {request.files}")
     current_app.logger.info(f"Request form: {request.form}")
     current_app.logger.info(f"Request data: {request.data}")
-    
+
     if 'files' not in request.files:
         current_app.logger.error("No files found in request")
         return jsonify({'success': False, 'message': 'No files provided'})
 
     files = request.files.getlist('files')
     current_app.logger.info(f"Files count: {len(files)}")
-    
+
     for file in files:
         current_app.logger.info(f"File: {file.filename}, Content-Type: {file.content_type}, Size: {file.content_length}")
 
@@ -55,26 +55,45 @@ def upload_files():
     # Prepare URLs for the CDN API
     file_urls = []
 
-    # The Hack Club CDN API needs accessible URL references to files
-    # In a production environment, you would upload files to a temporary
-    # storage and provide the public URLs to the CDN API
-    
-    # Since we don't have that set up here, this won't work in production
-    # But it demonstrates the correct format for the API request
+    # Create a temporary directory for storing uploaded files
+    import tempfile
+    import os
+    import uuid
+    from werkzeug.utils import secure_filename
+
+    # Create temp directory if it doesn't exist
+    temp_dir = os.path.join(tempfile.gettempdir(), 'hc_cdn_temp')
+    os.makedirs(temp_dir, exist_ok=True)
+
+    # Clean up old files (older than 5 minutes)
+    current_time = time.time()
+    for temp_file in os.listdir(temp_dir):
+        file_path = os.path.join(temp_dir, temp_file)
+        if os.path.isfile(file_path) and (current_time - os.path.getmtime(file_path)) > 300:  # 300 seconds = 5 minutes
+            try:
+                os.remove(file_path)
+                current_app.logger.info(f"Removed old temp file: {file_path}")
+            except Exception as e:
+                current_app.logger.error(f"Error removing old temp file {file_path}: {str(e)}")
+
     for file in files:
         if file.filename == '':
             continue
 
         try:
-            # In a real implementation, you would:
             # 1. Save file to temporary storage
-            # 2. Get a public URL for that file
-            # 3. Add that URL to file_urls array
-            
-            # For testing purposes, we'll use example URLs
-            # This is just for demonstration - it won't actually work
-            file_urls.append(f"https://example.com/{file.filename}")
-            current_app.logger.info(f"Added URL for file: {file.filename}")
+            secure_name = secure_filename(file.filename)
+            unique_filename = f"{uuid.uuid4()}_{secure_name}"
+            temp_file_path = os.path.join(temp_dir, unique_filename)
+            file.save(temp_file_path)
+            current_app.logger.info(f"Saved file to temporary location: {temp_file_path}")
+
+            # 2. Get a URL that can be accessed by the CDN API
+            # For local development, we'll use the file:// protocol
+            # In production, you'd use a URL that's publicly accessible
+            file_url = f"file://{temp_file_path}"
+            file_urls.append(file_url)
+            current_app.logger.info(f"Added URL for file: {file_url}")
         except Exception as e:
             current_app.logger.error(f"Error processing file {file.filename}: {str(e)}")
             return jsonify({'success': False, 'message': f'Error processing file {file.filename}'})
@@ -85,14 +104,14 @@ def upload_files():
     try:
         # Make request to the Hack Club CDN API
         current_app.logger.info(f"Sending CDN API request with URLs: {file_urls}")
-        
+
         # Store the actual request data for debugging
         global last_cdn_request
         headers = {
             'Authorization': f'Bearer {api_token}',
             'Content-Type': 'application/json'
         }
-        
+
         # Save the full request details
         last_cdn_request = {
             "headers": dict(headers),  # Convert to dict to make it JSON serializable
@@ -100,17 +119,17 @@ def upload_files():
             "url": 'https://cdn.hackclub.com/api/v3/new',
             "method": "POST"
         }
-        
+
         current_app.logger.info(f"Request data: {json.dumps(file_urls)}")
         current_app.logger.info(f"Request headers: {headers}")
-        
+
         response = requests.post(
             'https://cdn.hackclub.com/api/v3/new',
             headers=headers,
             json=file_urls,  # This should be an array, not an object
             timeout=60  # Longer timeout for large files
         )
-        
+
         current_app.logger.info(f"CDN API response status: {response.status_code}")
         current_app.logger.info(f"CDN API response headers: {response.headers}")
         current_app.logger.info(f"CDN API response body: {response.text}")
@@ -161,7 +180,7 @@ def upload_files():
         current_app.logger.error(f"Error in CDN upload: {str(e)}")
         current_app.logger.error(f"Traceback: {error_traceback}")
         db.session.rollback()
-        
+
         # Include more detailed error information for debugging
         return jsonify({
             'success': False, 
