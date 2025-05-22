@@ -71,6 +71,14 @@ app.config['PREFERRED_URL_SCHEME'] = 'https'
 app.config['EXPLAIN_TEMPLATE_LOADING'] = True
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
+# Get the Replit URL or use a default for local development
+replit_url = os.environ.get('REPL_SLUG', None)
+if replit_url:
+    app.config['APP_URL'] = f"https://{replit_url}.replit.dev"
+else:
+    # For local development
+    app.config['APP_URL'] = 'http://0.0.0.0:3000'
+
 
 def get_error_context(error):
     context = {

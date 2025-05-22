@@ -89,13 +89,13 @@ def upload_files():
             current_app.logger.info(f"Saved file to temporary location: {temp_file_path}")
 
             # 2. Get a URL that can be accessed by the CDN API
-            # For local development, we'll use the file:// protocol
-            # In production, you'd use a URL that's publicly accessible
             # Construct the temporary URL using the app's URL
             app_url = current_app.config.get('APP_URL')
             if not app_url:
-                current_app.logger.error("APP_URL not configured in Flask app.")
-                return jsonify({'success': False, 'message': 'APP_URL not configured.'})
+                # Try to get the URL from request
+                host = request.host_url.rstrip('/')
+                app_url = host
+                current_app.logger.info(f"Using host from request: {app_url}")
             
             file_url = f"{app_url}/cdn/temp/{unique_filename}"
             file_urls.append(file_url)
