@@ -460,10 +460,8 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     uploadFiles();
 });
 
-// Disable/enable upload button based on file selection
-const fileInput = document.getElementById('fileInput');
-const uploadBtn = document.querySelector('.upload-btn');
-
+// The fileInput and uploadBtn variables are already declared above
+// Just add the event listener without redeclaring
 fileInput.addEventListener('change', function() {
     if (this.files.length > 0) {
         uploadBtn.removeAttribute('disabled');
