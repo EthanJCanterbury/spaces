@@ -3,6 +3,8 @@ from flask_login import login_required, current_user
 import requests
 import json
 import os
+import tempfile
+import os
 import time
 from datetime import datetime
 from models import db, UserUpload, User
