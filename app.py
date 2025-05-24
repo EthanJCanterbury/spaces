@@ -873,12 +873,52 @@ def welcome():
     language_icons = {}
     for lang in PistonService.get_languages():
         language_icons[lang] = PistonService.get_language_icon(lang)
+        
+    # Check for join_code in request args
+    join_code = request.args.get('join_code')
+    join_message = None
+    
+    if join_code:
+        # Try to join the club with the provided code
+        club = Club.query.filter_by(join_code=join_code).first()
+        if club:
+            # Check if user is already a member
+            existing_membership = ClubMembership.query.filter_by(
+                user_id=current_user.id, club_id=club.id).first()
+            
+            if existing_membership:
+                # If already a member, redirect directly to the club dashboard
+                flash(f"Welcome back to {club.name}!", 'info')
+                return redirect(url_for('club_dashboard', club_id=club.id))
+            else:
+                # Add user to the club
+                new_membership = ClubMembership(
+                    user_id=current_user.id,
+                    club_id=club.id,
+                    role='member'
+                )
+                db.session.add(new_membership)
+                
+                # Log activity
+                log_activity(current_user.id, f"Joined club {club.name}")
+                
+                try:
+                    db.session.commit()
+                    flash(f"You have successfully joined {club.name}!", 'success')
+                    # Redirect to the club dashboard
+                    return redirect(url_for('club_dashboard', club_id=club.id))
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f"Error joining club: {str(e)}", 'error')
+        else:
+            flash(f"Invalid join code: {join_code}", 'error')
 
     return render_template('welcome.html',
                            sites=sites,
                            club_memberships=club_memberships,
                            max_sites=max_sites,
-                           language_icons=language_icons)
+                           language_icons=language_icons,
+                           join_message=join_message)
 
 
 @app.route('/edit/<int:site_id>')
