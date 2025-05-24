@@ -4,7 +4,7 @@ import subprocess
 import signal
 import atexit
 from flask import render_template
-from app import app, db
+from app import app, db, csrf
 
 # Configure logging - reduced verbosity
 logging.basicConfig(

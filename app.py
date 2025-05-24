@@ -576,6 +576,12 @@ def leader_onboarding():
     """Show the leader onboarding page with access code verification"""
     # Check for access code in session or form submission
     if request.method == 'POST':
+        # Validate CSRF token
+        if not csrf.validate_csrf(request.form.get('csrf_token')):
+            app.logger.warning(f"CSRF validation failed for leader_onboarding from IP: {request.remote_addr}")
+            flash('Security validation failed. Please try again.', 'error')
+            return render_template('access_code.html', target='leader_onboarding')
+            
         access_code = request.form.get('access_code')
         if access_code:
             # Verify the code against database
