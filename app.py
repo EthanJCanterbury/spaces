@@ -577,7 +577,8 @@ def leader_onboarding():
     # Check for access code in session or form submission
     if request.method == 'POST':
         # Validate CSRF token
-        if not csrf.validate_csrf(request.form.get('csrf_token')):
+        csrf_token = request.form.get('csrf_token')
+        if not csrf_token or csrf.validate(csrf_token) == False:
             app.logger.warning(f"CSRF validation failed for leader_onboarding from IP: {request.remote_addr}")
             flash('Security validation failed. Please try again.', 'error')
             return render_template('access_code.html', target='leader_onboarding')
@@ -760,7 +761,8 @@ def signup():
 
     if request.method == 'POST':
         # Validate CSRF token
-        if not csrf.validate_csrf(request.form.get('csrf_token')):
+        csrf_token = request.form.get('csrf_token')
+        if not csrf_token or csrf.validate(csrf_token) == False:
             app.logger.warning(f"CSRF attack detected from IP: {request.remote_addr}")
             flash('Invalid form submission. Please try again.', 'error')
             return render_template('signup.html', from_leader_onboarding=from_leader_onboarding), 400
@@ -6362,3 +6364,35 @@ if __name__ == '__main__':
         
     app.logger.info("Server running on http://0.0.0.0:3000")
     app.run(host='0.0.0.0', port=3000, debug=True)
+
+
+@app.route('/api/admin/error-lookup/<error_id>', methods=['GET'])
+@login_required
+@admin_required
+def lookup_error_by_id(error_id):
+    """Look up an error by its ID"""
+    try:
+        # Get the error details from logs
+        from utils.logs_util import logs_manager
+        logs = logs_manager.get_logs()
+        
+        # Find errors with matching ID
+        matching_errors = [log for log in logs if error_id in log.get('message', '')]
+        
+        if not matching_errors:
+            return jsonify({
+                'success': False,
+                'message': f'No error found with ID {error_id}'
+            }), 404
+            
+        return jsonify({
+            'success': True,
+            'errors': matching_errors
+        })
+    except Exception as e:
+        app.logger.error(f"Error looking up error ID: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Error looking up error: {str(e)}'
+        }), 500
+
