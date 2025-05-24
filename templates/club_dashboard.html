@@ -468,8 +468,33 @@
                     <button class="refresh-code-btn" onclick="generateJoinCode()" title="Refresh Join Code">
                         <i class="fas fa-sync-alt"></i>
                     </button>
+                    {% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}
+                    <button class="btn-share" onclick="copyJoinLink()" title="Copy Join Link">
+                        <i class="fas fa-link"></i> Copy Link
+                    </button>
+                    <button class="btn-qr" onclick="showQRCodeModal()" title="Show QR Code">
+                        <i class="fas fa-qrcode"></i> QR Code
+                    </button>
+                    {% endif %}
                 </div>
             </div>
+            
+            <script>
+                function copyJoinLink() {
+                    const joinCode = document.querySelector('.club-code-value').textContent;
+                    const joinUrl = `${window.location.origin}/join-club?code=${joinCode}`;
+                    
+                    // Create temporary element
+                    const el = document.createElement('textarea');
+                    el.value = joinUrl;
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                    
+                    showToast('success', 'Join link copied to clipboard!');
+                }
+            </script>
 
             <div class="dashboard-card-grid">
                 <!-- Club Members Card -->
@@ -779,6 +804,64 @@
                     color: #ec3750;
                 }
                 
+                .btn-share,
+                .btn-qr {
+                    background-color: #ec3750;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    margin-left: 8px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-weight: 500;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 5px;
+                    transition: background-color 0.2s ease;
+                }
+                
+                .btn-share:hover,
+                .btn-qr:hover {
+                    background-color: #d32f2f;
+                }
+                
+                .join-url-container {
+                    margin-top: 20px;
+                }
+                
+                .join-url-box {
+                    display: flex;
+                    align-items: center;
+                    background-color: #f5f5f5;
+                    padding: 8px 12px;
+                    border-radius: 4px;
+                    border: 1px solid #ddd;
+                    margin-top: 5px;
+                }
+                
+                #join-url-display {
+                    flex: 1;
+                    word-break: break-all;
+                    font-family: monospace;
+                    font-size: 14px;
+                }
+                
+                .btn-copy {
+                    background: none;
+                    border: none;
+                    color: #666;
+                    cursor: pointer;
+                    padding: 5px;
+                    border-radius: 50%;
+                    transition: all 0.2s;
+                }
+                
+                .btn-copy:hover {
+                    background-color: #eee;
+                    color: #ec3750;
+                }
+                
                 .dashboard-card-grid {
                     display: grid;
                     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -1028,6 +1111,16 @@
                 <div id="qrcode"></div>
             </div>
             
+            <div class="join-url-container">
+                <p>Or share this link:</p>
+                <div class="join-url-box">
+                    <span id="join-url-display"></span>
+                    <button class="btn-copy" onclick="copyJoinUrl()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            
             <div class="info-box">
                 <i class="fas fa-info-circle"></i>
                 <p>When members scan this code, they will be directed to join the club. New users will need to create an account first.</p>
@@ -1059,9 +1152,16 @@
     
     function generateQRCode() {
         const qrcodeContainer = document.getElementById('qrcode');
+        const joinUrlDisplay = document.getElementById('join-url-display');
+        
         if (qrcodeContainer && qrcodeContainer.innerHTML === '') {
             const joinCode = document.getElementById('qr-code-display').textContent;
             const joinUrl = `${window.location.origin}/join-club?code=${joinCode}`;
+            
+            // Update join URL display
+            if (joinUrlDisplay) {
+                joinUrlDisplay.textContent = joinUrl;
+            }
             
             // Clear previous QR code if any
             qrcodeContainer.innerHTML = '';
@@ -1076,6 +1176,20 @@
                 correctLevel: QRCode.CorrectLevel.H
             });
         }
+    }
+    
+    function copyJoinUrl() {
+        const joinUrl = document.getElementById('join-url-display').textContent;
+        
+        // Create temporary element
+        const el = document.createElement('textarea');
+        el.value = joinUrl;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        
+        showToast('success', 'Join link copied to clipboard!');
     }
     
     function downloadQRCode() {
