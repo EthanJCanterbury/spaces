@@ -176,7 +176,6 @@
             {% endwith %}
             
             <form class="access-form" method="POST" action="{{ url_for(target) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <div class="input-group">
                     <input type="text" name="access_code" class="code-input" placeholder="Enter access code" required autofocus>
                 </div>

@@ -502,8 +502,7 @@
                     fetch('/api/clubs', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token }}'
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
                             name: "My Hack Club",
