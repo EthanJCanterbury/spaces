@@ -578,7 +578,7 @@ def leader_onboarding():
     if request.method == 'POST':
         # Validate CSRF token
         csrf_token = request.form.get('csrf_token')
-        if not csrf_token or csrf.validate(csrf_token) == False:
+        if not csrf_token or not csrf.validate_csrf(csrf_token):
             app.logger.warning(f"CSRF validation failed for leader_onboarding from IP: {request.remote_addr}")
             flash('Security validation failed. Please try again.', 'error')
             return render_template('access_code.html', target='leader_onboarding')
@@ -762,7 +762,7 @@ def signup():
     if request.method == 'POST':
         # Validate CSRF token
         csrf_token = request.form.get('csrf_token')
-        if not csrf_token or csrf.validate(csrf_token) == False:
+        if not csrf_token or not csrf.validate_csrf(csrf_token):
             app.logger.warning(f"CSRF attack detected from IP: {request.remote_addr}")
             flash('Invalid form submission. Please try again.', 'error')
             return render_template('signup.html', from_leader_onboarding=from_leader_onboarding), 400
