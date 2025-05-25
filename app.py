@@ -60,6 +60,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # CSRF protection removed
 csrf = None
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_size': 20,
+    'pool_recycle': 1800,  # Recycle connections every 30 minutes
+    'pool_timeout': 30,  # Shorter timeout for better error handling
+    'max_overflow': 10,  # Allow up to 10 additional connections when needed
+    'pool_pre_ping': True  # Check if connection is still alive before using
+}
 
 @app.errorhandler(405)
 def method_not_allowed_error(error):
