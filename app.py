@@ -6459,4 +6459,3 @@ def lookup_error_by_id(error_id):
             'success': False,
             'message': f'Error looking up error: {str(e)}'
         }), 500
-
