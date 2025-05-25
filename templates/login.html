@@ -19,6 +19,12 @@
                     <i class="fab fa-github"></i> Sign in with GitHub
                 </a>
             </div>
+            <br>
+            <div class="social-login">
+                <a href="{{ url_for('slack_auth.slack_login') }}" class="slack-button">
+                  <i class="fab fa-slack"></i> Sign in with Slack
+                </a>
+            </div>
             <div class="divider">or</div>
             <form method="POST" class="auth-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
@@ -32,14 +38,6 @@
                 </div>
                 <button type="submit" class="btn primary">Login</button>
             </form>
-
-            <div class="divider">or</div>
-
-            <div class="social-login">
-                <a href="{{ url_for('slack_auth.slack_login') }}" class="slack-button">
-                  <i class="fab fa-slack"></i> Sign in with Slack
-                </a>
-            </div>
 
             <div class="auth-links">
                 <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign up</a></p>
