@@ -1123,10 +1123,9 @@ def view_site(slug, filename):
             site, 'analytics_enabled') and site.analytics_enabled:
         with db.engine.connect() as connection:
             connection.execute(
-                db.text(
-                    "UPDATE site SET view_count = view_count + 1 WHERE id = :site_id",
-                    {"site_id": site.id}
-                ))
+                db.text("UPDATE site SET view_count = view_count + 1 WHERE id = :site_id"),
+                {"site_id": site.id}
+            )
             connection.commit()
 
     if not filename:
