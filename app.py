@@ -104,6 +104,55 @@ def method_not_allowed_error(error):
     
     return render_template('errors/405.html', **context), 405
 
+@app.errorhandler(400)
+def bad_request_error(error):
+    """Handle 400 Bad Request errors with detailed logging"""
+    # Check if this is a WebSocket mismatch error
+    if "WebsocketMismatch" in str(error) or "websocket" in str(error).lower():
+        app.logger.warning(f"WebSocket connection attempted on non-WebSocket route: {request.path}")
+        # Return a specific response for WebSocket errors
+        return "This endpoint does not support WebSocket connections", 400
+    
+    # Log the request details for debugging
+    request_info = {
+        'url': request.path,
+        'method': request.method,
+        'remote_addr': request.remote_addr,
+        'user_agent': request.user_agent.string,
+        'referrer': request.referrer
+    }
+    
+    # Get user info if authenticated
+    user_info = "Anonymous"
+    if current_user.is_authenticated:
+        user_info = f"{current_user.username} (ID: {current_user.id})"
+    
+    app.logger.error(f"400 Bad Request: {request.method} {request.path}")
+    app.logger.error(f"Request from: {user_info}")
+    app.logger.error(f"Request details: {request_info}")
+    
+    # Log to LogFlow for tracking
+    try:
+        from utils.logflow import log_error
+        error_id = log_error(
+            error=error,
+            error_type="BadRequest",
+            source='request',
+            metadata={
+                'request_path': request.path,
+                'request_method': request.method,
+                'user_id': current_user.id if current_user.is_authenticated else None
+            }
+        )
+        context = get_error_context(error)
+        if error_id:
+            context['error_id'] = error_id
+    except Exception as e:
+        app.logger.error(f"Failed to log to LogFlow: {str(e)}")
+        context = get_error_context(error)
+    
+    return render_template('errors/400.html', **context), 400
+
     'pool_size': 20,
     'pool_recycle': 1800,  # Recycle connections every 30 minutes
     'pool_timeout': 30,  # Shorter timeout for better error handling

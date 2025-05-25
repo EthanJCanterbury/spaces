@@ -1,0 +1,33 @@
+
+{% extends "errors/base_error.html" %}
+
+{% block title %}Bad Request{% endblock %}
+
+{% block error_content %}
+<div class="error-details">
+  <h1>400 Bad Request</h1>
+  <p>The server could not understand the request due to invalid syntax.</p>
+  
+  <div class="error-info">
+    <p><strong>Error ID:</strong> {% if error_id %}{{ error_id }}{% else %}Unavailable{% endif %}</p>
+    <p><strong>URL:</strong> {{ request.path }}</p>
+    <p><strong>Method:</strong> {{ request.method }}</p>
+  </div>
+  
+  <div class="help-section">
+    <h2>What might have happened?</h2>
+    <ul>
+      <li>The request contains malformed data or headers</li>
+      <li>A WebSocket connection was attempted on a regular HTTP endpoint</li>
+      <li>There might be an issue with your browser's configuration</li>
+    </ul>
+    
+    <h2>What can you try?</h2>
+    <ul>
+      <li><a href="javascript:history.back()">Go back</a> to the previous page</li>
+      <li>Try clearing your browser cache and cookies</li>
+      <li>Try navigating from the <a href="/welcome">Dashboard</a></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
