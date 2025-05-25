@@ -210,6 +210,23 @@ def handle_error(error):
 
     context = get_error_context(error)
     app.logger.error(f'Unhandled Exception: {context}')
+    
+    # Log to LogFlow
+    from utils.logflow import log_error
+    error_id = log_error(
+        error=error,
+        error_type=context.get('error_type', 'UnhandledError'),
+        metadata={
+            'code': code,
+            'file_name': context.get('file_name'),
+            'line_number': context.get('line_number'),
+            'user_id': current_user.id if not current_user.is_anonymous else None
+        }
+    )
+    
+    # Add error_id to context for display in template
+    if error_id:
+        context['error_id'] = error_id
 
     return render_template('errors/generic.html', **context), code
 
@@ -241,10 +258,31 @@ def report_error():
 
         app.logger.error(
             f'Client Error Report: {json.dumps(error_log, indent=2)}')
+            
+        # Log to LogFlow
+        from utils.logflow import log_error
+        error_id = log_error(
+            error=error_data.get('message', 'Client-side Error'),
+            error_type=error_data.get('type', 'ClientError'),
+            source='client',
+            metadata={
+                'location': error_data.get('location'),
+                'user_id': current_user.id if not current_user.is_anonymous else None,
+                'user_agent': error_data.get('userAgent')
+            }
+        )
 
-        return jsonify({'status': 'success'}), 200
+        return jsonify({'status': 'success', 'error_id': error_id}), 200
     except Exception as e:
         app.logger.error(f'Error in report_error: {str(e)}')
+        
+        # Log even this error to LogFlow
+        try:
+            from utils.logflow import log_error
+            log_error(e, error_type='ReportErrorHandlerError')
+        except:
+            pass
+            
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
