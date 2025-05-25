@@ -159,13 +159,6 @@ def bad_request_error(error):
     
     return render_template('errors/400.html', **context), 400
 
-    'pool_size': 20,
-    'pool_recycle': 1800,  # Recycle connections every 30 minutes
-    'pool_timeout': 30,  # Shorter timeout for better error handling
-    'max_overflow': 10,  # Allow up to 10 additional connections when needed
-    'pool_pre_ping': True  # Check if connection is still alive before using
-}
-
 app.config['PREFERRED_URL_SCHEME'] = 'https'
 app.config['EXPLAIN_TEMPLATE_LOADING'] = True
 app.config['TEMPLATES_AUTO_RELOAD'] = True
