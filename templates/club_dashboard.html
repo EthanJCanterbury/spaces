@@ -2137,6 +2137,23 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Club Leader Row -->
+                            <tr>
+                                <td>{{ club.leader.username }}</td>
+                                <td>{{ club.leader.email }}</td>
+                                <td>
+                                    <span class="role-badge role-badge-leader">
+                                        Leader
+                                    </span>
+                                </td>
+                                <td>{{ club.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <!-- Leaders cannot modify their own role -->
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Club Members -->
                             {% for membership in club.members %}
                                 <tr>
                                     <td>{{ membership.user.username }}</td>
@@ -3820,7 +3837,9 @@
                                 <select id="member-select" class="form-input" required>
                                     <option value="{{ current_user.id }}" data-username="{{ current_user.username }}">{{ current_user.username }} (You)</option>
                                     {% for membership in club.members %}
+                                    {% if membership.user.id != current_user.id %}
                                     <option value="{{ membership.user.id }}" data-username="{{ membership.user.username }}">{{ membership.user.username }}</option>
+                                    {% endif %}
                                     {% endfor %}
                                 </select>
                                 <div class="hint">Club leaders can submit grants on behalf of members</div>
