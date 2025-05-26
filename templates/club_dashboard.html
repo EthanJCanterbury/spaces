@@ -468,6 +468,7 @@
                 <p class="club-subtitle" style="text-align: center; width: 100%;">Manage your hack club and empower your members with coding skills</p>
             </div>
 
+            {% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}
             <div class="club-info-bar">
                 <div class="club-code-box">
                     <span class="club-code-label"><i class="fas fa-key"></i> Join Code:</span>
@@ -475,14 +476,12 @@
                     <button class="refresh-code-btn" onclick="generateJoinCode()" title="Refresh Join Code">
                         <i class="fas fa-sync-alt"></i>
                     </button>
-                    {% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}
                     <button class="btn-share" onclick="copyJoinLink()" title="Copy Join Link">
                         <i class="fas fa-link"></i> Copy Link
                     </button>
                     <button class="btn-qr" onclick="showQRCodeModal()" title="Show QR Code">
                         <i class="fas fa-qrcode"></i> QR Code
                     </button>
-                    {% endif %}
                 </div>
                 
                 <div class="club-balance-box">
@@ -490,6 +489,17 @@
                     <span class="club-balance-value">${{ "%.2f"|format(club.balance|float) }}</span>
                 </div>
             </div>
+            {% else %}
+            <div class="member-welcome-bar">
+                <div class="welcome-message">
+                    <span class="welcome-text"><i class="fas fa-user"></i> Welcome back, {{ current_user.username }}!</span>
+                    <span class="member-role">{{ current_user.club_memberships|selectattr('club_id', 'eq', club.id)|map(attribute='role')|first|default('Member', true)|title }}</span>
+                </div>
+                <div class="member-info">
+                    <span class="join-date"><i class="fas fa-calendar"></i> Member since: {{ current_user.club_memberships|selectattr('club_id', 'eq', club.id)|map(attribute='joined_at')|first|default('', true)|string|truncate(10, True, '') }}</span>
+                </div>
+            </div>
+            {% endif %}
             
             <script>
                 function copyJoinLink() {
@@ -544,7 +554,8 @@
             </script>
 
             <div class="dashboard-card-grid">
-                <!-- Club Members Card -->
+                {% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}
+                <!-- Leader View - Management Cards -->
                 <div class="dashboard-feature-card">
                     <div class="card-icon member-icon">
                         <i class="fas fa-users"></i>
@@ -552,21 +563,20 @@
                     <div class="card-content">
                         <div class="card-header">
                             <h3>Club Members</h3>
-                            <span class="card-subtitle">{% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}Manage Members{% else %}View Members{% endif %}</span>
+                            <span class="card-subtitle">Manage Members</span>
                         </div>
                         <div class="card-metric">
                             <span class="metric-value">{{ club.members|length + 1 }}</span> total members
                         </div>
-                        <p class="card-description">{% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}View and manage all your club members{% else %}View club members{% endif %}</p>
+                        <p class="card-description">View and manage all your club members</p>
                         <div class="card-action">
                             <a href="#members" class="btn-action" onclick="openTab('members')">
-                                <i class="fas fa-{% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}plus{% else %}users{% endif %}"></i> {% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}Add & View Members{% else %}View Members{% endif %}
+                                <i class="fas fa-plus"></i> Add & View Members
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Club Meetings Card -->
                 <div class="dashboard-feature-card">
                     <div class="card-icon meeting-icon">
                         <i class="fas fa-calendar-alt"></i>
@@ -574,19 +584,17 @@
                     <div class="card-content">
                         <div class="card-header">
                             <h3>Club Meetings</h3>
-                            <span class="card-subtitle">{% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}Schedule Meetings{% else %}View Meetings{% endif %}</span>
+                            <span class="card-subtitle">Schedule Meetings</span>
                         </div>
-                        <p class="card-description">{% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}Planning your next club meeting{% else %}View upcoming club meetings{% endif %}</p>
+                        <p class="card-description">Planning your next club meeting</p>
                         <div class="card-action">
                             <a href="#schedule" class="btn-action" onclick="openTab('schedule')">
-                                <i class="fas fa-{% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}plus{% else %}calendar-alt{% endif %}"></i> {% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}Schedule Meeting{% else %}View Meetings{% endif %}
+                                <i class="fas fa-plus"></i> Schedule Meeting
                             </a>
                         </div>
                     </div>
                 </div>
 
-                {% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}
-                <!-- Club Budget Card (Leaders Only) -->
                 <div class="dashboard-feature-card">
                     <div class="card-icon budget-icon">
                         <i class="fas fa-dollar-sign"></i>
@@ -604,9 +612,7 @@
                         </div>
                     </div>
                 </div>
-                {% endif %}
 
-                <!-- Club Tasks Card -->
                 <div class="dashboard-feature-card">
                     <div class="card-icon task-icon">
                         <i class="fas fa-tasks"></i>
@@ -614,50 +620,136 @@
                     <div class="card-content">
                         <div class="card-header">
                             <h3>Club Tasks</h3>
-                            <span class="card-subtitle">{% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}Manage Tasks{% else %}View Tasks{% endif %}</span>
+                            <span class="card-subtitle">Manage Tasks</span>
                         </div>
-                        <p class="card-description">{% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}Assign coding challenges to members{% else %}View assigned coding challenges{% endif %}</p>
+                        <p class="card-description">Assign coding challenges to members</p>
                         <div class="card-action">
                             <a href="#assignments" class="btn-action" onclick="openTab('assignments')">
-                                <i class="fas fa-{% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}plus{% else %}list-ul{% endif %}"></i> {% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}Create Task{% else %}View Tasks{% endif %}
+                                <i class="fas fa-plus"></i> Create Task
                             </a>
                         </div>
                     </div>
                 </div>
-
-                <!-- Learning Pathways Card -->
+                
+                {% else %}
+                <!-- Member View - Personal Progress Cards -->
                 <div class="dashboard-feature-card">
                     <div class="card-icon pathway-icon">
-                        <i class="fas fa-graduation-cap"></i>
+                        <i class="fas fa-code"></i>
                     </div>
                     <div class="card-content">
                         <div class="card-header">
-                            <h3>Learning Pathways</h3>
-                            <span class="card-subtitle">Member Progress</span>
+                            <h3>My Progress</h3>
+                            <span class="card-subtitle">Track Your Growth</span>
                         </div>
-                        <p class="card-description">Track member coding project progress</p>
+                        <div class="card-metric">
+                            <span class="metric-value" id="myProjectCount">0</span> coding projects
+                        </div>
+                        <p class="card-description">See your coding journey and completed projects</p>
                         <div class="card-action">
                             <a href="#projects" class="btn-action" onclick="openTab('projects')">
-                                <i class="fas fa-eye"></i> View Pathways
+                                <i class="fas fa-chart-line"></i> View My Projects
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Resources Card -->
+                <div class="dashboard-feature-card">
+                    <div class="card-icon task-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <h3>My Assignments</h3>
+                            <span class="card-subtitle">Complete Tasks</span>
+                        </div>
+                        <div class="card-metric">
+                            <span class="metric-value" id="myAssignmentCount">0</span> pending tasks
+                        </div>
+                        <p class="card-description">Work on coding challenges assigned to you</p>
+                        <div class="card-action">
+                            <a href="#assignments" class="btn-action" onclick="openTab('assignments')">
+                                <i class="fas fa-list-ul"></i> View Assignments
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-feature-card">
+                    <div class="card-icon meeting-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <h3>Upcoming Events</h3>
+                            <span class="card-subtitle">Don't Miss Out</span>
+                        </div>
+                        <div class="card-metric">
+                            <span class="metric-value" id="upcomingEventCount">0</span> this week
+                        </div>
+                        <p class="card-description">Stay updated with club meetings and events</p>
+                        <div class="card-action">
+                            <a href="#schedule" class="btn-action" onclick="openTab('schedule')">
+                                <i class="fas fa-calendar-alt"></i> View Events
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-feature-card">
+                    <div class="card-icon pizza-icon">
+                        <i class="fas fa-pizza-slice"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <h3>Pizza Grants</h3>
+                            <span class="card-subtitle">Submit Projects</span>
+                        </div>
+                        <p class="card-description">Submit your coding projects to earn pizza for the club!</p>
+                        <div class="card-action">
+                            <a href="#pizza" class="btn-action" onclick="openTab('pizza')">
+                                <i class="fas fa-paper-plane"></i> Submit Project
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Universal Cards (for all users) -->
+                <div class="dashboard-feature-card">
+                    <div class="card-icon member-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <h3>Club Community</h3>
+                            <span class="card-subtitle">Meet Your Peers</span>
+                        </div>
+                        <div class="card-metric">
+                            <span class="metric-value">{{ club.members|length + 1 }}</span> club members
+                        </div>
+                        <p class="card-description">Connect with fellow coders in your club</p>
+                        <div class="card-action">
+                            <a href="#members" class="btn-action" onclick="openTab('members')">
+                                <i class="fas fa-users"></i> View Members
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="dashboard-feature-card">
                     <div class="card-icon resources-icon">
                         <i class="fas fa-book"></i>
                     </div>
                     <div class="card-content">
                         <div class="card-header">
-                            <h3>{% if current_user.id == club.leader_id or (club.members|selectattr('user_id', 'eq', current_user.id)|selectattr('role', 'eq', 'co-leader')|list|length > 0) %}Leader Resources{% else %}Club Resources{% endif %}</h3>
-                            <span class="card-subtitle">Hack Club Resources</span>
+                            <h3>Learning Resources</h3>
+                            <span class="card-subtitle">Expand Your Skills</span>
                         </div>
-                        <p class="card-description">Access Hack Club workshops and resources</p>
+                        <p class="card-description">Access curated coding tutorials and workshops</p>
                         <div class="card-action">
                             <a href="#resources" class="btn-action" onclick="openTab('resources')">
-                                <i class="fas fa-link"></i> Access Resources
+                                <i class="fas fa-book-open"></i> Browse Resources
                             </a>
                         </div>
                     </div>
@@ -843,6 +935,57 @@
                     font-family: monospace;
                     font-weight: bold;
                     font-size: 16px;
+                }
+
+                .member-welcome-bar {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background-color: #f8f9fa;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin-bottom: 24px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                    border-left: 4px solid #ec3750;
+                }
+
+                .welcome-message {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                }
+
+                .welcome-text {
+                    font-weight: 600;
+                    color: #333;
+                    font-size: 16px;
+                }
+
+                .member-role {
+                    background-color: #ec3750;
+                    color: white;
+                    padding: 2px 8px;
+                    border-radius: 12px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    width: fit-content;
+                }
+
+                .member-info {
+                    display: flex;
+                    align-items: center;
+                    color: #666;
+                    font-size: 14px;
+                }
+
+                .join-date {
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                }
+
+                .pizza-icon {
+                    background: linear-gradient(135deg, #ff6b35, #f7931e);
                 }
                 
                 .club-code-label {
