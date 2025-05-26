@@ -1303,6 +1303,94 @@ function filterSites() {
         });
 }
 
+function filterClubs() {
+    const searchTerm = document.getElementById('clubSearch').value.trim();
+
+    if (searchTerm.length < 2) {
+        return; // Require at least 2 characters
+    }
+
+    document.getElementById('clubTableBody').innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center">
+                <div class="loading-spinner"></div>
+                <p>Searching clubs...</p>
+            </td>
+        </tr>
+    `;
+
+    // Make API call to search clubs
+    fetch(`/api/admin/search/clubs?term=${encodeURIComponent(searchTerm)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showToast('error', data.error);
+                return;
+            }
+
+            const clubTableBody = document.getElementById('clubTableBody');
+            clubTableBody.innerHTML = '';
+
+            if (data.clubs.length === 0) {
+                clubTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <p>No clubs found matching "${searchTerm}"</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            data.clubs.forEach(club => {
+                const row = document.createElement('tr');
+
+                row.innerHTML = `
+                    <td>${club.id}</td>
+                    <td>${club.name}</td>
+                    <td>${club.leader_username}</td>
+                    <td>${club.member_count}</td>
+                    <td>${club.created_at}</td>
+                    <td>${club.join_code}</td>
+                    <td class="actions-cell">
+                        <div class="action-dropdown">
+                            <button class="action-dropdown-btn" onclick="toggleActionDropdown(this)">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="action-dropdown-content">
+                                <button onclick="viewClubDetails(${club.id})" class="dropdown-item">
+                                    <i class="fas fa-eye"></i>
+                                    <span>View Details</span>
+                                </button>
+                                <button onclick="resetJoinCode(${club.id})" class="dropdown-item">
+                                    <i class="fas fa-key"></i>
+                                    <span>Reset Join Code</span>
+                                </button>
+                                <button onclick="deleteClub(${club.id}, '${club.name}')" class="dropdown-item text-danger">
+                                    <i class="fas fa-trash-alt"></i>
+                                    <span>Delete Club</span>
+                                </button>
+                            </div>
+                        </div>
+                    </td>
+                `;
+
+                clubTableBody.appendChild(row);
+                row.classList.add('fade-in');
+                setTimeout(() => {
+                    row.classList.remove('fade-in');
+                }, 300);
+            });
+            
+            // Initialize action dropdowns for the new search results
+            initializeActionDropdowns();
+        })
+        .catch(error => {
+            console.error('Error searching clubs:', error);
+            showToast('error', 'Failed to search clubs');
+        });
+}
+
 function toggleSelectAll() {
     const selectAll = document.getElementById('selectAll');
     const checkboxes = document.querySelectorAll('.user-select');
@@ -1854,10 +1942,18 @@ function toggleActionDropdown(button) {
     }
 
     // Close all other open dropdowns first
-    const allDropdowns = document.querySelectorAll('.action-dropdown-content');
+    const allDropdowns = document.querySelectorAll('.action-dropdown-content.show');
     allDropdowns.forEach(dropdown => {
-        if (dropdown !== button.nextElementSibling) {
+        const parentButton = dropdown.previousElementSibling || document.getElementById(dropdown.dataset.parentButton);
+        if (parentButton && parentButton !== button) {
             dropdown.classList.remove('show');
+            dropdown.style.position = '';
+            dropdown.style.top = '';
+            dropdown.style.left = '';
+            dropdown.style.bottom = '';
+            if (dropdown.parentElement === document.body && parentButton) {
+                parentButton.after(dropdown);
+            }
         }
     });
     
@@ -1873,84 +1969,80 @@ function toggleActionDropdown(button) {
     // Toggle show class
     if (dropdownContent.classList.contains('show')) {
         dropdownContent.classList.remove('show');
+        dropdownContent.style.position = '';
+        dropdownContent.style.top = '';
+        dropdownContent.style.left = '';
+        dropdownContent.style.bottom = '';
         
         // If the dropdown is currently a child of the body, move it back
         if (dropdownContent.parentElement === document.body) {
-            const parentButton = document.getElementById(dropdownContent.dataset.parentButton);
-            if (parentButton) {
-                parentButton.after(dropdownContent);
-            }
+            button.after(dropdownContent);
         }
     } else {
         dropdownContent.classList.add('show');
         
-        // Save original position before moving
-        if (dropdownContent.parentElement !== document.body) {
-            // Make the dropdown position fixed and visible outside of container
-            dropdownContent.style.position = 'fixed';
-            
-            // Store reference to the button for later restoration
-            dropdownContent.dataset.parentButton = button.id || Math.random().toString(36).substring(2);
-            if (!button.id) button.id = dropdownContent.dataset.parentButton;
-            
-            // Temporarily store the dropdown in the body to break out of any overflow constraints
-            document.body.appendChild(dropdownContent);
-            
-            // Position the dropdown
-            const buttonRect = button.getBoundingClientRect();
-            
-            // Calculate the available space
-            const spaceBelow = window.innerHeight - buttonRect.bottom;
-            const spaceAbove = buttonRect.top;
-            
-            // Position the dropdown
-            if (spaceBelow >= 200 || spaceBelow > spaceAbove) {
-                // Position below
-                dropdownContent.style.top = `${buttonRect.bottom}px`;
-                dropdownContent.style.bottom = 'auto';
-            } else {
-                // Position above
-                dropdownContent.style.bottom = `${window.innerHeight - buttonRect.top}px`;
-                dropdownContent.style.top = 'auto';
+        // Set up positioning
+        dropdownContent.style.position = 'fixed';
+        dropdownContent.style.zIndex = '9999';
+        
+        // Store reference to the button
+        dropdownContent.dataset.parentButton = button.id || Math.random().toString(36).substring(2);
+        if (!button.id) button.id = dropdownContent.dataset.parentButton;
+        
+        // Move to body to escape overflow constraints
+        document.body.appendChild(dropdownContent);
+        
+        // Position the dropdown
+        const buttonRect = button.getBoundingClientRect();
+        
+        // Calculate space
+        const spaceBelow = window.innerHeight - buttonRect.bottom;
+        const spaceAbove = buttonRect.top;
+        
+        // Position vertically
+        if (spaceBelow >= 150 || spaceBelow > spaceAbove) {
+            dropdownContent.style.top = `${buttonRect.bottom + 5}px`;
+            dropdownContent.style.bottom = 'auto';
+        } else {
+            dropdownContent.style.bottom = `${window.innerHeight - buttonRect.top + 5}px`;
+            dropdownContent.style.top = 'auto';
+        }
+        
+        // Position horizontally
+        dropdownContent.style.left = `${buttonRect.left}px`;
+        
+        // Ensure it doesn't go off-screen
+        requestAnimationFrame(() => {
+            const dropdownRect = dropdownContent.getBoundingClientRect();
+            if (dropdownRect.right > window.innerWidth) {
+                dropdownContent.style.left = `${buttonRect.right - dropdownRect.width}px`;
             }
-            
-            dropdownContent.style.left = `${buttonRect.left}px`;
-            
-            // Make sure it's not positioned outside the viewport on the right
-            setTimeout(() => {
-                const dropdownRect = dropdownContent.getBoundingClientRect();
-                if (dropdownRect.right > window.innerWidth) {
-                    dropdownContent.style.left = `${buttonRect.right - dropdownRect.width}px`;
-                }
-            }, 0);
-            
-            // Stop event propagation to prevent immediate closing
-            dropdownContent.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-            
-            // Add click outside to close
-            setTimeout(() => {
-                function closeDropdown(e) {
-                    // Don't close if clicking the button or inside the dropdown
-                    if (button.contains(e.target) || dropdownContent.contains(e.target)) {
-                        return;
-                    }
-                    
+            if (dropdownRect.left < 0) {
+                dropdownContent.style.left = '10px';
+            }
+        });
+        
+        // Add click outside handler
+        setTimeout(() => {
+            function closeDropdown(e) {
+                if (!button.contains(e.target) && !dropdownContent.contains(e.target)) {
                     dropdownContent.classList.remove('show');
+                    dropdownContent.style.position = '';
+                    dropdownContent.style.top = '';
+                    dropdownContent.style.left = '';
+                    dropdownContent.style.bottom = '';
+                    dropdownContent.style.zIndex = '';
                     
-                    // Return the dropdown to its original position in the DOM
-                    const parentButton = document.getElementById(dropdownContent.dataset.parentButton);
-                    if (parentButton) {
-                        parentButton.after(dropdownContent);
+                    if (dropdownContent.parentElement === document.body) {
+                        button.after(dropdownContent);
                     }
                     
                     document.removeEventListener('click', closeDropdown);
                 }
-                
-                document.addEventListener('click', closeDropdown);
-            }, 50);
-        }
+            }
+            
+            document.addEventListener('click', closeDropdown);
+        }, 10);
     }
 }
 
