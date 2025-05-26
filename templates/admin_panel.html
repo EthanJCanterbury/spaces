@@ -536,6 +536,7 @@
                             <th>Name</th>
                             <th>Leader</th>
                             <th>Members</th>
+                            <th>Balance</th>
                             <th>Created At</th>
                             <th>Join Code</th>
                             <th>Actions</th>
@@ -548,6 +549,12 @@
                             <td>{{ club.name }}</td>
                             <td>{{ club.leader.username }}</td>
                             <td>{{ club.members|length }}</td>
+                            <td>
+                                <span class="balance-amount" id="balance-{{ club.id }}">${{ "%.2f"|format(club.balance|float) }}</span>
+                                <button class="btn-edit-balance" onclick="editClubBalance({{ club.id }}, {{ club.balance|float }})" title="Edit Balance">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
                             <td>{{ club.created_at.strftime('%Y-%m-%d') }}</td>
                             <td>{{ club.join_code }}</td>
                             <td class="actions-cell">
@@ -2163,6 +2170,43 @@ function openActionModal(userId, username) {
 
 function closeResetPasswordModal() {
     document.getElementById('resetPasswordModal').style.display = 'none';
+}
+
+function editClubBalance(clubId, currentBalance) {
+    const newBalance = prompt(`Enter new balance for club (current: $${currentBalance.toFixed(2)}):`);
+    
+    if (newBalance === null) return; // User cancelled
+    
+    const balance = parseFloat(newBalance);
+    if (isNaN(balance) || balance < 0) {
+        showToast('error', 'Please enter a valid positive number');
+        return;
+    }
+    
+    fetch(`/api/admin/clubs/${clubId}/balance`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ balance: balance })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showToast('error', data.error);
+        } else {
+            showToast('success', data.message);
+            // Update the displayed balance
+            const balanceElement = document.getElementById(`balance-${clubId}`);
+            if (balanceElement) {
+                balanceElement.textContent = `$${balance.toFixed(2)}`;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error updating club balance:', error);
+        showToast('error', 'Failed to update club balance');
+    });
 }
 
 function refreshData() {

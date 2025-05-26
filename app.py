@@ -2893,6 +2893,49 @@ def admin_remove_club_member(membership_id):
         return jsonify({'error': 'Failed to remove club member'}), 500
 
 
+@app.route('/api/admin/clubs/<int:club_id>/balance', methods=['PUT'])
+@login_required
+@admin_required
+def update_club_balance(club_id):
+    try:
+        club = Club.query.get_or_404(club_id)
+        data = request.get_json()
+        
+        new_balance = data.get('balance')
+        if new_balance is None:
+            return jsonify({'error': 'Balance is required'}), 400
+        
+        try:
+            new_balance = float(new_balance)
+            if new_balance < 0:
+                return jsonify({'error': 'Balance cannot be negative'}), 400
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid balance amount'}), 400
+        
+        old_balance = float(club.balance) if club.balance else 0.00
+        club.balance = new_balance
+        
+        # Record the activity
+        activity = UserActivity(
+            activity_type="admin_action",
+            message=f'Admin {{username}} updated club "{club.name}" balance from ${old_balance:.2f} to ${new_balance:.2f}',
+            username=current_user.username,
+            user_id=current_user.id
+        )
+        db.session.add(activity)
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Club balance updated to ${new_balance:.2f}',
+            'balance': new_balance
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error updating club balance: {str(e)}')
+        return jsonify({'error': 'Failed to update club balance'}), 500
+
+
 @app.route('/api/clubs/<int:club_id>/projects', methods=['GET'])
 @login_required
 def get_club_projects(club_id):
