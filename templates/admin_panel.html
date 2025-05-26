@@ -2049,19 +2049,17 @@ function toggleActionDropdown(button) {
 function initializeActionDropdowns() {
     // Add event listeners to all dropdown buttons
     document.querySelectorAll('.action-dropdown-btn').forEach(button => {
-        // Remove existing event listeners by cloning and replacing
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
-        
-        // Add the event listener
-        newButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleActionDropdown(this);
-        });
+        // Check if button already has the onclick attribute
+        if (!button.onclick) {
+            button.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleActionDropdown(this);
+            };
+        }
         
         // Ensure the dropdown can appear outside the table container
-        const dropdownContent = newButton.nextElementSibling;
+        const dropdownContent = button.nextElementSibling;
         if (dropdownContent && dropdownContent.classList.contains('action-dropdown-content')) {
             dropdownContent.style.position = 'absolute';
             dropdownContent.style.zIndex = '1000';
