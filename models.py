@@ -33,6 +33,7 @@ class Club(db.Model):
     description = db.Column(db.Text, nullable=True)
     location = db.Column(db.String(200), nullable=True)
     join_code = db.Column(db.String(16), unique=True, nullable=True)
+    balance = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

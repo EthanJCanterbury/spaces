@@ -484,6 +484,11 @@
                     </button>
                     {% endif %}
                 </div>
+                
+                <div class="club-balance-box">
+                    <span class="club-balance-label"><i class="fas fa-dollar-sign"></i> Grant Balance:</span>
+                    <span class="club-balance-value">${{ "%.2f"|format(club.balance|float) }}</span>
+                </div>
             </div>
             
             <script>
@@ -802,6 +807,7 @@
                 
                 .club-info-bar {
                     display: flex;
+                    justify-content: space-between;
                     background-color: #f8f9fa;
                     padding: 15px;
                     border-radius: 8px;
@@ -812,6 +818,31 @@
                 .club-code-box {
                     display: flex;
                     align-items: center;
+                }
+                
+                .club-balance-box {
+                    display: flex;
+                    align-items: center;
+                    background-color: #e8f5e9;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    border-left: 4px solid #4caf50;
+                }
+                
+                .club-balance-label {
+                    font-weight: 500;
+                    margin-right: 10px;
+                    color: #2e7d32;
+                }
+                
+                .club-balance-value {
+                    background-color: #4caf50;
+                    color: white;
+                    padding: 4px 12px;
+                    border-radius: 4px;
+                    font-family: monospace;
+                    font-weight: bold;
+                    font-size: 16px;
                 }
                 
                 .club-code-label {
