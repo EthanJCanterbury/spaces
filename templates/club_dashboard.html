@@ -2155,6 +2155,7 @@
                             </tr>
                             <!-- Club Members -->
                             {% for membership in club.members %}
+                                {% if membership.user_id != club.leader_id %}
                                 <tr>
                                     <td>{{ membership.user.username }}</td>
                                     <td>{{ membership.user.email }}</td>
@@ -2177,6 +2178,7 @@
                                         </div>
                                     </td>
                                 </tr>
+                                {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>
